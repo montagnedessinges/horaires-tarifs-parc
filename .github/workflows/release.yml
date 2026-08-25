@@ -81,7 +81,6 @@ jobs:
           fi
 
       - name: Build WordPress ZIP
-        if: steps.existing.outputs.exists != 'true'
         shell: bash
         run: |
           rm -rf build horaires-tarifs-parc.zip
@@ -89,6 +88,7 @@ jobs:
           rsync -a ./ build/horaires-tarifs-parc/ \
             --exclude '.git/' \
             --exclude '.github/' \
+            --exclude '.pkg/' \
             --exclude 'tests/' \
             --exclude 'vendor/' \
             --exclude 'composer.json' \
@@ -103,7 +103,6 @@ jobs:
           zip -qr ../horaires-tarifs-parc.zip horaires-tarifs-parc
 
       - name: Validate WordPress ZIP
-        if: steps.existing.outputs.exists != 'true'
         shell: bash
         run: |
           unzip -t horaires-tarifs-parc.zip
@@ -114,7 +113,6 @@ jobs:
           sha256sum horaires-tarifs-parc.zip | tee horaires-tarifs-parc.zip.sha256
 
       - name: Run official WordPress Plugin Check
-        if: steps.existing.outputs.exists != 'true'
         continue-on-error: true
         uses: wordpress/plugin-check-action@v1
         with:
@@ -135,3 +133,11 @@ jobs:
           gh release create "${{ steps.version.outputs.tag }}" horaires-tarifs-parc.zip horaires-tarifs-parc.zip.sha256 \
             --title "Horaires & Tarifs Parc ${{ steps.version.outputs.version }}" \
             --notes-file <(sed -n '/^## ${{ steps.version.outputs.version }}$/,/^## /p' CHANGELOG.md | sed '$d')
+
+      - name: Refresh existing release assets
+        if: steps.existing.outputs.exists == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh release upload "${{ steps.version.outputs.tag }}" horaires-tarifs-parc.zip horaires-tarifs-parc.zip.sha256 --clobber
