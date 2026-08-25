@@ -21,6 +21,7 @@ $season = array(
     )),
     'exceptions'=>array(
         array('enabled'=>'1','type'=>'hours','start'=>'2026-07-14','end'=>'2026-07-14','open'=>'09:00','close'=>'19:00','priority'=>'20','apply_domain_rules'=>'1'),
+        array('enabled'=>'1','type'=>'hours','start'=>'2026-10-27','end'=>'2026-10-27','open'=>'10:00','close'=>'12:00','open2'=>'14:00','close2'=>'18:00','priority'=>'20','apply_domain_rules'=>'1'),
         array('enabled'=>'1','type'=>'closed','start'=>'2026-11-02','end'=>'2026-11-06','priority'=>'30'),
         array('enabled'=>'1','type'=>'hours','start'=>'2026-11-02','end'=>'2026-11-02','open'=>'08:00','close'=>'20:00','priority'=>'30'),
     ),
@@ -41,6 +42,10 @@ htp_assert($regular['open'] && $regular['type'] === 'regular', 'un jour habituel
 
 $hours = Parcs_HT_Schedule::resolve_day($season, $general, '2026-07-14');
 htp_assert($hours['open'] && $hours['exceptional'] && $hours['openTime'] === '09:00', 'l’horaire exceptionnel doit remplacer l’horaire habituel');
+
+$split = Parcs_HT_Schedule::resolve_day($season, $general, '2026-10-27');
+htp_assert($split['open'] && count($split['slots']) === 2, 'un double horaire doit conserver ses deux créneaux');
+htp_assert($split['slots'][1]['open'] === '14:00' && $split['slots'][1]['close'] === '18:00', 'le second créneau doit rester intact');
 
 $closed = Parcs_HT_Schedule::resolve_day($season, $general, '2026-11-02');
 htp_assert(!$closed['open'] && $closed['exceptional'], 'une fermeture doit gagner à priorité égale');

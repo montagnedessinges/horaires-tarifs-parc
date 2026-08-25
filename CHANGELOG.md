@@ -1,5 +1,12 @@
 # Historique des versions
 
+## 1.8.1
+- Correction de l’affichage des doubles créneaux sur la première page, le bandeau, le calendrier, le détail du jour et l’aperçu d’administration.
+- Le résumé mensuel conserve toutes les combinaisons horaires réellement présentes dans le mois.
+- Entre les deux créneaux, affichage d’une réouverture le jour même au lieu d’une fermeture définitive.
+- Calcul de la dernière entrée à partir du dernier créneau et libellés accessibles complets.
+- Tests de non-régression sur le cas `10 h–12 h / 14 h–18 h` du 27 octobre.
+
 ## 1.8.0
 - Moteur PHP canonique pour les priorités horaires, fermetures, événements et accès limité, avec tests de parité JavaScript.
 - Correction de l’accès limité qui pouvait apparaître sur le site un jour fermé et du texte automatique des doubles horaires exceptionnels.

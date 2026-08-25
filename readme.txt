@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.8.0
+Stable tag: 1.8.1
 
 Gestion multilingue des horaires, saisons, calendrier, exceptions, alertes et tarifs des parcs.
 
@@ -66,6 +66,13 @@ Téléversez le nouveau ZIP depuis Extensions > Ajouter une extension > Téléve
 Il reste recommandé d'effectuer une sauvegarde du site et de la base de données avant toute mise à jour d'extension.
 
 == Changelog ==
+
+= 1.8.1 =
+* Affichage intégral des doubles créneaux sur la première page, le bandeau, le calendrier et le détail d’une journée.
+* Le résumé « Horaires du mois » reprend chaque combinaison horaire distincte, second créneau compris.
+* Entre deux créneaux, le site annonce désormais l’heure de réouverture au lieu d’indiquer que la journée est terminée.
+* La dernière entrée est calculée à partir de la fermeture du dernier créneau.
+* L’aperçu de l’administration et les libellés accessibles affichent eux aussi les deux plages.
 
 = 1.8.0 =
 * Diagnostic annuel, Santé du site, historique restaurable et notifications e-mail anti-spam.

@@ -176,10 +176,17 @@
     for(var offset=1;offset<=1095;offset++){var date=addDays(afterDate,offset),status=resolveAnyDay(date);if(status.open){nextOpeningCache[key]={date:date,status:status};return nextOpeningCache[key];}}
     nextOpeningCache[key]=null;return null;
   }
-  function lastEntryTime(status) {
+  function dayRanges(status,language) {
+    return statusSlots(status).map(function(slot){
+      return timeLabel(slot.open,language)+'–'+timeLabel(slot.close,language);
+    }).join(' / ');
+  }
+  function lastEntryTime(status,closeOverride) {
     var specific=String(status.lastEntryMinutes||'');
     var offset=specific!==''?Number(specific):Number((settings.general||{}).last_entry_minutes||0);
-    return fromMinutes(minutes(status.closeTime)-offset);
+    var slots=statusSlots(status),lastSlot=slots.length?slots[slots.length-1]:null;
+    var closing=closeOverride||(lastSlot&&lastSlot.close)||status.closeTime;
+    return fromMinutes(minutes(closing)-offset);
   }
   function nextOpening(afterDate) {
     var key='active|'+activeSeasonYear+'|'+afterDate;
@@ -234,12 +241,13 @@
     var heading=root.querySelector('[data-htp-today-status]'),detail=root.querySelector('[data-htp-today-detail]');heading.classList.remove('is-open','is-closed');
     if(!activeSeasonYear){heading.textContent=d.notAvailable||'';detail.textContent='';return;}
     if(!status.open){heading.classList.add('is-closed');heading.textContent=d.closedToday;var next=nextOpeningAcrossSeasons(now.date),closedBits=[];if(status.exceptional&&status.exception&&String(status.exception.show_public_marker)!=='0'){closedBits.push(d.exceptionalClosure);var closedContext=translated(status.exception.context,language);if(closedContext)closedBits.push(closedContext);}if(next)closedBits.push(text(d.nextOpening,{date:dateLabel(next.date,language,{weekday:'long',day:'numeric',month:'long',timeZone:siteTimezone}),time:timeLabel(next.status.openTime,language)}));detail.textContent=closedBits.join(' · ');return;}
-    var open=minutes(status.openTime),close=minutes(status.closeTime),message;
-    if(now.minutes<open)message=text(d.opensToday,{open:timeLabel(status.openTime,language)});
-    else if(now.minutes>=close){message=d.closedForToday;var nextAfter=nextOpeningAcrossSeasons(now.date);heading.textContent=message;detail.textContent=nextAfter?text(d.nextOpening,{date:dateLabel(nextAfter.date,language,{weekday:'long',day:'numeric',month:'long',timeZone:siteTimezone}),time:timeLabel(nextAfter.status.openTime,language)}):'';return;}
-    else {message=d.openNow;heading.classList.add('is-open');}
+    var open=minutes(status.openTime),message,currentSlot=activeSlot(status,now.minutes),upcomingSlot=nextSlot(status,now.minutes);
+    if(currentSlot){message=d.openNow;heading.classList.add('is-open');}
+    else if(upcomingSlot){
+      message=now.minutes<open?text(d.opensToday,{open:timeLabel(upcomingSlot.open,language)}):text(d.reopensToday||d.opensToday,{open:timeLabel(upcomingSlot.open,language)});
+    }else{message=d.closedForToday;var nextAfter=nextOpeningAcrossSeasons(now.date);heading.textContent=message;detail.textContent=nextAfter?text(d.nextOpening,{date:dateLabel(nextAfter.date,language,{weekday:'long',day:'numeric',month:'long',timeZone:siteTimezone}),time:timeLabel(nextAfter.status.openTime,language)}):'';return;}
     heading.textContent=message;
-    var todayRange=timeLabel(status.openTime,language)+'–'+timeLabel(status.closeTime,language);
+    var todayRange=dayRanges(status,language);
     var todayBits=[todayRange,text(d.lastEntry,{time:timeLabel(lastEntryTime(status),language)})];
     if(status.exceptional && status.exception && String(status.exception.show_public_marker)!=='0'){
       todayBits.push(status.type==='closed'?d.exceptionalClosure:d.exceptionalHours);
@@ -250,7 +258,7 @@
 
   function monthSummary(monthKey,language) {
     var year=Number(monthKey.slice(0,4)),month=Number(monthKey.slice(5,7)),days=new Date(Date.UTC(year,month,0)).getUTCDate(),seen=[];
-    for(var day=1;day<=days;day++){var status=resolveDay(isoDate(year,month,day));if(!status.open)continue;var label=timeLabel(status.openTime,language)+'–'+timeLabel(status.closeTime,language);if(seen.indexOf(label)===-1)seen.push(label);}
+    for(var day=1;day<=days;day++){var status=resolveDay(isoDate(year,month,day));if(!status.open)continue;var label=dayRanges(status,language);if(seen.indexOf(label)===-1)seen.push(label);}
     if(!seen.length)return dictionary(language).closed;
     return text(dictionary(language).monthHours,{hours:seen.join(' · ')});
   }
@@ -258,7 +266,7 @@
     var d=dictionary(language),label=dateLabel(date,language);
     var events=specialPeriodRows(date),suffix=(events.length?', '+(translated((settings.general||{}).event_legend_label,language)||d.event):'');
     if(!status.open)return label+', '+(status.exceptional && (!status.exception || String(status.exception.show_public_marker)!=='0')?d.exceptionalClosure:d.closed)+suffix;
-    return label+', '+timeLabel(status.openTime,language)+'–'+timeLabel(status.closeTime,language)+(status.exceptional && (!status.exception || String(status.exception.show_public_marker)!=='0')?', '+d.exceptionalHours:'')+suffix;
+    return label+', '+dayRanges(status,language)+(status.exceptional && (!status.exception || String(status.exception.show_public_marker)!=='0')?', '+d.exceptionalHours:'')+suffix;
   }
 
   var domainTooltipSequence = 0;
@@ -337,7 +345,7 @@
     box.innerHTML='';
     var heading=document.createElement('h3');heading.textContent=dateLabel(date,language);box.appendChild(heading);
     var hours=document.createElement('p');hours.className='parcs-ht-day-hours';
-    if(status.open)hours.textContent=timeLabel(status.openTime,language)+'–'+timeLabel(status.closeTime,language);else hours.textContent=(status.exceptional&&(!status.exception||String(status.exception.show_public_marker)!=='0'))?d.exceptionalClosure:d.closed;
+    if(status.open)hours.textContent=dayRanges(status,language);else hours.textContent=(status.exceptional&&(!status.exception||String(status.exception.show_public_marker)!=='0'))?d.exceptionalClosure:d.closed;
     box.appendChild(hours);
     if(status.open){var last=document.createElement('p');last.className='parcs-ht-day-last';last.textContent=text(d.lastEntry,{time:timeLabel(lastEntryTime(status),language)});box.appendChild(last);}
     if(status.exceptional && (!status.exception || String(status.exception.show_public_marker)!=='0')){var context=translated(status.exception.context,language),title=translated(status.exception.title,language),message=translated(status.exception.message,language),note=document.createElement('div');note.className='parcs-ht-exception-note';var parts=[];if(context)parts.push(context);if(title)parts.push(title);if(message)parts.push(message);note.textContent=parts.join(' — ');if(note.textContent)box.appendChild(note);}
@@ -478,7 +486,7 @@
     return dateLabel(date,language,opts);
   }
   function compactLastEntry(status,language,d){
-    var time=lastEntryTime(status);
+    var time=lastEntryTime(status,status.closeTime);
     if(!time)return '';
     return text(d.lastEntryCompact||d.lastEntry,{time:headerTime(time,language)});
   }
@@ -587,9 +595,10 @@
     hoursEl.textContent=hoursText;
     lastEl.textContent=lastText;
     lastEl.hidden=!lastText;
-    root.classList.toggle('is-open',!!(status.open&&now.minutes>=minutes(status.openTime)&&now.minutes<minutes(status.closeTime)));
-    root.classList.toggle('is-before-open',!!(status.open&&now.minutes<minutes(status.openTime)));
-    root.classList.toggle('is-after-close',!!(status.open&&now.minutes>=minutes(status.closeTime)));
+    var homeActive=status.open?activeSlot(status,now.minutes):null,homeUpcoming=status.open?nextSlot(status,now.minutes):null;
+    root.classList.toggle('is-open',!!homeActive);
+    root.classList.toggle('is-before-open',!!(status.open&&!homeActive&&homeUpcoming));
+    root.classList.toggle('is-after-close',!!(status.open&&!homeActive&&!homeUpcoming));
   }
 
   function initTariffs(root) {
@@ -631,5 +640,5 @@
     document.querySelectorAll('[data-htp-component="home-opening"]').forEach(initHomeOpening);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
-  window.ParcsHTP={resolveDay:resolveDay,resolveAnyDay:resolveAnyDay,domainRule:domainRule,nextOpening:nextOpening,nextOpeningAcrossSeasons:nextOpeningAcrossSeasons,lastEntryTime:lastEntryTime};
+  window.ParcsHTP={resolveDay:resolveDay,resolveAnyDay:resolveAnyDay,domainRule:domainRule,nextOpening:nextOpening,nextOpeningAcrossSeasons:nextOpeningAcrossSeasons,lastEntryTime:lastEntryTime,dayRanges:dayRanges,monthSummary:monthSummary,dayAria:dayAria};
 }());

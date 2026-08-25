@@ -737,7 +737,8 @@
       var result = document.querySelector('[data-htp-preview-result]');
       if (!input.value || !window.ParcsHTP) { result.textContent = 'Choisissez une date valide.'; return; }
       var status = window.ParcsHTP.resolveDay(input.value);
-      var lines = status.open ? ['Ouvert de ' + status.openTime + ' à ' + status.closeTime, 'Dernière entrée : ' + window.ParcsHTP.lastEntryTime(status)] : ['Parc fermé'];
+      var ranges = status.open && window.ParcsHTP.dayRanges ? window.ParcsHTP.dayRanges(status, 'fr') : '';
+      var lines = status.open ? ['Ouvert : ' + (ranges || (status.openTime + '–' + status.closeTime)), 'Dernière entrée : ' + window.ParcsHTP.lastEntryTime(status)] : ['Parc fermé'];
       if (status.exceptional) lines.push(status.type === 'closed' ? 'Fermeture exceptionnelle prioritaire.' : 'Horaires exceptionnels prioritaires.');
       var domain = status.open ? window.ParcsHTP.domainRule(input.value) : null;
       if (domain) lines.push('Une information discrète concernant le domaine sera affichée après le clic sur cette date.');

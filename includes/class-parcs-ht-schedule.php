@@ -329,7 +329,7 @@ final class Parcs_HT_Schedule {
         return array(
             'fr' => array(
                 'today' => 'Aujourd’hui', 'openNow' => 'OUVERT',
-                'opensToday' => 'Ouverture aujourd’hui à {open}', 'openToday' => 'Ouvert aujourd’hui de {open} à {close}',
+                'opensToday' => 'Ouverture aujourd’hui à {open}', 'reopensToday' => 'Réouverture aujourd’hui à {open}', 'openToday' => 'Ouvert aujourd’hui de {open} à {close}',
                 'closedToday' => 'Fermé aujourd’hui', 'closedForToday' => 'Fermé pour aujourd’hui', 'opensTomorrowAt' => 'Ouverture demain à {time}', 'opensOnAt' => 'Ouverture le {date} à {time}',
                 'lastEntry' => 'Dernière entrée à {time}', 'lastEntryCompact' => 'Dernière entrée : {time}', 'fromTime' => 'À partir de {time}', 'openingAt' => 'Ouverture à {time}', 'seeYouTomorrow' => 'À demain !', 'nextOpeningLabel' => 'Prochaine ouverture', 'nextOpeningCompact' => '{date} à {time}', 'openTodayCompact' => 'Ouvert aujourd’hui', 'nextOpening' => 'Prochaine ouverture : {date} à {time}',
                 'calendar' => 'Calendrier', 'monthHours' => 'Horaires du mois : {hours}', 'closed' => 'Fermé',
@@ -341,7 +341,7 @@ final class Parcs_HT_Schedule {
             ),
             'en' => array(
                 'today' => 'Today', 'openNow' => 'OPEN',
-                'opensToday' => 'Opens today at {open}', 'openToday' => 'Open today from {open} to {close}',
+                'opensToday' => 'Opens today at {open}', 'reopensToday' => 'Reopens today at {open}', 'openToday' => 'Open today from {open} to {close}',
                 'closedToday' => 'Closed today', 'closedForToday' => 'Closed for today', 'opensTomorrowAt' => 'Open tomorrow at {time}', 'opensOnAt' => 'Open on {date} at {time}',
                 'lastEntry' => 'Last admission at {time}', 'lastEntryCompact' => 'Last admission: {time}', 'fromTime' => 'From {time}', 'openingAt' => 'Opens at {time}', 'seeYouTomorrow' => 'See you tomorrow!', 'nextOpeningLabel' => 'Next opening', 'nextOpeningCompact' => '{date} at {time}', 'openTodayCompact' => 'Open today', 'nextOpening' => 'Next opening: {date} at {time}',
                 'calendar' => 'Calendar', 'monthHours' => 'Opening hours this month: {hours}', 'closed' => 'Closed',
@@ -353,7 +353,7 @@ final class Parcs_HT_Schedule {
             ),
             'de' => array(
                 'today' => 'Heute', 'openNow' => 'GEÖFFNET',
-                'opensToday' => 'Öffnet heute um {open}', 'openToday' => 'Heute geöffnet von {open} bis {close}',
+                'opensToday' => 'Öffnet heute um {open}', 'reopensToday' => 'Öffnet heute wieder um {open}', 'openToday' => 'Heute geöffnet von {open} bis {close}',
                 'closedToday' => 'Heute geschlossen', 'closedForToday' => 'Für heute geschlossen', 'opensTomorrowAt' => 'Morgen ab {time} geöffnet', 'opensOnAt' => 'Geöffnet am {date} ab {time}',
                 'lastEntry' => 'Letzter Einlass um {time}', 'lastEntryCompact' => 'Letzter Einlass: {time}', 'fromTime' => 'Ab {time}', 'openingAt' => 'Öffnung um {time}', 'seeYouTomorrow' => 'Bis morgen!', 'nextOpeningLabel' => 'Nächste Öffnung', 'nextOpeningCompact' => '{date} um {time}', 'openTodayCompact' => 'Heute geöffnet', 'nextOpening' => 'Nächste Öffnung: {date} um {time}',
                 'calendar' => 'Kalender', 'monthHours' => 'Öffnungszeiten in diesem Monat: {hours}', 'closed' => 'Geschlossen',
