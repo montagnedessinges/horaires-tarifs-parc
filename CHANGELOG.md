@@ -1,5 +1,13 @@
 # Historique des versions
 
+## 1.8.2
+- Ajout d’une dernière entrée indépendante pour le créneau 1 et le créneau 2, sans modifier la structure existante des horaires.
+- Compatibilité automatique avec les anciens réglages : l’ancien délai spécifique est conservé comme valeur de secours pour les deux créneaux.
+- Affichage adaptatif sur la page d’accueil, l’en-tête et le bloc « Aujourd’hui » : la journée complète reste visible le matin, puis seuls les créneaux encore utiles sont affichés après la première fermeture.
+- Le détail d’une date affiche toutes les dernières entrées correspondantes lorsqu’une journée comporte plusieurs créneaux.
+- Le résumé « Horaires du mois » affiche toutes les combinaisons horaires réellement présentes avec leurs dates d’application, avec libellés compacts pour tout le mois, les week-ends ou du lundi au vendredi lorsque cela correspond exactement au calendrier.
+- Même code pour la Montagne des Singes et la Forêt des Singes ; chaque site conserve ses propres réglages WordPress.
+
 ## 1.8.1
 - Correction de l’affichage des doubles créneaux sur la première page, le bandeau, le calendrier, le détail du jour et l’aperçu d’administration.
 - Le résumé mensuel conserve toutes les combinaisons horaires réellement présentes dans le mois.
