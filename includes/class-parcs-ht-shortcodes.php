@@ -583,6 +583,7 @@ final class Parcs_HT_Shortcodes {
     }
 
     private static function schedule_domain_rule($ctx, $date, $status) {
+        if (empty($status['open'])) return false;
         foreach ($ctx['special_periods'] as $period) {
             if (!is_array($period) || (string)($period['enabled'] ?? '0') !== '1' || (string)($period['kind'] ?? '') === 'event' || (string)($period['skip_domain_rules'] ?? '0') !== '1') continue;
             if ($date >= (string)($period['start'] ?? '') && $date <= (string)($period['end'] ?? '')) return false;
@@ -651,9 +652,11 @@ final class Parcs_HT_Shortcodes {
         }
 
         $cmd=array(); $legend=array(); $allEvents=array(); $allPeriods=array(); $domainLegends=array(); $monthIndex=0;
+        $hasClosed=false; $hasExceptionalHours=false; $hasEvent=false; $hasPeriod=false; $hasDomain=false; $hasHoliday=false;
         $text=static function(&$cmd,$x,$y,$value,$size=9,$bold=false){$cmd[]='0.125 0.153 0.141 rg BT /'.($bold?'F2':'F1').' '.$size.' Tf 1 0 0 1 '.round($x,2).' '.round($y,2).' Tm ('.Parcs_HT_Shortcodes::pdf_text($value).') Tj ET';};
         $rect=static function(&$cmd,$x,$y,$rw,$rh,$fill,$stroke='#d9dfdc',$line=0.6){$f=Parcs_HT_Shortcodes::pdf_rgb($fill);$st=Parcs_HT_Shortcodes::pdf_rgb($stroke);$cmd[]=sprintf('%.3F %.3F %.3F rg %.3F %.3F %.3F RG %.2F w %.2F %.2F %.2F %.2F re B',$f[0],$f[1],$f[2],$st[0],$st[1],$st[2],$line,$x,$y,$rw,$rh);};
         $fillrect=static function(&$cmd,$x,$y,$rw,$rh,$fill){$f=Parcs_HT_Shortcodes::pdf_rgb($fill);$cmd[]=sprintf('%.3F %.3F %.3F rg %.2F %.2F %.2F %.2F re f',$f[0],$f[1],$f[2],$x,$y,$rw,$rh);};
+        $cross=static function(&$cmd,$x,$y,$rw,$rh){$cmd[]=sprintf('0.72 0.72 0.72 RG 0.55 w %.2F %.2F m %.2F %.2F l S %.2F %.2F m %.2F %.2F l S',$x+4,$y+4,$x+$rw-4,$y+$rh-4,$x+4,$y+$rh-4,$x+$rw-4,$y+4);};
         $fillrect($cmd,0,$h-70,$w,70,'#eef4f1');
         $text($cmd,$margin,$h-34,$ctx['park'].' — '.$title.' '.$ctx['year'],21,true);
         $text($cmd,$margin,$h-52,$lang==='de'?'Effektiver Jahreskalender':($lang==='en'?'Effective annual calendar':'Calendrier annuel effectif'),8,false);
@@ -674,10 +677,12 @@ final class Parcs_HT_Shortcodes {
                 $x=$gridX+$col*$cellW;$top=$gridTop-$weekH-$row*$cellH;$y=$top-$cellH;
                 if($day<1||$day>$days)continue;
                 $date=sprintf('%s-%02d-%02d',$year,$m,$day);$status=self::schedule_resolve_day($ctx,$date);
-                if(!$status['in_season']){$rect($cmd,$x+1,$y+1,$cellW-2,$cellH-2,'#f7f7f7','#e5e8e6',0.3);$text($cmd,$x+14,$y+8,(string)$day,5.5,false);continue;}
-                $base=(string)$status['color'];$light=self::pdf_light_rgb($base,0.88);$fill=sprintf('#%02x%02x%02x',(int)round($light[0]*255),(int)round($light[1]*255),(int)round($light[2]*255));
+                $isClosed=empty($status['open']);
+                $base=$isClosed?'#d9d9d9':(string)$status['color'];$light=self::pdf_light_rgb($base,$isClosed?0.72:0.88);$fill=sprintf('#%02x%02x%02x',(int)round($light[0]*255),(int)round($light[1]*255),(int)round($light[2]*255));
                 $holiday=(string)($ctx['general']['show_public_holidays'] ?? '0')==='1' && self::schedule_is_public_holiday($ctx,$date);
+                if($holiday)$hasHoliday=true;
                 $rect($cmd,$x+1,$y+1,$cellW-2,$cellH-2,$fill,$holiday?(string)($ctx['general']['holiday_border_color'] ?? '#e7c55b'):'#cbd2ce',$holiday?1.5:0.35);$fillrect($cmd,$x+1,$top-3,$cellW-2,3,$base);
+                if($isClosed){$cross($cmd,$x+1,$y+1,$cellW-2,$cellH-2);$hasClosed=true;}
                 $text($cmd,$x+14,$y+8,(string)$day,5.7,true);
                 $hours=self::schedule_hours_label($status);
                 if($hours!==''){
@@ -685,16 +690,17 @@ final class Parcs_HT_Shortcodes {
                 }else{
                     $legend['#d9d9d9|'.$closedLabel]=array('color'=>'#d9d9d9','label'=>$closedLabel);
                 }
-                $items=self::schedule_calendar_items($ctx,$date); $hasEvent=false; $hasPeriod=false;
+                $items=self::schedule_calendar_items($ctx,$date); $dayHasEvent=false; $dayHasPeriod=false;
                 foreach($items as $item){
-                    if((string)($item['kind'] ?? '')==='event'){$hasEvent=true;$allEvents[$item['title']]=true;}
-                    else{$hasPeriod=true;$allPeriods[$item['title']]=true;}
+                    if((string)($item['kind'] ?? '')==='event'){$dayHasEvent=true;$hasEvent=true;$allEvents[$item['title']]=true;}
+                    else{$dayHasPeriod=true;$hasPeriod=true;$allPeriods[$item['title']]=true;}
                 }
-                if($hasEvent)$text($cmd,$x+3,$top-10,'E',5.5,true);
-                if($hasPeriod)$text($cmd,$x+$cellW-7,$y+4,'P',5,true);
-                if(!empty($status['exceptional']) && (string)($status['source']['show_public_marker'] ?? '1')==='1')$text($cmd,$x+$cellW-7,$top-10,'!',6,true);
+                if($dayHasEvent)$text($cmd,$x+3,$top-10,'E',5.5,true);
+                if($dayHasPeriod)$text($cmd,$x+$cellW-7,$y+4,'P',5,true);
+                if(!$isClosed && !empty($status['exceptional']) && (string)($status['source']['show_public_marker'] ?? '1')==='1'){$text($cmd,$x+$cellW-7,$top-10,'!',6,true);$hasExceptionalHours=true;}
                 $domainRule=self::schedule_domain_rule($ctx,$date,$status);
                 if($domainRule){
+                    $hasDomain=true;
                     $text($cmd,$x+3,$y+4,'D',5,true);
                     $domainLabel=$domainRule['label'] ?? '';
                     $domainText=is_array($domainLabel)?Parcs_HT_Schedule::translation($domainLabel,$lang,''):(string)$domainLabel;
@@ -709,14 +715,38 @@ final class Parcs_HT_Shortcodes {
         }
         $footerY=75;$text($cmd,$margin,$footerY+31,$lang==='de'?'Legende':($lang==='en'?'Legend':'Légende'),8,true);$lx=$margin;
         foreach($legend as $item){if($lx>$w-185){$lx=$margin;$footerY-=15;}$fillrect($cmd,$lx,$footerY+11,10,10,$item['color']);$text($cmd,$lx+15,$footerY+13,(string)$item['label'],6.2,false);$lx+=180;}
-        $periodsLabel=$lang==='de'?'Zeiträume':($lang==='en'?'Periods':'Périodes repères');
-        $text($cmd,$margin,56,'!  '.($lang==='en'?'Exceptional hours':($lang==='de'?'Sonderöffnungszeiten':'Horaire exceptionnel')).'    E  '.$eventsLabel.'    P  '.$periodsLabel.'    D  '.($lang==='en'?'Limited area access':($lang==='de'?'Eingeschränkter Bereichszugang':'Accès au domaine limité')),6.5,false);
+        $periodsLabel=$lang==='de'?'Zeiträume':($lang==='en'?'Reference periods':'Périodes repères');
+        $explanations=array();
+        if($lang==='de'){
+            if($hasClosed)$explanations[]='× Geschlossen: kein Öffnungszeitraum; der Tag ist durchgestrichen.';
+            if($hasExceptionalHours)$explanations[]='! Sonderöffnungszeit: ersetzt die übliche Öffnungszeit; maßgeblich ist die Zeit im Feld.';
+            if($hasEvent)$explanations[]='E Veranstaltung: aktuelle Einzelheiten auf der Website prüfen.';
+            if($hasPeriod)$explanations[]='P Bezugszeitraum: Kontextangabe, ändert die Öffnungszeit nicht zwingend.';
+            if($hasDomain)$explanations[]='D Eingeschränkter Zugang: Der Park bleibt geöffnet; Unterbrechung und Wiederaufnahme stehen unten.';
+            if($hasHoliday)$explanations[]='Farbiger Rand: Feiertag.';
+        }elseif($lang==='en'){
+            if($hasClosed)$explanations[]='× Closed: no opening time applies; the day is crossed out.';
+            if($hasExceptionalHours)$explanations[]='! Exceptional hours: replace the usual hours; follow the time shown in the day cell.';
+            if($hasEvent)$explanations[]='E Event: check the website for current details.';
+            if($hasPeriod)$explanations[]='P Reference period: contextual information; it does not necessarily change the hours.';
+            if($hasDomain)$explanations[]='D Limited access: the park remains open; interruption and reopening times are listed below.';
+            if($hasHoliday)$explanations[]='Coloured outline: public holiday.';
+        }else{
+            if($hasClosed)$explanations[]='× Fermé : aucun horaire d’ouverture ne s’applique ; la journée est barrée.';
+            if($hasExceptionalHours)$explanations[]='! Horaire exceptionnel : remplace l’horaire habituel ; l’horaire inscrit dans la case fait foi.';
+            if($hasEvent)$explanations[]='E Événement : consultez le site pour les détails à jour.';
+            if($hasPeriod)$explanations[]='P Période repère : information de contexte ; elle ne modifie pas forcément l’horaire.';
+            if($hasDomain)$explanations[]='D Accès au domaine limité : le parc reste ouvert ; interruption et reprise sont précisées ci-dessous.';
+            if($hasHoliday)$explanations[]='Contour coloré : jour férié.';
+        }
+        $explanationLines=self::pdf_wrap(implode('  |  ',$explanations),185);
+        foreach(array_slice($explanationLines,0,4) as $i=>$line)$text($cmd,$margin,91-($i*9),$line,6.2,false);
         $summaries=array();
         if($allEvents)$summaries[]=$eventsLabel.' : '.implode(' · ',array_keys($allEvents));
         if($allPeriods)$summaries[]=$periodsLabel.' : '.implode(' · ',array_keys($allPeriods));
         if($domainLegends)$summaries[]='D : '.implode(' · ',array_keys($domainLegends));
         $summaryLines=array();foreach($summaries as $summary)$summaryLines=array_merge($summaryLines,self::pdf_wrap($summary,155));
-        foreach(array_slice($summaryLines,0,2) as $i=>$line)$text($cmd,$margin,43-($i*8),$line,6,false);
+        foreach(array_slice($summaryLines,0,2) as $i=>$line)$text($cmd,$margin,45-($i*8),$line,6,false);
         $site=(string)($ctx['website'] ?? '');$generated=(string)($ctx['generated_on'] ?? '');
         if($lang==='de')$disclaimer='Stand '.$generated.': Öffnungszeiten können jederzeit geändert werden. Bitte prüfen Sie vor Ihrem Besuch die aktuellen Angaben von '.$ctx['park'].' auf '.$site.'.';
         elseif($lang==='en')$disclaimer='Generated on '.$generated.': opening times may change at any time. Before visiting, always check the latest information from '.$ctx['park'].' at '.$site.'.';

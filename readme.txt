@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.7.9
+Stable tag: 1.7.10
 
 Gestion multilingue des horaires, saisons, calendrier, exceptions, alertes et tarifs des parcs.
 
@@ -66,6 +66,11 @@ Téléversez le nouveau ZIP depuis Extensions > Ajouter une extension > Téléve
 Il reste recommandé d'effectuer une sauvegarde du site et de la base de données avant toute mise à jour d'extension.
 
 == Changelog ==
+
+= 1.7.10 =
+* Toute journée sans horaire applicable est désormais affichée fermée et barrée dans le planning annuel.
+* Une fermeture exceptionnelle n'est plus présentée comme un horaire exceptionnel.
+* La légende explique les fermetures, horaires exceptionnels, événements, périodes repères et accès limité réellement présents.
 
 = 1.7.9 =
 * Les plages horaires complètes ne sont plus raccourcies dans la légende du planning annuel.
