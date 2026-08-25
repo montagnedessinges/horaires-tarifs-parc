@@ -34,6 +34,8 @@ jobs:
         run: |
           node --check assets/admin.js
           node --check assets/frontend.js
+          node --check assets/slot-last-entry-admin.js
+          node --check assets/slot-last-entry-frontend.js
           node tests/frontend-engine.js
       - name: WordPress security and PHP compatibility report
         continue-on-error: true
@@ -67,6 +69,8 @@ jobs:
         run: |
           node --check assets/admin.js
           node --check assets/frontend.js
+          node --check assets/slot-last-entry-admin.js
+          node --check assets/slot-last-entry-frontend.js
 
       - name: Stop if release already exists
         id: existing
@@ -141,3 +145,6 @@ jobs:
         shell: bash
         run: |
           gh release upload "${{ steps.version.outputs.tag }}" horaires-tarifs-parc.zip horaires-tarifs-parc.zip.sha256 --clobber
+          gh release edit "${{ steps.version.outputs.tag }}" \
+            --title "Horaires & Tarifs Parc ${{ steps.version.outputs.version }}" \
+            --notes-file <(sed -n '/^## ${{ steps.version.outputs.version }}$/,/^## /p' CHANGELOG.md | sed '$d')
