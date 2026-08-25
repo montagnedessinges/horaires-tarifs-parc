@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Horaires et tarifs du parc
  * Description: Horaires, calendrier interactif, exceptions, alertes et tarifs multilingues pour les parcs.
- * Version: 1.8.3
+ * Version: 1.8.4
  * Update URI: https://github.com/montagnedessinges/horaires-tarifs-parc
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('PARCS_HT_VERSION', '1.8.3');
+define('PARCS_HT_VERSION', '1.8.4');
 define('PARCS_HT_FILE', __FILE__);
 define('PARCS_HT_DIR', plugin_dir_path(__FILE__));
 define('PARCS_HT_URL', plugin_dir_url(__FILE__));
@@ -49,19 +49,6 @@ add_action('added_option', static function ($option, $value) {
     }
 }, 10, 2);
 
-// Correctif 1.8.3 : après la fermeture du dernier créneau de la journée,
-// forcer les blocs publics à afficher la prochaine ouverture plutôt que « OUVERT ».
-add_action('wp_enqueue_scripts', static function () {
-    if (!wp_script_is('parcs-ht-slot-last-entry-frontend', 'enqueued')) return;
-    wp_enqueue_script(
-        'parcs-ht-status-after-close-fix',
-        PARCS_HT_URL . 'assets/status-after-close-fix.js',
-        array('parcs-ht-slot-last-entry-frontend'),
-        PARCS_HT_VERSION,
-        true
-    );
-}, 120);
-
 add_action('plugins_loaded', static function () {
     // Les shortcodes restent enregistrés partout, mais leur gros moteur n'est chargé
     // que lorsqu'un shortcode/export est réellement utilisé.
@@ -83,8 +70,7 @@ add_action('plugins_loaded', static function () {
         }
     }
 
-    // 1.8.2 : ajoute les dernières entrées indépendantes par créneau sans
-    // modifier la structure historique des horaires ni les données des parcs.
+    // Gestion des dernières entrées par créneau et du statut horaire dynamique.
     Parcs_HT_Slot_Last_Entry::init();
 
     // Les contrôles de versions WordPress ont lieu dans l'administration ou via cron.
