@@ -1,5 +1,10 @@
 # Historique des versions
 
+## 1.7.10
+- Journées sans horaire et fermetures exceptionnelles clairement barrées et indiquées fermées.
+- Distinction visuelle entre fermeture exceptionnelle et horaire exceptionnel.
+- Légende contextuelle détaillée, identique aux règles du calendrier public.
+
 ## 1.7.9
 - Affichage complet des doubles plages horaires dans la légende du planning annuel.
 - Avertissement automatique indiquant le parc, la date de génération et le site à vérifier avant la visite.
