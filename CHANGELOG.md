@@ -1,12 +1,13 @@
 # Historique des versions
 
 ## 1.8.2
-- Ajout d’une dernière entrée indépendante pour le créneau 1 et le créneau 2, sans modifier la structure existante des horaires.
-- Compatibilité automatique avec les anciens réglages : l’ancien délai spécifique est conservé comme valeur de secours pour les deux créneaux.
-- Affichage adaptatif sur la page d’accueil, l’en-tête et le bloc « Aujourd’hui » : la journée complète reste visible le matin, puis seuls les créneaux encore utiles sont affichés après la première fermeture.
-- Le détail d’une date affiche toutes les dernières entrées correspondantes lorsqu’une journée comporte plusieurs créneaux.
-- Le résumé « Horaires du mois » affiche toutes les combinaisons horaires réellement présentes avec leurs dates d’application, avec libellés compacts pour tout le mois, les week-ends ou du lundi au vendredi lorsque cela correspond exactement au calendrier.
-- Même code pour la Montagne des Singes et la Forêt des Singes ; chaque site conserve ses propres réglages WordPress.
+- Ajout d’une dernière entrée configurable séparément pour le créneau 1 et le créneau 2, sans modifier la structure existante des horaires.
+- Compatibilité conservée avec les réglages 1.8.1 : l’ancien délai reste utilisé tant qu’un délai spécifique au créneau 2 n’est pas renseigné.
+- Page d’accueil, en-tête et bloc « Aujourd’hui » adaptatifs : le matin affiche la journée complète, puis seuls les créneaux encore utiles restent affichés.
+- Entre deux créneaux, l’affichage se concentre sur la prochaine réouverture et le créneau restant.
+- Détail du calendrier : affichage des dernières entrées de chaque créneau.
+- Résumé « Horaires du mois » enrichi avec les jours d’application de chaque combinaison horaire, afin de distinguer les périodes à horaires différents dans un même mois.
+- Même code pour La Forêt des Singes et La Montagne des Singes ; les valeurs restent propres à chaque installation WordPress.
 
 ## 1.8.1
 - Correction de l’affichage des doubles créneaux sur la première page, le bandeau, le calendrier, le détail du jour et l’aperçu d’administration.
