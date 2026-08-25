@@ -1,5 +1,9 @@
 # Historique des versions
 
+## 1.7.9
+- Affichage complet des doubles plages horaires dans la légende du planning annuel.
+- Avertissement automatique indiquant le parc, la date de génération et le site à vérifier avant la visite.
+
 ## 1.7.8
 - Nouveau planning annuel sur une page A3 paysage avec légende globale.
 - Respect de la priorité exception applicable, horaire normal applicable, fermeture.
