@@ -1,5 +1,11 @@
 # Historique des versions
 
+## 1.8.6
+- Synchronisation du statut public avec l’état horaire réel pour éviter toute combinaison incohérente du type « Ouvert » avec une ouverture future.
+- Les shortcodes de statut et d’horaire utilisent désormais un contrôle commun supplémentaire chargé après les moteurs historiques.
+- Avant ouverture : affichage d’une ouverture future ; entre deux créneaux : réouverture ; pendant un créneau : OUVERT ; après fermeture : prochaine ouverture.
+- Le contrôle est réévalué automatiquement toutes les 30 secondes.
+
 ## 1.8.5
 - Vérification complète du mécanisme de mise à jour GitHub : dépôt, slug, URL de mise à jour et noms des assets inchangés depuis la 1.8.1.
 - Renforcement des appels HTTPS vers GitHub en utilisant explicitement le bundle de certificats CA fourni par WordPress.
