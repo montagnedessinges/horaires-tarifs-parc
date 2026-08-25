@@ -1,5 +1,12 @@
 # Historique des versions
 
+## 1.7.8
+- Nouveau planning annuel sur une page A3 paysage avec légende globale.
+- Respect de la priorité exception applicable, horaire normal applicable, fermeture.
+- Affichage des périodes et événements uniquement lorsqu’ils sont visibles sur le calendrier public.
+- Prise en compte des jours fériés et des règles d’accès temporairement limité au domaine.
+- Cache des PDF horaires et tarifs invalidé automatiquement lors d’une modification des réglages.
+
 ## 1.7.7
 - Finalisation du système natif de mise à jour depuis les releases GitHub privées.
 - Vérification manuelle protégée par `manage_options` et nonce.
