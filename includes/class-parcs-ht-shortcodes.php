@@ -493,6 +493,8 @@ final class Parcs_HT_Shortcodes {
         return array(
             'language'=>$language,
             'park'=>$park,
+            'website'=>untrailingslashit(home_url('/')),
+            'generated_on'=>wp_date('d/m/Y', null, new DateTimeZone('Europe/Paris')),
             'year'=>(string)$year,
             'start'=>$start,
             'end'=>$end,
@@ -705,16 +707,21 @@ final class Parcs_HT_Shortcodes {
             }
 
         }
-        $footerY=67;$text($cmd,$margin,$footerY+31,$lang==='de'?'Legende':($lang==='en'?'Legend':'Légende'),8,true);$lx=$margin;
-        foreach($legend as $item){if($lx>$w-150){$lx=$margin;$footerY-=15;}$fillrect($cmd,$lx,$footerY+11,10,10,$item['color']);$text($cmd,$lx+15,$footerY+13,self::pdf_short($item['label'],22),6.5,false);$lx+=135;}
+        $footerY=75;$text($cmd,$margin,$footerY+31,$lang==='de'?'Legende':($lang==='en'?'Legend':'Légende'),8,true);$lx=$margin;
+        foreach($legend as $item){if($lx>$w-185){$lx=$margin;$footerY-=15;}$fillrect($cmd,$lx,$footerY+11,10,10,$item['color']);$text($cmd,$lx+15,$footerY+13,(string)$item['label'],6.2,false);$lx+=180;}
         $periodsLabel=$lang==='de'?'Zeiträume':($lang==='en'?'Periods':'Périodes repères');
-        $text($cmd,$margin,48,'!  '.($lang==='en'?'Exceptional hours':($lang==='de'?'Sonderöffnungszeiten':'Horaire exceptionnel')).'    E  '.$eventsLabel.'    P  '.$periodsLabel.'    D  '.($lang==='en'?'Limited area access':($lang==='de'?'Eingeschränkter Bereichszugang':'Accès au domaine limité')),6.5,false);
+        $text($cmd,$margin,56,'!  '.($lang==='en'?'Exceptional hours':($lang==='de'?'Sonderöffnungszeiten':'Horaire exceptionnel')).'    E  '.$eventsLabel.'    P  '.$periodsLabel.'    D  '.($lang==='en'?'Limited area access':($lang==='de'?'Eingeschränkter Bereichszugang':'Accès au domaine limité')),6.5,false);
         $summaries=array();
         if($allEvents)$summaries[]=$eventsLabel.' : '.implode(' · ',array_keys($allEvents));
         if($allPeriods)$summaries[]=$periodsLabel.' : '.implode(' · ',array_keys($allPeriods));
         if($domainLegends)$summaries[]='D : '.implode(' · ',array_keys($domainLegends));
         $summaryLines=array();foreach($summaries as $summary)$summaryLines=array_merge($summaryLines,self::pdf_wrap($summary,155));
-        foreach(array_slice($summaryLines,0,3) as $i=>$line)$text($cmd,$margin,32-($i*8),$line,6,false);
+        foreach(array_slice($summaryLines,0,2) as $i=>$line)$text($cmd,$margin,43-($i*8),$line,6,false);
+        $site=(string)($ctx['website'] ?? '');$generated=(string)($ctx['generated_on'] ?? '');
+        if($lang==='de')$disclaimer='Stand '.$generated.': Öffnungszeiten können jederzeit geändert werden. Bitte prüfen Sie vor Ihrem Besuch die aktuellen Angaben von '.$ctx['park'].' auf '.$site.'.';
+        elseif($lang==='en')$disclaimer='Generated on '.$generated.': opening times may change at any time. Before visiting, always check the latest information from '.$ctx['park'].' at '.$site.'.';
+        else $disclaimer='Planning généré le '.$generated.' : les horaires peuvent changer à tout moment. Avant votre visite, vérifiez toujours les informations à jour de '.$ctx['park'].' sur '.$site.'.';
+        $text($cmd,$margin,18,$disclaimer,6.2,true);
         return self::pdf_document(array(implode("\n",$cmd)),$w,$h);
     }
 

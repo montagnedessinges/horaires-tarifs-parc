@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.7.8
+Stable tag: 1.7.9
 
 Gestion multilingue des horaires, saisons, calendrier, exceptions, alertes et tarifs des parcs.
 
@@ -66,6 +66,10 @@ Téléversez le nouveau ZIP depuis Extensions > Ajouter une extension > Téléve
 Il reste recommandé d'effectuer une sauvegarde du site et de la base de données avant toute mise à jour d'extension.
 
 == Changelog ==
+
+= 1.7.9 =
+* Les plages horaires complètes ne sont plus raccourcies dans la légende du planning annuel.
+* Ajout d'un avertissement automatique avec le nom du parc, la date de génération et l'adresse du site à vérifier avant la visite.
 
 = 1.7.8 =
 * Planning annuel synthétique sur une page A3 paysage.
