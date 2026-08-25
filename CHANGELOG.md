@@ -1,5 +1,13 @@
 # Historique des versions
 
+## 1.8.4
+- Le statut public est désormais recalculé selon l’heure réelle de consultation : avant ouverture, pendant un créneau, entre deux créneaux et après la fermeture finale.
+- Suppression des combinaisons incohérentes du type « OUVERT » avec une heure d’ouverture future.
+- Avant le premier créneau : affichage « Ouverture à … » ; entre deux créneaux : « Réouverture à … » ; après le dernier créneau : « Fermé pour aujourd’hui » puis prochaine ouverture.
+- Les pages d’accueil, l’en-tête et le bloc « Aujourd’hui » utilisent la même logique.
+- Le calcul est réévalué automatiquement chaque minute sans rechargement de la page.
+- Conservation des dernières entrées distinctes pour les créneaux 1 et 2 et du résumé mensuel multi-horaires.
+
 ## 1.8.2
 - Ajout d’une dernière entrée indépendante pour le créneau 1 et le créneau 2, sans modifier la structure existante des horaires.
 - Compatibilité automatique avec les anciens réglages : l’ancien délai spécifique est conservé comme valeur de secours pour les deux créneaux.
