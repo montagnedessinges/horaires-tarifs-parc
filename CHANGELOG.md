@@ -1,5 +1,11 @@
 # Historique des versions
 
+## 1.8.5
+- Vérification complète du mécanisme de mise à jour GitHub : dépôt, slug, URL de mise à jour et noms des assets inchangés depuis la 1.8.1.
+- Renforcement des appels HTTPS vers GitHub en utilisant explicitement le bundle de certificats CA fourni par WordPress.
+- La vérification SSL reste obligatoire ; aucun contournement `sslverify=false` n’est utilisé.
+- Le correctif s’applique uniquement aux hôtes GitHub et GitHubusercontent utilisés par le système de mise à jour.
+
 ## 1.8.4
 - Le statut public est désormais recalculé selon l’heure réelle de consultation : avant ouverture, pendant un créneau, entre deux créneaux et après la fermeture finale.
 - Suppression des combinaisons incohérentes du type « OUVERT » avec une heure d’ouverture future.
