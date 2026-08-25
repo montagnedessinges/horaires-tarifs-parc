@@ -1,5 +1,11 @@
 # Historique des versions
 
+## 1.8.7
+- Correction du bloc d’accueil lorsque le libellé « Ouvert » est un texte statique du thème placé à côté du shortcode horaire.
+- Le moteur synchronise désormais ce libellé visuel avec l’état horaire réel : ouverture future, réouverture, ouvert maintenant ou prochaine ouverture.
+- Cette synchronisation reste limitée au bloc contenant le shortcode horaire afin d’éviter de modifier d’autres contenus du site.
+- Le contrôle reste réévalué automatiquement toutes les 30 secondes.
+
 ## 1.8.6
 - Synchronisation du statut public avec l’état horaire réel pour éviter toute combinaison incohérente du type « Ouvert » avec une ouverture future.
 - Les shortcodes de statut et d’horaire utilisent désormais un contrôle commun supplémentaire chargé après les moteurs historiques.
