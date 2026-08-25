@@ -15,7 +15,34 @@
   function nextOpening(date){return typeof api.nextOpeningAcrossSeasons==='function'?api.nextOpeningAcrossSeasons(date):null;}
   function statusValue(status,current,date,lang){var l=labels(lang),p=phase(status,current),list=slots(status);if(p.type==='open')return{value:l.open,isOpen:true,phase:p.type};if(p.type==='before')return{value:l.before+headerTime(list[0].open,lang),isOpen:false,phase:p.type};if(p.type==='gap')return{value:l.gap+headerTime(list[p.index].open,lang),isOpen:false,phase:p.type};var next=nextOpening(date);if(next)return{value:next.date===addDays(date,1)?l.tomorrow:l.next,isOpen:false,phase:'after'};return{value:l.closed,isOpen:false,phase:'after'};}
   function apply(root,state){root.textContent=state.value;root.classList.toggle('is-open',state.isOpen);root.classList.toggle('is-closed',!state.isOpen);root.classList.toggle('is-before-open',state.phase==='before');root.classList.toggle('is-after-close',state.phase==='after');}
-  function refresh(){var now=nowLocal(),status=api.resolveAnyDay(now.date);document.querySelectorAll('[data-htp-component="header-status"]').forEach(function(root){var lang=root.getAttribute('data-htp-lang')||'fr';apply(root,statusValue(status,now.minutes,now.date,lang));});document.querySelectorAll('[data-htp-component="home-opening"]').forEach(function(root){var target=root.querySelector('[data-htp-home-status]');if(!target)return;var lang=root.getAttribute('data-htp-lang')||'fr',state=statusValue(status,now.minutes,now.date,lang);target.textContent=state.value;root.classList.toggle('is-open',state.isOpen);root.classList.toggle('is-before-open',state.phase==='before');root.classList.toggle('is-after-close',state.phase==='after');});}
+  function isStaticOpenLabel(text){text=String(text||'').trim().toLowerCase();return text==='ouvert'||text==='open'||text==='geöffnet';}
+  function syncVisualLabel(hourRoot,state){
+    var ancestor=hourRoot.parentElement,depth=0;
+    while(ancestor&&depth<6){
+      var candidates=ancestor.querySelectorAll('strong,h1,h2,h3,h4,h5,h6,.elementor-heading-title,.elementor-widget-text-editor p,.elementor-widget-text-editor span');
+      for(var i=0;i<candidates.length;i++){
+        var el=candidates[i];
+        if(el===hourRoot||hourRoot.contains(el)||el.closest('[data-htp-component="header-hour"]')===hourRoot)continue;
+        if(el.hasAttribute('data-htp-component'))continue;
+        if(isStaticOpenLabel(el.textContent)){
+          el.textContent=state.value;
+          el.setAttribute('data-htp-synced-status','1');
+          return;
+        }
+        if(el.getAttribute('data-htp-synced-status')==='1'){
+          el.textContent=state.value;
+          return;
+        }
+      }
+      ancestor=ancestor.parentElement;depth++;
+    }
+  }
+  function refresh(){
+    var now=nowLocal(),status=api.resolveAnyDay(now.date);
+    document.querySelectorAll('[data-htp-component="header-status"]').forEach(function(root){var lang=root.getAttribute('data-htp-lang')||'fr';apply(root,statusValue(status,now.minutes,now.date,lang));});
+    document.querySelectorAll('[data-htp-component="header-hour"]').forEach(function(root){var lang=root.getAttribute('data-htp-lang')||'fr',state=statusValue(status,now.minutes,now.date,lang);syncVisualLabel(root,state);});
+    document.querySelectorAll('[data-htp-component="home-opening"]').forEach(function(root){var target=root.querySelector('[data-htp-home-status]');if(!target)return;var lang=root.getAttribute('data-htp-lang')||'fr',state=statusValue(status,now.minutes,now.date,lang);target.textContent=state.value;root.classList.toggle('is-open',state.isOpen);root.classList.toggle('is-before-open',state.phase==='before');root.classList.toggle('is-after-close',state.phase==='after');});
+  }
 
   function boot(){refresh();setInterval(refresh,30000);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(boot,0);});else setTimeout(boot,0);
