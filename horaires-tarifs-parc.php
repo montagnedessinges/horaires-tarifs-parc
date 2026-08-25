@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Horaires et tarifs du parc
  * Description: Horaires, calendrier interactif, exceptions, alertes et tarifs multilingues pour les parcs.
- * Version: 1.8.2
+ * Version: 1.8.3
  * Update URI: https://github.com/montagnedessinges/horaires-tarifs-parc
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('PARCS_HT_VERSION', '1.8.2');
+define('PARCS_HT_VERSION', '1.8.3');
 define('PARCS_HT_FILE', __FILE__);
 define('PARCS_HT_DIR', plugin_dir_path(__FILE__));
 define('PARCS_HT_URL', plugin_dir_url(__FILE__));
@@ -32,7 +32,6 @@ register_deactivation_hook(__FILE__, static function () {
     Parcs_HT_Health::deactivate();
 });
 
-
 add_action('updated_option', static function ($option, $old_value, $value) {
     unset($old_value);
     if ($option === Parcs_HT_Defaults::OPTION && is_array($value)) {
@@ -49,6 +48,19 @@ add_action('added_option', static function ($option, $value) {
         if (!wp_next_scheduled('parcs_ht_pregenerate_exports')) wp_schedule_single_event(time() + 10, 'parcs_ht_pregenerate_exports');
     }
 }, 10, 2);
+
+// Correctif 1.8.3 : après la fermeture du dernier créneau de la journée,
+// forcer les blocs publics à afficher la prochaine ouverture plutôt que « OUVERT ».
+add_action('wp_enqueue_scripts', static function () {
+    if (!wp_script_is('parcs-ht-slot-last-entry-frontend', 'enqueued')) return;
+    wp_enqueue_script(
+        'parcs-ht-status-after-close-fix',
+        PARCS_HT_URL . 'assets/status-after-close-fix.js',
+        array('parcs-ht-slot-last-entry-frontend'),
+        PARCS_HT_VERSION,
+        true
+    );
+}, 120);
 
 add_action('plugins_loaded', static function () {
     // Les shortcodes restent enregistrés partout, mais leur gros moteur n'est chargé
