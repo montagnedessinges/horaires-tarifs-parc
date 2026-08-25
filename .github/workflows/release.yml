@@ -8,6 +8,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: horaires-tarifs-release-main
+  cancel-in-progress: true
+
 jobs:
   quality:
     runs-on: ubuntu-latest
