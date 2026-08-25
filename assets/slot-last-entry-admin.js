@@ -46,9 +46,8 @@
     legacyWrap.setAttribute('aria-hidden', 'true');
 
     var row = legacyInput.closest('.htp-repeat-row');
-    var open2 = row ? row.querySelector('input[name="' + base.replace(/([\[\]])/g, '\\$1') + '[open2]"]') : null;
-    var close2 = row ? row.querySelector('input[name="' + base.replace(/([\[\]])/g, '\\$1') + '[close2]"]') : null;
-    // querySelector avec des crochets échappés varie selon les navigateurs : secours par recherche de nom exact.
+    var open2 = null;
+    var close2 = null;
     if (row) {
       Array.prototype.forEach.call(row.querySelectorAll('input'), function (input) {
         if (input.name === base + '[open2]') open2 = input;
