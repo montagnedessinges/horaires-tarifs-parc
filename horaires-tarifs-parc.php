@@ -54,7 +54,6 @@ add_action('plugins_loaded', static function () {
     // Les shortcodes restent enregistrés partout, mais leur gros moteur n'est chargé
     // que lorsqu'un shortcode/export est réellement utilisé.
     Parcs_HT_Bootstrap::init();
-    Parcs_HT_Slot_Last_Entry::init();
 
     if (is_admin()) {
         require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin.php';
@@ -71,6 +70,10 @@ add_action('plugins_loaded', static function () {
             Parcs_HT_Alerts::init();
         }
     }
+
+    // 1.8.2 : ajoute les dernières entrées indépendantes par créneau sans
+    // modifier la structure historique des horaires ni les données des parcs.
+    Parcs_HT_Slot_Last_Entry::init();
 
     // Les contrôles de versions WordPress ont lieu dans l'administration ou via cron.
     // Le moteur GitHub n'est donc pas parsé sur les visites publiques ordinaires.
