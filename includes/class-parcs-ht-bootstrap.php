@@ -22,6 +22,7 @@ final class Parcs_HT_Bootstrap {
         }
 
         add_action('wp_enqueue_scripts', array(__CLASS__, 'maybe_preload_assets'), 20);
+        add_action('parcs_ht_pregenerate_exports', array(__CLASS__, 'pregenerate_exports'));
 
         foreach (array('tariffs_print', 'tariffs_pdf', 'schedule_pdf') as $endpoint) {
             add_action('admin_post_parcs_ht_' . $endpoint, array(__CLASS__, $endpoint . '_endpoint'));
@@ -54,6 +55,11 @@ final class Parcs_HT_Bootstrap {
     public static function schedule_pdf_endpoint() {
         require_once PARCS_HT_DIR . 'includes/class-parcs-ht-shortcodes.php';
         Parcs_HT_Shortcodes::schedule_pdf_endpoint();
+    }
+
+    public static function pregenerate_exports() {
+        require_once PARCS_HT_DIR . 'includes/class-parcs-ht-shortcodes.php';
+        Parcs_HT_Shortcodes::pregenerate_exports();
     }
 
     private static function tags() {

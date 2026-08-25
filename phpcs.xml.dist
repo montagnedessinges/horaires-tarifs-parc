@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<ruleset name="Horaires Tarifs Parc">
+    <description>Contrôles progressifs de compatibilité et de sécurité WordPress.</description>
+    <file>horaires-tarifs-parc.php</file>
+    <file>includes</file>
+    <exclude-pattern>vendor/*</exclude-pattern>
+    <arg name="extensions" value="php"/>
+    <arg value="sp"/>
+    <config name="testVersion" value="7.4-"/>
+    <rule ref="PHPCompatibility"/>
+    <rule ref="WordPress.Security"/>
+</ruleset>

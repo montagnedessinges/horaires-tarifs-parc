@@ -21,6 +21,7 @@ final class Parcs_HT_Updater {
     const RELEASE_CACHE_SECONDS = 15 * MINUTE_IN_SECONDS;
     const RELEASE_ERROR_CACHE_SECONDS = 5 * MINUTE_IN_SECONDS;
     const ASSET_NAME = 'horaires-tarifs-parc.zip';
+    const CHECKSUM_ASSET_NAME = 'horaires-tarifs-parc.zip.sha256';
     const TOKEN_OPTION = 'parcs_ht_github_token';
     const AUTO_UPDATE_OPTION = 'parcs_ht_github_auto_update';
     const LAST_CHECK_OPTION = 'parcs_ht_github_last_check';
@@ -95,6 +96,13 @@ final class Parcs_HT_Updater {
 
     public static function set_auto_update($enabled) {
         update_option(self::AUTO_UPDATE_OPTION, $enabled ? '1' : '0', false);
+    }
+
+    public static function store_token($token) {
+        $token = is_string($token) ? trim($token) : '';
+        if ($token === '') return false;
+        $value = self::encrypt_token($token);
+        return update_option(self::TOKEN_OPTION, $value, false);
     }
 
     public static function latest_version() {
@@ -188,6 +196,8 @@ final class Parcs_HT_Updater {
 
         $code = (int) wp_remote_retrieve_response_code($response);
         if ($code >= 200 && $code < 300 && file_exists($tmp) && filesize($tmp) > 0) {
+            $verified = self::verify_download_checksum($tmp);
+            if (is_wp_error($verified)) { @unlink($tmp); return $verified; }
             return $tmp;
         }
 
@@ -219,6 +229,8 @@ final class Parcs_HT_Updater {
 
             $download_code = (int) wp_remote_retrieve_response_code($download);
             if ($download_code >= 200 && $download_code < 300 && file_exists($tmp) && filesize($tmp) > 0) {
+                $verified = self::verify_download_checksum($tmp);
+                if (is_wp_error($verified)) { @unlink($tmp); return $verified; }
                 return $tmp;
             }
 
@@ -291,6 +303,7 @@ final class Parcs_HT_Updater {
         if (is_wp_error($response)) {
             self::$release = $response;
             self::cache_release_error($response->get_error_code(), $response->get_error_message());
+            self::report_updater_error('github_release_network', 'La vérification GitHub a échoué.', $response->get_error_message());
             return self::$release;
         }
 
@@ -301,6 +314,7 @@ final class Parcs_HT_Updater {
                 sprintf('Impossible de lire la dernière release GitHub (HTTP %d).', $code)
             );
             self::cache_release_error(self::$release->get_error_code(), self::$release->get_error_message());
+            self::report_updater_error('github_release_http', 'La vérification GitHub a échoué.', 'HTTP '.$code);
             return self::$release;
         }
 
@@ -308,6 +322,7 @@ final class Parcs_HT_Updater {
         if (!is_array($data) || empty($data['tag_name'])) {
             self::$release = new WP_Error('parcs_ht_github_release', 'Réponse GitHub invalide pour la dernière release.');
             self::cache_release_error(self::$release->get_error_code(), self::$release->get_error_message());
+            self::report_updater_error('github_release_invalid', 'GitHub a renvoyé une release invalide.');
             return self::$release;
         }
 
@@ -323,6 +338,10 @@ final class Parcs_HT_Updater {
             'code' => (string) $code,
             'message' => (string) $message,
         ), self::RELEASE_ERROR_CACHE_SECONDS);
+    }
+
+    private static function report_updater_error($code, $message, $details = '') {
+        if (class_exists('Parcs_HT_Health')) Parcs_HT_Health::report_runtime_error($code, $message, $details);
     }
 
     private static function release_version($release) {
@@ -345,6 +364,56 @@ final class Parcs_HT_Updater {
         }
 
         return false;
+    }
+
+    private static function checksum_asset($release) {
+        if (empty($release['assets']) || !is_array($release['assets'])) return false;
+        foreach ($release['assets'] as $asset) {
+            if (is_array($asset) && ($asset['name'] ?? '') === self::CHECKSUM_ASSET_NAME && !empty($asset['url'])) return $asset;
+        }
+        return false;
+    }
+
+    private static function verify_download_checksum($path) {
+        $release = self::latest_release();
+        if (is_wp_error($release) || !is_array($release)) {
+            return new WP_Error('parcs_ht_checksum_release', 'Impossible de vérifier l’intégrité de la mise à jour : release GitHub indisponible.');
+        }
+        $asset = self::checksum_asset($release);
+        if (!$asset) {
+            return new WP_Error('parcs_ht_checksum_missing', 'La release GitHub ne contient pas le fichier SHA-256 attendu.');
+        }
+        $response = wp_remote_get($asset['url'], array(
+            'timeout'=>15, 'redirection'=>0, 'headers'=>self::headers(true),
+        ));
+        if (is_wp_error($response)) return $response;
+        $code = (int)wp_remote_retrieve_response_code($response);
+        $body = '';
+        if ($code >= 200 && $code < 300) {
+            $body = (string)wp_remote_retrieve_body($response);
+        } elseif ($code >= 300 && $code < 400) {
+            $location = wp_remote_retrieve_header($response, 'location');
+            if (!$location || !wp_http_validate_url($location)) {
+                return new WP_Error('parcs_ht_checksum_redirect', 'GitHub n’a pas fourni de lien SHA-256 valide.');
+            }
+            $download = wp_remote_get($location, array('timeout'=>15,'redirection'=>3));
+            if (is_wp_error($download)) return $download;
+            $download_code = (int)wp_remote_retrieve_response_code($download);
+            if ($download_code < 200 || $download_code >= 300) {
+                return new WP_Error('parcs_ht_checksum_download', 'Le fichier SHA-256 de la release n’a pas pu être téléchargé.');
+            }
+            $body = (string)wp_remote_retrieve_body($download);
+        }
+        if (!preg_match('/\b([a-f0-9]{64})\b/i', $body, $matches)) {
+            return new WP_Error('parcs_ht_checksum_invalid', 'Le fichier SHA-256 de la release est invalide.');
+        }
+        $expected = strtolower($matches[1]);
+        $actual = strtolower((string)hash_file('sha256', $path));
+        if ($actual === '' || !hash_equals($expected, $actual)) {
+            if (class_exists('Parcs_HT_Health')) Parcs_HT_Health::report_runtime_error('update_checksum', 'La mise à jour GitHub a été bloquée : empreinte SHA-256 incorrecte.');
+            return new WP_Error('parcs_ht_checksum_mismatch', 'La mise à jour a été bloquée car son empreinte SHA-256 est incorrecte.');
+        }
+        return true;
     }
 
     public static function has_token() {
@@ -377,7 +446,7 @@ final class Parcs_HT_Updater {
                 $token = $env;
             } else {
                 $stored = get_option(self::TOKEN_OPTION, '');
-                if (is_string($stored)) $token = $stored;
+                if (is_string($stored)) $token = self::decrypt_token($stored);
             }
         }
 
@@ -386,6 +455,33 @@ final class Parcs_HT_Updater {
          */
         $token = apply_filters('parcs_ht_github_token', $token);
         return is_string($token) ? trim($token) : '';
+    }
+
+    private static function encrypt_token($token) {
+        if (!function_exists('openssl_encrypt') || !defined('AUTH_KEY') || trim((string)AUTH_KEY) === '') return $token;
+        try {
+            $key = hash('sha256', (string)AUTH_KEY, true);
+            $iv = random_bytes(12);
+            $tag = '';
+            $cipher = openssl_encrypt($token, 'aes-256-gcm', $key, OPENSSL_RAW_DATA, $iv, $tag);
+            if ($cipher === false) return $token;
+            return 'enc:'.base64_encode($iv.$tag.$cipher);
+        } catch (Exception $e) {
+            return $token;
+        }
+    }
+
+    private static function decrypt_token($value) {
+        if (strpos($value, 'enc:') !== 0) return $value;
+        if (!function_exists('openssl_decrypt') || !defined('AUTH_KEY')) return '';
+        $raw = base64_decode(substr($value, 4), true);
+        if ($raw === false || strlen($raw) < 29) return '';
+        $iv = substr($raw, 0, 12);
+        $tag = substr($raw, 12, 16);
+        $cipher = substr($raw, 28);
+        $key = hash('sha256', (string)AUTH_KEY, true);
+        $plain = openssl_decrypt($cipher, 'aes-256-gcm', $key, OPENSSL_RAW_DATA, $iv, $tag);
+        return is_string($plain) ? $plain : '';
     }
 
     private static function headers($binary) {

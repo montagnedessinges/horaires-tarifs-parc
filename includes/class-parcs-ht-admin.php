@@ -14,6 +14,7 @@ final class Parcs_HT_Admin {
         add_action('admin_post_parcs_ht_add_season', array(__CLASS__, 'add_season'));
         add_action('admin_post_parcs_ht_duplicate_season', array(__CLASS__, 'duplicate_season'));
         add_action('admin_post_parcs_ht_delete_season', array(__CLASS__, 'delete_season'));
+        add_action('admin_post_parcs_ht_restore_revision', array(__CLASS__, 'restore_revision'));
         add_action('admin_enqueue_scripts', array(__CLASS__, 'assets'));
     }
 
@@ -52,6 +53,9 @@ final class Parcs_HT_Admin {
         $requested_year = isset($_GET['season']) ? sanitize_text_field(wp_unslash($_GET['season'])) : '';
         $settings = Parcs_HT_Defaults::settings($requested_year);
         $warnings = self::warnings($settings);
+        $audit = Parcs_HT_Schedule::audit_season($settings);
+        $runtime_errors = get_option('parcs_ht_runtime_errors', array());
+        if (is_array($runtime_errors)) $runtime_errors = array_filter($runtime_errors, static function ($error) { return time() - (int)($error['time'] ?? 0) <= 7 * DAY_IN_SECONDS; });
         $all_settings = Parcs_HT_Defaults::all_settings();
         $active_year = isset($settings['active_season_year']) ? $settings['active_season_year'] : '';
         ?>
@@ -68,9 +72,18 @@ final class Parcs_HT_Admin {
             <?php if (isset($_GET['update-check'])) : ?>
                 <div class="notice notice-info is-dismissible"><p>La vérification des mises à jour WordPress et GitHub vient d’être relancée.</p></div>
             <?php endif; ?>
+            <?php if (isset($_GET['restored'])) : ?>
+                <div class="notice notice-success is-dismissible"><p>La configuration sélectionnée a été restaurée et les caches ont été invalidés.</p></div>
+            <?php endif; ?>
+            <?php if (isset($_GET['duplicated'])) : ?>
+                <div class="notice notice-success is-dismissible"><p>La nouvelle saison brouillon a été créée et toutes les dates ont été décalées automatiquement. Vérifiez-la dans le diagnostic avant de la publier.</p></div>
+            <?php endif; ?>
 
             <?php if ($warnings) : ?>
                 <div class="notice notice-warning"><p><strong>Points à vérifier :</strong></p><ul><?php foreach ($warnings as $warning) : ?><li><?php echo esc_html($warning); ?></li><?php endforeach; ?></ul></div>
+            <?php endif; ?>
+            <?php if (is_array($runtime_errors) && $runtime_errors) : ?>
+                <div class="notice notice-error"><p><strong>Erreurs techniques récentes :</strong></p><ul><?php foreach (array_slice($runtime_errors, 0, 5) as $error) : ?><li><?php echo esc_html((string)($error['message'] ?? 'Erreur inconnue')); ?><?php if (!empty($error['time'])) echo ' — '.esc_html(wp_date('d/m/Y H:i', (int)$error['time'])); ?></li><?php endforeach; ?></ul><p>Les détails sont aussi disponibles dans <a href="<?php echo esc_url(admin_url('site-health.php')); ?>">Santé du site</a>.</p></div>
             <?php endif; ?>
 
             <section class="htp-card htp-season-manager">
@@ -80,7 +93,7 @@ final class Parcs_HT_Admin {
                     <?php foreach ($all_settings['seasons'] as $year => $season) : ?>
                         <div class="htp-season-item">
                             <a class="button <?php echo $year === $active_year ? 'button-primary' : ''; ?>" href="<?php echo esc_url(add_query_arg(array('page'=>self::PAGE,'season'=>$year), admin_url('admin.php'))); ?>"><?php echo esc_html($year); ?><?php echo ((string)($season['published'] ?? '0') === '1') ? '' : ' · brouillon'; ?></a>
-                            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="htp-inline-form"><input type="hidden" name="action" value="parcs_ht_duplicate_season"><input type="hidden" name="season_year" value="<?php echo esc_attr($year); ?>"><?php wp_nonce_field('parcs_ht_duplicate_season_' . $year); ?><button type="submit" class="button button-small">Dupliquer</button></form>
+                            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="htp-inline-form"><input type="hidden" name="action" value="parcs_ht_duplicate_season"><input type="hidden" name="season_year" value="<?php echo esc_attr($year); ?>"><?php wp_nonce_field('parcs_ht_duplicate_season_' . $year); ?><button type="submit" class="button button-small" title="Créer une saison brouillon en décalant automatiquement toutes les dates">Préparer l’année suivante</button></form>
                             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="htp-inline-form htp-delete-season-form"><input type="hidden" name="action" value="parcs_ht_delete_season"><input type="hidden" name="season_year" value="<?php echo esc_attr($year); ?>"><?php wp_nonce_field('parcs_ht_delete_season_' . $year); ?><button type="submit" class="button button-small button-link-delete">Supprimer</button></form>
                         </div>
                     <?php endforeach; ?>
@@ -121,11 +134,11 @@ final class Parcs_HT_Admin {
                 <?php self::alerts_section($settings); ?>
                 <?php self::tariffs_section($settings); ?>
                 <?php self::quote_section($settings); ?>
-                <?php self::preview_section(); ?>
-                <?php self::updates_section(); ?>
+                <?php self::preview_section($audit); ?>
+                <?php self::updates_section($settings); ?>
                 <?php self::shortcodes_section(); ?>
 
-                <div class="htp-sticky-save"><?php submit_button('Enregistrer tous les réglages', 'primary', 'submit', false); ?></div>
+                <div class="htp-sticky-save"><?php submit_button('Enregistrer cet onglet', 'primary', 'htp_save_active', false); ?> <?php submit_button('Enregistrer tous les réglages', 'secondary', 'htp_save_all', false); ?></div>
             </form>
         </div>
         <?php
@@ -145,12 +158,19 @@ final class Parcs_HT_Admin {
                 <?php self::input('settings[general][last_entry_minutes]', $g['last_entry_minutes'], 'Dernière entrée — minutes avant fermeture', 'number'); ?>
                 <?php self::input('settings[general][season_start]', $g['season_start'], 'Début de saison', 'date'); ?>
                 <?php self::input('settings[general][season_end]', $g['season_end'], 'Fin de saison', 'date'); ?>
+                <label class="htp-field"><span>Fuseau horaire</span><select name="settings[timezone]"><?php echo function_exists('wp_timezone_choice') ? wp_timezone_choice($settings['timezone'] ?? 'Europe/Paris', get_user_locale()) : '<option value="Europe/Paris">Europe/Paris</option>'; ?></select></label>
                 <?php self::translated_input('settings[general][tickets_url]', $g['tickets_url'], 'Lien du bouton Acheter les billets', 'url'); ?>
                 <?php self::input('settings[general][primary_color]', $g['primary_color'], 'Couleur principale', 'color'); ?>
                 <?php self::input('settings[general][secondary_color]', $g['secondary_color'], 'Couleur secondaire', 'color'); ?>
                 <?php self::input('settings[general][accent_color]', $g['accent_color'], 'Couleur des exceptions', 'color'); ?>
                 <?php self::input('settings[general][highlight_color]', $g['highlight_color'], 'Couleur de mise en valeur', 'color'); ?>
             </div>
+            <h3>Surveillance et notifications</h3>
+            <div class="htp-grid htp-grid-3">
+                <label class="htp-field"><span>Alertes automatiques</span><span><?php self::checkbox('settings[general][health_notifications_enabled]', $g['health_notifications_enabled'] ?? '1', 'Envoyer un e-mail si le planning contient une erreur ou un nouveau conflit'); ?></span></label>
+                <?php self::input('settings[general][health_notification_email]', $g['health_notification_email'] ?? '', 'Adresse e-mail (vide = administrateur WordPress)', 'email'); ?>
+            </div>
+            <p class="description">Les problèmes identiques sont regroupés et ne sont pas renvoyés pendant sept jours afin d’éviter les e-mails répétés.</p>
             <h3>Apparence générale</h3>
             <p>Ces trois couleurs servent uniquement de valeurs globales. Les couleurs propres aux horaires, jours fériés, alertes et tarifs se règlent directement dans leurs sections respectives.</p>
             <div class="htp-grid htp-grid-3">
@@ -1006,7 +1026,7 @@ final class Parcs_HT_Admin {
         <?php
     }
 
-    private static function updates_section() {
+    private static function updates_section($settings) {
         $has_token = class_exists('Parcs_HT_Updater') && Parcs_HT_Updater::has_token();
         $source = class_exists('Parcs_HT_Updater') ? Parcs_HT_Updater::token_source() : 'none';
         $auto_update = class_exists('Parcs_HT_Updater') && Parcs_HT_Updater::auto_update_enabled();
@@ -1063,17 +1083,39 @@ final class Parcs_HT_Admin {
                 <label class="htp-field"><span>Mises à jour automatiques</span><span><?php self::checkbox('github_auto_update', $auto_update ? '1' : '0', 'Installer automatiquement les nouvelles versions de cette extension lorsqu’elles sont détectées'); ?></span><small>Si cette option est activée, WordPress pourra installer automatiquement les prochaines releases GitHub lors de ses vérifications planifiées. Le site doit avoir WP-Cron fonctionnel et la clé GitHub doit rester valide.</small></label>
             <?php endif; ?>
             <p class="description">Après configuration, les nouvelles versions apparaissent dans <strong>Extensions</strong> et <strong>Tableau de bord → Mises à jour</strong>, comme les autres extensions WordPress. Si l’option automatique ci-dessus reste désactivée, l’installation est manuelle.</p>
+            <hr>
+            <h3>Données lors d’une désinstallation</h3>
+            <label class="htp-field"><span>Nettoyage facultatif</span><span><?php self::checkbox('settings[general][delete_data_on_uninstall]', $settings['general']['delete_data_on_uninstall'] ?? '0', 'Supprimer définitivement les horaires, tarifs, caches et historiques si l’extension est désinstallée'); ?></span><small>La valeur par défaut conserve toutes les données. Une simple désactivation ou une mise à jour ne supprime jamais les réglages.</small></label>
         </section>
         <?php
     }
 
-    private static function preview_section() {
+    private static function preview_section($audit) {
+        $summary = is_array($audit['summary'] ?? null) ? $audit['summary'] : array();
+        $audit_problems = array_merge((array)($audit['errors'] ?? array()), (array)($audit['warnings'] ?? array()));
+        $revisions = class_exists('Parcs_HT_Health') ? Parcs_HT_Health::revisions() : array();
         ?>
         <section id="htp-preview" class="htp-card">
-            <h2>Prévisualiser une journée</h2>
+            <h2>Diagnostic annuel et aperçu</h2>
+            <div class="htp-audit-summary <?php echo $audit_problems ? 'has-problems' : 'is-ok'; ?>">
+                <p><strong><?php echo $audit_problems ? 'Le planning demande une vérification.' : 'Le planning est cohérent.'; ?></strong></p>
+                <p><?php echo esc_html(sprintf(
+                    '%d jours analysés · %d ouverts · %d fermés · %d horaires exceptionnels · %d fermetures exceptionnelles · %d jours avec accès limité',
+                    (int)($summary['days'] ?? 0), (int)($summary['open'] ?? 0), (int)($summary['closed'] ?? 0),
+                    (int)($summary['exceptional_hours'] ?? 0), (int)($summary['exceptional_closures'] ?? 0), (int)($summary['domain_limited'] ?? 0)
+                )); ?></p>
+                <?php if ($audit_problems) : ?><ul><?php foreach (array_slice($audit_problems, 0, 30) as $problem) : ?><li><?php echo esc_html($problem); ?></li><?php endforeach; ?></ul><?php endif; ?>
+            </div>
             <p>Enregistrez d’abord les modifications, puis choisissez une date pour vérifier la priorité des horaires, fermetures et règles du domaine.</p>
             <div class="htp-preview-controls"><label class="htp-field"><span>Date à tester</span><input type="date" data-htp-preview-date></label><button type="button" class="button button-secondary" data-htp-preview-button>Afficher le résultat</button></div>
             <div class="htp-preview-result" data-htp-preview-result aria-live="polite">Sélectionnez une date.</div>
+            <h3>Historique de sécurité</h3>
+            <p>Les dix dernières configurations différentes sont conservées avant enregistrement.</p>
+            <?php if ($revisions) : ?><div class="htp-revisions"><?php foreach (array_slice($revisions, 0, 10) as $index=>$revision) : ?>
+                <div class="htp-revision-row"><span><?php echo esc_html(wp_date('d/m/Y H:i', (int)($revision['created_at'] ?? 0))); ?> · saison <?php echo esc_html((string)($revision['year'] ?? '')); ?></span>
+                    <a class="button button-small" href="<?php echo esc_url(wp_nonce_url(add_query_arg(array('action'=>'parcs_ht_restore_revision','revision'=>$index), admin_url('admin-post.php')), 'parcs_ht_restore_revision_'.$index)); ?>">Restaurer</a>
+                </div>
+            <?php endforeach; ?></div><?php else : ?><p class="description">Aucune révision n’est encore enregistrée.</p><?php endif; ?>
         </section>
         <?php
     }
@@ -1097,7 +1139,7 @@ final class Parcs_HT_Admin {
                 if (strlen($new_token) < 20 || preg_match('/\s/', $new_token)) {
                     wp_die('La clé GitHub saisie ne semble pas valide.');
                 }
-                update_option(Parcs_HT_Updater::TOKEN_OPTION, $new_token, false);
+                Parcs_HT_Updater::store_token($new_token);
                 Parcs_HT_Updater::clear_cache();
             }
         }
@@ -1108,11 +1150,14 @@ final class Parcs_HT_Admin {
         }
 
         $current = Parcs_HT_Defaults::settings($year);
+        $scoped_save = isset($_POST['htp_save_active']);
         $incomplete = self::incomplete_sections($raw);
         $clean = self::sanitize($raw, $current);
         $all = Parcs_HT_Defaults::all_settings();
+        if (class_exists('Parcs_HT_Health')) Parcs_HT_Health::store_revision($all, $year);
         if (!isset($all['seasons'][$year])) $all['seasons'][$year] = Parcs_HT_Defaults::empty_season($year);
         $all['general'] = $clean['general'];
+        $all['timezone'] = $clean['timezone'];
         unset($all['general']['year'], $all['general']['season_start'], $all['general']['season_end'], $all['general']['published']);
         $all['alerts'] = $clean['alerts'];
         $all['tariffs'] = $clean['tariffs'];
@@ -1131,12 +1176,14 @@ final class Parcs_HT_Admin {
         );
         $all['schema_version'] = Parcs_HT_Defaults::SCHEMA_VERSION;
         update_option(Parcs_HT_Defaults::OPTION, $all, false);
+        $clean['active_season_year'] = $year;
+        if (class_exists('Parcs_HT_Health')) Parcs_HT_Health::notify_audit($clean, 'enregistrement de la saison '.$year);
         do_action('litespeed_purge_all');
         $redirect = array('page' => self::PAGE, 'season' => $year, 'updated' => '1');
         $allowed_tabs = array('htp-general','htp-regular','htp-holidays','htp-domain','htp-exceptions','htp-alerts','htp-tariffs','htp-quote','htp-preview','htp-updates','htp-shortcodes');
         $active_tab = isset($_POST['htp_active_tab']) ? sanitize_key(wp_unslash($_POST['htp_active_tab'])) : '';
         if (in_array($active_tab, $allowed_tabs, true)) $redirect['tab'] = $active_tab;
-        if (!empty($incomplete)) $redirect['preserved'] = '1';
+        if (!empty($incomplete) && !$scoped_save) $redirect['preserved'] = '1';
         wp_safe_redirect(add_query_arg($redirect, admin_url('admin.php')));
         exit;
     }
@@ -1159,6 +1206,23 @@ final class Parcs_HT_Admin {
             'page' => self::PAGE,
             'update-check' => '1',
         ), admin_url('admin.php')) . '#htp-updates');
+        exit;
+    }
+
+    public static function restore_revision() {
+        if (!current_user_can('manage_options')) wp_die('Accès refusé.');
+        $index = isset($_REQUEST['revision']) ? absint(wp_unslash($_REQUEST['revision'])) : -1;
+        check_admin_referer('parcs_ht_restore_revision_'.$index);
+        $revisions = class_exists('Parcs_HT_Health') ? Parcs_HT_Health::revisions() : array();
+        if (!isset($revisions[$index]['settings']) || !is_array($revisions[$index]['settings'])) {
+            wp_die('Cette révision n’existe plus.');
+        }
+        $current = Parcs_HT_Defaults::all_settings();
+        $year = (string)($revisions[$index]['year'] ?? '');
+        if (class_exists('Parcs_HT_Health')) Parcs_HT_Health::store_revision($current, $year, 'Avant restauration');
+        update_option(Parcs_HT_Defaults::OPTION, $revisions[$index]['settings'], false);
+        do_action('litespeed_purge_all');
+        wp_safe_redirect(add_query_arg(array('page'=>self::PAGE,'season'=>$year,'restored'=>'1','tab'=>'htp-preview'), admin_url('admin.php')));
         exit;
     }
 
@@ -1191,13 +1255,14 @@ final class Parcs_HT_Admin {
         $copy = $all['seasons'][$year];
         $copy['year'] = (string)$target;
         $copy['published'] = '0';
-        $copy['season_start'] = '';
-        $copy['season_end'] = '';
+        $year_offset = $target - (int)$year;
+        $copy['season_start'] = self::shift_date_years((string)($copy['season_start'] ?? ''), $year_offset);
+        $copy['season_end'] = self::shift_date_years((string)($copy['season_end'] ?? ''), $year_offset);
         foreach (array('regular_periods','school_holidays','special_periods','public_holidays','domain_rules','exceptions') as $list) {
             foreach ($copy[$list] as &$row) {
-                if (isset($row['start'])) $row['start'] = '';
-                if (isset($row['end'])) $row['end'] = '';
-                if (isset($row['date'])) $row['date'] = '';
+                foreach (array('start','end','date','popup_start','popup_end') as $date_key) {
+                    if (isset($row[$date_key])) $row[$date_key] = self::shift_date_years((string)$row[$date_key], $year_offset);
+                }
             }
             unset($row);
         }
@@ -1205,6 +1270,15 @@ final class Parcs_HT_Admin {
         ksort($all['seasons'], SORT_NUMERIC);
         update_option(Parcs_HT_Defaults::OPTION, $all, false);
         wp_safe_redirect(add_query_arg(array('page'=>self::PAGE,'season'=>(string)$target,'duplicated'=>1), admin_url('admin.php'))); exit;
+    }
+
+    private static function shift_date_years($value, $years) {
+        if ($value === '' || !preg_match('/^(\d{4})-(\d{2})-(\d{2})(T\d{2}:\d{2})?$/', $value, $parts)) return $value;
+        $target_year = (int)$parts[1] + (int)$years;
+        $month = (int)$parts[2];
+        $day = (int)$parts[3];
+        while ($day > 28 && !checkdate($month, $day, $target_year)) $day--;
+        return sprintf('%04d-%02d-%02d', $target_year, $month, $day).($parts[4] ?? '');
     }
 
     public static function delete_season() {
@@ -1216,6 +1290,7 @@ final class Parcs_HT_Admin {
         if (!isset($all['seasons'][$year])) wp_die('Saison introuvable.');
         $published = 0; foreach ($all['seasons'] as $s) if ((string)($s['published'] ?? '0') === '1') $published++;
         if ((string)($all['seasons'][$year]['published'] ?? '0') === '1' && $published <= 1) wp_die('Impossible de supprimer la dernière saison publiée. Passez d’abord une autre saison en statut publié.');
+        if (class_exists('Parcs_HT_Health')) Parcs_HT_Health::store_revision($all, $year, 'Avant suppression de saison');
         unset($all['seasons'][$year]);
         update_option(Parcs_HT_Defaults::OPTION, $all, false);
         $next = Parcs_HT_Defaults::select_season_year($all);
@@ -1226,7 +1301,10 @@ final class Parcs_HT_Admin {
         $defaults = Parcs_HT_Defaults::get();
         $complete = isset($raw['_complete']) && is_array($raw['_complete']) ? $raw['_complete'] : array();
 
-        if (!isset($complete['general']) && isset($current['general'])) $raw['general'] = $current['general'];
+        if (!isset($complete['general']) && isset($current['general'])) {
+            $posted_general = isset($raw['general']) && is_array($raw['general']) ? $raw['general'] : array();
+            $raw['general'] = array_replace_recursive($current['general'], $posted_general);
+        }
         if (!isset($complete['regular_periods']) && isset($current['regular_periods'])) $raw['regular_periods'] = $current['regular_periods'];
         if (!isset($complete['holidays'])) {
             if (isset($current['school_holidays'])) $raw['school_holidays'] = $current['school_holidays'];
@@ -1241,7 +1319,7 @@ final class Parcs_HT_Admin {
         $clean = array(
             'schema_version' => Parcs_HT_Defaults::SCHEMA_VERSION,
             'site_type' => $defaults['site_type'],
-            'timezone' => 'Europe/Paris',
+            'timezone' => self::sanitize_timezone(isset($raw['timezone']) ? $raw['timezone'] : ($current['timezone'] ?? 'Europe/Paris')),
             'languages' => array('fr','en','de'),
             'general' => array(), 'season_start'=>'', 'season_end'=>'', 'season_published'=>'0',
             'regular_periods' => array(), 'school_holidays' => array(), 'special_periods' => array(), 'public_holidays' => array(),
@@ -1264,6 +1342,9 @@ final class Parcs_HT_Admin {
             'groups_closed_note' => self::sanitize_translations(isset($g['groups_closed_note']) ? $g['groups_closed_note'] : array(), true),
             'groups_booking_note' => self::sanitize_translations(isset($g['groups_booking_note']) ? $g['groups_booking_note'] : array(), true),
             'groups_button_label' => self::sanitize_translations(isset($g['groups_button_label']) ? $g['groups_button_label'] : array()),
+            'health_notifications_enabled' => array_key_exists('health_notifications_enabled', $g) ? self::bool($g, 'health_notifications_enabled') : '1',
+            'health_notification_email' => isset($g['health_notification_email']) ? sanitize_email($g['health_notification_email']) : '',
+            'delete_data_on_uninstall' => array_key_exists('delete_data_on_uninstall', $g) ? self::bool($g, 'delete_data_on_uninstall') : '0',
             'primary_color' => self::color($g, 'primary_color', '#006757'), 'secondary_color' => self::color($g, 'secondary_color', '#31ad81'),
             'accent_color' => self::color($g, 'accent_color', '#ef7b5b'), 'highlight_color' => self::color($g, 'highlight_color', '#e7c55b'),
             'body_text_color' => self::optional_color($g, 'body_text_color'), 'heading_text_color' => self::optional_color($g, 'heading_text_color'), 'border_color' => self::optional_color($g, 'border_color'), 'block_spacing' => self::number($g, 'block_spacing', 0, 60), 'block_border_enabled' => self::bool($g, 'block_border_enabled'),
@@ -1605,6 +1686,15 @@ final class Parcs_HT_Admin {
     }
 
     private static function input($name, $value, $label, $type = 'text') { ?><label class="htp-field"><span><?php echo esc_html($label); ?></span><input type="<?php echo esc_attr($type); ?>" name="<?php echo esc_attr($name); ?>" value="<?php echo esc_attr($value); ?>"></label><?php }
+    private static function sanitize_timezone($value) {
+        $value = sanitize_text_field((string)$value);
+        try {
+            new DateTimeZone($value);
+            return $value;
+        } catch (Exception $e) {
+            return 'Europe/Paris';
+        }
+    }
     private static function optional_color_input($name, $value, $label) {
         $color = sanitize_hex_color($value);
         $inherit = !$color;

@@ -32,6 +32,260 @@ final class Parcs_HT_Schedule {
         return isset($value['fr']) ? $value['fr'] : $fallback;
     }
 
+    public static function timezone($settings = null) {
+        $name = is_array($settings) && !empty($settings['timezone']) ? (string) $settings['timezone'] : '';
+        if ($name === '' && function_exists('wp_timezone_string')) {
+            $name = (string) wp_timezone_string();
+        }
+        if ($name === '') $name = 'Europe/Paris';
+        try {
+            new DateTimeZone($name);
+        } catch (Exception $e) {
+            $name = 'Europe/Paris';
+        }
+        return $name;
+    }
+
+    private static function valid_date($date) {
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $date)) return false;
+        $parts = array_map('intval', explode('-', (string) $date));
+        return count($parts) === 3 && checkdate($parts[1], $parts[2], $parts[0]);
+    }
+
+    private static function row_in_range($row, $date) {
+        return is_array($row) && (string)($row['enabled'] ?? '0') === '1'
+            && !empty($row['start']) && !empty($row['end'])
+            && $date >= (string)$row['start'] && $date <= (string)$row['end'];
+    }
+
+    private static function weekday($date, $timezone) {
+        try {
+            return (string) (new DateTimeImmutable($date, new DateTimeZone($timezone)))->format('N');
+        } catch (Exception $e) {
+            return '';
+        }
+    }
+
+    /**
+     * Résout l'état effectif d'une journée. Cet ordre est la règle métier canonique :
+     * exception prioritaire (fermeture avant horaires à priorité égale), puis horaire
+     * habituel, sinon fermeture.
+     */
+    public static function resolve_day($season, $general, $date, $timezone = 'Europe/Paris') {
+        $season = is_array($season) ? $season : array();
+        $general = is_array($general) ? $general : array();
+        $timezone = self::timezone(array('timezone' => $timezone));
+        $closed = array(
+            'in_season' => true, 'open' => false, 'exceptional' => false,
+            'type' => 'closed', 'color' => '#eeeeee', 'slots' => array(),
+            'openTime' => '', 'closeTime' => '', 'lastEntryMinutes' => '',
+        );
+        if (!self::valid_date($date)) {
+            $closed['in_season'] = false;
+            $closed['type'] = 'invalid';
+            return $closed;
+        }
+        $start = (string)($season['season_start'] ?? '');
+        $end = (string)($season['season_end'] ?? '');
+        if (($start !== '' && $date < $start) || ($end !== '' && $date > $end)) {
+            $closed['in_season'] = false;
+            $closed['type'] = 'outside';
+            return $closed;
+        }
+
+        $exceptions = array_values(array_filter((array)($season['exceptions'] ?? array()), static function ($row) use ($date) {
+            return Parcs_HT_Schedule::row_in_range($row, $date);
+        }));
+        usort($exceptions, static function ($a, $b) {
+            $priority = (int)($b['priority'] ?? 0) - (int)($a['priority'] ?? 0);
+            if ($priority !== 0) return $priority;
+            $a_type = (string)($a['type'] ?? 'hours');
+            $b_type = (string)($b['type'] ?? 'hours');
+            if ($a_type === $b_type) return 0;
+            return $a_type === 'closed' ? -1 : 1;
+        });
+        if ($exceptions) {
+            $exception = $exceptions[0];
+            if ((string)($exception['type'] ?? 'hours') === 'closed') {
+                $closed['exceptional'] = true;
+                $closed['exception'] = $exception;
+                $closed['source'] = $exception;
+                return $closed;
+            }
+            if (!empty($exception['open']) && !empty($exception['close'])) {
+                $slots = array(array('open'=>(string)$exception['open'], 'close'=>(string)$exception['close']));
+                if (!empty($exception['open2']) && !empty($exception['close2'])) {
+                    $slots[] = array('open'=>(string)$exception['open2'], 'close'=>(string)$exception['close2']);
+                }
+                return array(
+                    'in_season'=>true, 'open'=>true, 'exceptional'=>true, 'type'=>'hours',
+                    'color'=>(string)($general['accent_color'] ?? '#ef7b5b'), 'slots'=>$slots,
+                    'openTime'=>(string)$exception['open'], 'closeTime'=>(string)$exception['close'],
+                    'lastEntryMinutes'=>(string)($exception['last_entry_minutes'] ?? ''),
+                    'exception'=>$exception, 'source'=>$exception,
+                );
+            }
+        }
+
+        $weekday = self::weekday($date, $timezone);
+        foreach ((array)($season['regular_periods'] ?? array()) as $period) {
+            if (!self::row_in_range($period, $date)) continue;
+            $days = array_map('strval', is_array($period['weekdays'] ?? null) ? $period['weekdays'] : array());
+            if (!in_array($weekday, $days, true)) continue;
+            if (empty($period['open']) || empty($period['close'])) return $closed;
+            $slots = array(array('open'=>(string)$period['open'], 'close'=>(string)$period['close']));
+            if (!empty($period['open2']) && !empty($period['close2'])) {
+                $slots[] = array('open'=>(string)$period['open2'], 'close'=>(string)$period['close2']);
+            }
+            return array(
+                'in_season'=>true, 'open'=>true, 'exceptional'=>false, 'type'=>'regular',
+                'color'=>(string)($period['color'] ?? '#9AAA8B'), 'slots'=>$slots,
+                'openTime'=>(string)$period['open'], 'closeTime'=>(string)$period['close'],
+                'lastEntryMinutes'=>(string)($period['last_entry_minutes'] ?? ''),
+                'period'=>$period, 'source'=>$period,
+            );
+        }
+        return $closed;
+    }
+
+    public static function calendar_items($season, $date, $language) {
+        $out = array();
+        foreach ((array)($season['special_periods'] ?? array()) as $row) {
+            if (!self::row_in_range($row, $date) || (string)($row['show_on_calendar'] ?? '1') === '0') continue;
+            $title = self::translation($row['title'] ?? array(), $language, (string)($row['internal_label'] ?? ''));
+            if ($title === '') continue;
+            $out[] = array(
+                'title'=>$title, 'kind'=>(string)($row['kind'] ?? 'event'),
+                'color'=>(string)($row['color'] ?? '#e7c55b'), 'source'=>$row,
+            );
+        }
+        return $out;
+    }
+
+    public static function in_school_holiday($season, $date) {
+        foreach ((array)($season['school_holidays'] ?? array()) as $row) {
+            if (self::row_in_range($row, $date)) return true;
+        }
+        return false;
+    }
+
+    public static function is_public_holiday($season, $date) {
+        foreach ((array)($season['public_holidays'] ?? array()) as $row) {
+            if (is_array($row) && (string)($row['enabled'] ?? '0') === '1' && (string)($row['date'] ?? '') === $date) return true;
+        }
+        return false;
+    }
+
+    public static function domain_rule($season, $date, $status, $timezone = 'Europe/Paris') {
+        if (empty($status['open'])) return false;
+        foreach ((array)($season['special_periods'] ?? array()) as $period) {
+            if (!self::row_in_range($period, $date) || (string)($period['kind'] ?? '') === 'event') continue;
+            if ((string)($period['skip_domain_rules'] ?? '0') === '1') return false;
+        }
+        $source = is_array($status['source'] ?? null) ? $status['source'] : array();
+        if (!empty($status['exceptional']) && (string)($source['apply_domain_rules'] ?? '1') === '0') return false;
+        $weekday = self::weekday($date, self::timezone(array('timezone'=>$timezone)));
+        foreach ((array)($season['domain_rules'] ?? array()) as $rule) {
+            if (!self::row_in_range($rule, $date)) continue;
+            $days = array_map('strval', is_array($rule['weekdays'] ?? null) ? $rule['weekdays'] : array());
+            if (!in_array($weekday, $days, true)) continue;
+            if ((string)($rule['exclude_weekends'] ?? '0') === '1' && in_array($weekday, array('6','7'), true)) continue;
+            if ((string)($rule['exclude_school_holidays'] ?? '0') === '1' && self::in_school_holiday($season, $date)) continue;
+            if ((string)($rule['exclude_public_holidays'] ?? '0') === '1' && self::is_public_holiday($season, $date)) continue;
+            return $rule;
+        }
+        return false;
+    }
+
+    /**
+     * Analyse exhaustive d'une saison, utilisée dans l'administration et les tests.
+     */
+    public static function audit_season($settings) {
+        $settings = is_array($settings) ? $settings : array();
+        $season = array(
+            'season_start'=>(string)($settings['general']['season_start'] ?? $settings['season_start'] ?? ''),
+            'season_end'=>(string)($settings['general']['season_end'] ?? $settings['season_end'] ?? ''),
+            'regular_periods'=>(array)($settings['regular_periods'] ?? array()),
+            'school_holidays'=>(array)($settings['school_holidays'] ?? array()),
+            'special_periods'=>(array)($settings['special_periods'] ?? array()),
+            'public_holidays'=>(array)($settings['public_holidays'] ?? array()),
+            'domain_rules'=>(array)($settings['domain_rules'] ?? array()),
+            'exceptions'=>(array)($settings['exceptions'] ?? array()),
+        );
+        $timezone = self::timezone($settings);
+        $report = array(
+            'valid'=>true, 'errors'=>array(), 'warnings'=>array(),
+            'summary'=>array('days'=>0,'open'=>0,'closed'=>0,'exceptional_hours'=>0,'exceptional_closures'=>0,'events'=>0,'reference_periods'=>0,'domain_limited'=>0),
+        );
+        if (!self::valid_date($season['season_start']) || !self::valid_date($season['season_end']) || $season['season_start'] > $season['season_end']) {
+            $report['valid'] = false;
+            $report['errors'][] = 'Les dates de début et de fin de saison sont invalides ou inversées.';
+            return $report;
+        }
+        try {
+            $date = new DateTimeImmutable($season['season_start'], new DateTimeZone($timezone));
+            $last = new DateTimeImmutable($season['season_end'], new DateTimeZone($timezone));
+        } catch (Exception $e) {
+            $report['valid'] = false;
+            $report['errors'][] = 'Impossible d’analyser les dates de cette saison.';
+            return $report;
+        }
+        $conflict_dates = array();
+        for ($guard=0; $date <= $last && $guard < 740; $guard++, $date=$date->modify('+1 day')) {
+            $ymd = $date->format('Y-m-d');
+            $report['summary']['days']++;
+            $status = self::resolve_day($season, (array)($settings['general'] ?? array()), $ymd, $timezone);
+            $report['summary'][$status['open'] ? 'open' : 'closed']++;
+            if (!empty($status['exceptional'])) {
+                $report['summary'][$status['open'] ? 'exceptional_hours' : 'exceptional_closures']++;
+            }
+            foreach (self::calendar_items($season, $ymd, 'fr') as $item) {
+                $report['summary'][(string)($item['kind'] ?? '') === 'event' ? 'events' : 'reference_periods']++;
+            }
+            if (self::domain_rule($season, $ymd, $status, $timezone)) $report['summary']['domain_limited']++;
+
+            $weekday = self::weekday($ymd, $timezone);
+            $regular_matches = 0;
+            foreach ($season['regular_periods'] as $row) {
+                if (!self::row_in_range($row, $ymd)) continue;
+                if (in_array($weekday, array_map('strval', (array)($row['weekdays'] ?? array())), true)) $regular_matches++;
+            }
+            if ($regular_matches > 1 && count($conflict_dates) < 20) $conflict_dates[] = $ymd;
+
+            $priorities = array();
+            foreach ($season['exceptions'] as $row) {
+                if (!self::row_in_range($row, $ymd)) continue;
+                $priority = (string)(int)($row['priority'] ?? 0);
+                $priorities[$priority] = ($priorities[$priority] ?? 0) + 1;
+            }
+            foreach ($priorities as $priority => $count) {
+                if ($count > 1) {
+                    $message = 'Plusieurs exceptions de priorité '.$priority.' se chevauchent le '.$ymd.'.';
+                    if (!in_array($message, $report['warnings'], true) && count($report['warnings']) < 40) $report['warnings'][] = $message;
+                }
+            }
+        }
+        if ($date <= $last) {
+            $report['valid'] = false;
+            $report['errors'][] = 'La saison dépasse la limite de 740 jours prise en charge.';
+        }
+        if ($conflict_dates) {
+            $report['warnings'][] = 'Horaires habituels superposés aux dates suivantes : '.implode(', ', $conflict_dates).(count($conflict_dates) === 20 ? '…' : '').'.';
+        }
+        foreach ($season['special_periods'] as $row) {
+            if (!is_array($row) || (string)($row['enabled'] ?? '0') !== '1' || (string)($row['show_on_calendar'] ?? '1') === '0') continue;
+            $titles = is_array($row['title'] ?? null) ? $row['title'] : array();
+            foreach (array('fr','en','de') as $language) {
+                if (trim((string)($titles[$language] ?? '')) === '') {
+                    $report['warnings'][] = 'Une période publique n’a pas de titre en '.strtoupper($language).'.';
+                    break;
+                }
+            }
+        }
+        $report['valid'] = empty($report['errors']);
+        return $report;
+    }
+
     public static function public_settings($settings) {
         $all = (is_array($settings) && isset($settings['seasons']) && is_array($settings['seasons'])) ? $settings : Parcs_HT_Defaults::all_settings();
         $published = array();

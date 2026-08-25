@@ -9,7 +9,38 @@ permissions:
   contents: write
 
 jobs:
+  quality:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['7.4', '8.1', '8.2', '8.3']
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Configure PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+          tools: composer
+      - name: Install quality tools
+        run: composer install --no-interaction --prefer-dist
+      - name: Check PHP syntax
+        run: find . -type f -name '*.php' -not -path './vendor/*' -not -path './.git/*' -print0 | xargs -0 -n1 php -l
+      - name: Run schedule business tests
+        run: php tests/schedule-engine.php
+      - name: Check JavaScript and parity tests
+        run: |
+          node --check assets/admin.js
+          node --check assets/frontend.js
+          node tests/frontend-engine.js
+      - name: WordPress security and PHP compatibility report
+        continue-on-error: true
+        run: composer lint
+
   release:
+    needs: quality
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -58,6 +89,14 @@ jobs:
           rsync -a ./ build/horaires-tarifs-parc/ \
             --exclude '.git/' \
             --exclude '.github/' \
+            --exclude 'tests/' \
+            --exclude 'vendor/' \
+            --exclude 'composer.json' \
+            --exclude 'composer.lock' \
+            --exclude 'phpcs.xml.dist' \
+            --exclude 'AUDIT-PERFORMANCE-1.7.5.md' \
+            --exclude 'CAHIER-DES-CHARGES.md' \
+            --exclude 'GITHUB-UPDATES.md' \
             --exclude 'build/' \
             --exclude 'horaires-tarifs-parc.zip'
           cd build
@@ -73,6 +112,19 @@ jobs:
           PACKAGE_VERSION=$(php -r '$s=file_get_contents("/tmp/horaires-tarifs-parc.php"); preg_match("/Version:\\s*([0-9.]+)/",$s,$m); echo $m[1] ?? "";')
           test "$PACKAGE_VERSION" = "${{ steps.version.outputs.version }}"
           sha256sum horaires-tarifs-parc.zip | tee horaires-tarifs-parc.zip.sha256
+
+      - name: Run official WordPress Plugin Check
+        if: steps.existing.outputs.exists != 'true'
+        continue-on-error: true
+        uses: wordpress/plugin-check-action@v1
+        with:
+          build-dir: './build/horaires-tarifs-parc'
+          categories: |
+            security
+            performance
+            accessibility
+          ignore-warnings: true
+          include-experimental: false
 
       - name: Create GitHub Release
         if: steps.existing.outputs.exists != 'true'

@@ -399,12 +399,11 @@ final class Parcs_HT_Shortcodes {
         $print = isset($tariffs['print']) && is_array($tariffs['print']) ? $tariffs['print'] : array();
         if ((string)($print['pdf_enabled'] ?? '1') !== '1') return '';
 
-        $nonce = wp_create_nonce('parcs_ht_tariff_export');
         $pdf_url = add_query_arg(
             array(
                 'action'   => 'parcs_ht_tariffs_pdf',
                 'lang'     => $language,
-                '_wpnonce' => $nonce,
+                'rev'      => max(1, (int)get_option('parcs_ht_export_revision', 1)),
             ),
             admin_url('admin-post.php')
         );
@@ -434,7 +433,7 @@ final class Parcs_HT_Shortcodes {
             array(
                 'action' => 'parcs_ht_schedule_pdf',
                 'lang' => $language,
-                '_wpnonce' => wp_create_nonce('parcs_ht_schedule_export'),
+                'rev' => max(1, (int)get_option('parcs_ht_export_revision', 1)),
             ),
             admin_url('admin-post.php')
         );
@@ -444,10 +443,7 @@ final class Parcs_HT_Shortcodes {
     }
 
     public static function schedule_pdf_endpoint() {
-        $nonce = isset($_GET['_wpnonce']) ? sanitize_text_field(wp_unslash($_GET['_wpnonce'])) : '';
-        if (!$nonce || !wp_verify_nonce($nonce, 'parcs_ht_schedule_export')) {
-            wp_die('Lien d’export invalide.', '', array('response'=>403));
-        }
+        self::validate_public_export_request();
         $language = self::export_language();
         $settings = Parcs_HT_Defaults::settings();
         $ctx = self::schedule_export_context($settings, $language);
@@ -494,7 +490,8 @@ final class Parcs_HT_Shortcodes {
             'language'=>$language,
             'park'=>$park,
             'website'=>untrailingslashit(home_url('/')),
-            'generated_on'=>wp_date('d/m/Y', null, new DateTimeZone('Europe/Paris')),
+            'timezone'=>Parcs_HT_Schedule::timezone($all),
+            'generated_on'=>wp_date('d/m/Y', null, new DateTimeZone(Parcs_HT_Schedule::timezone($all))),
             'year'=>(string)$year,
             'start'=>$start,
             'end'=>$end,
@@ -513,94 +510,36 @@ final class Parcs_HT_Shortcodes {
      * enabled exception with highest priority > regular period > closed.
      */
     private static function schedule_resolve_day($ctx, $date) {
-        if ($ctx['start'] !== '' && $date < $ctx['start']) return array('in_season'=>false,'open'=>false,'type'=>'outside','color'=>'#f3f3f3','slots'=>array());
-        if ($ctx['end'] !== '' && $date > $ctx['end']) return array('in_season'=>false,'open'=>false,'type'=>'outside','color'=>'#f3f3f3','slots'=>array());
-
-        $exceptions = array();
-        foreach ($ctx['exceptions'] as $row) {
-            if (!is_array($row) || (string)($row['enabled'] ?? '0') !== '1') continue;
-            $from=(string)($row['start'] ?? ''); $to=(string)($row['end'] ?? '');
-            if ($from !== '' && $to !== '' && $date >= $from && $date <= $to) $exceptions[]=$row;
-        }
-        usort($exceptions, static function($a,$b){
-            $priority=(int)($b['priority'] ?? 0)-(int)($a['priority'] ?? 0);
-            if($priority!==0)return $priority;
-            $at=(string)($a['type'] ?? 'hours'); $bt=(string)($b['type'] ?? 'hours');
-            if($at===$bt)return 0;
-            return $at==='closed' ? -1 : 1;
-        });
-        if ($exceptions) {
-            $ex=$exceptions[0];
-            if ((string)($ex['type'] ?? 'hours') === 'closed') {
-                return array('in_season'=>true,'open'=>false,'type'=>'closed','exceptional'=>true,'color'=>'#d9d9d9','slots'=>array(),'source'=>$ex);
-            }
-            if (!empty($ex['open']) && !empty($ex['close'])) {
-                $slots=array(array('open'=>(string)$ex['open'],'close'=>(string)$ex['close']));
-                if (!empty($ex['open2']) && !empty($ex['close2'])) $slots[]=array('open'=>(string)$ex['open2'],'close'=>(string)$ex['close2']);
-                return array('in_season'=>true,'open'=>true,'type'=>'hours','exceptional'=>true,'color'=>(string)($ctx['general']['accent_color'] ?? '#ef7b5b'),'slots'=>$slots,'source'=>$ex);
-            }
-        }
-
-        $weekday=(string)(new DateTimeImmutable($date, new DateTimeZone('Europe/Paris')))->format('N');
-        foreach ($ctx['regular_periods'] as $row) {
-            if (!is_array($row) || (string)($row['enabled'] ?? '0') !== '1') continue;
-            $from=(string)($row['start'] ?? ''); $to=(string)($row['end'] ?? '');
-            $days=isset($row['weekdays']) && is_array($row['weekdays']) ? array_map('strval',$row['weekdays']) : array();
-            if ($from === '' || $to === '' || $date < $from || $date > $to || !in_array($weekday,$days,true)) continue;
-            if (empty($row['open']) || empty($row['close'])) break;
-            $slots=array(array('open'=>(string)$row['open'],'close'=>(string)$row['close']));
-            if (!empty($row['open2']) && !empty($row['close2'])) $slots[]=array('open'=>(string)$row['open2'],'close'=>(string)$row['close2']);
-            return array('in_season'=>true,'open'=>true,'type'=>'regular','exceptional'=>false,'color'=>(string)($row['color'] ?? '#9AAA8B'),'slots'=>$slots,'source'=>$row);
-        }
-        return array('in_season'=>true,'open'=>false,'type'=>'closed','exceptional'=>false,'color'=>'#d9d9d9','slots'=>array());
+        return Parcs_HT_Schedule::resolve_day(self::schedule_context_season($ctx), $ctx['general'] ?? array(), $date, $ctx['timezone'] ?? 'Europe/Paris');
     }
 
     private static function schedule_calendar_items($ctx, $date) {
-        $out=array();
-        foreach ($ctx['special_periods'] as $row) {
-            if (!is_array($row) || (string)($row['enabled'] ?? '0') !== '1' || (string)($row['show_on_calendar'] ?? '1') === '0') continue;
-            $from=(string)($row['start'] ?? ''); $to=(string)($row['end'] ?? '');
-            if ($from === '' || $to === '' || $date < $from || $date > $to) continue;
-            $title=Parcs_HT_Schedule::translation($row['title'] ?? array(),$ctx['language'],(string)($row['internal_label'] ?? ''));
-            if ($title==='') continue;
-            $out[]=array('title'=>$title,'kind'=>(string)($row['kind'] ?? 'event'),'color'=>(string)($row['color'] ?? '#e7c55b'));
-        }
-        return $out;
+        return Parcs_HT_Schedule::calendar_items(self::schedule_context_season($ctx), $date, $ctx['language']);
     }
 
     private static function schedule_in_school_holiday($ctx, $date) {
-        foreach ($ctx['school_holidays'] as $row) {
-            if (is_array($row) && (string)($row['enabled'] ?? '0') === '1' && $date >= (string)($row['start'] ?? '') && $date <= (string)($row['end'] ?? '')) return true;
-        }
-        return false;
+        return Parcs_HT_Schedule::in_school_holiday(self::schedule_context_season($ctx), $date);
     }
 
     private static function schedule_is_public_holiday($ctx, $date) {
-        foreach ($ctx['public_holidays'] as $row) {
-            if (is_array($row) && (string)($row['enabled'] ?? '0') === '1' && (string)($row['date'] ?? '') === $date) return true;
-        }
-        return false;
+        return Parcs_HT_Schedule::is_public_holiday(self::schedule_context_season($ctx), $date);
     }
 
     private static function schedule_domain_rule($ctx, $date, $status) {
-        if (empty($status['open'])) return false;
-        foreach ($ctx['special_periods'] as $period) {
-            if (!is_array($period) || (string)($period['enabled'] ?? '0') !== '1' || (string)($period['kind'] ?? '') === 'event' || (string)($period['skip_domain_rules'] ?? '0') !== '1') continue;
-            if ($date >= (string)($period['start'] ?? '') && $date <= (string)($period['end'] ?? '')) return false;
-        }
-        if (!empty($status['exceptional']) && (string)($status['source']['apply_domain_rules'] ?? '1') === '0') return false;
-        $weekday=(string)(new DateTimeImmutable($date,new DateTimeZone('Europe/Paris')))->format('N');
-        foreach ($ctx['domain_rules'] as $rule) {
-            if (!is_array($rule) || (string)($rule['enabled'] ?? '0') !== '1') continue;
-            if ($date < (string)($rule['start'] ?? '') || $date > (string)($rule['end'] ?? '')) continue;
-            $days=array_map('strval',is_array($rule['weekdays'] ?? null)?$rule['weekdays']:array());
-            if (!in_array($weekday,$days,true)) continue;
-            if ((string)($rule['exclude_weekends'] ?? '0') === '1' && in_array($weekday,array('6','7'),true)) continue;
-            if ((string)($rule['exclude_school_holidays'] ?? '0') === '1' && self::schedule_in_school_holiday($ctx,$date)) continue;
-            if ((string)($rule['exclude_public_holidays'] ?? '0') === '1' && self::schedule_is_public_holiday($ctx,$date)) continue;
-            return $rule;
-        }
-        return false;
+        return Parcs_HT_Schedule::domain_rule(self::schedule_context_season($ctx), $date, $status, $ctx['timezone'] ?? 'Europe/Paris');
+    }
+
+    private static function schedule_context_season($ctx) {
+        return array(
+            'season_start'=>(string)($ctx['start'] ?? ''),
+            'season_end'=>(string)($ctx['end'] ?? ''),
+            'regular_periods'=>(array)($ctx['regular_periods'] ?? array()),
+            'exceptions'=>(array)($ctx['exceptions'] ?? array()),
+            'special_periods'=>(array)($ctx['special_periods'] ?? array()),
+            'school_holidays'=>(array)($ctx['school_holidays'] ?? array()),
+            'public_holidays'=>(array)($ctx['public_holidays'] ?? array()),
+            'domain_rules'=>(array)($ctx['domain_rules'] ?? array()),
+        );
     }
 
     private static function schedule_hours_label($status) {
@@ -645,8 +584,14 @@ final class Parcs_HT_Shortcodes {
         $eventsLabel=$lang==='de'?'Veranstaltungen':($lang==='en'?'Events':'Événements');
 
         try {
-            $first=new DateTimeImmutable(substr($ctx['start'],0,7).'-01',new DateTimeZone('Europe/Paris'));
-            $last=new DateTimeImmutable(substr($ctx['end'],0,7).'-01',new DateTimeZone('Europe/Paris'));
+            $timezone=new DateTimeZone($ctx['timezone'] ?? 'Europe/Paris');
+            if (preg_match('/^20\d{2}$/', (string)$ctx['year'])) {
+                $first=new DateTimeImmutable($ctx['year'].'-01-01',$timezone);
+                $last=new DateTimeImmutable($ctx['year'].'-12-01',$timezone);
+            } else {
+                $first=new DateTimeImmutable(substr($ctx['start'],0,7).'-01',$timezone);
+                $last=new DateTimeImmutable(substr($ctx['end'],0,7).'-01',$timezone);
+            }
         } catch (Exception $e) {
             return self::pdf_document(array('BT /F2 18 Tf 1 0 0 1 42 520 Tm ('.self::pdf_text($title).') Tj ET'),$w,$h);
         }
@@ -681,7 +626,8 @@ final class Parcs_HT_Shortcodes {
                 $base=$isClosed?'#d9d9d9':(string)$status['color'];$light=self::pdf_light_rgb($base,$isClosed?0.72:0.88);$fill=sprintf('#%02x%02x%02x',(int)round($light[0]*255),(int)round($light[1]*255),(int)round($light[2]*255));
                 $holiday=(string)($ctx['general']['show_public_holidays'] ?? '0')==='1' && self::schedule_is_public_holiday($ctx,$date);
                 if($holiday)$hasHoliday=true;
-                $rect($cmd,$x+1,$y+1,$cellW-2,$cellH-2,$fill,$holiday?(string)($ctx['general']['holiday_border_color'] ?? '#e7c55b'):'#cbd2ce',$holiday?1.5:0.35);$fillrect($cmd,$x+1,$top-3,$cellW-2,3,$base);
+                $holidayWidth=max(0.5,min(5,(float)($ctx['general']['holiday_border_width'] ?? 3)));
+                $rect($cmd,$x+1,$y+1,$cellW-2,$cellH-2,$fill,$holiday?(string)($ctx['general']['holiday_border_color'] ?? '#e7c55b'):'#cbd2ce',$holiday?$holidayWidth:0.35);$fillrect($cmd,$x+1,$top-3,$cellW-2,3,$base);
                 if($isClosed){$cross($cmd,$x+1,$y+1,$cellW-2,$cellH-2);$hasClosed=true;}
                 $text($cmd,$x+14,$y+8,(string)$day,5.7,true);
                 $hours=self::schedule_hours_label($status);
@@ -714,7 +660,7 @@ final class Parcs_HT_Shortcodes {
 
         }
         $footerY=75;$text($cmd,$margin,$footerY+31,$lang==='de'?'Legende':($lang==='en'?'Legend':'Légende'),8,true);$lx=$margin;
-        foreach($legend as $item){if($lx>$w-185){$lx=$margin;$footerY-=15;}$fillrect($cmd,$lx,$footerY+11,10,10,$item['color']);$text($cmd,$lx+15,$footerY+13,(string)$item['label'],6.2,false);$lx+=180;}
+        foreach(array_slice(array_values($legend),0,6) as $item){$fillrect($cmd,$lx,$footerY+11,10,10,$item['color']);$text($cmd,$lx+15,$footerY+13,(string)$item['label'],6.2,false);$lx+=180;}
         $periodsLabel=$lang==='de'?'Zeiträume':($lang==='en'?'Reference periods':'Périodes repères');
         $explanations=array();
         if($lang==='de'){
@@ -740,19 +686,57 @@ final class Parcs_HT_Shortcodes {
             if($hasHoliday)$explanations[]='Contour coloré : jour férié.';
         }
         $explanationLines=self::pdf_wrap(implode('  |  ',$explanations),185);
-        foreach(array_slice($explanationLines,0,4) as $i=>$line)$text($cmd,$margin,91-($i*9),$line,6.2,false);
+        foreach(array_slice($explanationLines,0,2) as $i=>$line)$text($cmd,$margin,72-($i*9),$line,6.2,false);
         $summaries=array();
         if($allEvents)$summaries[]=$eventsLabel.' : '.implode(' · ',array_keys($allEvents));
         if($allPeriods)$summaries[]=$periodsLabel.' : '.implode(' · ',array_keys($allPeriods));
         if($domainLegends)$summaries[]='D : '.implode(' · ',array_keys($domainLegends));
         $summaryLines=array();foreach($summaries as $summary)$summaryLines=array_merge($summaryLines,self::pdf_wrap($summary,155));
-        foreach(array_slice($summaryLines,0,2) as $i=>$line)$text($cmd,$margin,45-($i*8),$line,6,false);
+        foreach(array_slice($summaryLines,0,1) as $i=>$line)$text($cmd,$margin,50-($i*8),$line,6,false);
+        $hasDetailPage=count($legend)>6 || count($explanationLines)>2 || count($summaryLines)>1;
+        if($hasDetailPage)$text($cmd,$margin,38,$lang==='de'?'Vollständige Legende auf Seite 2':($lang==='en'?'Complete legend on page 2':'Légende complète en page 2'),6.2,true);
         $site=(string)($ctx['website'] ?? '');$generated=(string)($ctx['generated_on'] ?? '');
         if($lang==='de')$disclaimer='Stand '.$generated.': Öffnungszeiten können jederzeit geändert werden. Bitte prüfen Sie vor Ihrem Besuch die aktuellen Angaben von '.$ctx['park'].' auf '.$site.'.';
         elseif($lang==='en')$disclaimer='Generated on '.$generated.': opening times may change at any time. Before visiting, always check the latest information from '.$ctx['park'].' at '.$site.'.';
         else $disclaimer='Planning généré le '.$generated.' : les horaires peuvent changer à tout moment. Avant votre visite, vérifiez toujours les informations à jour de '.$ctx['park'].' sur '.$site.'.';
         $text($cmd,$margin,18,$disclaimer,6.2,true);
-        return self::pdf_document(array(implode("\n",$cmd)),$w,$h);
+        $pages=array(implode("\n",$cmd));
+        if($hasDetailPage){
+            $detailTitle=$lang==='de'?'Vollständige Legende und Details':($lang==='en'?'Complete legend and details':'Légende complète et détails');
+            $detailLines=array();
+            $detailLines[]=array($lang==='de'?'Öffnungszeiten und Farben':($lang==='en'?'Hours and colours':'Horaires et couleurs'),true);
+            foreach($legend as $item)$detailLines[]=array((string)$item['label'],false,(string)$item['color']);
+            $detailLines[]=array($lang==='de'?'Erklärungen':($lang==='en'?'Explanations':'Explications'),true);
+            foreach($explanations as $line)$detailLines[]=array('• '.$line,false);
+            if($summaries){
+                $detailLines[]=array($lang==='de'?'Zeiträume und Hinweise':($lang==='en'?'Periods and notices':'Périodes et informations'),true);
+                foreach($summaries as $line)$detailLines[]=array($line,false);
+            }
+            $pages=array_merge($pages,self::pdf_detail_pages($ctx['park'].' — '.$detailTitle,$detailLines,$w,$h));
+        }
+        return self::pdf_document($pages,$w,$h);
+    }
+
+    private static function pdf_detail_pages($title,$items,$w,$h) {
+        $pages=array();$cmd=array();$margin=42;$y=$h-54;
+        $addHeader=static function() use (&$cmd,&$y,$title,$h,$margin){
+            $cmd[]='0.125 0.153 0.141 rg BT /F2 18 Tf 1 0 0 1 '.$margin.' '.($h-42).' Tm ('.Parcs_HT_Shortcodes::pdf_text($title).') Tj ET';
+            $y=$h-70;
+        };
+        $addHeader();
+        foreach($items as $item){
+            $value=(string)($item[0] ?? '');$bold=!empty($item[1]);
+            $color=isset($item[2]) && preg_match('/^#[0-9a-fA-F]{6}$/',(string)$item[2]) ? (string)$item[2] : '';
+            $lines=self::pdf_wrap($value,165);
+            $needed=max(1,count($lines))*12+($bold?5:0);
+            if($y-$needed<$margin){$pages[]=implode("\n",$cmd);$cmd=array();$addHeader();}
+            if($bold)$y-=5;
+            if($color){$rgb=self::pdf_rgb($color);$cmd[]=sprintf('%.3F %.3F %.3F rg %.2F %.2F 9 9 re f',$rgb[0],$rgb[1],$rgb[2],$margin,$y-2);}
+            foreach($lines as $line){$x=$color?$margin+16:$margin;$cmd[]='0.125 0.153 0.141 rg BT /'.($bold?'F2':'F1').' '.($bold?'10':'8').' Tf 1 0 0 1 '.$x.' '.$y.' Tm ('.self::pdf_text($line).') Tj ET';$y-=12;$color='';}
+            $y-=3;
+        }
+        if($cmd)$pages[]=implode("\n",$cmd);
+        return $pages;
     }
 
     public static function tariffs_print_endpoint() {
@@ -764,7 +748,7 @@ final class Parcs_HT_Shortcodes {
         header('Content-Type: text/html; charset=' . get_bloginfo('charset'));
         echo '<!doctype html><html lang="'.esc_attr($language).'"><head><meta charset="'.esc_attr(get_bloginfo('charset')).'"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'.esc_html($ctx['title']).'</title>';
         echo '<style>@page{size:A4;margin:14mm}*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#202724;margin:0;font-size:12px}.head{border-bottom:2px solid #1f6554;padding-bottom:10px;margin-bottom:16px}.park{font-size:13px;margin:0 0 4px}.title{font-size:26px;line-height:1.1;margin:0}.meta{color:#65706b;margin-top:6px}.group{margin:18px 0;page-break-inside:avoid}.group h2{font-size:17px;margin:0 0 8px;color:#1f6554}.table{width:100%;border-collapse:collapse}.table th,.table td{border-bottom:1px solid #d7ddda;padding:8px 6px;text-align:left;vertical-align:top}.table th{font-size:10px;text-transform:uppercase;color:#5c6661}.price{text-align:right!important;white-space:nowrap;font-weight:700}.old{text-decoration:line-through;font-weight:400;color:#777;margin-right:5px}.sub{display:block;font-size:10px;color:#666;margin-top:2px}.badge{display:inline-block;font-size:9px;border:1px solid #d4ad2f;border-radius:10px;padding:1px 5px;margin-left:5px}.note{font-size:10px;line-height:1.45}.footer{border-top:1px solid #d7ddda;margin-top:20px;padding-top:10px;color:#666;font-size:9px}.actions{display:flex;gap:8px;margin:0 0 16px}.actions button,.actions a{border:0;border-radius:5px;padding:9px 13px;background:#1f6554;color:#fff;text-decoration:none;cursor:pointer}@media print{.actions{display:none}.group{break-inside:avoid}}@media(max-width:600px){body{font-size:11px}.title{font-size:21px}.table th,.table td{padding:6px 4px}}</style></head><body>';
-        $pdf_url = add_query_arg(array('action'=>'parcs_ht_tariffs_pdf','lang'=>$language,'_wpnonce'=>wp_create_nonce('parcs_ht_tariff_export')), admin_url('admin-post.php'));
+        $pdf_url = add_query_arg(array('action'=>'parcs_ht_tariffs_pdf','lang'=>$language,'rev'=>max(1, (int)get_option('parcs_ht_export_revision', 1))), admin_url('admin-post.php'));
         $print_label = $language==='de'?'Drucken':($language==='en'?'Print':'Imprimer');
         $pdf_label = $language==='de'?'PDF herunterladen':($language==='en'?'Download PDF':'Télécharger PDF');
         echo '<div class="actions"><button type="button" onclick="window.print()">'.esc_html($print_label).'</button>';
@@ -789,15 +773,52 @@ final class Parcs_HT_Shortcodes {
         });
     }
 
+    public static function pregenerate_exports() {
+        $settings = Parcs_HT_Defaults::settings();
+        foreach (array('fr','en','de') as $language) {
+            $schedule = self::schedule_export_context($settings, $language);
+            $schedule_year = (string)($schedule['year'] ?? '');
+            self::build_cached_pdf('planning', $language, $schedule_year, static function () use ($schedule) {
+                return Parcs_HT_Shortcodes::build_schedule_pdf($schedule);
+            });
+
+            $tariffs = self::tariff_export_context($settings, $language);
+            $orientation = (string)($tariffs['print']['orientation'] ?? 'portrait');
+            self::build_cached_pdf('tarifs-'.$orientation, $language, (string)($tariffs['year'] ?? ''), static function () use ($tariffs, $orientation) {
+                return Parcs_HT_Shortcodes::build_tariff_pdf($tariffs, $orientation === 'landscape');
+            });
+        }
+    }
+
     private static function serve_cached_pdf($type, $language, $year, $download_name, $builder) {
+        $cached = self::build_cached_pdf($type, $language, $year, $builder);
+        if ($cached && !empty($cached['url'])) {
+            wp_redirect(esc_url_raw($cached['url']), 302, 'Horaires-Tarifs-Parc');
+            exit;
+        }
+        $pdf = (string)call_user_func($builder);
+        if (strpos($pdf, '%PDF-') !== 0) {
+            self::report_export_error('pdf_generation', 'Le PDF n’a pas pu être généré.', $type.' / '.$language.' / '.$year);
+            wp_die('Le document est momentanément indisponible.', '', array('response'=>503));
+        }
+        self::output_pdf($pdf, $download_name);
+    }
+
+    private static function build_cached_pdf($type, $language, $year, $builder) {
         $uploads = wp_upload_dir();
+        if (!empty($uploads['error'])) {
+            self::report_export_error('pdf_upload_directory', 'Le dossier des médias WordPress est indisponible.', (string)$uploads['error']);
+            return false;
+        }
         $revision = max(1, (int) get_option('parcs_ht_export_revision', 1));
         $key = sanitize_file_name($type . '-' . $year . '-' . $language . '-r' . $revision . '-v' . PARCS_HT_VERSION);
         $directory = trailingslashit($uploads['basedir']) . 'horaires-tarifs-parc-exports';
         $url_base = trailingslashit($uploads['baseurl']) . 'horaires-tarifs-parc-exports';
         if (!wp_mkdir_p($directory)) {
-            self::output_pdf((string) call_user_func($builder), $download_name);
+            self::report_export_error('pdf_cache_directory', 'Le dossier du cache PDF ne peut pas être créé.', $directory);
+            return false;
         }
+        self::protect_export_directory($directory);
         $path = trailingslashit($directory) . $key . '.pdf';
         if (!is_file($path) || filesize($path) < 100) {
             $lock_path = $path . '.lock';
@@ -806,22 +827,45 @@ final class Parcs_HT_Shortcodes {
                 if (!is_file($path) || filesize($path) < 100) {
                     $pdf = (string) call_user_func($builder);
                     $temporary = $path . '.tmp-' . wp_generate_password(8, false, false);
-                    if (@file_put_contents($temporary, $pdf, LOCK_EX) !== false) {
-                        @rename($temporary, $path);
+                    if (strpos($pdf, '%PDF-') === 0 && @file_put_contents($temporary, $pdf, LOCK_EX) !== false && @rename($temporary, $path)) {
                         foreach ((array) glob(trailingslashit($directory) . sanitize_file_name($type . '-' . $year . '-' . $language) . '-r*.pdf') as $old) {
                             if ($old !== $path && is_file($old)) @unlink($old);
                         }
+                        foreach ((array)glob(trailingslashit($directory).sanitize_file_name($type.'-'.$year.'-'.$language).'-r*.pdf.lock') as $old_lock) {
+                            if ($old_lock !== $lock_path && is_file($old_lock) && filemtime($old_lock) < time() - 5 * MINUTE_IN_SECONDS) @unlink($old_lock);
+                        }
+                    } else {
+                        if (is_file($temporary)) @unlink($temporary);
+                        self::report_export_error('pdf_cache_write', 'Le PDF n’a pas pu être écrit dans le cache.', $path);
                     }
                 }
                 flock($lock, LOCK_UN);
                 fclose($lock);
+            } else {
+                self::report_export_error('pdf_cache_lock', 'Le verrou de génération PDF n’a pas pu être ouvert.', $lock_path);
             }
         }
         if (is_file($path) && filesize($path) >= 100) {
-            wp_redirect(esc_url_raw($url_base . '/' . rawurlencode(basename($path))), 302, 'Horaires-Tarifs-Parc');
-            exit;
+            return array('path'=>$path, 'url'=>$url_base . '/' . rawurlencode(basename($path)));
         }
-        self::output_pdf((string) call_user_func($builder), $download_name);
+        return false;
+    }
+
+    private static function protect_export_directory($directory) {
+        $index = trailingslashit($directory).'index.html';
+        if (!is_file($index)) @file_put_contents($index, '<!doctype html><title></title>', LOCK_EX);
+        $htaccess = trailingslashit($directory).'.htaccess';
+        if (!is_file($htaccess)) {
+            @file_put_contents($htaccess, "Options -Indexes\n<FilesMatch \"\\.(?:lock|tmp-[A-Za-z0-9]+)$\">\nRequire all denied\n</FilesMatch>\n<IfModule mod_headers.c>\n<FilesMatch \"\\.pdf$\">\nHeader set Cache-Control \"public, max-age=31536000, immutable\"\nHeader set X-Robots-Tag \"noindex, nofollow\"\n</FilesMatch>\n</IfModule>\n", LOCK_EX);
+        }
+        foreach ((array)glob(trailingslashit($directory).'*.tmp-*') as $temporary) {
+            if (is_file($temporary) && filemtime($temporary) < time() - HOUR_IN_SECONDS) @unlink($temporary);
+        }
+    }
+
+    private static function report_export_error($code, $message, $details = '') {
+        if (!class_exists('Parcs_HT_Health')) require_once PARCS_HT_DIR.'includes/class-parcs-ht-health.php';
+        if (class_exists('Parcs_HT_Health')) Parcs_HT_Health::report_runtime_error($code, $message, $details);
     }
 
     private static function output_pdf($pdf, $download_name) {
@@ -834,8 +878,22 @@ final class Parcs_HT_Shortcodes {
     }
 
     private static function validate_tariff_export_request() {
-        $nonce = isset($_GET['_wpnonce']) ? sanitize_text_field(wp_unslash($_GET['_wpnonce'])) : '';
-        if (!$nonce || !wp_verify_nonce($nonce, 'parcs_ht_tariff_export')) wp_die('Lien d’export invalide.', '', array('response'=>403));
+        self::validate_public_export_request();
+    }
+
+    private static function validate_public_export_request() {
+        if (is_user_logged_in() && current_user_can('manage_options')) return;
+        $address = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : 'unknown';
+        $bucket = (string)floor(time() / MINUTE_IN_SECONDS);
+        $key = 'parcs_ht_export_rate_'.substr(hash_hmac('sha256', $address.'|'.$bucket, wp_salt('nonce')), 0, 32);
+        $count = (int)get_transient($key);
+        if ($count >= 30) {
+            status_header(429);
+            header('Retry-After: 60');
+            wp_die('Trop de téléchargements. Merci de réessayer dans une minute.', '', array('response'=>429));
+        }
+        set_transient($key, $count + 1, 2 * MINUTE_IN_SECONDS);
+        header('X-Robots-Tag: noindex, nofollow', true);
     }
 
     private static function export_language() {
@@ -883,9 +941,9 @@ final class Parcs_HT_Shortcodes {
         $date = '';
         if ((string)($print['show_generation_date'] ?? '1') === '1') {
             $fmt = $language==='en'?'F j, Y':($language==='de'?'j. F Y':'j F Y');
-            $date = wp_date($fmt, null, new DateTimeZone('Europe/Paris'));
+            $date = wp_date($fmt, null, new DateTimeZone(Parcs_HT_Schedule::timezone($settings)));
         }
-        return array('language'=>$language,'title'=>$title,'park'=>$park,'year'=>$year,'groups'=>$out_groups,'footer'=>Parcs_HT_Schedule::translation($print['footer']??array(),$language,''),'date'=>$date,'print'=>$print);
+        return array('language'=>$language,'title'=>$title,'park'=>$park,'year'=>$year,'timezone'=>Parcs_HT_Schedule::timezone($settings),'groups'=>$out_groups,'footer'=>Parcs_HT_Schedule::translation($print['footer']??array(),$language,''),'date'=>$date,'print'=>$print);
     }
 
     private static function tariff_export_html($ctx) {
@@ -966,7 +1024,7 @@ final class Parcs_HT_Shortcodes {
 
     private static function tariff_row_is_visible($row) {
         if (!is_array($row) || ($row['row_type'] ?? 'standard') !== 'special') return true;
-        $today = wp_date('Y-m-d', null, new DateTimeZone('Europe/Paris'));
+        $today = wp_date('Y-m-d', null, new DateTimeZone(Parcs_HT_Schedule::timezone(Parcs_HT_Defaults::all_settings())));
         $from = (string)($row['display_from'] ?? '');
         $to = (string)($row['display_to'] ?? '');
         if ($from !== '' && $today < $from) return false;

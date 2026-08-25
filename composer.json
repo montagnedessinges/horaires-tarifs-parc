@@ -1,0 +1,19 @@
+{
+  "name": "montagnedessinges/horaires-tarifs-parc",
+  "description": "Outils de qualité pour l’extension Horaires et tarifs du parc.",
+  "type": "wordpress-plugin",
+  "require-dev": {
+    "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+    "phpcompatibility/php-compatibility": "^9.3",
+    "wp-coding-standards/wpcs": "^3.0"
+  },
+  "config": {
+    "allow-plugins": {
+      "dealerdirect/phpcodesniffer-composer-installer": true
+    }
+  },
+  "scripts": {
+    "lint": "phpcs --standard=phpcs.xml.dist",
+    "test": "php tests/schedule-engine.php"
+  }
+}

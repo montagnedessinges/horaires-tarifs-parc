@@ -122,3 +122,9 @@
 .htp-sort-handle-quote{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:1px solid #c3c4c7;border-radius:5px;background:#fff;color:#646970;cursor:grab;font-weight:800;letter-spacing:-2px}
 .htp-sort-handle-quote:active{cursor:grabbing}
 .htp-quote-row.ui-sortable-helper{box-shadow:0 8px 25px rgba(0,0,0,.12);background:#fff}
+.htp-audit-summary{margin:14px 0;padding:14px 16px;border-left:4px solid #00a32a;background:#f0f6fc}
+.htp-audit-summary.has-problems{border-left-color:#dba617;background:#fff8e5}
+.htp-audit-summary p:first-child{margin-top:0}.htp-audit-summary ul{margin-bottom:0}
+.htp-revisions{border:1px solid #dcdcde;border-radius:8px;overflow:hidden;background:#fff}
+.htp-revision-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 12px;border-bottom:1px solid #eee}
+.htp-revision-row:last-child{border-bottom:0}

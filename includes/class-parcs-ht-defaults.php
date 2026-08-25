@@ -8,7 +8,7 @@ final class Parcs_HT_Defaults {
     const OPTION = 'parcs_ht_settings';
     const BACKUP_OPTION = 'parcs_ht_settings_backup_pre_1_1_0';
     const POPUP_FLAG_OPTION = 'parcs_ht_has_popup_source';
-    const SCHEMA_VERSION = 25;
+    const SCHEMA_VERSION = 26;
 
     public static function activate() {
         if (get_option(self::OPTION, null) === null) {
@@ -748,7 +748,8 @@ final class Parcs_HT_Defaults {
     public static function select_season_year($settings, $requested_year = '') {
         $seasons = isset($settings['seasons']) && is_array($settings['seasons']) ? $settings['seasons'] : array();
         if ($requested_year !== '' && isset($seasons[(string)$requested_year])) return (string)$requested_year;
-        $today = wp_date('Y-m-d', null, new DateTimeZone('Europe/Paris'));
+        $timezone = class_exists('Parcs_HT_Schedule') ? Parcs_HT_Schedule::timezone($settings) : 'Europe/Paris';
+        $today = wp_date('Y-m-d', null, new DateTimeZone($timezone));
         foreach ($seasons as $year => $season) {
             if ((string)($season['published'] ?? '0') !== '1') continue;
             $start = (string)($season['season_start'] ?? ''); $end = (string)($season['season_end'] ?? '');
@@ -855,6 +856,9 @@ final class Parcs_HT_Defaults {
                 'groups_closed_note' => array('fr'=>'Même lorsque le parc est fermé au public, une demande de groupe peut être envoyée par e-mail.','en'=>'Even when the park is closed to the public, group visit requests can still be sent by email.','de'=>'Auch wenn der Park für die Öffentlichkeit geschlossen ist, können Gruppenanfragen weiterhin per E-Mail gesendet werden.'),
                 'groups_booking_note' => array('fr'=>$is_mds?'Réservation obligatoire pour bénéficier des tarifs groupes. Commencez par effectuer une demande de devis en ligne. Une fois le devis reçu, renvoyez-le avec la mention « Bon pour accord » pour confirmer votre réservation.':($is_fds?'Réservation recommandée pour les groupes, mais non obligatoire. Pour préparer votre venue, vous pouvez contacter directement l’équipe du parc.':''),'en'=>$is_fds?'Group reservations are recommended but not compulsory. You can contact the park team directly to prepare your visit.':'','de'=>''),
                 'groups_button_label' => array('fr'=>$is_mds?'Faire une demande de devis':($is_fds?'Contacter le parc':''),'en'=>$is_fds?'Contact the park':'','de'=>''),
+                'health_notifications_enabled'=>'1',
+                'health_notification_email'=>'',
+                'delete_data_on_uninstall'=>'0',
                 'primary_color'=>'#006757','secondary_color'=>'#31ad81','accent_color'=>'#ef7b5b','highlight_color'=>'#e7c55b',
                 'body_text_color'=>'','heading_text_color'=>'','border_color'=>'','block_spacing'=>'8','block_border_enabled'=>'0',
                 // Typographie : valeurs vides = tailles historiques / thème du site.

@@ -3,6 +3,22 @@
 
   var currentLanguage = 'fr';
 
+  function initScopedSave() {
+    var form=document.querySelector('.htp-admin form[action*="admin-post.php"] input[name="action"][value="parcs_ht_save"]');
+    form=form?form.closest('form'):null;
+    if(!form)return;
+    form.addEventListener('submit',function(event){
+      var submitter=event.submitter||document.activeElement;
+      if(!submitter||submitter.name!=='htp_save_active')return;
+      var activeInput=form.querySelector('[data-htp-active-tab-input]');
+      var activeId=activeInput?activeInput.value:'';
+      form.querySelectorAll('section.htp-card').forEach(function(section){
+        if(section.id===activeId)return;
+        section.querySelectorAll('input,select,textarea,button').forEach(function(control){control.disabled=true;});
+      });
+    });
+  }
+
   function applyLanguage(language) {
     currentLanguage = language;
     document.querySelectorAll('[data-htp-language]').forEach(function (button) {
@@ -750,6 +766,7 @@
     initTariffSortables();
     initQuoteSortables();
     initAdminTabs();
+    initScopedSave();
     document.querySelectorAll('.htp-delete-season-form').forEach(function(form){form.addEventListener('submit',function(e){if(!window.confirm('Supprimer cette saison et toutes ses données ? Cette action est irréversible.'))e.preventDefault();});});
   });
 }());
