@@ -1,2 +1,0 @@
-version=1.7.7
-sha256=11d600892fc4c17bde4f5c0e303bd643ceb0d3fcdac14e1f88e2a0ba1d7d3d0b

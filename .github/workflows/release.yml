@@ -1,11 +1,9 @@
-name: Publier la release WordPress
+name: Build and publish WordPress release
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - '.release/manifest.txt'
+    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -16,44 +14,72 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Reconstruire le package WordPress
-        shell: bash
-        run: |
-          cat .release/part-* | base64 --decode > horaires-tarifs-parc.zip
-          unzip -t horaires-tarifs-parc.zip
-
-      - name: Lire la version
+      - name: Read plugin version
         id: version
         shell: bash
         run: |
-          VERSION=$(sed -n 's/^version=//p' .release/manifest.txt | head -1)
-          if [ -z "$VERSION" ]; then
-            echo "Version introuvable dans le manifeste" >&2
-            exit 1
-          fi
+          VERSION=$(php -r '$s=file_get_contents("horaires-tarifs-parc.php"); preg_match("/Version:\s*([0-9.]+)/",$s,$m); echo $m[1] ?? "";')
+          test -n "$VERSION"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: Vérifier le package
+      - name: Check PHP syntax
         shell: bash
         run: |
-          EXPECTED=$(sed -n 's/^sha256=//p' .release/manifest.txt | head -1)
-          ACTUAL=$(sha256sum horaires-tarifs-parc.zip | awk '{print $1}')
-          test -n "$EXPECTED"
-          test "$EXPECTED" = "$ACTUAL"
+          find . -type f -name '*.php' -not -path './.git/*' -print0 | xargs -0 -n1 php -l
 
-      - name: Créer ou mettre à jour la release
+      - name: Check JavaScript syntax
+        shell: bash
+        run: |
+          node --check assets/admin.js
+          node --check assets/frontend.js
+
+      - name: Stop if release already exists
+        id: existing
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ steps.version.outputs.tag }}
-          VERSION: ${{ steps.version.outputs.version }}
         shell: bash
         run: |
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" horaires-tarifs-parc.zip --clobber
+          if gh release view "${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
           else
-            git tag "$TAG" "$GITHUB_SHA"
-            git push origin "$TAG"
-            gh release create "$TAG" horaires-tarifs-parc.zip --title "Horaires & Tarifs Parc $VERSION" --generate-notes
+            echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Build WordPress ZIP
+        if: steps.existing.outputs.exists != 'true'
+        shell: bash
+        run: |
+          rm -rf build horaires-tarifs-parc.zip
+          mkdir -p build/horaires-tarifs-parc
+          rsync -a ./ build/horaires-tarifs-parc/ \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            --exclude 'build/' \
+            --exclude 'horaires-tarifs-parc.zip'
+          cd build
+          zip -qr ../horaires-tarifs-parc.zip horaires-tarifs-parc
+
+      - name: Validate WordPress ZIP
+        if: steps.existing.outputs.exists != 'true'
+        shell: bash
+        run: |
+          unzip -t horaires-tarifs-parc.zip
+          test "$(zipinfo -1 horaires-tarifs-parc.zip | cut -d/ -f1 | sort -u)" = "horaires-tarifs-parc"
+          unzip -p horaires-tarifs-parc.zip horaires-tarifs-parc/horaires-tarifs-parc.php > /tmp/horaires-tarifs-parc.php
+          PACKAGE_VERSION=$(php -r '$s=file_get_contents("/tmp/horaires-tarifs-parc.php"); preg_match("/Version:\\s*([0-9.]+)/",$s,$m); echo $m[1] ?? "";')
+          test "$PACKAGE_VERSION" = "${{ steps.version.outputs.version }}"
+          sha256sum horaires-tarifs-parc.zip | tee horaires-tarifs-parc.zip.sha256
+
+      - name: Create GitHub Release
+        if: steps.existing.outputs.exists != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh release create "${{ steps.version.outputs.tag }}" horaires-tarifs-parc.zip horaires-tarifs-parc.zip.sha256 \
+            --title "Horaires & Tarifs Parc ${{ steps.version.outputs.version }}" \
+            --notes-file <(sed -n '/^## ${{ steps.version.outputs.version }}$/,/^## /p' CHANGELOG.md | sed '$d')

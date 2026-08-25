@@ -1,0 +1,692 @@
+.parcs-ht-page,.parcs-ht-today,.parcs-ht-calendar,.parcs-ht-tariffs,.parcs-ht-alert-host{--htp-primary:#006757;--htp-secondary:#31ad81;--htp-accent:#ef7b5b;--htp-highlight:#e7c55b;box-sizing:border-box;background:transparent;color:var(--htp-body-text,inherit);font-family:inherit}.parcs-ht-page *,.parcs-ht-today *,.parcs-ht-calendar *,.parcs-ht-tariffs *,.parcs-ht-alert-host *{box-sizing:border-box}.parcs-ht-kicker{margin:0 0 7px;color:inherit;font-size:13px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;opacity:.72}.parcs-ht-heading{position:static!important;inset:auto!important;float:none!important;transform:none!important;display:block!important;text-align:center}.parcs-ht-heading h2,.parcs-ht-title{position:static!important;inset:auto!important;float:none!important;transform:none!important;margin:0!important;color:inherit!important;font-size:clamp(29px,4vw,46px)!important;font-weight:800!important;line-height:1.1!important}.parcs-ht-tariff-heading{clear:both!important;width:100%!important}.parcs-ht-tariff-heading .parcs-ht-kicker,.parcs-ht-tariff-heading .parcs-ht-title{color:var(--htp-tariff-title,inherit)!important}.parcs-ht-today{padding:var(--htp-block-spacing,8px) clamp(12px,3vw,24px);border:var(--htp-block-border-width,0) solid var(--htp-border,currentColor);background:transparent;color:inherit;text-align:center}.parcs-ht-today .parcs-ht-kicker{color:var(--htp-today-title,inherit)}.parcs-ht-today h2.is-open:before{content:'●';display:inline-block;margin-right:.22em;color:var(--htp-today-status,#16843d);font-size:.72em;vertical-align:.08em}.parcs-ht-today h2{max-width:950px;margin:0 auto;color:var(--htp-today-status,inherit);font-size:clamp(31px,6vw,58px);line-height:1.06}.parcs-ht-today-detail{margin:13px 0 0;color:inherit;font-size:clamp(17px,2.2vw,22px);font-weight:600}.parcs-ht-calendar{padding:var(--htp-block-spacing,8px) max(12px,calc((100% - 1080px)/2));border:var(--htp-block-border-width,0) solid var(--htp-border,currentColor);background:transparent;color:inherit}.parcs-ht-month-nav{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:8px;margin:28px 0 18px}.parcs-ht-month-list{display:flex;gap:8px;overflow-x:auto;padding:3px;scrollbar-width:thin;scroll-snap-type:x proximity}.parcs-ht-month-list button,.parcs-ht-month-arrow{appearance:none;min-height:42px;border:1px solid var(--htp-primary);border-radius:999px;background:var(--htp-primary);color:#fff;font:inherit;font-weight:700;cursor:pointer}.parcs-ht-month-list button{flex:0 0 auto;padding:8px 16px;scroll-snap-align:center}.parcs-ht-month-list button[aria-selected=true]{border-color:var(--htp-highlight);background:var(--htp-highlight);color:#26352f}.parcs-ht-month-arrow{width:42px;padding:0;font-size:28px;line-height:1}.parcs-ht-month-arrow:disabled{opacity:.35;cursor:default}.parcs-ht-month-summary{min-height:28px;margin:0 0 15px;text-align:center;font-size:clamp(17px,2.5vw,22px);font-weight:750;color:inherit}.parcs-ht-calendar-grid{max-width:620px;margin:0 auto}.parcs-ht-weekdays,.parcs-ht-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}.parcs-ht-weekdays{margin-bottom:6px}.parcs-ht-weekdays span{text-align:center;font-size:12px;font-weight:800;text-transform:uppercase}.parcs-ht-day,.parcs-ht-empty{position:relative;aspect-ratio:1;min-width:0}.parcs-ht-day{appearance:none;display:flex;align-items:center;justify-content:center;border:1px solid rgba(0,0,0,.12);border-radius:10px;background:var(--htp-day-color,#eef3f1);color:var(--htp-day-text,#1f2926);font:inherit;font-size:clamp(14px,3.7vw,18px);font-weight:750;cursor:pointer}.parcs-ht-day.is-closed{background:#e3e5e4;color:#616765;text-decoration:line-through}.parcs-ht-day.is-selected{outline:3px solid var(--htp-primary);outline-offset:1px}.parcs-ht-day.is-today:after{position:absolute;right:5px;bottom:4px;width:6px;height:6px;border-radius:50%;background:currentColor;content:""}.parcs-ht-day .parcs-ht-symbol{position:absolute;right:-4px;top:-5px}.parcs-ht-symbol{display:inline-flex;align-items:center;justify-content:center;width:21px;height:21px;border-radius:50%;font-size:14px;font-style:normal;font-weight:900;line-height:1;text-decoration:none}.parcs-ht-symbol.is-hours{background:var(--htp-highlight);color:#322b12}.parcs-ht-symbol.is-closed{background:var(--htp-accent);color:#fff}.parcs-ht-legend{display:flex;flex-wrap:wrap;justify-content:center;gap:14px 22px;margin:20px auto 0;font-size:14px}.parcs-ht-legend>span{display:flex;align-items:center;gap:7px}.parcs-ht-day-detail{max-width:720px;min-height:120px;margin:24px auto 0;padding:22px;border:1px solid currentColor;border-radius:14px;background:transparent;color:inherit;text-align:center;opacity:.96}.parcs-ht-day-detail h3{margin:0 0 9px;color:inherit;font-size:clamp(23px,3vw,31px)}.parcs-ht-day-hours{margin:0;font-size:clamp(20px,3vw,28px);font-weight:800}.parcs-ht-day-last{margin:7px 0 0;font-weight:650}.parcs-ht-exception-note{margin:13px auto 0;padding:10px 14px;border-left:4px solid var(--htp-highlight);background:transparent;text-align:left}.parcs-ht-domain-note{margin:15px auto 0;color:inherit;font-size:13px;line-height:1.45;text-align:left;opacity:.78}.parcs-ht-tariffs{position:relative!important;clear:both!important;padding:var(--htp-block-spacing,8px) max(12px,calc((100% - 1000px)/2));border:var(--htp-block-border-width,0) solid var(--htp-border,currentColor);background:transparent;color:inherit}.parcs-ht-payment-strip{max-width:860px;margin:12px auto 0;padding:10px 12px;border:var(--htp-payment-border-width,0) solid var(--htp-payment-border,currentColor);border-radius:16px;background:transparent;color:inherit;text-align:center}.parcs-ht-payment-title{display:block;margin-bottom:12px;font-size:15px}.parcs-ht-payment-icons{display:flex;flex-wrap:wrap;justify-content:center;gap:9px}.parcs-ht-payment-item{display:inline-flex;align-items:center;gap:8px;min-height:42px;padding:8px 12px;border:var(--htp-payment-local-border-width,0) solid var(--htp-payment-local-border,var(--htp-payment-border,currentColor));border-radius:999px;background:var(--htp-payment-local-bg,var(--htp-payment-item-bg,var(--htp-primary)))!important;color:var(--htp-payment-local-text,var(--htp-payment-item-text,#fff))!important;font-size:14px;font-weight:750}.parcs-ht-payment-item>span:not(.parcs-ht-payment-icon){color:var(--htp-payment-local-text,var(--htp-payment-item-text,#fff))!important}.parcs-ht-payment-item .parcs-ht-payment-icon,.parcs-ht-payment-item .parcs-ht-payment-icon svg{color:var(--htp-payment-local-icon,var(--htp-payment-icon,currentColor))!important;stroke:currentColor!important}.parcs-ht-payment-icon{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;color:var(--htp-payment-local-icon,var(--htp-payment-icon,currentColor))}.parcs-ht-payment-icon svg{display:block;width:22px;height:22px}.parcs-ht-payment-note{margin:11px 0 0;color:inherit;font-size:13px;line-height:1.45;opacity:.82}.parcs-ht-tariff-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:800px;margin:12px auto 0}.parcs-ht-tariff-tabs button{appearance:none;min-height:52px;padding:10px 14px;border:2px solid var(--htp-primary);border-radius:11px;background:var(--htp-primary);color:#fff;font:inherit;font-size:16px;font-weight:800;cursor:pointer}.parcs-ht-tariff-tabs button[aria-selected=true]{border-color:var(--htp-highlight);background:var(--htp-highlight);color:#27342f}.parcs-ht-tariff-panel{max-width:800px;margin:8px auto 0;padding:clamp(12px,3vw,22px);border:var(--htp-panel-border-width,0) solid var(--htp-panel-border,currentColor);border-radius:14px;background:transparent;color:inherit}.parcs-ht-price-row{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:14px 0;border-bottom:1px solid currentColor}.parcs-ht-price-row:last-child{border-bottom:0}.parcs-ht-price-row div{display:grid;gap:2px}.parcs-ht-price-row strong{font-size:17px}.parcs-ht-price-row small{color:inherit;opacity:.72}.parcs-ht-price-row.is-disability small{font-size:12px;line-height:1.4;max-width:560px}.parcs-ht-price-row b{flex:0 0 auto;color:inherit;font-size:22px}.parcs-ht-tariff-note{margin:18px 0 0;padding:14px;border-left:4px solid var(--htp-accent);background:transparent;color:inherit;font-size:14px;line-height:1.5}.parcs-ht-payments{max-width:800px;margin:18px auto 0;text-align:center}.parcs-ht-panel-actions{display:flex;justify-content:center;margin-top:12px}.parcs-ht-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:12px}.parcs-ht-button{appearance:none;display:inline-block;padding:12px 22px;border:2px solid var(--htp-primary);border-radius:999px;background:var(--htp-primary);color:var(--htp-button-text,#fff)!important;font-weight:800;text-decoration:none!important}.parcs-ht-button.is-primary{border-color:var(--htp-accent);background:var(--htp-accent);color:#fff!important}.parcs-ht-alert-host[hidden]{display:none!important}.parcs-ht-alert{padding:20px;border:3px solid var(--htp-accent);border-radius:12px;background:var(--htp-primary);color:#fff;text-align:center}.parcs-ht-alert h2{margin:0 0 8px;color:#fff}.parcs-ht-alert p{margin:0}.parcs-ht-alert .parcs-ht-button{margin-top:15px;border-color:var(--htp-accent);background:var(--htp-accent);color:#fff!important}.parcs-ht-modal{position:fixed;z-index:999999;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.68)}.parcs-ht-modal-dialog{position:relative;width:min(620px,100%);max-height:90vh;overflow:auto}.parcs-ht-modal-close{appearance:none;position:absolute;z-index:2;right:10px;top:10px;width:36px;height:36px;border:0;border-radius:50%;background:#fff;color:#222;font-size:24px;cursor:pointer}.screen-reader-text{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}@media(max-width:600px){.parcs-ht-month-nav{grid-template-columns:38px minmax(0,1fr) 38px}.parcs-ht-month-arrow{width:38px}.parcs-ht-calendar{padding-top:var(--htp-block-spacing,8px)}.parcs-ht-weekdays,.parcs-ht-days{gap:4px}.parcs-ht-day{border-radius:8px}.parcs-ht-tariff-tabs{grid-template-columns:1fr}.parcs-ht-tariff-tabs button{min-height:46px}.parcs-ht-price-row{align-items:center}.parcs-ht-day-detail{padding:18px 14px}.parcs-ht-payment-strip{margin-top:10px;padding:10px}.parcs-ht-payment-icons{gap:7px}.parcs-ht-payment-item{flex:1 1 calc(50% - 7px);justify-content:flex-start;min-width:0;padding:8px 10px;font-size:13px}.parcs-ht-payment-note{font-size:12px}}@media(prefers-reduced-motion:reduce){.parcs-ht-month-list{scroll-behavior:auto!important}}
+.parcs-ht-year-list{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin:20px auto 4px}.parcs-ht-year-list[hidden]{display:none!important}.parcs-ht-year-list button{appearance:none;min-width:72px;padding:9px 16px;border:2px solid var(--htp-primary);border-radius:999px;background:var(--htp-primary);color:#fff;font:inherit;font-weight:800;cursor:pointer}.parcs-ht-year-list button[aria-pressed=true]{border-color:var(--htp-highlight);background:var(--htp-highlight);color:#27342f}
+
+.parcs-ht-payment-note{display:none!important}
+
+/* 1.1.2 — personnalisation complète des couleurs */
+.parcs-ht-page,.parcs-ht-today,.parcs-ht-calendar,.parcs-ht-tariffs{color:var(--htp-body-text,inherit)}
+.parcs-ht-heading{color:var(--htp-heading-text,inherit);padding:12px 16px;border-radius:12px}
+.parcs-ht-today-heading{background:var(--htp-today-title-bg,transparent)}
+.parcs-ht-today-heading .parcs-ht-kicker{color:var(--htp-today-title,var(--htp-heading-text,inherit))}
+.parcs-ht-today h2{color:var(--htp-today-status,#16843d)}
+.parcs-ht-today h2.is-closed{color:var(--htp-today-closed,#9b2c2c)}
+.parcs-ht-today-detail{color:var(--htp-today-detail,inherit)}
+.parcs-ht-calendar>.parcs-ht-heading{background:var(--htp-calendar-title-bg,transparent);color:var(--htp-calendar-title,var(--htp-heading-text,inherit))}
+.parcs-ht-weekdays{color:var(--htp-calendar-weekday,inherit)}
+.parcs-ht-month-list button,.parcs-ht-month-arrow,.parcs-ht-year-list button{border-color:var(--htp-calendar-nav-bg,var(--htp-primary));background:var(--htp-calendar-nav-bg,var(--htp-primary));color:var(--htp-calendar-nav-text,#fff)}
+.parcs-ht-month-list button[aria-selected=true],.parcs-ht-year-list button[aria-pressed=true]{border-color:var(--htp-calendar-nav-active-bg,var(--htp-highlight));background:var(--htp-calendar-nav-active-bg,var(--htp-highlight));color:var(--htp-calendar-nav-active-text,#27342f)}
+.parcs-ht-day.is-closed{background:var(--htp-calendar-closed-bg,#e3e5e4);color:var(--htp-calendar-closed-text,#616765)}
+.parcs-ht-day.is-selected{outline-color:var(--htp-calendar-selected,var(--htp-primary))}
+.parcs-ht-day-detail{border-color:var(--htp-calendar-detail-border,var(--htp-border,currentColor));color:var(--htp-calendar-detail-text,inherit)}
+.parcs-ht-tariff-heading{background:var(--htp-tariff-title-bg,transparent)}
+.parcs-ht-tariff-heading .parcs-ht-kicker,.parcs-ht-tariff-heading .parcs-ht-title{color:var(--htp-tariff-title,var(--htp-heading-text,inherit))!important}
+.parcs-ht-payment-strip{border-color:var(--htp-payment-border,var(--htp-border,currentColor))}
+.parcs-ht-payment-title{display:inline-block;padding:6px 10px;border-radius:8px;background:var(--htp-payment-title-bg,transparent);color:var(--htp-payment-title,var(--htp-heading-text,inherit))}
+.parcs-ht-payment-item{background:var(--htp-payment-item-bg,var(--htp-primary));color:var(--htp-payment-item-text,#fff)}
+.parcs-ht-payment-icon{color:var(--htp-payment-icon,#fff)}
+.parcs-ht-tariff-tabs button{border-color:var(--htp-tab-bg,var(--htp-primary));background:var(--htp-tab-bg,var(--htp-primary));color:var(--htp-tab-text,#fff)}
+.parcs-ht-tariff-tabs button[aria-selected=true]{border-color:var(--htp-tab-active-bg,var(--htp-highlight));background:var(--htp-tab-active-bg,var(--htp-highlight));color:var(--htp-tab-active-text,#27342f)}
+.parcs-ht-tariff-panel{border-color:var(--htp-panel-border,var(--htp-border,currentColor));color:var(--htp-panel-text,inherit)}
+.parcs-ht-price-row b{color:var(--htp-price,inherit)}
+.parcs-ht-button{border-color:var(--htp-button-bg,var(--htp-primary));background:var(--htp-button-bg,var(--htp-primary));color:var(--htp-button-text,#fff)!important}
+.parcs-ht-button.is-primary{border-color:var(--htp-primary-button-bg,var(--htp-accent));background:var(--htp-primary-button-bg,var(--htp-accent));color:var(--htp-primary-button-text,#fff)!important}
+.parcs-ht-alert{border-color:var(--htp-alert-border,var(--htp-accent));background:var(--htp-alert-bg,var(--htp-primary));color:var(--htp-alert-text,#fff)}
+.parcs-ht-alert h2,.parcs-ht-alert p{color:var(--htp-alert-text,#fff)}
+.parcs-ht-alert .parcs-ht-button{border-color:var(--htp-alert-border,var(--htp-accent));background:var(--htp-alert-border,var(--htp-accent));color:var(--htp-alert-text,#fff)!important}
+
+/* 1.1.3 — jours fériés, groupes hors période et horaire d’en-tête */
+.parcs-ht-day.is-public-holiday{box-shadow:inset 0 0 0 var(--htp-holiday-border-width,3px) var(--htp-holiday-border,#e7c55b)}
+.parcs-ht-holiday-legend{display:inline-block;width:19px;height:19px;border:3px solid var(--htp-holiday-border,#e7c55b);border-radius:5px;background:transparent}
+.parcs-ht-holiday-note{margin:13px auto 0;padding:10px 14px;border:1px solid var(--htp-holiday-border,#e7c55b);border-radius:10px;background:transparent;color:inherit;font-size:13px;line-height:1.45;text-align:left}
+.parcs-ht-groups-closed-note{margin:18px 0 0;padding:12px 14px;border-left:4px solid var(--htp-highlight);background:transparent;color:inherit;font-size:13px;line-height:1.5}
+.parcs-ht-groups-closed-note a{color:inherit;text-decoration:underline}
+.parcs-ht-header-hour{color:inherit;font:inherit}
+
+/* 1.1.4 — couleurs rangées par section + personnalisation ligne tarifaire */
+.parcs-ht-tariff-heading .parcs-ht-kicker{color:var(--htp-tariff-kicker,var(--htp-tariff-title,var(--htp-heading-text,inherit)))!important}
+.parcs-ht-tariff-heading .parcs-ht-title{color:var(--htp-tariff-title,var(--htp-heading-text,inherit))!important}
+.parcs-ht-tariff-panel{background:var(--htp-panel-bg,transparent)}
+.parcs-ht-price-row{background:var(--htp-row-bg,transparent);border-bottom-color:var(--htp-row-border,currentColor);padding-left:10px;padding-right:10px;border-radius:8px}
+.parcs-ht-price-row strong{color:var(--htp-row-label,var(--htp-panel-text,inherit))}
+.parcs-ht-price-row small{color:var(--htp-row-detail,var(--htp-panel-text,inherit));opacity:1}
+.parcs-ht-price-row b{color:var(--htp-row-price,var(--htp-price,var(--htp-panel-text,inherit)))}
+.parcs-ht-tariff-note{color:var(--htp-tariff-note-text,var(--htp-panel-text,inherit));border-left-color:var(--htp-tariff-note-border,var(--htp-accent))}
+.parcs-ht-groups-closed-note{color:var(--htp-groups-note-text,var(--htp-panel-text,inherit));border-left-color:var(--htp-groups-note-border,var(--htp-highlight))}
+
+/* 1.1.5 — affichage compact et couleurs paiement entièrement configurables */
+.parcs-ht-payment-title{color:var(--htp-payment-title,inherit);background:var(--htp-payment-title-bg,transparent)}
+.parcs-ht-tariff-heading{background:var(--htp-tariff-title-bg,transparent)}
+.parcs-ht-page>.parcs-ht-today:first-child,.parcs-ht-page>.parcs-ht-calendar:first-child,.parcs-ht-page>.parcs-ht-tariffs:first-child{margin-top:0}
+.parcs-ht-page>.parcs-ht-today:last-child,.parcs-ht-page>.parcs-ht-calendar:last-child,.parcs-ht-page>.parcs-ht-tariffs:last-child{margin-bottom:0}
+
+.parcs-ht-price-subtitle{display:block;color:var(--htp-row-detail,inherit)}.parcs-ht-price-note{display:block;margin-top:3px;color:var(--htp-row-note,var(--htp-row-detail,inherit));font-size:.88em;line-height:1.35}
+
+
+/* 1.2.5 — calendrier mobile ultra-compact et réglages groupes conservés */
+.parcs-ht-groups-booking-note{margin:12px 0 0;padding:12px 14px;border-left:4px solid var(--htp-groups-note-border,var(--htp-highlight));background:transparent;color:var(--htp-groups-note-text,var(--htp-panel-text,inherit));font-size:14px;line-height:1.45}
+.parcs-ht-day-detail-top{margin:10px auto 10px;min-height:0;padding:12px 14px}
+.parcs-ht-day-detail-top h3{margin-bottom:4px}
+.parcs-ht-day-detail-top .parcs-ht-day-last{margin-top:3px}
+@media(max-width:600px){
+  .parcs-ht-calendar{padding:4px 8px calc(6px + env(safe-area-inset-bottom));}
+  .parcs-ht-calendar>.parcs-ht-heading{padding:4px 6px!important;margin:0!important;}
+  .parcs-ht-calendar>.parcs-ht-heading .parcs-ht-kicker{margin:0 0 2px;font-size:10px;line-height:1.05}
+  .parcs-ht-calendar>.parcs-ht-heading h2{font-size:22px!important;line-height:1.05!important}
+  .parcs-ht-year-list{margin:5px auto 2px;gap:4px}
+  .parcs-ht-year-list button{min-width:58px;padding:5px 10px;font-size:12px}
+  .parcs-ht-month-nav{grid-template-columns:30px minmax(0,1fr) 30px;gap:4px;margin:6px 0 4px}
+  .parcs-ht-month-arrow{width:30px;min-height:30px;font-size:21px}
+  .parcs-ht-month-list{justify-content:center;gap:4px;padding:1px;overflow:hidden;scrollbar-width:none}
+  .parcs-ht-month-list::-webkit-scrollbar{display:none}
+  .parcs-ht-month-list button{display:none;min-height:30px;padding:4px 8px;font-size:11px;line-height:1.1}
+  .parcs-ht-month-list button.is-near-month{display:block;max-width:32%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .parcs-ht-month-list button[aria-selected=true]{font-size:12px;font-weight:850}
+  .parcs-ht-day-detail-top{margin:4px auto;padding:5px 8px;border-radius:8px;line-height:1.15}
+  .parcs-ht-day-detail-top h3{margin:0 0 2px;font-size:var(--htp-mobile-detail-title,15px);line-height:1.15}
+  .parcs-ht-day-hours{font-size:var(--htp-mobile-detail-hours,16px);line-height:1.1}
+  .parcs-ht-day-last{margin:2px 0 0;font-size:var(--htp-mobile-detail-last,12px);line-height:1.15}
+  .parcs-ht-exception-note,.parcs-ht-holiday-note,.parcs-ht-domain-note{margin:4px 0 0;padding:5px 7px;font-size:10px;line-height:1.2}
+  .parcs-ht-month-summary{min-height:0;margin:3px 0 4px;font-size:11px;line-height:1.15}
+  .parcs-ht-calendar-grid{width:min(100%,var(--htp-mobile-grid,318px));margin:0 auto}
+  .parcs-ht-weekdays,.parcs-ht-days{gap:1px}
+  .parcs-ht-weekdays{margin-bottom:2px}
+  .parcs-ht-weekdays span{font-size:var(--htp-mobile-weekday-font,11px);line-height:1}
+  .parcs-ht-day,.parcs-ht-empty{aspect-ratio:auto;height:var(--htp-mobile-day-h,32px);min-height:var(--htp-mobile-day-h,32px)}
+  .parcs-ht-day{border-radius:5px;font-size:var(--htp-mobile-day-font,12px);line-height:1;padding:0}
+  .parcs-ht-day.is-selected{outline-width:2px;outline-offset:0}
+  .parcs-ht-day.is-today:after{right:3px;bottom:3px;width:4px;height:4px}
+  .parcs-ht-day .parcs-ht-symbol{right:-2px;top:-3px}
+  .parcs-ht-symbol{width:var(--htp-mobile-symbol,15px);height:var(--htp-mobile-symbol,15px);font-size:calc(var(--htp-mobile-symbol,15px) * .68)}
+  .parcs-ht-legend{gap:3px 7px;margin:5px auto 0;font-size:var(--htp-mobile-legend-font,10px);line-height:1.15}
+  .parcs-ht-legend>span{gap:3px}
+  .parcs-ht-holiday-legend{width:var(--htp-mobile-symbol,15px);height:var(--htp-mobile-symbol,15px);border-width:2px;border-radius:3px}
+  .parcs-ht-today{padding-top:4px;padding-bottom:4px}
+  .parcs-ht-today .parcs-ht-heading{padding:4px 6px}
+  .parcs-ht-today h2{font-size:28px}
+  .parcs-ht-today-detail{margin-top:4px;font-size:14px;line-height:1.25}
+  .parcs-ht-groups-booking-note,.parcs-ht-groups-closed-note{margin-top:8px;padding:8px 10px;font-size:12px;line-height:1.35}
+}
+
+/* 1.2.6 — taille mobile configurable sans sacrifier la lisibilité */
+@media(max-width:600px){.parcs-ht-weekdays span,.parcs-ht-legend{font-weight:700}.parcs-ht-day{font-weight:800}}
+
+
+/* 1.2.7 — exceptions du domaine, vacances Zone B et shortcodes sans cadre */
+.parcs-ht-page,.parcs-ht-today,.parcs-ht-calendar,.parcs-ht-tariffs{border:0!important;box-shadow:none!important;background:transparent}
+.parcs-ht-day.is-school-holiday:before{content:'';position:absolute;left:3px;top:3px;width:7px;height:7px;border-radius:50%;background:var(--htp-school-holiday,#7b61a8);z-index:2}
+.parcs-ht-school-holiday-legend{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--htp-school-holiday,#7b61a8)}
+.parcs-ht-school-holiday-note{margin:8px auto 0;padding:7px 10px;border-left:3px solid var(--htp-school-holiday,#7b61a8);background:transparent;color:inherit;font-size:13px;line-height:1.4;text-align:left}
+@media(max-width:600px){.parcs-ht-day.is-school-holiday:before{left:2px;top:2px;width:5px;height:5px}.parcs-ht-school-holiday-legend{width:8px;height:8px}.parcs-ht-school-holiday-note{margin-top:4px;padding:5px 7px;font-size:10px;line-height:1.2}}
+
+
+/* 1.2.8 final — typographie réglable sur tous les modules */
+.parcs-ht-page,.parcs-ht-today,.parcs-ht-calendar,.parcs-ht-tariffs,.parcs-ht-alert-host{font-size:var(--htp-font-body,inherit)}
+.parcs-ht-kicker{font-size:var(--htp-font-kicker,13px)!important}
+.parcs-ht-heading h2,.parcs-ht-title{font-size:var(--htp-font-heading,clamp(29px,4vw,46px))!important}
+.parcs-ht-today .parcs-ht-kicker{font-size:var(--htp-font-today-title,var(--htp-font-kicker,13px))!important}
+.parcs-ht-today h2{font-size:var(--htp-font-today-status,clamp(31px,6vw,58px))!important}
+.parcs-ht-today-detail{font-size:var(--htp-font-today-detail,clamp(17px,2.2vw,22px))!important}
+.parcs-ht-calendar>.parcs-ht-heading h2{font-size:var(--htp-font-calendar-title,var(--htp-font-heading,clamp(29px,4vw,46px)))!important}
+.parcs-ht-month-list button{font-size:var(--htp-font-calendar-month,inherit)!important}
+.parcs-ht-month-summary{font-size:var(--htp-font-calendar-summary,clamp(17px,2.5vw,22px))!important}
+.parcs-ht-weekdays span{font-size:var(--htp-font-calendar-weekday,12px)!important}
+.parcs-ht-day{font-size:var(--htp-font-calendar-day,clamp(14px,3.7vw,18px))!important}
+.parcs-ht-day-detail h3{font-size:var(--htp-font-calendar-detail-title,clamp(23px,3vw,31px))!important}
+.parcs-ht-day-hours{font-size:var(--htp-font-calendar-detail-hours,clamp(20px,3vw,28px))!important}
+.parcs-ht-day-last{font-size:var(--htp-font-calendar-detail-last,inherit)!important}
+.parcs-ht-legend{font-size:var(--htp-font-calendar-legend,14px)!important}
+.parcs-ht-tariff-heading .parcs-ht-title{font-size:var(--htp-font-tariff-title,var(--htp-font-heading,clamp(29px,4vw,46px)))!important}
+.parcs-ht-tariff-tabs button{font-size:var(--htp-font-tariff-tab,16px)!important}
+.parcs-ht-price-row strong{font-size:var(--htp-font-tariff-label,17px)!important}
+.parcs-ht-price-row small,.parcs-ht-price-subtitle{font-size:var(--htp-font-tariff-detail,inherit)!important}
+.parcs-ht-price-note,.parcs-ht-tariff-note{font-size:var(--htp-font-tariff-note,14px)!important}
+.parcs-ht-price-row b{font-size:var(--htp-font-tariff-price,22px)!important}
+.parcs-ht-payment-title{font-size:var(--htp-font-payment-title,15px)!important}
+.parcs-ht-payment-item{font-size:var(--htp-font-payment-item,14px)!important}
+.parcs-ht-groups-booking-note,.parcs-ht-groups-closed-note{font-size:var(--htp-font-groups-note,14px)!important}
+.parcs-ht-button{font-size:var(--htp-font-button,inherit)!important}
+.parcs-ht-alert h2{font-size:var(--htp-font-alert-title,var(--htp-font-heading,inherit))!important}
+.parcs-ht-alert p{font-size:var(--htp-font-alert-text,var(--htp-font-body,inherit))!important}
+.parcs-ht-alert .parcs-ht-button{font-size:var(--htp-font-alert-button,var(--htp-font-button,inherit))!important}
+@media(max-width:600px){
+  .parcs-ht-weekdays span{font-size:var(--htp-font-calendar-weekday,var(--htp-mobile-weekday-font,11px))!important}
+  .parcs-ht-day{font-size:var(--htp-font-calendar-day,var(--htp-mobile-day-font,12px))!important}
+  .parcs-ht-day-detail-top h3{font-size:var(--htp-font-calendar-detail-title,var(--htp-mobile-detail-title,15px))!important}
+  .parcs-ht-day-hours{font-size:var(--htp-font-calendar-detail-hours,var(--htp-mobile-detail-hours,16px))!important}
+  .parcs-ht-day-last{font-size:var(--htp-font-calendar-detail-last,var(--htp-mobile-detail-last,12px))!important}
+  .parcs-ht-legend{font-size:var(--htp-font-calendar-legend,var(--htp-mobile-legend-font,10px))!important}
+  .parcs-ht-month-list button{font-size:var(--htp-font-calendar-month,11px)!important}
+  .parcs-ht-month-list button[aria-selected=true]{font-size:var(--htp-font-calendar-month,12px)!important}
+  .parcs-ht-groups-booking-note,.parcs-ht-groups-closed-note{font-size:var(--htp-font-groups-note,12px)!important}
+}
+
+
+/* 1.3.0 — lisibilité simplifiée, événements génériques et intégration neutre au thème */
+.parcs-ht-page{margin:0!important;padding:0!important;border:0!important;box-shadow:none!important;background:transparent!important}
+.parcs-ht-header-hour,.parcs-ht-header-status{font:inherit!important;color:inherit!important;margin:0!important;padding:0!important}
+.parcs-ht-page,.parcs-ht-today,.parcs-ht-calendar,.parcs-ht-tariffs{font-size:var(--htp-type-scale,1em)}
+.parcs-ht-day.is-special-event .parcs-ht-event-star{position:absolute;left:3px;top:1px;z-index:3;color:var(--htp-event-color,#e7c55b);font-size:13px;line-height:1;text-shadow:0 1px 1px rgba(0,0,0,.12)}.parcs-ht-day.is-special-event .parcs-ht-event-star.is-period{font-size:10px}
+.parcs-ht-event-legend{display:inline-flex;align-items:center;justify-content:center;color:var(--htp-highlight,#e7c55b);font-size:17px;line-height:1}
+.parcs-ht-event-note{margin:0 0 8px;padding:8px 10px;border-left:4px solid var(--htp-event-color,#e7c55b);background:transparent;text-align:left}
+.parcs-ht-event-note .parcs-ht-event-title{margin:0 0 4px;color:inherit;font:inherit;font-weight:850;font-size:1.05em}
+.parcs-ht-event-note p{margin:0;line-height:1.4}
+.parcs-ht-event-note .parcs-ht-event-link{margin-top:8px}
+.htp-advanced{margin-top:14px}
+.htp-advanced>summary{cursor:pointer;font-weight:700}
+@media(max-width:600px){
+  .parcs-ht-day-detail-top h3{font-size:var(--htp-font-calendar-detail-title,var(--htp-simple-detail-title,19px))!important}
+  .parcs-ht-day-detail-top .parcs-ht-day-hours{font-size:var(--htp-font-calendar-detail-hours,var(--htp-simple-detail-hours,25px))!important;font-weight:850}
+  .parcs-ht-day-detail-top .parcs-ht-day-last{font-size:var(--htp-font-calendar-detail-last,var(--htp-simple-detail-last,15px))!important}
+  .parcs-ht-day.is-special-event .parcs-ht-event-star{left:2px;top:1px;font-size:10px}
+  .parcs-ht-event-note{margin-bottom:5px;padding:5px 7px;font-size:11px}
+}
+
+.parcs-ht-event-star svg{display:block;width:13px;height:13px}.parcs-ht-event-title-icon{display:inline-flex;vertical-align:-2px;color:var(--htp-event-color,#e7c55b)}.parcs-ht-event-title-icon svg{width:17px;height:17px}.parcs-ht-event-star.is-period{font-weight:900}
+@media(max-width:720px){.parcs-ht-event-star svg{width:10px;height:10px}.parcs-ht-event-title-icon svg{width:15px;height:15px}}
+
+.parcs-ht-event-star.is-event{left:3px;top:1px}.parcs-ht-event-star.is-period{left:auto;right:3px;bottom:2px;top:auto}.parcs-ht-period-legend{display:inline-flex;align-items:center;justify-content:center;color:var(--htp-highlight,#7b61a8);font-size:13px;line-height:1}
+@media(max-width:720px){.parcs-ht-event-star.is-event{left:2px;top:1px}.parcs-ht-event-star.is-period{right:2px;bottom:1px}}
+
+/* 1.3.2 corrective — accès temporairement limité */
+.parcs-ht-domain-note{display:grid;gap:4px}.parcs-ht-domain-note strong{font-size:1.05em}.parcs-ht-domain-note p{margin:0}
+
+
+/* 1.5.0 — calendrier minimaliste et détail de journée hiérarchisé */
+.parcs-ht-day{background:transparent!important;color:inherit!important;border-color:rgba(0,0,0,.14)!important;text-decoration:none!important}
+.parcs-ht-day.is-open{background:transparent!important;color:inherit!important}
+.parcs-ht-day.is-closed{background:rgba(100,110,105,.10)!important;color:rgba(70,78,75,.55)!important;text-decoration:none!important}
+.parcs-ht-day.is-selected{outline:3px solid var(--htp-primary)!important;outline-offset:1px!important;border-color:var(--htp-primary)!important}
+.parcs-ht-day .parcs-ht-symbol{right:2px!important;top:2px!important}
+.parcs-ht-event-star.is-event{position:absolute!important;left:3px!important;top:3px!important;right:auto!important;bottom:auto!important;color:var(--htp-event-color,#e7c55b)!important;text-shadow:none!important}
+.parcs-ht-event-star.is-event.is-spot{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px}
+.parcs-ht-event-star.is-event.is-long{font-size:18px!important;line-height:10px!important;font-weight:900!important}
+.parcs-ht-period-band{position:absolute;left:4px;right:4px;bottom:calc(3px + (var(--htp-period-index,0) * 3px));height:2px;border-radius:999px;background:var(--htp-period-color,#7b61a8);pointer-events:none}
+.parcs-ht-event-star.is-period{display:none!important}
+.parcs-ht-day-detail{border:2px solid rgba(0,0,0,.16)!important;background:transparent!important}
+.parcs-ht-domain-note{margin:10px 0 0!important;padding:8px 0 0!important;border-top:1px solid rgba(0,0,0,.10);display:block!important;color:inherit!important;font-size:.92em!important;line-height:1.35!important;text-align:left!important;opacity:.82!important}
+.parcs-ht-domain-note strong{display:block;margin:0 0 4px;font-size:1em!important;font-weight:800}
+.parcs-ht-domain-note p{display:inline;margin:0 12px 0 0!important}
+.parcs-ht-domain-note .parcs-ht-domain-extra{display:block;margin-top:4px!important;opacity:.9}
+.parcs-ht-event-note{margin:10px 0 0!important;padding:8px 0 0!important;border-left:0!important;border-top:1px solid rgba(0,0,0,.10);background:transparent!important;text-align:left!important}
+.parcs-ht-event-note.is-event{border-top:0!important;border-left:3px solid var(--htp-event-color,#e7c55b)!important;padding:6px 0 6px 10px!important}
+.parcs-ht-event-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.parcs-ht-event-note .parcs-ht-event-title{display:flex;align-items:center;gap:5px;min-width:0;margin:0!important;font-size:1em!important;font-weight:850!important}
+.parcs-ht-event-title-icon{flex:0 0 auto}
+.parcs-ht-event-note p{margin:4px 0 0!important;font-size:.9em;line-height:1.35;opacity:.8}
+.parcs-ht-event-note .parcs-ht-event-link{flex:0 0 auto;margin:0!important;padding:7px 12px!important;font-size:.82em!important;white-space:nowrap}
+.parcs-ht-period-legend{display:inline-block;width:24px;height:3px;border-radius:999px;background:currentColor;font-size:0!important}
+@media(max-width:600px){
+ .parcs-ht-day .parcs-ht-symbol{right:1px!important;top:1px!important}
+ .parcs-ht-event-star.is-event{left:2px!important;top:2px!important}
+ .parcs-ht-event-star.is-event.is-spot{width:12px;height:12px}
+ .parcs-ht-event-star.is-event.is-long{font-size:15px!important}
+ .parcs-ht-period-band{left:2px;right:2px;bottom:calc(2px + (var(--htp-period-index,0) * 2px));height:2px}
+ .parcs-ht-day-detail{padding:10px!important;border-width:2px!important}
+ .parcs-ht-domain-note{margin-top:6px!important;padding-top:6px!important;font-size:11px!important}
+ .parcs-ht-domain-note p{margin-right:8px!important}
+ .parcs-ht-event-note{margin-top:6px!important;padding-top:6px!important;font-size:11px!important}
+ .parcs-ht-event-head{gap:6px}
+ .parcs-ht-event-note .parcs-ht-event-link{padding:5px 8px!important;font-size:10px!important}
+}
+
+.parcs-ht-period-legends{display:contents}
+.parcs-ht-period-legend-item{display:inline-flex!important;align-items:center;gap:6px}
+
+/* 1.5.2 — calendrier lisible et marqueurs d'événements unifiés */
+.parcs-ht-day{background:var(--htp-calendar-day-bg,#fff)!important;}
+.parcs-ht-day.is-closed{background:var(--htp-calendar-closed-bg,#e3e5e4)!important;color:var(--htp-calendar-closed-text,#616765)!important;text-decoration:none!important;}
+.parcs-ht-day.is-closed .parcs-ht-day-number{text-decoration:line-through!important;text-decoration-thickness:2px!important;text-decoration-color:currentColor!important;}
+.parcs-ht-day-number{position:relative;z-index:1;}
+.parcs-ht-event-star.is-event{position:absolute!important;left:-4px!important;top:-5px!important;right:auto!important;bottom:auto!important;z-index:5!important;color:#2f2a12!important;text-shadow:none!important;pointer-events:none!important;}
+.parcs-ht-event-star.is-event.is-spot{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:22px!important;height:22px!important;border-radius:50%!important;background:#e7c55b!important;box-shadow:0 1px 2px rgba(0,0,0,.18)!important;}
+.parcs-ht-event-star.is-event.is-spot svg{display:block!important;width:13px!important;height:13px!important;color:#2f2a12!important;stroke:currentColor!important;}
+.parcs-ht-event-star.is-event.is-long{display:block!important;width:8px!important;height:8px!important;border-radius:50%!important;background:#e7c55b!important;color:transparent!important;font-size:0!important;line-height:0!important;left:2px!important;top:2px!important;box-shadow:0 1px 1px rgba(0,0,0,.15)!important;}
+@media(max-width:640px){.parcs-ht-event-star.is-event.is-spot{width:18px!important;height:18px!important;left:-3px!important;top:-4px!important}.parcs-ht-event-star.is-event.is-spot svg{width:11px!important;height:11px!important}.parcs-ht-event-star.is-event.is-long{width:7px!important;height:7px!important;left:2px!important;top:2px!important}}
+
+/* 1.5.3 — légende publique simplifiée */
+.parcs-ht-event-legend{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#e7c55b;color:#2f2a12;font-size:13px;font-style:normal;font-weight:900;line-height:1;box-shadow:0 1px 2px rgba(0,0,0,.16)}
+.parcs-ht-legend [data-htp-event-legend-wrap][hidden]{display:none!important}
+
+
+/* 1.5.4 — affichage compact de la page d’accueil */
+.parcs-ht-header-status{display:inline-block!important;font-family:inherit!important;font-size:var(--htp-header-status-size,1.35em)!important;font-weight:900!important;line-height:var(--htp-header-status-line-height,1.05)!important;letter-spacing:.01em!important;color:inherit!important}
+.parcs-ht-header-hour{display:inline-block!important;margin-top:3px!important;font-family:inherit!important;font-size:var(--htp-header-hour-size,.98em)!important;font-weight:650!important;line-height:var(--htp-header-hour-line-height,1.25)!important;color:inherit!important}
+.parcs-ht-header-status.is-open{font-weight:900!important}
+.parcs-ht-header-status.is-closed{font-weight:850!important}
+@media(max-width:640px){.parcs-ht-header-status{font-size:1.28em!important}.parcs-ht-header-hour{font-size:.92em!important}}
+
+
+/* 1.5.5 — profils typographiques (police toujours héritée du thème) */
+.parcs-ht-heading h2,.parcs-ht-title,.parcs-ht-day-detail h3,.parcs-ht-event-title{line-height:var(--htp-title-line-height,1.08)!important}
+.parcs-ht-kicker{line-height:var(--htp-kicker-line-height,1.15)!important}
+.parcs-ht-page,.parcs-ht-today,.parcs-ht-calendar,.parcs-ht-tariffs,.parcs-ht-alert-host,.parcs-ht-header-status,.parcs-ht-header-hour{font-family:inherit!important}
+@media(max-width:640px){
+ .parcs-ht-header-status{font-size:var(--htp-header-status-size,1.28em)!important}
+ .parcs-ht-header-hour{font-size:var(--htp-header-hour-size,.92em)!important}
+}
+
+
+/* 1.5.6 — bloc d’accueil : hiérarchie simple, sans date */
+.parcs-ht-header-status{
+  display:inline-block!important;
+  font-family:inherit!important;
+  font-size:1.18em!important;
+  font-weight:800!important;
+  line-height:1.05!important;
+  letter-spacing:0!important;
+  color:inherit!important;
+  text-transform:none!important;
+}
+.parcs-ht-header-hour{
+  display:block!important;
+  margin-top:3px!important;
+  font-family:inherit!important;
+  font-size:inherit!important;
+  font-weight:400!important;
+  line-height:1.16!important;
+  color:inherit!important;
+}
+.parcs-ht-header-hour-main{display:block!important;font-size:1.05em!important;font-weight:600!important;line-height:1.15!important}
+.parcs-ht-header-hour-detail{display:block!important;margin-top:2px!important;font-size:.82em!important;font-weight:400!important;line-height:1.15!important;opacity:.96}
+@media(max-width:640px){
+  .parcs-ht-header-status{font-size:1.16em!important;font-weight:800!important}
+  .parcs-ht-header-hour-main{font-size:1.04em!important}
+  .parcs-ht-header-hour-detail{font-size:.8em!important}
+}
+
+/* 1.5.7 — intégration accueil : texte uniquement, le thème garde le contenant */
+.parc-home-opening{
+  display:block!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  font-family:inherit!important;
+  color:inherit!important;
+  text-align:left!important;
+}
+.parc-home-opening *{
+  box-sizing:border-box;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  font-family:inherit!important;
+  color:inherit!important;
+  margin-left:0!important;
+  margin-right:0!important;
+  padding:0!important;
+}
+.parc-home-opening__status{
+  display:block!important;
+  margin:0 0 3px!important;
+  font-size:1.24em!important;
+  font-weight:800!important;
+  line-height:1.05!important;
+  letter-spacing:0!important;
+  text-transform:none!important;
+}
+.parc-home-opening__hours{
+  display:block!important;
+  margin:0!important;
+  font-size:1.07em!important;
+  font-weight:500!important;
+  line-height:1.18!important;
+}
+.parc-home-opening__last-entry{
+  display:block!important;
+  margin:2px 0 0!important;
+  font-size:.84em!important;
+  font-weight:400!important;
+  line-height:1.18!important;
+  opacity:.95;
+}
+.parc-home-opening__last-entry[hidden]{display:none!important;}
+@media(max-width:640px){
+  .parc-home-opening__status{font-size:1.20em!important;}
+  .parc-home-opening__hours{font-size:1.04em!important;}
+  .parc-home-opening__last-entry{font-size:.82em!important;}
+}
+
+/* 1.5.8 — info-bulle discrète pour l’accès temporairement limité */
+.parcs-ht-domain-title-row{
+  position:relative;
+  display:flex!important;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:6px;
+  margin:0 0 4px!important;
+}
+.parcs-ht-domain-title-row>strong{
+  display:inline!important;
+  margin:0!important;
+}
+.parcs-ht-domain-help-wrap{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  flex:0 0 auto;
+  font-family:inherit!important;
+}
+.parcs-ht-domain-help{
+  appearance:none!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:18px!important;
+  height:18px!important;
+  min-width:18px!important;
+  min-height:18px!important;
+  margin:0!important;
+  padding:0!important;
+  border:1px solid currentColor!important;
+  border-radius:50%!important;
+  background:transparent!important;
+  color:inherit!important;
+  box-shadow:none!important;
+  font-family:inherit!important;
+  font-size:12px!important;
+  font-weight:900!important;
+  line-height:1!important;
+  text-align:center!important;
+  cursor:pointer!important;
+  opacity:.8;
+}
+.parcs-ht-domain-help:hover,
+.parcs-ht-domain-help:focus-visible,
+.parcs-ht-domain-help[aria-expanded="true"]{
+  opacity:1;
+}
+.parcs-ht-domain-help:focus-visible{
+  outline:2px solid var(--htp-primary,#006757)!important;
+  outline-offset:2px!important;
+}
+.parcs-ht-domain-tooltip{
+  position:absolute!important;
+  z-index:80!important;
+  left:calc(100% + 9px)!important;
+  top:50%!important;
+  width:max-content!important;
+  max-width:min(330px,70vw)!important;
+  margin:0!important;
+  padding:9px 11px!important;
+  transform:translateY(-50%)!important;
+  border:1px solid rgba(0,0,0,.16)!important;
+  border-radius:9px!important;
+  background:#fff!important;
+  color:#303634!important;
+  box-shadow:0 8px 24px rgba(0,0,0,.16)!important;
+  font-family:inherit!important;
+  font-size:12px!important;
+  font-weight:500!important;
+  line-height:1.42!important;
+  letter-spacing:0!important;
+  text-align:left!important;
+  text-transform:none!important;
+  white-space:normal!important;
+  opacity:1!important;
+}
+.parcs-ht-domain-tooltip[hidden]{display:none!important}
+.parcs-ht-domain-tooltip::before{
+  position:absolute;
+  left:-5px;
+  top:50%;
+  width:8px;
+  height:8px;
+  transform:translateY(-50%) rotate(45deg);
+  border-left:1px solid rgba(0,0,0,.16);
+  border-bottom:1px solid rgba(0,0,0,.16);
+  background:#fff;
+  content:"";
+}
+@media(max-width:600px){
+  .parcs-ht-domain-title-row{gap:5px}
+  .parcs-ht-domain-help{width:17px!important;height:17px!important;min-width:17px!important;min-height:17px!important;font-size:11px!important}
+  .parcs-ht-domain-tooltip{
+    left:auto!important;
+    right:0!important;
+    top:calc(100% + 8px)!important;
+    width:min(280px,calc(100vw - 54px))!important;
+    max-width:min(280px,calc(100vw - 54px))!important;
+    transform:none!important;
+    font-size:11px!important;
+  }
+  .parcs-ht-domain-tooltip::before{
+    left:auto;
+    right:5px;
+    top:-5px;
+    transform:rotate(135deg);
+  }
+}
+
+/* 1.5.10 — tarifs multi-colonnes, ordre libre et billets spéciaux */
+.parcs-ht-price-head{display:grid;grid-template-columns:minmax(0,1fr) repeat(var(--htp-tariff-column-count,1),minmax(90px,1fr));gap:14px;align-items:end;padding:0 10px 8px;border-bottom:1px solid currentColor;font-size:13px;font-weight:800;opacity:.72;text-align:right}
+.parcs-ht-price-head>span:first-child{text-align:left}
+.parcs-ht-price-row{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(110px,calc(var(--htp-tariff-column-count,1) * 120px));gap:18px;align-items:center!important}
+.parcs-ht-price-label{display:grid!important;gap:2px}
+.parcs-ht-price-row .parcs-ht-price-label-line{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.parcs-ht-price-values{display:grid;grid-template-columns:repeat(var(--htp-tariff-column-count,1),minmax(90px,1fr));gap:12px;align-items:center}
+.parcs-ht-price-row .parcs-ht-price-cell{display:flex;flex-direction:column;align-items:flex-end;justify-content:center;min-width:0;text-align:right}
+.parcs-ht-price-cell b{white-space:nowrap}
+.parcs-ht-price-cell del{margin-bottom:2px;font-size:.82em;line-height:1.1;opacity:.62;text-decoration-thickness:1.5px}
+.parcs-ht-price-cell-label{display:none;font-size:11px;font-weight:750;opacity:.68}
+.parcs-ht-price-row.is-special-offer{position:relative}
+.parcs-ht-special-dot{flex:0 0 auto;width:8px;height:8px;border-radius:50%;background:var(--htp-highlight,#e7c55b);box-shadow:0 0 0 2px rgba(0,0,0,.06)}
+.parcs-ht-special-badge{display:inline-flex;align-items:center;min-height:22px;padding:3px 8px;border-radius:999px;background:var(--htp-highlight,#e7c55b);color:#27342f;font-size:11px;font-weight:850;line-height:1.1}
+.parcs-ht-special-meta{display:block;color:inherit;font-size:12px!important;line-height:1.35;opacity:.78}
+.parcs-ht-special-buy{display:inline-flex;width:max-content;margin-top:5px;padding:6px 11px;border-radius:999px;background:var(--htp-primary,#006757);color:#fff!important;font-size:12px;font-weight:800;text-decoration:none!important}
+.parcs-ht-special-buy:hover,.parcs-ht-special-buy:focus-visible{filter:brightness(1.06)}
+@media(max-width:600px){
+  .parcs-ht-price-head{display:none}
+  .parcs-ht-price-row{grid-template-columns:1fr!important;gap:8px!important;padding-top:12px!important;padding-bottom:12px!important}
+  .parcs-ht-price-values{grid-template-columns:repeat(auto-fit,minmax(115px,1fr));gap:7px}
+  .parcs-ht-price-row .parcs-ht-price-cell{align-items:flex-start;text-align:left;padding:7px 8px;border:1px solid rgba(0,0,0,.12);border-radius:7px}
+  .parcs-ht-price-cell-label{display:block;margin-bottom:2px}
+  .parcs-ht-price-cell b{font-size:var(--htp-font-tariff-price,20px)!important}
+  .parcs-ht-special-meta{font-size:11px!important}
+}
+
+
+/* 1.5.12 — Actions impression/PDF discrètes en bas du bloc tarifs */
+.parcs-ht-tariff-export-actions{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:0;margin:14px 0 0;font-size:13px;line-height:1.25;opacity:.82}
+.parcs-ht-tariff-export-button{display:inline-flex;align-items:center;gap:6px;min-height:auto;padding:4px 10px;border:0!important;border-radius:0!important;background:transparent!important;color:inherit!important;text-decoration:none!important;font:inherit;font-size:inherit;font-weight:500;line-height:1.25;box-shadow:none!important}
+.parcs-ht-tariff-export-button:first-child::before{content:"⌑";font-size:16px;line-height:1;transform:rotate(180deg);opacity:.9}
+.parcs-ht-tariff-export-button.is-pdf::before{content:"PDF";display:inline-flex;align-items:center;justify-content:center;min-width:21px;height:19px;padding:0 3px;border:1px solid currentColor;border-radius:2px;font-size:8px;font-weight:800;line-height:1;letter-spacing:.2px;opacity:.9}
+.parcs-ht-tariff-export-button.is-pdf{position:relative;margin-left:3px;padding-left:15px}
+.parcs-ht-tariff-export-button.is-pdf::after{content:"";position:absolute;left:0;top:4px;bottom:4px;width:1px;background:currentColor;opacity:.3}
+.parcs-ht-tariff-export-button:hover,.parcs-ht-tariff-export-button:focus-visible{opacity:1;text-decoration:underline!important;text-underline-offset:3px}
+@media(max-width:600px){.parcs-ht-tariff-export-actions{justify-content:flex-end;margin-top:10px;font-size:12px}.parcs-ht-tariff-export-button{padding:4px 7px}.parcs-ht-tariff-export-button.is-pdf{padding-left:12px}}
+
+
+/* 1.6.0 — page Devis / Groupes : habillage léger autour du formulaire existant */
+.parcs-ht-quote{margin:0;padding:0;background:transparent;color:inherit;font-family:inherit}
+.parcs-ht-quote-head{max-width:820px;margin:0 auto 26px;text-align:center}
+.parcs-ht-quote-head h2{margin:0 0 9px;color:inherit;font:inherit;font-size:clamp(30px,4vw,46px);font-weight:850;line-height:1.08}
+.parcs-ht-quote-head p{margin:0;line-height:1.55;opacity:.82}
+.parcs-ht-quote-info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;max-width:1050px;margin:18px auto 24px}
+.parcs-ht-quote-info{padding:16px 18px;border:1px solid rgba(0,0,0,.12);border-radius:12px;background:transparent;color:inherit}
+.parcs-ht-quote-info h3{margin:0 0 6px;color:inherit;font:inherit;font-size:17px;font-weight:850;line-height:1.2}
+.parcs-ht-quote-info p{margin:0;font-size:14px;line-height:1.5;opacity:.82}
+.parcs-ht-quote-form-wrap{max-width:900px;margin:26px auto}
+.parcs-ht-quote-form-wrap>h3{margin:0 0 14px;text-align:center;color:inherit;font:inherit;font-size:clamp(22px,3vw,30px);font-weight:850}
+.parcs-ht-quote-form{font:inherit;color:inherit}
+.parcs-ht-quote-missing{padding:14px;border:1px dashed rgba(0,0,0,.25);border-radius:10px;text-align:center;opacity:.7}
+.parcs-ht-quote-accordions{display:grid;gap:8px;max-width:900px;margin:22px auto}
+.parcs-ht-quote-accordion{border:1px solid rgba(0,0,0,.14);border-radius:10px;background:transparent;color:inherit;overflow:hidden}
+.parcs-ht-quote-accordion summary{padding:13px 16px;cursor:pointer;font-weight:800;line-height:1.3;list-style:none}
+.parcs-ht-quote-accordion summary::-webkit-details-marker{display:none}
+.parcs-ht-quote-accordion summary::after{content:'+';float:right;margin-left:10px;font-size:20px;font-weight:500;line-height:1}
+.parcs-ht-quote-accordion[open] summary::after{content:'–'}
+.parcs-ht-quote-accordion>div{padding:0 16px 15px;font-size:14px;line-height:1.55;opacity:.84}
+@media(max-width:600px){.parcs-ht-quote-head{margin-bottom:18px}.parcs-ht-quote-info-grid{grid-template-columns:1fr;gap:8px;margin:12px auto 18px}.parcs-ht-quote-info{padding:13px 14px}.parcs-ht-quote-form-wrap{margin:20px auto}.parcs-ht-quote-accordion summary{padding:12px 13px}.parcs-ht-quote-accordion>div{padding:0 13px 13px}}
+
+/* 1.6.1 — boutons optionnels Devis groupe */
+.parcs-ht-quote-button{display:inline-flex;align-items:center;justify-content:center;margin-top:12px;padding:8px 12px;border:1px solid currentColor;border-radius:999px;background:transparent;color:inherit;text-decoration:none;font:inherit;font-size:13px;font-weight:750;line-height:1.2;transition:opacity .15s ease}
+.parcs-ht-quote-button:hover,.parcs-ht-quote-button:focus{opacity:.78;text-decoration:none}.parcs-ht-quote-button:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+
+
+/* 1.6.3 — tarifs : le prix reste associé directement au libellé */
+.parcs-ht-price-cell-label{display:none!important}
+.parcs-ht-price-cell{display:flex;align-items:baseline;justify-content:flex-end;gap:7px;min-width:0;text-align:right}
+.parcs-ht-price-cell b{white-space:nowrap}
+.parcs-ht-price-cell del{white-space:nowrap;opacity:.65}
+.parcs-ht-tariff-export-actions{display:flex;justify-content:flex-end;align-items:center;margin:8px auto 0;max-width:800px;font-size:12px;line-height:1.2;opacity:.74}
+.parcs-ht-tariff-export-button.is-pdf{display:inline-flex;align-items:center;gap:6px;margin:0!important;padding:3px 0!important;border:0!important;background:transparent!important;color:inherit!important;text-decoration:none!important;font:inherit;font-size:inherit;font-weight:500;box-shadow:none!important}
+.parcs-ht-tariff-export-button.is-pdf::before,.parcs-ht-tariff-export-button.is-pdf::after{content:none!important}
+.parcs-ht-pdf-mark{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:18px;padding:0 3px;border:1px solid currentColor;border-radius:2px;font-size:8px;font-weight:800;line-height:1;letter-spacing:.2px}
+.parcs-ht-tariff-export-button.is-pdf:hover,.parcs-ht-tariff-export-button.is-pdf:focus-visible{opacity:1;text-decoration:underline!important;text-underline-offset:3px}
+
+@media(max-width:600px){
+  .parcs-ht-price-row{grid-template-columns:minmax(0,1fr) auto!important;gap:10px!important;padding:12px 0!important}
+  .parcs-ht-price-values{display:flex!important;justify-content:flex-end;align-items:center;gap:8px;min-width:0}
+  .parcs-ht-price-cell{min-width:0}
+  .parcs-ht-tariff-export-actions{justify-content:flex-end;margin-top:6px;font-size:11px}
+}
+
+
+/* 1.6.6 — Devis groupe : intégration neutre dans le thème + messages importants */
+.parcs-ht-quote{
+  display:block!important;
+  position:static!important;
+  inset:auto!important;
+  clear:both!important;
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  padding:0!important;
+  transform:none!important;
+  border:0!important;
+  outline:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:inherit!important;
+  font-family:inherit!important;
+  overflow:visible!important;
+}
+.parcs-ht-quote-head{
+  display:block!important;
+  position:static!important;
+  inset:auto!important;
+  transform:none!important;
+  max-width:900px!important;
+  margin:0 auto 20px!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:inherit!important;
+  text-align:left!important;
+}
+.parcs-ht-quote-title{
+  margin:0 0 7px!important;
+  padding:0!important;
+  color:inherit!important;
+  font-family:inherit!important;
+  font-size:clamp(26px,3vw,38px)!important;
+  font-weight:850!important;
+  line-height:1.08!important;
+  letter-spacing:normal!important;
+  text-transform:none!important;
+}
+.parcs-ht-quote-head p{margin:0!important;color:inherit!important;font:inherit!important;line-height:1.5!important;opacity:.82!important}
+.parcs-ht-quote-form-wrap{
+  position:static!important;
+  max-width:900px!important;
+  margin:20px auto!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:inherit!important;
+}
+.parcs-ht-quote-form-title{
+  margin:0 0 14px!important;
+  padding:0!important;
+  color:inherit!important;
+  font-family:inherit!important;
+  font-size:clamp(22px,2.5vw,30px)!important;
+  font-weight:850!important;
+  line-height:1.15!important;
+  text-align:left!important;
+  text-transform:none!important;
+}
+.parcs-ht-quote-info-grid{max-width:900px!important;margin:14px auto 18px!important}
+.parcs-ht-quote-info{
+  padding:13px 0 13px 14px!important;
+  border:0!important;
+  border-left:3px solid currentColor!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:inherit!important;
+}
+.parcs-ht-quote-info-title{margin:0 0 4px!important;color:inherit!important;font:inherit!important;font-size:16px!important;font-weight:850!important;line-height:1.25!important}
+.parcs-ht-quote-info p{color:inherit!important}
+.parcs-ht-quote-important-list{display:grid;gap:8px;max-width:900px;margin:12px auto 20px}
+.parcs-ht-quote-important{
+  position:relative;
+  margin:0;
+  padding:10px 12px 10px 15px;
+  border:0!important;
+  border-left:4px solid var(--htp-quote-accent,#ef7658)!important;
+  border-radius:0 8px 8px 0;
+  background:color-mix(in srgb,var(--htp-quote-accent,#ef7658) 8%,transparent);
+  box-shadow:none!important;
+  color:inherit!important;
+}
+@supports not (background:color-mix(in srgb,#000 10%,transparent)){
+  .parcs-ht-quote-important{background:transparent}
+}
+.parcs-ht-quote-important-title{margin:0 0 3px;color:inherit;font:inherit;font-size:15px;font-weight:850;line-height:1.25}
+.parcs-ht-quote-important p{margin:0;color:inherit;font:inherit;font-size:14px;line-height:1.45;opacity:.9}
+.parcs-ht-quote-accordions{max-width:900px!important;margin:18px auto!important}
+.parcs-ht-quote-accordion{border-color:rgba(127,127,127,.28)!important;background:transparent!important;box-shadow:none!important;color:inherit!important}
+.parcs-ht-quote-accordion summary,.parcs-ht-quote-accordion>div{color:inherit!important}
+@media(max-width:600px){
+  .parcs-ht-quote-head{margin-bottom:14px!important}
+  .parcs-ht-quote-title{font-size:26px!important}
+  .parcs-ht-quote-form-wrap{margin:16px auto!important}
+  .parcs-ht-quote-form-title{font-size:22px!important;margin-bottom:10px!important}
+  .parcs-ht-quote-important-list{gap:7px;margin:10px auto 16px}
+  .parcs-ht-quote-important{padding:9px 10px 9px 12px}
+  .parcs-ht-quote-important-title{font-size:14px}
+  .parcs-ht-quote-important p{font-size:13px;line-height:1.4}
+}
+
+
+/* 1.6.7 — Devis groupe : liens rapides */
+.parcs-ht-quote-quick{display:block;max-width:900px;margin:18px auto 24px;padding:0;color:inherit;font-family:inherit}
+.parcs-ht-quote-quick-title{margin:0 0 5px;color:inherit;font:inherit;font-size:20px;font-weight:850;line-height:1.2}
+.parcs-ht-quote-quick-intro{margin:0 0 11px;color:inherit;font:inherit;font-size:14px;line-height:1.45;opacity:.82}
+.parcs-ht-quote-quick-links{display:flex;flex-wrap:wrap;gap:8px}
+.parcs-ht-quote-quick-link{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:40px;padding:8px 14px;border:1px solid currentColor;border-radius:999px;background:transparent;color:inherit!important;font:inherit;font-size:14px;font-weight:750;line-height:1.2;text-decoration:none!important;box-shadow:none!important;transition:opacity .15s ease}
+.parcs-ht-quote-quick-link:hover,.parcs-ht-quote-quick-link:focus-visible{opacity:.78;text-decoration:none!important}
+.parcs-ht-quote-quick-link:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+.parcs-ht-quote-quick-icon{font-size:15px;line-height:1}
+@media(max-width:600px){
+  .parcs-ht-quote-quick{margin:14px auto 19px}
+  .parcs-ht-quote-quick-title{font-size:18px}
+  .parcs-ht-quote-quick-links{display:grid;grid-template-columns:1fr;gap:7px}
+  .parcs-ht-quote-quick-link{justify-content:flex-start;width:100%;min-height:42px;padding:9px 13px}
+}
+
+/* 1.6.8 — Messages importants avant / après formulaire */
+.parcs-ht-quote-form-wrap + .parcs-ht-quote-important-list{margin-top:8px;margin-bottom:18px}
+.parcs-ht-quote-form-wrap + .parcs-ht-quote-important-list .parcs-ht-quote-important{padding-top:9px;padding-bottom:9px}
+@media(max-width:600px){.parcs-ht-quote-form-wrap + .parcs-ht-quote-important-list{margin-top:6px;margin-bottom:14px}}
+
+/* 1.7.0 */
+[data-htp-home-status], .parcs-ht-header-status, #parc-home-status{font-weight:700!important;}
+
+/* 1.7.2 — export planning commun + statut homogène */
+.parcs-ht-today [data-htp-today-status],
+.parcs-ht-header-status,
+.parcs-ht-home-opening strong{font-weight:800!important}
+.parcs-ht-schedule-export{display:flex;justify-content:flex-end;margin-top:10px}
+.parcs-ht-schedule-export-button{display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border:1px solid currentColor;border-radius:6px;color:inherit!important;text-decoration:none!important;font-size:12px;font-weight:600;line-height:1.1;opacity:.72}
+.parcs-ht-schedule-export-button:hover,.parcs-ht-schedule-export-button:focus{opacity:1}
+.parcs-ht-schedule-export-button .parcs-ht-pdf-mark{font-size:9px;font-weight:800;letter-spacing:.04em}
+@media(max-width:600px){.parcs-ht-schedule-export{justify-content:center}.parcs-ht-schedule-export-button{font-size:11px}}
