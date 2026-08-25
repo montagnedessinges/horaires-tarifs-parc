@@ -76,7 +76,6 @@ final class Parcs_HT_Health {
             } catch (Exception $e) {}
         }
         if (!$problems) {
-            delete_option(self::NOTIFICATION_OPTION);
             return false;
         }
         $park = Parcs_HT_Schedule::translation($general['park_name'] ?? array(), 'fr', get_bloginfo('name'));
@@ -117,14 +116,29 @@ final class Parcs_HT_Health {
 
     private static function send_once($subject, $body, $general, $fingerprint_data) {
         $fingerprint = hash('sha256', wp_json_encode($fingerprint_data));
-        $last = get_option(self::NOTIFICATION_OPTION, array());
-        if (is_array($last) && ($last['fingerprint'] ?? '') === $fingerprint && time() - (int)($last['sent_at'] ?? 0) < self::REMINDER_SECONDS) return false;
+        $state = get_option(self::NOTIFICATION_OPTION, array());
+        if (!is_array($state)) $state = array();
+        $history = isset($state['history']) && is_array($state['history']) ? $state['history'] : array();
+        // Migration transparente de l’ancien format qui ne mémorisait qu’un seul problème.
+        if (!empty($state['fingerprint']) && !empty($state['sent_at'])) {
+            $history[(string)$state['fingerprint']] = (int)$state['sent_at'];
+        }
+        if (isset($history[$fingerprint]) && time() - (int)$history[$fingerprint] < self::REMINDER_SECONDS) return false;
         $email = sanitize_email((string)($general['health_notification_email'] ?? ''));
         if ($email === '') $email = sanitize_email((string)get_option('admin_email'));
         if ($email === '') return false;
         $sent = wp_mail($email, wp_specialchars_decode($subject, ENT_QUOTES), $body);
         if ($sent) {
-            update_option(self::NOTIFICATION_OPTION, array('fingerprint'=>$fingerprint,'sent_at'=>time(),'email'=>$email), false);
+            $now = time();
+            $history[$fingerprint] = $now;
+            arsort($history, SORT_NUMERIC);
+            $history = array_slice($history, 0, 50, true);
+            update_option(self::NOTIFICATION_OPTION, array(
+                'fingerprint'=>$fingerprint,
+                'sent_at'=>$now,
+                'email'=>$email,
+                'history'=>$history,
+            ), false);
         }
         return (bool)$sent;
     }
