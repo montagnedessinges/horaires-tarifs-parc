@@ -451,15 +451,11 @@ final class Parcs_HT_Shortcodes {
         $language = self::export_language();
         $settings = Parcs_HT_Defaults::settings();
         $ctx = self::schedule_export_context($settings, $language);
-        $pdf = self::build_schedule_pdf($ctx);
         $slug = sanitize_title($ctx['park'] ?: 'parc');
         $year = $ctx['year'] !== '' ? '-' . $ctx['year'] : '';
-        nocache_headers();
-        header('Content-Type: application/pdf');
-        header('Content-Disposition: attachment; filename="' . $slug . '-planning-horaires' . $year . '.pdf"');
-        header('Content-Length: ' . strlen($pdf));
-        echo $pdf;
-        exit;
+        self::serve_cached_pdf('planning', $ctx['language'], $ctx['year'], $slug . '-planning-horaires' . $year . '.pdf', static function() use ($ctx) {
+            return Parcs_HT_Shortcodes::build_schedule_pdf($ctx);
+        });
     }
 
     private static function schedule_export_context($settings, $language) {
@@ -504,7 +500,9 @@ final class Parcs_HT_Shortcodes {
             'regular_periods'=>isset($season['regular_periods']) && is_array($season['regular_periods']) ? $season['regular_periods'] : array(),
             'exceptions'=>isset($season['exceptions']) && is_array($season['exceptions']) ? $season['exceptions'] : array(),
             'special_periods'=>isset($season['special_periods']) && is_array($season['special_periods']) ? $season['special_periods'] : array(),
+            'school_holidays'=>isset($season['school_holidays']) && is_array($season['school_holidays']) ? $season['school_holidays'] : array(),
             'public_holidays'=>isset($season['public_holidays']) && is_array($season['public_holidays']) ? $season['public_holidays'] : array(),
+            'domain_rules'=>isset($season['domain_rules']) && is_array($season['domain_rules']) ? $season['domain_rules'] : array(),
         );
     }
 
@@ -568,6 +566,40 @@ final class Parcs_HT_Shortcodes {
         return $out;
     }
 
+    private static function schedule_in_school_holiday($ctx, $date) {
+        foreach ($ctx['school_holidays'] as $row) {
+            if (is_array($row) && (string)($row['enabled'] ?? '0') === '1' && $date >= (string)($row['start'] ?? '') && $date <= (string)($row['end'] ?? '')) return true;
+        }
+        return false;
+    }
+
+    private static function schedule_is_public_holiday($ctx, $date) {
+        foreach ($ctx['public_holidays'] as $row) {
+            if (is_array($row) && (string)($row['enabled'] ?? '0') === '1' && (string)($row['date'] ?? '') === $date) return true;
+        }
+        return false;
+    }
+
+    private static function schedule_domain_rule($ctx, $date, $status) {
+        foreach ($ctx['special_periods'] as $period) {
+            if (!is_array($period) || (string)($period['enabled'] ?? '0') !== '1' || (string)($period['kind'] ?? '') === 'event' || (string)($period['skip_domain_rules'] ?? '0') !== '1') continue;
+            if ($date >= (string)($period['start'] ?? '') && $date <= (string)($period['end'] ?? '')) return false;
+        }
+        if (!empty($status['exceptional']) && (string)($status['source']['apply_domain_rules'] ?? '1') === '0') return false;
+        $weekday=(string)(new DateTimeImmutable($date,new DateTimeZone('Europe/Paris')))->format('N');
+        foreach ($ctx['domain_rules'] as $rule) {
+            if (!is_array($rule) || (string)($rule['enabled'] ?? '0') !== '1') continue;
+            if ($date < (string)($rule['start'] ?? '') || $date > (string)($rule['end'] ?? '')) continue;
+            $days=array_map('strval',is_array($rule['weekdays'] ?? null)?$rule['weekdays']:array());
+            if (!in_array($weekday,$days,true)) continue;
+            if ((string)($rule['exclude_weekends'] ?? '0') === '1' && in_array($weekday,array('6','7'),true)) continue;
+            if ((string)($rule['exclude_school_holidays'] ?? '0') === '1' && self::schedule_in_school_holiday($ctx,$date)) continue;
+            if ((string)($rule['exclude_public_holidays'] ?? '0') === '1' && self::schedule_is_public_holiday($ctx,$date)) continue;
+            return $rule;
+        }
+        return false;
+    }
+
     private static function schedule_hours_label($status) {
         if (empty($status['open'])) return '';
         $parts=array();
@@ -593,7 +625,7 @@ final class Parcs_HT_Shortcodes {
     }
 
     private static function build_schedule_pdf($ctx) {
-        $w=842; $h=595; $margin=28; $pages=array();
+        $w=1191; $h=842; $margin=28;
         $lang=$ctx['language'];
         $monthNames=array(
             'fr'=>array(1=>'Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'),
@@ -616,49 +648,74 @@ final class Parcs_HT_Shortcodes {
             return self::pdf_document(array('BT /F2 18 Tf 1 0 0 1 42 520 Tm ('.self::pdf_text($title).') Tj ET'),$w,$h);
         }
 
-        for($month=$first;$month<=$last;$month=$month->modify('+1 month')){
-            $cmd=array();
-            $text=static function(&$cmd,$x,$y,$value,$size=9,$bold=false){$cmd[]='0.125 0.153 0.141 rg BT /'.($bold?'F2':'F1').' '.$size.' Tf 1 0 0 1 '.round($x,2).' '.round($y,2).' Tm ('.Parcs_HT_Shortcodes::pdf_text($value).') Tj ET';};
-            $rect=static function(&$cmd,$x,$y,$rw,$rh,$fill,$stroke='#d9dfdc',$line=0.6){$f=Parcs_HT_Shortcodes::pdf_rgb($fill);$st=Parcs_HT_Shortcodes::pdf_rgb($stroke);$cmd[]=sprintf('%.3F %.3F %.3F rg %.3F %.3F %.3F RG %.2F w %.2F %.2F %.2F %.2F re B',$f[0],$f[1],$f[2],$st[0],$st[1],$st[2],$line,$x,$y,$rw,$rh);};
-            $fillrect=static function(&$cmd,$x,$y,$rw,$rh,$fill){$f=Parcs_HT_Shortcodes::pdf_rgb($fill);$cmd[]=sprintf('%.3F %.3F %.3F rg %.2F %.2F %.2F %.2F re f',$f[0],$f[1],$f[2],$x,$y,$rw,$rh);};
+        $cmd=array(); $legend=array(); $allEvents=array(); $allPeriods=array(); $domainLegends=array(); $monthIndex=0;
+        $text=static function(&$cmd,$x,$y,$value,$size=9,$bold=false){$cmd[]='0.125 0.153 0.141 rg BT /'.($bold?'F2':'F1').' '.$size.' Tf 1 0 0 1 '.round($x,2).' '.round($y,2).' Tm ('.Parcs_HT_Shortcodes::pdf_text($value).') Tj ET';};
+        $rect=static function(&$cmd,$x,$y,$rw,$rh,$fill,$stroke='#d9dfdc',$line=0.6){$f=Parcs_HT_Shortcodes::pdf_rgb($fill);$st=Parcs_HT_Shortcodes::pdf_rgb($stroke);$cmd[]=sprintf('%.3F %.3F %.3F rg %.3F %.3F %.3F RG %.2F w %.2F %.2F %.2F %.2F re B',$f[0],$f[1],$f[2],$st[0],$st[1],$st[2],$line,$x,$y,$rw,$rh);};
+        $fillrect=static function(&$cmd,$x,$y,$rw,$rh,$fill){$f=Parcs_HT_Shortcodes::pdf_rgb($fill);$cmd[]=sprintf('%.3F %.3F %.3F rg %.2F %.2F %.2F %.2F re f',$f[0],$f[1],$f[2],$x,$y,$rw,$rh);};
+        $fillrect($cmd,0,$h-70,$w,70,'#eef4f1');
+        $text($cmd,$margin,$h-34,$ctx['park'].' — '.$title.' '.$ctx['year'],21,true);
+        $text($cmd,$margin,$h-52,$lang==='de'?'Effektiver Jahreskalender':($lang==='en'?'Effective annual calendar':'Calendrier annuel effectif'),8,false);
+
+        for($month=$first;$month<=$last && $monthIndex<12;$month=$month->modify('+1 month'),$monthIndex++){
 
             $m=(int)$month->format('n'); $year=$month->format('Y');
-            $text($cmd,$margin,$h-34,$ctx['park'],10,false);
-            $text($cmd,$margin,$h-58,$title.' — '.$monthNames[$lang][$m].' '.$year,20,true);
-            $text($cmd,$w-$margin-110,$h-34,'v'.PARCS_HT_VERSION,7,false);
-
-            $gridX=$margin; $gridTop=$h-92; $gridW=$w-2*$margin; $cellW=$gridW/7; $weekH=20; $cellH=64;
-            foreach($weekNames[$lang] as $i=>$name){$x=$gridX+$i*$cellW;$rect($cmd,$x,$gridTop-$weekH,$cellW,$weekH,'#f3f5f4','#cfd6d2',0.5);$text($cmd,$x+6,$gridTop-14,$name,8,true);}
+            $panelCol=$monthIndex%4; $panelRow=intdiv($monthIndex,4);
+            $panelW=276; $panelH=192; $panelX=$margin+$panelCol*286; $panelTop=$h-86-$panelRow*202;
+            $rect($cmd,$panelX,$panelTop-$panelH,$panelW,$panelH,'#f4f7f5','#e1e7e4',0.4);
+            $text($cmd,$panelX+8,$panelTop-15,$monthNames[$lang][$m],10,true);
+            $gridX=$panelX+8; $gridTop=$panelTop-27; $gridW=$panelW-16; $cellW=$gridW/7; $weekH=12; $cellH=23;
+            foreach($weekNames[$lang] as $i=>$name){$x=$gridX+$i*$cellW;$text($cmd,$x+13,$gridTop-9,substr($name,0,1),5.5,true);}
 
             $firstWeekday=(int)$month->format('N'); $days=(int)$month->format('t');
-            $legend=array(); $monthEvents=array();
             for($slot=0;$slot<42;$slot++){
                 $row=intdiv($slot,7);$col=$slot%7;$day=$slot-$firstWeekday+2;
                 $x=$gridX+$col*$cellW;$top=$gridTop-$weekH-$row*$cellH;$y=$top-$cellH;
-                if($day<1||$day>$days){$rect($cmd,$x,$y,$cellW,$cellH,'#fafafa','#e5e8e6',0.4);continue;}
+                if($day<1||$day>$days)continue;
                 $date=sprintf('%s-%02d-%02d',$year,$m,$day);$status=self::schedule_resolve_day($ctx,$date);
-                if(!$status['in_season']){$rect($cmd,$x,$y,$cellW,$cellH,'#f7f7f7','#e5e8e6',0.4);$text($cmd,$x+5,$top-13,(string)$day,8,false);continue;}
+                if(!$status['in_season']){$rect($cmd,$x+1,$y+1,$cellW-2,$cellH-2,'#f7f7f7','#e5e8e6',0.3);$text($cmd,$x+14,$y+8,(string)$day,5.5,false);continue;}
                 $base=(string)$status['color'];$light=self::pdf_light_rgb($base,0.88);$fill=sprintf('#%02x%02x%02x',(int)round($light[0]*255),(int)round($light[1]*255),(int)round($light[2]*255));
-                $rect($cmd,$x,$y,$cellW,$cellH,$fill,'#cbd2ce',0.55);$fillrect($cmd,$x,$top-5,$cellW,5,$base);
-                $text($cmd,$x+5,$top-16,(string)$day,9,true);
+                $holiday=(string)($ctx['general']['show_public_holidays'] ?? '0')==='1' && self::schedule_is_public_holiday($ctx,$date);
+                $rect($cmd,$x+1,$y+1,$cellW-2,$cellH-2,$fill,$holiday?(string)($ctx['general']['holiday_border_color'] ?? '#e7c55b'):'#cbd2ce',$holiday?1.5:0.35);$fillrect($cmd,$x+1,$top-3,$cellW-2,3,$base);
+                $text($cmd,$x+14,$y+8,(string)$day,5.7,true);
                 $hours=self::schedule_hours_label($status);
                 if($hours!==''){
-                    $parts=explode(' / ',$hours);$text($cmd,$x+5,$top-31,self::pdf_short($parts[0],22),7.5,true);if(isset($parts[1]))$text($cmd,$x+5,$top-42,self::pdf_short($parts[1],22),7.2,false);
                     $legend[$base.'|'.$hours]=array('color'=>$base,'label'=>$hours);
                 }else{
-                    $text($cmd,$x+5,$top-32,$closedLabel,7.5,true);$legend['#d9d9d9|'.$closedLabel]=array('color'=>'#d9d9d9','label'=>$closedLabel);
+                    $legend['#d9d9d9|'.$closedLabel]=array('color'=>'#d9d9d9','label'=>$closedLabel);
                 }
-                $items=self::schedule_calendar_items($ctx,$date);
-                $eventY=$y+7;
-                foreach(array_slice($items,0,2) as $item){$ec=(string)$item['color'];if((string)$item['kind']==='event')$ec='#e7c55b';$fillrect($cmd,$x+5,$eventY,4,4,$ec);$text($cmd,$x+12,$eventY-1,self::pdf_short($item['title'],18),6.1,false);$eventY+=9;$monthEvents[$item['title']]=true;}
+                $items=self::schedule_calendar_items($ctx,$date); $hasEvent=false; $hasPeriod=false;
+                foreach($items as $item){
+                    if((string)($item['kind'] ?? '')==='event'){$hasEvent=true;$allEvents[$item['title']]=true;}
+                    else{$hasPeriod=true;$allPeriods[$item['title']]=true;}
+                }
+                if($hasEvent)$text($cmd,$x+3,$top-10,'E',5.5,true);
+                if($hasPeriod)$text($cmd,$x+$cellW-7,$y+4,'P',5,true);
+                if(!empty($status['exceptional']) && (string)($status['source']['show_public_marker'] ?? '1')==='1')$text($cmd,$x+$cellW-7,$top-10,'!',6,true);
+                $domainRule=self::schedule_domain_rule($ctx,$date,$status);
+                if($domainRule){
+                    $text($cmd,$x+3,$y+4,'D',5,true);
+                    $domainLabel=$domainRule['label'] ?? '';
+                    $domainText=is_array($domainLabel)?Parcs_HT_Schedule::translation($domainLabel,$lang,''):(string)$domainLabel;
+                    if($domainText==='')$domainText=$lang==='de'?'Eingeschränkter Bereichszugang':($lang==='en'?'Limited area access':'Accès au domaine limité');
+                    $times=array_filter(array((string)($domainRule['pause_start'] ?? ''),(string)($domainRule['resume'] ?? '')));
+                    if($times)$domainText.=' '.implode('–',$times);
+                    if((string)($domainRule['last_entry'] ?? '')!=='')$domainText.=' ('.($lang==='de'?'letzter Einlass':($lang==='en'?'last entry':'dernière entrée')).' '.(string)$domainRule['last_entry'].')';
+                    $domainLegends[$domainText]=true;
+                }
             }
 
-            $footerY=37;$lx=$margin;$text($cmd,$lx,$footerY+35,$lang==='de'?'Legende':($lang==='en'?'Legend':'Légende'),8,true);$lx+=48;
-            foreach($legend as $item){$fillrect($cmd,$lx,$footerY+31,8,8,$item['color']);$text($cmd,$lx+12,$footerY+31,self::pdf_short($item['label'],28),7,false);$lx+=105;if($lx>$w-150){$lx=$margin+48;$footerY-=13;}}
-            if($monthEvents){$eventText=$eventsLabel.' : '.implode(' · ',array_keys($monthEvents));foreach(self::pdf_wrap($eventText,120) as $i=>$line)$text($cmd,$margin,13-($i*9),$line,6.5,false);}
-            $pages[]=implode("\n",$cmd);
         }
-        return self::pdf_document($pages,$w,$h);
+        $footerY=67;$text($cmd,$margin,$footerY+31,$lang==='de'?'Legende':($lang==='en'?'Legend':'Légende'),8,true);$lx=$margin;
+        foreach($legend as $item){if($lx>$w-150){$lx=$margin;$footerY-=15;}$fillrect($cmd,$lx,$footerY+11,10,10,$item['color']);$text($cmd,$lx+15,$footerY+13,self::pdf_short($item['label'],22),6.5,false);$lx+=135;}
+        $periodsLabel=$lang==='de'?'Zeiträume':($lang==='en'?'Periods':'Périodes repères');
+        $text($cmd,$margin,48,'!  '.($lang==='en'?'Exceptional hours':($lang==='de'?'Sonderöffnungszeiten':'Horaire exceptionnel')).'    E  '.$eventsLabel.'    P  '.$periodsLabel.'    D  '.($lang==='en'?'Limited area access':($lang==='de'?'Eingeschränkter Bereichszugang':'Accès au domaine limité')),6.5,false);
+        $summaries=array();
+        if($allEvents)$summaries[]=$eventsLabel.' : '.implode(' · ',array_keys($allEvents));
+        if($allPeriods)$summaries[]=$periodsLabel.' : '.implode(' · ',array_keys($allPeriods));
+        if($domainLegends)$summaries[]='D : '.implode(' · ',array_keys($domainLegends));
+        $summaryLines=array();foreach($summaries as $summary)$summaryLines=array_merge($summaryLines,self::pdf_wrap($summary,155));
+        foreach(array_slice($summaryLines,0,3) as $i=>$line)$text($cmd,$margin,32-($i*8),$line,6,false);
+        return self::pdf_document(array(implode("\n",$cmd)),$w,$h);
     }
 
     public static function tariffs_print_endpoint() {
@@ -688,12 +745,52 @@ final class Parcs_HT_Shortcodes {
         $settings = Parcs_HT_Defaults::settings();
         $ctx = self::tariff_export_context($settings, $language);
         $orientation = (string)($ctx['print']['orientation'] ?? 'portrait');
-        $pdf = self::build_tariff_pdf($ctx, $orientation === 'landscape');
         $slug = sanitize_title($ctx['park'] ?: 'tarifs');
         $year = !empty($settings['general']['year']) ? '-' . $settings['general']['year'] : '';
+        self::serve_cached_pdf('tarifs-' . $orientation, $language, ltrim($year, '-'), $slug . '-tarifs' . $year . '.pdf', static function() use ($ctx, $orientation) {
+            return Parcs_HT_Shortcodes::build_tariff_pdf($ctx, $orientation === 'landscape');
+        });
+    }
+
+    private static function serve_cached_pdf($type, $language, $year, $download_name, $builder) {
+        $uploads = wp_upload_dir();
+        $revision = max(1, (int) get_option('parcs_ht_export_revision', 1));
+        $key = sanitize_file_name($type . '-' . $year . '-' . $language . '-r' . $revision . '-v' . PARCS_HT_VERSION);
+        $directory = trailingslashit($uploads['basedir']) . 'horaires-tarifs-parc-exports';
+        $url_base = trailingslashit($uploads['baseurl']) . 'horaires-tarifs-parc-exports';
+        if (!wp_mkdir_p($directory)) {
+            self::output_pdf((string) call_user_func($builder), $download_name);
+        }
+        $path = trailingslashit($directory) . $key . '.pdf';
+        if (!is_file($path) || filesize($path) < 100) {
+            $lock_path = $path . '.lock';
+            $lock = @fopen($lock_path, 'c');
+            if ($lock && flock($lock, LOCK_EX)) {
+                if (!is_file($path) || filesize($path) < 100) {
+                    $pdf = (string) call_user_func($builder);
+                    $temporary = $path . '.tmp-' . wp_generate_password(8, false, false);
+                    if (@file_put_contents($temporary, $pdf, LOCK_EX) !== false) {
+                        @rename($temporary, $path);
+                        foreach ((array) glob(trailingslashit($directory) . sanitize_file_name($type . '-' . $year . '-' . $language) . '-r*.pdf') as $old) {
+                            if ($old !== $path && is_file($old)) @unlink($old);
+                        }
+                    }
+                }
+                flock($lock, LOCK_UN);
+                fclose($lock);
+            }
+        }
+        if (is_file($path) && filesize($path) >= 100) {
+            wp_redirect(esc_url_raw($url_base . '/' . rawurlencode(basename($path))), 302, 'Horaires-Tarifs-Parc');
+            exit;
+        }
+        self::output_pdf((string) call_user_func($builder), $download_name);
+    }
+
+    private static function output_pdf($pdf, $download_name) {
         nocache_headers();
         header('Content-Type: application/pdf');
-        header('Content-Disposition: attachment; filename="' . $slug . '-tarifs' . $year . '.pdf"');
+        header('Content-Disposition: attachment; filename="' . sanitize_file_name($download_name) . '"');
         header('Content-Length: ' . strlen($pdf));
         echo $pdf;
         exit;
