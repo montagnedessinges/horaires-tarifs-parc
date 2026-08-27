@@ -40,12 +40,15 @@ jobs:
         run: |
           node --check assets/admin.js
           node --check assets/admin-preview-enhanced.js
+          node --check assets/admin-validation.js
+          node --check assets/display-state.js
           node --check assets/frontend.js
           node --check assets/slot-last-entry-admin.js
           node --check assets/slot-last-entry-frontend.js
           node --check assets/status-sync.js
           node tests/frontend-engine.js
           node tests/status-sync-engine.js
+          node tests/display-state-engine.js
       - name: WordPress security and PHP compatibility report
         continue-on-error: true
         run: composer lint
@@ -58,7 +61,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: Read plugin version
         id: version
         shell: bash
@@ -67,34 +69,27 @@ jobs:
           test -n "$VERSION"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
-
       - name: Check PHP syntax
         shell: bash
-        run: |
-          find . -type f -name '*.php' -not -path './.git/*' -print0 | xargs -0 -n1 php -l
-
+        run: find . -type f -name '*.php' -not -path './.git/*' -print0 | xargs -0 -n1 php -l
       - name: Check JavaScript syntax
         shell: bash
         run: |
           node --check assets/admin.js
           node --check assets/admin-preview-enhanced.js
+          node --check assets/admin-validation.js
+          node --check assets/display-state.js
           node --check assets/frontend.js
           node --check assets/slot-last-entry-admin.js
           node --check assets/slot-last-entry-frontend.js
           node --check assets/status-sync.js
-
       - name: Check whether release already exists
         id: existing
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
-          if gh release view "${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-          fi
-
+          if gh release view "${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then echo "exists=true" >> "$GITHUB_OUTPUT"; else echo "exists=false" >> "$GITHUB_OUTPUT"; fi
       - name: Build WordPress ZIP
         if: steps.existing.outputs.exists != 'true'
         shell: bash
@@ -102,25 +97,12 @@ jobs:
           rm -rf build horaires-tarifs-parc.zip
           mkdir -p build/horaires-tarifs-parc
           rsync -a ./ build/horaires-tarifs-parc/ \
-            --exclude '.git/' \
-            --exclude '.github/' \
-            --exclude '.pkg/' \
-            --exclude 'tests/' \
-            --exclude 'vendor/' \
-            --exclude 'composer.json' \
-            --exclude 'composer.lock' \
-            --exclude 'phpcs.xml.dist' \
-            --exclude 'AUDIT-PERFORMANCE-1.7.5.md' \
-            --exclude 'CAHIER-DES-CHARGES.md' \
-            --exclude 'GITHUB-UPDATES.md' \
-            --exclude 'AUDIT-*.md' \
-            --exclude 'UPDATE-*.md' \
-            --exclude 'CHATGPT-CONTEXT.md' \
-            --exclude 'build/' \
-            --exclude 'horaires-tarifs-parc.zip'
+            --exclude '.git/' --exclude '.github/' --exclude '.pkg/' --exclude 'tests/' --exclude 'vendor/' \
+            --exclude 'composer.json' --exclude 'composer.lock' --exclude 'phpcs.xml.dist' \
+            --exclude 'AUDIT-PERFORMANCE-1.7.5.md' --exclude 'CAHIER-DES-CHARGES.md' --exclude 'GITHUB-UPDATES.md' \
+            --exclude 'AUDIT-*.md' --exclude 'UPDATE-*.md' --exclude 'CHATGPT-CONTEXT.md' --exclude 'build/' --exclude 'horaires-tarifs-parc.zip'
           cd build
           zip -qr ../horaires-tarifs-parc.zip horaires-tarifs-parc
-
       - name: Validate WordPress ZIP
         if: steps.existing.outputs.exists != 'true'
         shell: bash
@@ -131,7 +113,6 @@ jobs:
           PACKAGE_VERSION=$(php -r '$s=file_get_contents("/tmp/horaires-tarifs-parc.php"); preg_match("/Version:\\s*([0-9.]+)/",$s,$m); echo $m[1] ?? "";')
           test "$PACKAGE_VERSION" = "${{ steps.version.outputs.version }}"
           sha256sum horaires-tarifs-parc.zip | tee horaires-tarifs-parc.zip.sha256
-
       - name: Run official WordPress Plugin Check
         if: steps.existing.outputs.exists != 'true'
         continue-on-error: true
@@ -144,7 +125,6 @@ jobs:
             accessibility
           ignore-warnings: true
           include-experimental: false
-
       - name: Create GitHub Release
         if: steps.existing.outputs.exists != 'true'
         env:
@@ -154,7 +134,6 @@ jobs:
           gh release create "${{ steps.version.outputs.tag }}" horaires-tarifs-parc.zip horaires-tarifs-parc.zip.sha256 \
             --title "Horaires & Tarifs Parc ${{ steps.version.outputs.version }}" \
             --notes-file <(sed -n '/^## ${{ steps.version.outputs.version }}$/,/^## /p' CHANGELOG.md | sed '$d')
-
       - name: Preserve existing release unchanged
         if: steps.existing.outputs.exists == 'true'
         shell: bash
