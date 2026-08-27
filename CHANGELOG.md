@@ -1,5 +1,16 @@
 # Historique des versions
 
+## 1.9.0
+- Refonte du système de vérification : suppression du contrôle quotidien et passage à une vérification événementielle.
+- Un contrôle complet est lancé après chaque enregistrement de configuration, une seule fois après changement de version de l’extension, ou manuellement depuis l’administration.
+- Vérification des créneaux : heures inversées, créneau 2 incomplet, chevauchements et cohérence des dernières entrées.
+- Vérification des rendus principaux : composant d’accueil, statut/horaire d’en-tête et bloc « Aujourd’hui » de la page Horaires & Tarifs dans les trois langues.
+- Vérification des pop-up FR / EN / DE : chaque pop-up actif doit disposer d’un contenu correspondant à chaque langue.
+- La langue des pop-up reste pilotée par qTranslate-XT lorsqu’il est disponible, avec fallback sur la locale WordPress ; elle ne dépend pas de `navigator.language`.
+- Ajout d’un test de non-régression GitHub qui bloque une release si la sélection de langue des pop-up revient à la langue du navigateur ou si un contrôle quotidien est réintroduit.
+- Le résultat du dernier contrôle est mémorisé et visible dans l’administration et dans Santé du site.
+- Les erreurs techniques runtime restent consignées, mais les e-mails/contrôles quotidiens répétitifs sont supprimés.
+
 ## 1.8.9
 - L’onglet « Aperçu » devient un simulateur date + heure pour tester le comportement public sans attendre l’heure réelle.
 - Le simulateur affiche séparément le rendu attendu sur la page d’accueil et dans le bloc « Aujourd’hui » de la page Horaires & Tarifs.
