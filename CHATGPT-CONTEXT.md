@@ -17,15 +17,17 @@ Avant toute modification :
 1. Lire ce fichier.
 2. Vérifier la version actuelle dans `horaires-tarifs-parc.php`.
 3. Lire `CHANGELOG.md` et les fichiers directement concernés.
-4. Vérifier que la modification reste compatible avec les deux parcs.
-5. Ne jamais coder en dur un comportement « Forêt des Singes » ou « Montagne des Singes » si cela peut être un réglage WordPress.
-6. Préserver les réglages existants et prévoir une compatibilité avec les anciennes données quand un champ évolue.
-7. Toute évolution fonctionnelle destinée aux sites doit entraîner une nouvelle version de l’extension.
-8. Les mises à jour se font sur GitHub, sur `main`, puis sont publiées par le workflow GitHub Actions.
-9. Après un push de version, vérifier que le workflow `Build and publish WordPress release` s’est déclenché et s’est terminé correctement.
-10. Avant toute release, vérifier la compatibilité avec les versions WordPress et PHP déclarées par l’extension, ainsi que les API WordPress utilisées.
-11. Avant toute release, vérifier que la modification n’ajoute pas de charge inutile côté serveur ou navigateur.
-12. Avant toute release, vérifier les implications de sécurité et ne jamais désactiver une protection simplement pour contourner une erreur.
+4. Lire le dernier fichier `AUDIT-*.md` pertinent lorsqu’il existe, en particulier après un incident ou une régression récente.
+5. Vérifier que la modification reste compatible avec les deux parcs.
+6. Ne jamais coder en dur un comportement « Forêt des Singes » ou « Montagne des Singes » si cela peut être un réglage WordPress.
+7. Préserver les réglages existants et prévoir une compatibilité avec les anciennes données quand un champ évolue.
+8. Toute évolution fonctionnelle destinée aux sites doit entraîner une nouvelle version de l’extension.
+9. Les mises à jour se font sur GitHub, sur `main`, puis sont publiées par le workflow GitHub Actions.
+10. Après un push de version, vérifier que le workflow `Build and publish WordPress release` s’est déclenché et s’est terminé correctement.
+11. Avant toute release, vérifier la compatibilité avec les versions WordPress et PHP déclarées par l’extension, ainsi que les API WordPress utilisées.
+12. Avant toute release, vérifier que la modification n’ajoute pas de charge inutile côté serveur ou navigateur.
+13. Avant toute release, vérifier les implications de sécurité et ne jamais désactiver une protection simplement pour contourner une erreur.
+14. Tout audit important, incident de production, cause identifiée, contournement temporaire ou décision d’architecture doit être consigné dans GitHub afin qu’un nouveau chat puisse reprendre le projet sans perte de contexte.
 
 ## Principe d’architecture
 
@@ -41,6 +43,21 @@ Ne pas multiplier les correctifs spécifiques à un site. Privilégier :
 - une logique simple, lisible et maintenable.
 
 Lorsqu’un problème révèle deux moteurs ou plusieurs scripts qui calculent la même information, privilégier la suppression de la duplication et la consolidation dans une seule logique commune plutôt que l’ajout d’une nouvelle rustine.
+
+## Documentation des audits et incidents
+
+Le dépôt GitHub doit conserver la mémoire technique du projet, pas seulement son dernier état.
+
+Règles permanentes :
+
+- créer ou mettre à jour un fichier d’audit lorsqu’un problème important nécessite plusieurs vérifications ou touche la production ;
+- distinguer clairement dans les audits ce qui est confirmé, ce qui est probable et ce qui ne peut pas être vérifié avec les accès disponibles ;
+- noter les sites/pages observés, les fichiers concernés, la cause identifiée ou probable et le plan recommandé ;
+- lorsqu’un correctif est finalement publié, faire le lien avec l’incident dans le changelog si cela aide à comprendre la version ;
+- ne pas supprimer les anciens audits simplement parce que le problème est corrigé ;
+- lors d’un nouveau chat, lire le dernier audit pertinent avant de reprendre un problème déjà rencontré.
+
+Audit de référence actuel : `AUDIT-2026-08-27.md`.
 
 ## Conservation des versions et retour arrière
 
@@ -269,17 +286,19 @@ Selon la modification :
 - `assets/frontend.js` — moteur d’affichage côté navigateur ;
 - `assets/slot-last-entry-frontend.js` — comportement des créneaux / dernières entrées ;
 - `assets/slot-last-entry-admin.js` — champs associés dans l’administration ;
+- `assets/status-sync.js` — couche actuelle de synchronisation du statut, à considérer comme une rustine à auditer avant de la conserver ;
 - `.github/workflows/release.yml` — construction et publication des releases ;
-- `CHANGELOG.md` — historique fonctionnel.
+- `CHANGELOG.md` — historique fonctionnel ;
+- `AUDIT-2026-08-27.md` — audit de référence sur les divergences Forêt/Montagne et les couches d’affichage.
 
 ## Pour démarrer une nouvelle conversation ChatGPT
 
 Le message utilisateur peut simplement être :
 
-> Accède au dépôt GitHub `montagnedessinges/horaires-tarifs-parc`, lis `CHATGPT-CONTEXT.md`, puis utilise GitHub comme source de vérité avant toute modification.
+> Accède au dépôt GitHub `montagnedessinges/horaires-tarifs-parc`, lis `CHATGPT-CONTEXT.md`, le dernier `AUDIT-*.md` pertinent et `CHANGELOG.md`, puis utilise GitHub comme source de vérité avant toute modification.
 
-Une fois ce fichier lu, ne pas demander à l’utilisateur de renvoyer un ZIP si le dépôt GitHub est accessible.
+Une fois ces fichiers lus, ne pas demander à l’utilisateur de renvoyer un ZIP si le dépôt GitHub est accessible.
 
 ## Important
 
-Ce fichier décrit les règles de travail et la logique métier connues à la date de sa dernière modification. Si le code, le changelog ou une instruction explicite de l’utilisateur est plus récent, l’information la plus récente prévaut. Mettre à jour ce fichier lorsqu’une évolution structurelle importante change ces règles.
+Ce fichier décrit les règles de travail et la logique métier connues à la date de sa dernière modification. Si le code, le changelog, un audit plus récent ou une instruction explicite de l’utilisateur est plus récent, l’information la plus récente prévaut. Mettre à jour ce fichier lorsqu’une évolution structurelle importante change ces règles.
