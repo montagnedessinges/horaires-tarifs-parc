@@ -45,6 +45,7 @@
     document.querySelectorAll('[data-htp-component="home-opening"]').forEach(function(root){var target=root.querySelector('[data-htp-home-status]');if(!target)return;var lang=root.getAttribute('data-htp-lang')||'fr',state=statusValue(status,now.minutes,now.date,lang);target.textContent=state.value;applyStateClasses(root,state);});
   }
 
+  window.ParcsHTPStatusSync={phase:phase,statusValue:statusValue};
   function boot(){refresh();setInterval(refresh,30000);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(boot,0);});else setTimeout(boot,0);
 }());
