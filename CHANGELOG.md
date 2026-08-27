@@ -1,5 +1,19 @@
 # Historique des versions
 
+## 1.9.1
+- Unification de l’aperçu d’administration et de l’affichage public autour d’un moteur d’état partagé (`assets/display-state.js`) : mêmes phases horaires, mêmes créneaux et mêmes calculs de dernière entrée.
+- Correction des dernières entrées par créneau : le créneau 1 utilise `last_entry_minutes_slot1` et le créneau 2 `last_entry_minutes_slot2`, avec fallback vers les anciens champs uniquement pour compatibilité.
+- Correction du cas 10h–12h / 13h–17h30 avec 30 minutes : dernière entrée 11h30 puis 17h00.
+- Le moteur public de synchronisation met également à jour le bloc « Aujourd’hui » et le bloc d’accueil avec ce calcul partagé.
+- Ajout du réglage « Langues publiques actives » dans l’administration : français toujours obligatoire, anglais et allemand activables indépendamment selon le site.
+- Les contrôles de pop-up et de contenus publics ne rendent obligatoires que les langues actives ; un site FR/EN ne génère plus d’erreur pour l’allemand.
+- Les titres FR deviennent obligatoires pour les périodes/événements et exceptions activés afin que chaque règle soit identifiable dans l’administration, même si elle n’est pas affichée publiquement.
+- Pour un élément visible publiquement, les titres des autres langues actives deviennent obligatoires.
+- Ajout d’une validation immédiate avant enregistrement : champs manquants, créneau 2 incomplet et chevauchements sont signalés et l’enregistrement est bloqué jusqu’à correction.
+- Les messages de vérification identifient désormais le type d’élément, son numéro, son titre lorsqu’il existe et ses dates.
+- Le contrôle après sauvegarde relit les valeurs réellement persistées afin de tester le bon choix de langues et les valeurs filtrées.
+- Ajout d’un test GitHub dédié au moteur partagé et aux dernières entrées des deux créneaux.
+
 ## 1.9.0
 - Refonte du système de vérification : suppression du contrôle quotidien et passage à une vérification événementielle.
 - Un contrôle complet est lancé après chaque enregistrement de configuration, une seule fois après changement de version de l’extension, ou manuellement depuis l’administration.
