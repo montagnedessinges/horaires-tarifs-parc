@@ -40,6 +40,7 @@ jobs:
           node --check assets/frontend.js
           node --check assets/slot-last-entry-admin.js
           node --check assets/slot-last-entry-frontend.js
+          node --check assets/status-sync.js
           node tests/frontend-engine.js
       - name: WordPress security and PHP compatibility report
         continue-on-error: true
@@ -75,8 +76,9 @@ jobs:
           node --check assets/frontend.js
           node --check assets/slot-last-entry-admin.js
           node --check assets/slot-last-entry-frontend.js
+          node --check assets/status-sync.js
 
-      - name: Stop if release already exists
+      - name: Check whether release already exists
         id: existing
         env:
           GH_TOKEN: ${{ github.token }}
@@ -89,6 +91,7 @@ jobs:
           fi
 
       - name: Build WordPress ZIP
+        if: steps.existing.outputs.exists != 'true'
         shell: bash
         run: |
           rm -rf build horaires-tarifs-parc.zip
@@ -105,12 +108,15 @@ jobs:
             --exclude 'AUDIT-PERFORMANCE-1.7.5.md' \
             --exclude 'CAHIER-DES-CHARGES.md' \
             --exclude 'GITHUB-UPDATES.md' \
+            --exclude 'AUDIT-*.md' \
+            --exclude 'CHATGPT-CONTEXT.md' \
             --exclude 'build/' \
             --exclude 'horaires-tarifs-parc.zip'
           cd build
           zip -qr ../horaires-tarifs-parc.zip horaires-tarifs-parc
 
       - name: Validate WordPress ZIP
+        if: steps.existing.outputs.exists != 'true'
         shell: bash
         run: |
           unzip -t horaires-tarifs-parc.zip
@@ -121,6 +127,7 @@ jobs:
           sha256sum horaires-tarifs-parc.zip | tee horaires-tarifs-parc.zip.sha256
 
       - name: Run official WordPress Plugin Check
+        if: steps.existing.outputs.exists != 'true'
         continue-on-error: true
         uses: wordpress/plugin-check-action@v1
         with:
@@ -142,13 +149,7 @@ jobs:
             --title "Horaires & Tarifs Parc ${{ steps.version.outputs.version }}" \
             --notes-file <(sed -n '/^## ${{ steps.version.outputs.version }}$/,/^## /p' CHANGELOG.md | sed '$d')
 
-      - name: Refresh existing release assets
+      - name: Preserve existing release unchanged
         if: steps.existing.outputs.exists == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
         shell: bash
-        run: |
-          gh release upload "${{ steps.version.outputs.tag }}" horaires-tarifs-parc.zip horaires-tarifs-parc.zip.sha256 --clobber
-          gh release edit "${{ steps.version.outputs.tag }}" \
-            --title "Horaires & Tarifs Parc ${{ steps.version.outputs.version }}" \
-            --notes-file <(sed -n '/^## ${{ steps.version.outputs.version }}$/,/^## /p' CHANGELOG.md | sed '$d')
+        run: echo "Release ${{ steps.version.outputs.tag }} already exists; keeping its assets immutable."
