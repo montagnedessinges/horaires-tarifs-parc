@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Horaires et tarifs du parc
  * Description: Horaires, calendrier interactif, exceptions, alertes et tarifs multilingues pour les parcs.
- * Version: 1.8.9
+ * Version: 1.9.0
  * Update URI: https://github.com/montagnedessinges/horaires-tarifs-parc
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -14,21 +14,17 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('PARCS_HT_VERSION', '1.8.9');
+define('PARCS_HT_VERSION', '1.9.0');
 define('PARCS_HT_FILE', __FILE__);
 define('PARCS_HT_DIR', plugin_dir_path(__FILE__));
 define('PARCS_HT_URL', plugin_dir_url(__FILE__));
 
-// Le noyau léger est chargé partout. Les modules lourds d'administration et
-// de mise à jour ne sont chargés que dans les contextes qui en ont besoin.
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-defaults.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-schedule.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-bootstrap.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-slot-last-entry.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-http-ssl.php';
 
-// Force le bundle CA de WordPress uniquement pour les appels GitHub de l'extension.
-// La vérification SSL reste active ; aucun contournement sslverify=false n'est utilisé.
 Parcs_HT_HTTP_SSL::init();
 
 register_activation_hook(__FILE__, array('Parcs_HT_Defaults', 'activate'));
@@ -54,8 +50,6 @@ add_action('added_option', static function ($option, $value) {
     }
 }, 10, 2);
 
-// Synchronise le statut visible avec l'horaire, y compris lorsqu'un ancien bloc
-// du thème conserve un libellé statique « Ouvert » à côté du shortcode horaire.
 add_action('wp_footer', static function () {
     if (!wp_script_is('parcs-ht-frontend', 'enqueued')) return;
     wp_enqueue_script(
@@ -67,8 +61,7 @@ add_action('wp_footer', static function () {
     );
 }, 2);
 
-// L'aperçu avancé n'est chargé que dans l'administration de cette extension.
-// Priorité 20 : le script principal d'administration est déjà enregistré/enfilé.
+// Simulateur d'aperçu : administration uniquement.
 add_action('admin_enqueue_scripts', static function ($hook) {
     if ($hook !== 'toplevel_page_parcs-horaires-tarifs') return;
     wp_enqueue_script(
@@ -81,33 +74,25 @@ add_action('admin_enqueue_scripts', static function ($hook) {
 }, 20);
 
 add_action('plugins_loaded', static function () {
-    // Les shortcodes restent enregistrés partout, mais leur gros moteur n'est chargé
-    // que lorsqu'un shortcode/export est réellement utilisé.
     Parcs_HT_Bootstrap::init();
 
     if (is_admin()) {
         require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin.php';
         Parcs_HT_Admin::init();
-
-        // Une migration n'a aucune raison de lire la grosse option du plugin sur
-        // chaque page publique. En administration, on vérifie le schéma une fois.
         Parcs_HT_Defaults::maybe_upgrade();
     } else {
-        // Un petit indicateur autoloadé évite de charger/analyser toute la configuration
-        // des pop-up sur chaque page d'un site qui n'en utilise pas.
         if (Parcs_HT_Defaults::has_popup_source_fast()) {
             require_once PARCS_HT_DIR . 'includes/class-parcs-ht-alerts.php';
             Parcs_HT_Alerts::init();
         }
     }
 
-    // Gestion des dernières entrées par créneau et du statut horaire dynamique.
     Parcs_HT_Slot_Last_Entry::init();
 
-    // Les contrôles de versions WordPress ont lieu dans l'administration ou via cron.
-    // Le moteur GitHub n'est donc pas parsé sur les visites publiques ordinaires.
     $doing_cron = function_exists('wp_doing_cron') && wp_doing_cron();
     if (is_admin() || $doing_cron) {
+        require_once PARCS_HT_DIR . 'includes/class-parcs-ht-verifier.php';
+        Parcs_HT_Verifier::init();
         require_once PARCS_HT_DIR . 'includes/class-parcs-ht-health.php';
         Parcs_HT_Health::init();
         require_once PARCS_HT_DIR . 'includes/class-parcs-ht-updater.php';
