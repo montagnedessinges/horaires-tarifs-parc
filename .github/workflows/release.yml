@@ -33,7 +33,9 @@ jobs:
       - name: Check PHP syntax
         run: find . -type f -name '*.php' -not -path './vendor/*' -not -path './.git/*' -print0 | xargs -0 -n1 php -l
       - name: Run schedule business tests
-        run: php tests/schedule-engine.php
+        run: |
+          php tests/schedule-engine.php
+          php tests/popup-language-contract.php
       - name: Check JavaScript and parity tests
         run: |
           node --check assets/admin.js
