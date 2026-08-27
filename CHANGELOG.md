@@ -1,5 +1,15 @@
 # Historique des versions
 
+## 1.8.9
+- L’onglet « Aperçu » devient un simulateur date + heure pour tester le comportement public sans attendre l’heure réelle.
+- Le simulateur affiche séparément le rendu attendu sur la page d’accueil et dans le bloc « Aujourd’hui » de la page Horaires & Tarifs.
+- L’aperçu indique la règle réellement appliquée : horaire classique, horaire exceptionnel prioritaire, fermeture exceptionnelle ou absence d’horaire.
+- Le simulateur prend en compte les phases avant ouverture, pendant un créneau, entre deux créneaux et après la fermeture finale, avec la dernière entrée du créneau actif.
+- L’onglet Aperçu signale et représente le premier pop-up actif correspondant à la date testée lorsqu’il est configuré dans l’administration.
+- Le bouton « Enregistrer tous les réglages » est retiré de l’interface afin de privilégier la sauvegarde sûre de l’onglet actif.
+- Le nouveau module d’aperçu est chargé uniquement dans l’administration de l’extension et n’ajoute aucune charge aux pages publiques.
+- Le workflow GitHub vérifie désormais aussi la syntaxe du nouveau module `assets/admin-preview-enhanced.js`.
+
 ## 1.8.8
 - Correction du statut public lorsqu’un horaire exceptionnel est actif : les classes d’état utilisent désormais l’ouverture réelle à l’instant T et non le simple fait que la journée possède des horaires.
 - Un horaire exceptionnel suit désormais la même logique visuelle qu’un horaire classique : avant ouverture, ouvert pendant le créneau, réouverture entre deux créneaux, puis prochaine ouverture après la fermeture finale.
