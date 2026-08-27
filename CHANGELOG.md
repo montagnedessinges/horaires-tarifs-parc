@@ -1,5 +1,13 @@
 # Historique des versions
 
+## 1.8.8
+- Correction du statut public lorsqu’un horaire exceptionnel est actif : les classes d’état utilisent désormais l’ouverture réelle à l’instant T et non le simple fait que la journée possède des horaires.
+- Un horaire exceptionnel suit désormais la même logique visuelle qu’un horaire classique : avant ouverture, ouvert pendant le créneau, réouverture entre deux créneaux, puis prochaine ouverture après la fermeture finale.
+- Correction ciblée du cas observé à La Forêt des Singes où un horaire exceptionnel pouvait laisser un libellé « Ouvert » après la fermeture.
+- Ajout d’un test JavaScript couvrant un horaire exceptionnel avant ouverture, pendant l’ouverture, après fermeture et entre deux créneaux.
+- Le workflow contrôle maintenant aussi `assets/status-sync.js` et exécute le nouveau test de statut dynamique.
+- Les releases déjà publiées sont désormais conservées telles quelles : le workflow ne remplace plus leurs ZIP avec `--clobber`.
+
 ## 1.8.7
 - Correction du bloc d’accueil lorsque le libellé « Ouvert » est un texte statique du thème placé à côté du shortcode horaire.
 - Le moteur synchronise désormais ce libellé visuel avec l’état horaire réel : ouverture future, réouverture, ouvert maintenant ou prochaine ouverture.
