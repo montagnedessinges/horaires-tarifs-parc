@@ -42,6 +42,7 @@ jobs:
           node --check assets/slot-last-entry-frontend.js
           node --check assets/status-sync.js
           node tests/frontend-engine.js
+          node tests/status-sync-engine.js
       - name: WordPress security and PHP compatibility report
         continue-on-error: true
         run: composer lint
