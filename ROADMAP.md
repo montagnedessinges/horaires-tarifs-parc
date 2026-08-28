@@ -23,6 +23,12 @@ Ce fichier consigne les idées validées ou à débattre avant développement. N
 - Supprimer les libellés ambigus « Enregistrer cet onglet » et « Enregistrer tous les réglages » si la sauvegarde réelle porte sur toute la saison.
 - Éviter une simple case « Afficher cette saison sur le site » mélangée aux réglages généraux : le statut de publication doit être une action distincte et volontaire.
 
+## Validation des doubles créneaux
+- Le créneau 2 reste totalement facultatif pour les horaires classiques comme exceptionnels.
+- Si ouverture 2 et fermeture 2 sont toutes les deux vides, aucune erreur ni mise en évidence ne doit apparaître.
+- Une erreur « créneau 2 incomplet » ne doit apparaître que si un seul des deux champs est renseigné.
+- Si les deux champs sont renseignés, la validation contrôle uniquement leur ordre et un éventuel chevauchement avec le créneau 1.
+
 ## Tarifs : plusieurs colonnes de prix
 - Prévoir la possibilité d’ajouter une ou plusieurs colonnes tarifaires supplémentaires par catégorie.
 - Cas d’usage prioritaire : différencier un tarif « Sur place » et un tarif « En ligne » pour une même ligne (ex. adulte).
@@ -42,8 +48,10 @@ Ce fichier consigne les idées validées ou à débattre avant développement. N
 - À débattre : emplacement précis dans le tableau, badge visuel, priorité entre plusieurs offres et intégration PDF.
 
 ## Aperçu complet
-- L’onglet Aperçu doit conserver la simulation date + heure existante.
-- Il doit présenter dans un même endroit ce que verra le visiteur : affichage de la page d’accueil, bloc Aujourd’hui / horaires, pop-up correspondant et tarifs.
+- L’onglet Aperçu conserve la simulation date + heure existante.
+- L’heure testée doit être explicitement interprétée : avant ouverture, ouvert, entre deux créneaux ou après fermeture, avec l’heure d’ouverture/réouverture/fermeture correspondante visible dans le diagnostic.
+- La page d’accueil et le bloc « Aujourd’hui » reposent sur le même moteur partagé : l’aperçu ne doit afficher qu’un seul bloc « Affichage du jour » au lieu de deux rendus identiques.
+- Il doit présenter dans un même endroit ce que verra le visiteur : affichage du jour, pop-up correspondant et tarifs.
 - L’aperçu doit pouvoir afficher les tarifs et offres d’une saison brouillon sans les rendre visibles sur le site public.
 - L’aperçu doit utiliser autant que possible le même moteur de rendu que le site public et ne pas constituer un second moteur indépendant.
 
