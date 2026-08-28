@@ -1,5 +1,18 @@
 # Historique des versions
 
+## 1.9.4
+- Correction définitive du faux message « Créneau 2 incomplet » : le créneau 2 est réellement facultatif et n’est signalé incomplet que si une seule des deux heures est renseignée.
+- Quand les deux heures du créneau 2 sont présentes, la validation contrôle uniquement l’ordre ouverture/fermeture et le chevauchement éventuel avec le créneau 1.
+- L’aperçu n’affiche plus deux cartes identiques pour l’accueil et « Aujourd’hui » : un seul bloc « Affichage du jour » utilise le moteur partagé.
+- L’aperçu interprète désormais explicitement l’heure simulée : avant ouverture, pendant un créneau, entre deux créneaux et après fermeture, avec l’heure d’ouverture, de réouverture ou de fermeture correspondante.
+- La sauvegarde et la publication des saisons sont séparées. Une simple sauvegarde ne peut plus changer le statut d’une saison.
+- Pour une saison brouillon : actions « Enregistrer le brouillon » et « Publier la saison ».
+- Pour une saison publiée : actions « Enregistrer les modifications » et « Remettre en brouillon ».
+- « Remettre en brouillon » retire la saison du moteur public sans supprimer ses horaires, tarifs, événements, exceptions ou pop-up.
+- La case de publication mélangée aux réglages généraux est masquée dans l’administration ; le changement de statut passe par une action explicite avec confirmation.
+- Les anciens libellés ambigus « Enregistrer cet onglet » / « Enregistrer tous les réglages » sont remplacés dans l’interface par les actions de saison correspondantes.
+- Ajout de tests de non-régression GitHub pour la gestion brouillon/publié, la validation du second créneau et l’aperçu horaire.
+
 ## 1.9.3
 - Tarifs indépendants par saison : une saison brouillon peut être préparée sans modifier les tarifs de la saison publiée.
 - La duplication d’une saison peut emporter ses tarifs et la copie reste en brouillon jusqu’à publication explicite.
