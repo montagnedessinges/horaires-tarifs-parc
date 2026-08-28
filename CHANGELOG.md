@@ -1,5 +1,12 @@
 # Historique des versions
 
+## 1.9.2
+- Suppression de la rustine qui parcourait le DOM Elementor/thème pour rechercher un texte statique « Ouvert / Open / Geöffnet » et le remplacer dynamiquement.
+- La synchronisation publique ne modifie désormais que les composants natifs de l’extension (`home-opening`, `header-status`, `header-hour`, `today`).
+- Conservation du moteur d’état partagé introduit en 1.9.1 pour les phases avant ouverture, ouvert, coupure entre créneaux et après fermeture.
+- Le bloc de page d’accueil doit utiliser le composant/shortcode dynamique de l’extension ; un texte statique ajouté dans Elementor ou le thème n’est plus corrigé artificiellement par JavaScript.
+- Aucun changement des horaires, dernières entrées, tarifs, pop-up ou règles de saison dans cette version : mise à jour volontairement ciblée sur la simplification de l’affichage public.
+
 ## 1.9.1
 - Unification de l’aperçu d’administration et de l’affichage public autour d’un moteur d’état partagé (`assets/display-state.js`) : mêmes phases horaires, mêmes créneaux et mêmes calculs de dernière entrée.
 - Correction des dernières entrées par créneau : le créneau 1 utilise `last_entry_minutes_slot1` et le créneau 2 `last_entry_minutes_slot2`, avec fallback vers les anciens champs uniquement pour compatibilité.
