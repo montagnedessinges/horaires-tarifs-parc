@@ -72,7 +72,8 @@ final class Parcs_HT_Verifier {
     private static function row_name($kind,$row,$index) {
         $title='';
         if (!empty($row['internal_label'])) $title=trim((string)$row['internal_label']);
-        foreach (array('context','title') as $key) if ($title==='' && isset($row[$key]['fr'])) $title=trim((string)$row[$key]['fr']);
+        if ($title==='' && !empty($row['label'])) $title=trim((string)$row['label']);
+        if ($title==='' && isset($row['title']['fr'])) $title=trim((string)$row['title']['fr']);
         $dates=''; if(!empty($row['start'])||!empty($row['end']))$dates=trim((string)($row['start']??'').' → '.(string)($row['end']??''),' →');
         return $kind.' #'.($index+1).($title!==''?' « '.$title.' »':'').($dates!==''?' ('.$dates.')':'');
     }
@@ -81,13 +82,12 @@ final class Parcs_HT_Verifier {
         foreach ((array)($settings['special_periods']??array()) as $i=>$row) {
             if ((string)($row['enabled']??'0')!=='1') continue;
             $name=self::row_name('Période / événement',$row,$i);
-            if(trim((string)($row['internal_label']??''))==='') $errors[]='Repère interne manquant : '.$name.' → libellé interne obligatoire.';
+            if(trim((string)($row['internal_label']??''))==='') $errors[]='Repère interne manquant : '.$name.' → nom interne FR obligatoire.';
         }
         foreach ((array)($settings['exceptions']??array()) as $i=>$row) {
             if ((string)($row['enabled']??'0')!=='1') continue;
             $name=self::row_name('Exception',$row,$i);
-            $context=(array)($row['context']??array());
-            if(trim((string)($context['fr']??''))==='') $errors[]='Repère interne manquant : '.$name.' → contexte / motif obligatoire.';
+            if(trim((string)($row['label']??''))==='') $errors[]='Repère interne manquant : '.$name.' → nom interne FR obligatoire.';
         }
     }
 
