@@ -1,5 +1,8 @@
 'use strict';
 
+var fs=require('fs');
+var syncSource=fs.readFileSync(require('path').join(__dirname,'../assets/status-sync.js'),'utf8');
+
 var currentStatus=null;
 global.window={
   ParcsHTP:{
@@ -19,6 +22,8 @@ var display=window.ParcsHTPDisplayState;
 var api=window.ParcsHTPStatusSync;
 assert(display&&typeof display.state==='function','le moteur partagé doit être testable');
 assert(api&&typeof api.state==='function','la synchronisation publique doit exposer le moteur partagé');
+assert(syncSource.indexOf('elementor')===-1,'la synchronisation ne doit pas parcourir Elementor pour corriger un texte statique');
+assert(syncSource.indexOf('synced-status')===-1,'la synchronisation ne doit pas marquer ni remplacer des textes externes au composant');
 
 var exceptional={open:true,exceptional:true,type:'hours',openTime:'09:00',closeTime:'17:30',slots:[{open:'09:00',close:'17:30'}],exception:{last_entry_minutes_slot1:'30'}};
 currentStatus=exceptional;
