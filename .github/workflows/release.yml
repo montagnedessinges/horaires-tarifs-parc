@@ -36,6 +36,7 @@ jobs:
         run: |
           php tests/schedule-engine.php
           php tests/popup-language-contract.php
+          php tests/tariff-seasons-contract.php
       - name: Check JavaScript and parity tests
         run: |
           node --check assets/admin.js
@@ -46,6 +47,8 @@ jobs:
           node --check assets/slot-last-entry-admin.js
           node --check assets/slot-last-entry-frontend.js
           node --check assets/status-sync.js
+          node --check assets/tariff-seasons-admin.js
+          node --check assets/tariff-seasons-frontend.js
           node tests/frontend-engine.js
           node tests/status-sync-engine.js
           node tests/display-state-engine.js
@@ -83,6 +86,8 @@ jobs:
           node --check assets/slot-last-entry-admin.js
           node --check assets/slot-last-entry-frontend.js
           node --check assets/status-sync.js
+          node --check assets/tariff-seasons-admin.js
+          node --check assets/tariff-seasons-frontend.js
       - name: Check whether release already exists
         id: existing
         env:
