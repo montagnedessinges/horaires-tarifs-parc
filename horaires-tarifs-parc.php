@@ -45,6 +45,22 @@ add_action('added_option', static function ($option, $value) {
     }
 }, 10, 2);
 
+// Lors de la sauvegarde d'une saison brouillon, conserver les tarifs globaux de secours
+// sur une saison publiée. Les tarifs du brouillon restent exclusivement dans sa saison.
+add_filter('pre_update_option_' . Parcs_HT_Defaults::OPTION, static function ($new_value, $old_value) {
+    if (!is_array($new_value) || !is_admin() || !isset($_POST['action']) || sanitize_key(wp_unslash($_POST['action'])) !== 'parcs_ht_save') return $new_value;
+    $year = isset($_POST['season_year']) ? sanitize_text_field(wp_unslash($_POST['season_year'])) : '';
+    if ($year === '' || !isset($new_value['seasons'][$year]) || (string)($new_value['seasons'][$year]['published'] ?? '0') === '1') return $new_value;
+    foreach ((array)($old_value['seasons'] ?? array()) as $published_year => $season) {
+        if ((string)$published_year === $year || !is_array($season) || (string)($season['published'] ?? '0') !== '1') continue;
+        if (!empty($season['tariffs']) && is_array($season['tariffs'])) {
+            $new_value['tariffs'] = $season['tariffs'];
+            break;
+        }
+    }
+    return $new_value;
+}, 50, 2);
+
 // Moteur d'état partagé : même calcul pour le site public et le simulateur d'administration.
 // La synchronisation ne touche que les composants natifs de l'extension ; aucun texte
 // Elementor/thème externe n'est recherché ou modifié automatiquement.
@@ -66,6 +82,25 @@ add_action('plugins_loaded', static function () {
         require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin.php';
         Parcs_HT_Admin::init();
         Parcs_HT_Defaults::maybe_upgrade();
+
+        // Migration 1.9.3 : chaque saison existante reçoit une copie indépendante
+        // des tarifs actuels. Elle n'est exécutée qu'une seule fois.
+        if (get_option('parcs_ht_tariff_seasons_migrated_193', '0') !== '1') {
+            $all = get_option(Parcs_HT_Defaults::OPTION, array());
+            if (is_array($all) && !empty($all['seasons']) && is_array($all['seasons']) && isset($all['tariffs']) && is_array($all['tariffs'])) {
+                $changed = false;
+                foreach ($all['seasons'] as &$season) {
+                    if (!is_array($season)) continue;
+                    if (!isset($season['tariffs']) || !is_array($season['tariffs'])) {
+                        $season['tariffs'] = $all['tariffs'];
+                        $changed = true;
+                    }
+                }
+                unset($season);
+                if ($changed) update_option(Parcs_HT_Defaults::OPTION, $all, false);
+            }
+            update_option('parcs_ht_tariff_seasons_migrated_193', '1', false);
+        }
     } else {
         if (Parcs_HT_Defaults::has_popup_source_fast()) { require_once PARCS_HT_DIR . 'includes/class-parcs-ht-alerts.php'; Parcs_HT_Alerts::init(); }
     }
