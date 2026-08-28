@@ -37,6 +37,7 @@ jobs:
           php tests/schedule-engine.php
           php tests/popup-language-contract.php
           php tests/tariff-seasons-contract.php
+          php tests/admin-season-status-contract.php
       - name: Check JavaScript and parity tests
         run: |
           node --check assets/admin.js
@@ -44,6 +45,7 @@ jobs:
           node --check assets/admin-validation.js
           node --check assets/display-state.js
           node --check assets/frontend.js
+          node --check assets/season-status-admin.js
           node --check assets/slot-last-entry-admin.js
           node --check assets/slot-last-entry-frontend.js
           node --check assets/status-sync.js
@@ -83,6 +85,7 @@ jobs:
           node --check assets/admin-validation.js
           node --check assets/display-state.js
           node --check assets/frontend.js
+          node --check assets/season-status-admin.js
           node --check assets/slot-last-entry-admin.js
           node --check assets/slot-last-entry-frontend.js
           node --check assets/status-sync.js
