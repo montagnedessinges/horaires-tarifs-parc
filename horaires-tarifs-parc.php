@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Horaires et tarifs du parc
  * Description: Horaires, calendrier interactif, exceptions, alertes et tarifs multilingues pour les parcs.
- * Version: 1.9.1
+ * Version: 1.9.2
  * Update URI: https://github.com/montagnedessinges/horaires-tarifs-parc
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -12,7 +12,7 @@
 
 if (!defined('ABSPATH')) { exit; }
 
-define('PARCS_HT_VERSION', '1.9.1');
+define('PARCS_HT_VERSION', '1.9.2');
 define('PARCS_HT_FILE', __FILE__);
 define('PARCS_HT_DIR', plugin_dir_path(__FILE__));
 define('PARCS_HT_URL', plugin_dir_url(__FILE__));
@@ -44,6 +44,8 @@ add_action('added_option', static function ($option, $value) {
 }, 10, 2);
 
 // Moteur d'état partagé : même calcul pour le site public et le simulateur d'administration.
+// La synchronisation ne touche que les composants natifs de l'extension ; aucun texte
+// Elementor/thème externe n'est recherché ou modifié automatiquement.
 add_action('wp_footer', static function () {
     if (!wp_script_is('parcs-ht-frontend', 'enqueued')) return;
     wp_enqueue_script('parcs-ht-display-state', PARCS_HT_URL . 'assets/display-state.js', array('parcs-ht-frontend'), PARCS_HT_VERSION, true);
