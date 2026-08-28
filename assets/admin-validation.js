@@ -16,9 +16,19 @@
   function isEnabled(row){var e=row.querySelector('input[type="checkbox"][name$="[enabled]"]');return !e||e.checked;}
   function clearErrors(){document.querySelectorAll('.htp-validation-error').forEach(function(el){el.classList.remove('htp-validation-error');el.removeAttribute('aria-invalid');});var old=document.querySelector('[data-htp-validation-summary]');if(old)old.remove();}
   function mark(field){if(!field)return;field.classList.add('htp-validation-error');field.setAttribute('aria-invalid','true');}
+  function hasValue(field){return !!(field&&String(field.value||'').trim()!=='');}
   function validate(){clearErrors();var errors=[];
     ['htp-holidays','htp-exceptions'].forEach(function(sectionId){var section=document.getElementById(sectionId);if(!section)return;var rows=Array.prototype.slice.call(section.querySelectorAll('.htp-repeat-row'));rows.forEach(function(row,index){if(!isEnabled(row))return;var internal=rowInternalField(row);if(internal&&String(internal.value||'').trim()===''){errors.push((sectionId==='htp-exceptions'?'Exception ':'Période / événement ')+rowLabel(row,index)+' : repère interne FR obligatoire.');mark(internal);}});});
-    document.querySelectorAll('#htp-regular .htp-repeat-row,#htp-exceptions .htp-repeat-row').forEach(function(row,index){if(!isEnabled(row))return;var o1=fieldBySuffix(row,'[open]'),c1=fieldBySuffix(row,'[close]'),o2=fieldBySuffix(row,'[open2]'),c2=fieldBySuffix(row,'[close2]');if(o1&&c1&&o1.value&&c1.value&&o1.value>=c1.value){errors.push('Créneau 1 invalide ligne '+(index+1)+'.');mark(o1);mark(c1);}if((o2&&o2.value)!==(c2&&c2.value)){errors.push('Créneau 2 incomplet ligne '+(index+1)+'.');mark(o2);mark(c2);}if(o2&&c2&&o2.value&&c2.value&&c1&&c1.value&&o2.value<c1.value){errors.push('Chevauchement entre créneau 1 et créneau 2 ligne '+(index+1)+'.');mark(o2);mark(c1);}});
+    document.querySelectorAll('#htp-regular .htp-repeat-row,#htp-exceptions .htp-repeat-row').forEach(function(row,index){
+      if(!isEnabled(row))return;
+      var o1=fieldBySuffix(row,'[open]'),c1=fieldBySuffix(row,'[close]'),o2=fieldBySuffix(row,'[open2]'),c2=fieldBySuffix(row,'[close2]');
+      if(hasValue(o1)&&hasValue(c1)&&o1.value>=c1.value){errors.push('Créneau 1 invalide ligne '+(index+1)+'.');mark(o1);mark(c1);}
+      var hasO2=hasValue(o2),hasC2=hasValue(c2);
+      // Le créneau 2 est entièrement facultatif. Il n'est invalide que si un seul de ses deux champs est renseigné.
+      if(hasO2!==hasC2){errors.push('Créneau 2 incomplet ligne '+(index+1)+'.');if(hasO2)mark(c2);else mark(o2);}
+      if(hasO2&&hasC2&&o2.value>=c2.value){errors.push('Créneau 2 invalide ligne '+(index+1)+'.');mark(o2);mark(c2);}
+      if(hasO2&&hasC2&&hasValue(c1)&&o2.value<c1.value){errors.push('Chevauchement entre créneau 1 et créneau 2 ligne '+(index+1)+'.');mark(o2);mark(c1);}
+    });
     return errors;
   }
   function showSummary(errors){if(!errors.length)return;var wrap=document.querySelector('.htp-admin');if(!wrap)return;var div=document.createElement('div');div.className='notice notice-error';div.setAttribute('data-htp-validation-summary','1');div.innerHTML='<p><strong>Enregistrement bloqué : '+errors.length+' élément(s) à corriger.</strong></p><ul>'+errors.slice(0,15).map(function(e){return '<li>'+String(e).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c];})+'</li>';}).join('')+'</ul>';wrap.insertBefore(div,wrap.children[1]||null);div.scrollIntoView({behavior:'smooth',block:'start'});}
