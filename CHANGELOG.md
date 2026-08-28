@@ -1,5 +1,17 @@
 # Historique des versions
 
+## 1.9.3
+- Les tarifs peuvent désormais être conservés par saison : préparer ou modifier une saison brouillon ne remplace pas les tarifs de la saison actuellement publiée.
+- La duplication d’une saison peut ainsi emporter ses tarifs ; la copie reste en brouillon jusqu’à l’action explicite de publication déjà prévue par la gestion des saisons.
+- Migration non destructive : les tarifs existants sont copiés une seule fois dans les saisons historiques qui n’avaient pas encore leur propre configuration tarifaire.
+- Chaque colonne tarifaire peut être affichée ou masquée publiquement, ce qui permet notamment de préparer des colonnes « Sur place » et « En ligne » sans les rendre immédiatement visibles.
+- Les billets/offres spéciaux conservent deux périodes distinctes : période de vente/affichage (`display_from` / `display_to`) et période de validité (`valid_from` / `valid_to`).
+- Plusieurs lignes tarifaires (par exemple adulte et enfant) peuvent être regroupées sous un même repère interne d’offre, uniquement en français.
+- Une offre spéciale peut déclencher facultativement un pop-up multilingue pendant sa période de vente/affichage ; le titre public reste facultatif.
+- L’aperçu d’administration inclut désormais les tarifs de la saison sélectionnée, y compris lorsqu’elle est encore en brouillon, et respecte la date simulée pour les offres temporaires.
+- Correction de validation : le repère interne est obligatoire uniquement en français ; aucun titre public FR/EN/DE n’est obligatoire. Les contenus publics restent facultatifs.
+- Ajout de tests de non-régression et de contrôles de syntaxe GitHub pour les nouveaux modules tarifs/saisons.
+
 ## 1.9.2
 - Suppression de la rustine qui parcourait le DOM Elementor/thème pour rechercher un texte statique « Ouvert / Open / Geöffnet » et le remplacer dynamiquement.
 - La synchronisation publique ne modifie désormais que les composants natifs de l’extension (`home-opening`, `header-status`, `header-hour`, `today`).
@@ -115,33 +127,6 @@
 ## 1.7.8
 - Nouveau planning annuel sur une page A3 paysage avec légende globale.
 - Respect de la priorité exception applicable, horaire normal applicable, fermeture.
-- Affichage des périodes et événements uniquement lorsqu’ils sont visibles sur le calendrier public.
-- Prise en compte des jours fériés et des règles d’accès temporairement limité au domaine.
-- Cache des PDF horaires et tarifs invalidé automatiquement lors d’une modification des réglages.
-
-## 1.7.7
-- Finalisation du système natif de mise à jour depuis les releases GitHub privées.
-- Vérification manuelle protégée par `manage_options` et nonce.
-- Affichage explicite de la version locale, de la version GitHub, de l’état et de la dernière vérification.
-- Conservation du mécanisme WordPress pour les mises à jour automatiques.
-- Renforcement de la construction et des contrôles du ZIP de release.
-
-## 1.7.6
-- GitHub devient la source canonique vérifiée avant chaque évolution.
-- Bouton de vérification immédiate des mises à jour depuis WordPress.
-- Affichage version locale / version GitHub / dernière vérification.
-- Option de mises à jour automatiques WordPress pour les releases GitHub privées.
-- Publication automatisée d’un ZIP de release depuis la branche `main`.
-
-## 1.7.5
-- Audit et optimisations de performances.
-- Chargement conditionnel des modules administration, GitHub, alertes et shortcodes.
-- Réduction des données JavaScript et mise en cache de calculs.
-- Cache renforcé des appels GitHub.
-
-## 1.7.4
-- Planning PDF visuel basé sur le calendrier effectif.
-- Priorité des horaires exceptionnels sur les horaires normaux dans l’export.
 - Événements intégrés au planning.
 - Configuration de la clé GitHub directement depuis WordPress.
 
