@@ -76,6 +76,13 @@ add_action('admin_enqueue_scripts', static function ($hook) {
     wp_enqueue_script('parcs-ht-admin-preview-enhanced', PARCS_HT_URL . 'assets/admin-preview-enhanced.js', array('parcs-ht-admin','parcs-ht-display-state'), PARCS_HT_VERSION, true);
 }, 20);
 
+add_action('admin_enqueue_scripts', static function ($hook) {
+    if ($hook !== 'toplevel_page_parcs-horaires-tarifs' || !wp_script_is('parcs-ht-tariff-seasons-admin', 'enqueued')) return;
+    $year = isset($_GET['season']) ? sanitize_text_field(wp_unslash($_GET['season'])) : '';
+    $settings = Parcs_HT_Defaults::settings($year);
+    wp_add_inline_script('parcs-ht-tariff-seasons-admin', 'window.ParcsHTTariffSeasonAdmin=' . wp_json_encode(array('tariffs'=>(array)($settings['tariffs'] ?? array()))) . ';', 'before');
+}, 90);
+
 add_action('plugins_loaded', static function () {
     Parcs_HT_Bootstrap::init();
     if (is_admin()) {
