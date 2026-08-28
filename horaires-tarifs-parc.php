@@ -23,8 +23,10 @@ require_once PARCS_HT_DIR . 'includes/class-parcs-ht-bootstrap.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-slot-last-entry.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-http-ssl.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-tariff-seasons.php';
+require_once PARCS_HT_DIR . 'includes/class-parcs-ht-season-status.php';
 Parcs_HT_HTTP_SSL::init();
 Parcs_HT_Tariff_Seasons::init();
+Parcs_HT_Season_Status::init();
 
 register_activation_hook(__FILE__, array('Parcs_HT_Defaults', 'activate'));
 register_deactivation_hook(__FILE__, static function () { require_once PARCS_HT_DIR . 'includes/class-parcs-ht-health.php'; Parcs_HT_Health::deactivate(); });
