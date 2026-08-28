@@ -58,9 +58,9 @@ final class Parcs_HT_Verifier {
         $errors=array_merge($errors,(array)($audit['errors']??array()));
         $warnings=array_merge($warnings,(array)($audit['warnings']??array()));
         $checks[]=array('name'=>'Configuration annuelle','ok'=>empty($audit['errors']));
-        self::check_required_titles($settings,$errors);
+        self::check_internal_contexts($settings,$errors);
         self::check_slots($settings,$errors,$warnings);
-        $checks[]=array('name'=>'Créneaux, titres et dernières entrées','ok'=>!self::has_prefix($errors,array('Créneau','Titre')));
+        $checks[]=array('name'=>'Créneaux, repères internes et dernières entrées','ok'=>!self::has_prefix($errors,array('Créneau','Repère interne')));
         self::check_public_renderers($settings,$errors,$warnings);
         $checks[]=array('name'=>'Accueil et bloc Aujourd’hui','ok'=>!self::has_prefix($errors,array('Affichage')));
         self::check_popups($settings,$errors,$warnings);
@@ -71,27 +71,23 @@ final class Parcs_HT_Verifier {
 
     private static function row_name($kind,$row,$index) {
         $title='';
-        foreach (array('title','context') as $key) if ($title==='' && isset($row[$key]['fr'])) $title=trim((string)$row[$key]['fr']);
-        if ($title==='' && !empty($row['internal_label'])) $title=trim((string)$row['internal_label']);
+        if (!empty($row['internal_label'])) $title=trim((string)$row['internal_label']);
+        foreach (array('context','title') as $key) if ($title==='' && isset($row[$key]['fr'])) $title=trim((string)$row[$key]['fr']);
         $dates=''; if(!empty($row['start'])||!empty($row['end']))$dates=trim((string)($row['start']??'').' → '.(string)($row['end']??''),' →');
         return $kind.' #'.($index+1).($title!==''?' « '.$title.' »':'').($dates!==''?' ('.$dates.')':'');
     }
 
-    private static function check_required_titles($settings,&$errors) {
-        $langs=self::active_languages($settings);
+    private static function check_internal_contexts($settings,&$errors) {
         foreach ((array)($settings['special_periods']??array()) as $i=>$row) {
             if ((string)($row['enabled']??'0')!=='1') continue;
-            $name=self::row_name('Période / événement',$row,$i); $titles=(array)($row['title']??array());
-            if(trim((string)($titles['fr']??''))==='')$errors[]='Titre obligatoire manquant : '.$name.' → titre FR.';
-            $public=(string)($row['show_on_calendar']??'1')==='1'||(string)($row['show_popup']??'0')==='1';
-            if($public)foreach($langs as $lang)if($lang!=='fr'&&trim((string)($titles[$lang]??''))==='')$errors[]='Titre public manquant : '.$name.' → '.strtoupper($lang).' est une langue active.';
+            $name=self::row_name('Période / événement',$row,$i);
+            if(trim((string)($row['internal_label']??''))==='') $errors[]='Repère interne manquant : '.$name.' → libellé interne obligatoire.';
         }
         foreach ((array)($settings['exceptions']??array()) as $i=>$row) {
             if ((string)($row['enabled']??'0')!=='1') continue;
-            $name=self::row_name('Exception',$row,$i); $titles=(array)($row['title']??array());
-            if(trim((string)($titles['fr']??''))==='')$errors[]='Titre obligatoire manquant : '.$name.' → titre FR.';
-            $public=(string)($row['show_public_marker']??'1')==='1'||(string)($row['show_popup']??'0')==='1';
-            if($public)foreach($langs as $lang)if($lang!=='fr'&&trim((string)($titles[$lang]??''))==='')$errors[]='Titre public manquant : '.$name.' → '.strtoupper($lang).' est une langue active.';
+            $name=self::row_name('Exception',$row,$i);
+            $context=(array)($row['context']??array());
+            if(trim((string)($context['fr']??''))==='') $errors[]='Repère interne manquant : '.$name.' → contexte / motif obligatoire.';
         }
     }
 
