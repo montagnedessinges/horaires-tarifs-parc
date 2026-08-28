@@ -4,11 +4,24 @@ Ce fichier consigne les idées validées ou à débattre avant développement. N
 
 ## Règle d’administration : repère interne obligatoire, contenu public facultatif
 - Une période, un événement, une exception ou une offre doit toujours avoir un repère interne permettant de l’identifier facilement dans l’administration.
+- Le repère interne est uniquement en français ; aucune traduction EN / DE n’est nécessaire.
 - Le titre public n’est jamais obligatoire.
 - Si aucun titre public n’est souhaité, l’élément peut tout de même être publié et affiché.
 - Les traductions FR / EN / DE d’un titre public ne doivent être contrôlées que si ce titre public a réellement été saisi.
 - Pour les périodes / événements, le champ de référence est le libellé interne.
 - Pour les exceptions, le contexte / motif sert de repère obligatoire.
+
+## Gestion explicite du statut d’une saison
+- La sauvegarde et la publication doivent être deux actions différentes : enregistrer une saison ne doit jamais la publier automatiquement.
+- Pour une saison en brouillon, afficher deux actions accessibles depuis tous les onglets : « Enregistrer le brouillon » et « Publier la saison ».
+- « Enregistrer le brouillon » sauvegarde toute la configuration de la saison sans aucune visibilité publique.
+- « Publier la saison » est une action explicite, avec confirmation, qui change son statut en publiée.
+- Pour une saison déjà publiée, afficher « Enregistrer les modifications » et « Remettre en brouillon ».
+- « Remettre en brouillon » désactive immédiatement la saison côté public sans supprimer ses horaires, tarifs, événements, exceptions, pop-up ou autres réglages.
+- Une saison remise en brouillon peut être modifiée puis republiée ultérieurement sans perte de données.
+- Les actions de sauvegarde / publication / remise en brouillon doivent rester visibles quel que soit l’onglet actif afin d’éviter de revenir dans « Parc & apparence ».
+- Supprimer les libellés ambigus « Enregistrer cet onglet » et « Enregistrer tous les réglages » si la sauvegarde réelle porte sur toute la saison.
+- Éviter une simple case « Afficher cette saison sur le site » mélangée aux réglages généraux : le statut de publication doit être une action distincte et volontaire.
 
 ## Tarifs : plusieurs colonnes de prix
 - Prévoir la possibilité d’ajouter une ou plusieurs colonnes tarifaires supplémentaires par catégorie.
