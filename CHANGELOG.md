@@ -1,5 +1,12 @@
 # Historique des versions
 
+## 1.9.6
+- Correction du rendu public après la fermeture du parc : une ouverture le lendemain n’affiche plus une date technique au format ISO (`2026-08-30 · 10h`).
+- Pour le lendemain, l’affichage devient humain et compact, par exemple `À demain !` puis `Ouverture à 10h`.
+- Lorsqu’une prochaine ouverture est plus éloignée, la date est affichée dans la langue de la page sous une forme lisible, par exemple `5 septembre · 10h`, jamais sous forme ISO brute.
+- La correction est faite dans le moteur d’état partagé afin que la page d’accueil et le bloc « Aujourd’hui » utilisent exactement la même logique.
+- Ajout de tests de non-régression pour l’affichage après fermeture, le lendemain et les prochaines ouvertures plus éloignées.
+
 ## 1.9.5
 - Nettoyage du paquet de production sans modifier les sources de maintenance conservées sur GitHub.
 - Les commentaires PHP, JavaScript et CSS sont retirés de la copie construite pour WordPress ; seul l’en-tête officiel du plugin est conservé car WordPress en a besoin pour identifier l’extension.
