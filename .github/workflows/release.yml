@@ -65,6 +65,10 @@ jobs:
           find /tmp/htp-production-test -type f -name '*.php' -print0 | xargs -0 -n1 php -l
           find /tmp/htp-production-test/assets -type f -name '*.js' -print0 | xargs -0 -n1 node --check
           grep -q 'Plugin Name: Horaires et tarifs du parc' /tmp/htp-production-test/horaires-tarifs-parc.php
+          if find /tmp/htp-production-test -type f \( -name '*.map' -o -name '*.ts' -o -name '*.tsx' -o -name '*.jsx' -o -name '*.scss' -o -name '*.sass' -o -name '*.less' \) | grep -q .; then
+            echo 'Development source file found after production cleanup.' >&2
+            exit 1
+          fi
       - name: WordPress security and PHP compatibility report
         continue-on-error: true
         run: composer lint
@@ -115,10 +119,8 @@ jobs:
         run: |
           rm -rf build horaires-tarifs-parc.zip
           mkdir -p build/horaires-tarifs-parc
-          rsync -a ./ build/horaires-tarifs-parc/ \
-            --exclude '.git/' --exclude '.github/' --exclude '.pkg/' --exclude 'tests/' --exclude 'tools/' --exclude 'vendor/' \
-            --exclude '*.md' --exclude 'composer.json' --exclude 'composer.lock' --exclude 'phpcs.xml.dist' \
-            --exclude 'build/' --exclude 'horaires-tarifs-parc.zip' --exclude 'horaires-tarifs-parc.zip.sha256'
+          cp horaires-tarifs-parc.php uninstall.php build/horaires-tarifs-parc/
+          cp -R includes assets build/horaires-tarifs-parc/
           php tools/prepare-production.php build/horaires-tarifs-parc
           cd build
           zip -qr ../horaires-tarifs-parc.zip horaires-tarifs-parc
@@ -128,8 +130,8 @@ jobs:
         run: |
           unzip -t horaires-tarifs-parc.zip
           test "$(zipinfo -1 horaires-tarifs-parc.zip | cut -d/ -f1 | sort -u)" = "horaires-tarifs-parc"
-          if zipinfo -1 horaires-tarifs-parc.zip | grep -Ei '\.md$|/(tests|tools|vendor|\.github|\.pkg)/'; then
-            echo 'Development or documentation files found in production ZIP.' >&2
+          if zipinfo -1 horaires-tarifs-parc.zip | grep -Ei '\.(md|map|ts|tsx|jsx|scss|sass|less)$|/(tests|tools|vendor|\.github|\.git|\.pkg)/|/(composer\.(json|lock)|phpcs\.xml\.dist|package(-lock)?\.json|yarn\.lock|pnpm-lock\.yaml)$'; then
+            echo 'Development, source-map or documentation file found in production ZIP.' >&2
             exit 1
           fi
           unzip -p horaires-tarifs-parc.zip horaires-tarifs-parc/horaires-tarifs-parc.php > /tmp/horaires-tarifs-parc.php
@@ -137,8 +139,8 @@ jobs:
           test "$PACKAGE_VERSION" = "${{ steps.version.outputs.version }}"
           find build/horaires-tarifs-parc -type f -name '*.php' -print0 | xargs -0 -n1 php -l
           find build/horaires-tarifs-parc/assets -type f -name '*.js' -print0 | xargs -0 -n1 node --check
-          if grep -RniE --include='*.php' --include='*.js' --include='*.css' 'ChatGPT|OpenAI|GitHub Copilot|generated[[:space:]-]+by[[:space:]]+(AI|artificial intelligence)|généré[[:space:]]+par[[:space:]]+(une[[:space:]]+)?IA' build/horaires-tarifs-parc; then
-            echo 'Development attribution marker found in production sources.' >&2
+          if grep -RniE --include='*.php' --include='*.js' --include='*.css' 'ChatGPT|OpenAI|GitHub Copilot|generated[[:space:]-]+by[[:space:]]+(AI|artificial intelligence)|généré[[:space:]]+par[[:space:]]+(une[[:space:]]+)?IA|sourceMappingURL|TODO|FIXME|HACK|DEBUG|console\.log[[:space:]]*\(|debugger[[:space:]]*;' build/horaires-tarifs-parc; then
+            echo 'Development marker found in production sources.' >&2
             exit 1
           fi
           sha256sum horaires-tarifs-parc.zip | tee horaires-tarifs-parc.zip.sha256
