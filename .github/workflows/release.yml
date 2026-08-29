@@ -139,7 +139,7 @@ jobs:
           test "$PACKAGE_VERSION" = "${{ steps.version.outputs.version }}"
           find build/horaires-tarifs-parc -type f -name '*.php' -print0 | xargs -0 -n1 php -l
           find build/horaires-tarifs-parc/assets -type f -name '*.js' -print0 | xargs -0 -n1 node --check
-          if grep -RniE --include='*.php' --include='*.js' --include='*.css' 'ChatGPT|OpenAI|GitHub Copilot|generated[[:space:]-]+by[[:space:]]+(AI|artificial intelligence)|généré[[:space:]]+par[[:space:]]+(une[[:space:]]+)?IA|sourceMappingURL|TODO|FIXME|HACK|DEBUG|console\.log[[:space:]]*\(|debugger[[:space:]]*;' build/horaires-tarifs-parc; then
+          if grep -RniE --include='*.php' --include='*.js' --include='*.css' 'ChatGPT|OpenAI|GitHub Copilot|generated[[:space:]-]+by[[:space:]]+(AI|artificial intelligence)|généré[[:space:]]+par[[:space:]]+(une[[:space:]]+)?IA|sourceMappingURL|TODO|FIXME|HACK|console\.log[[:space:]]*\(|debugger[[:space:]]*;' build/horaires-tarifs-parc; then
             echo 'Development marker found in production sources.' >&2
             exit 1
           fi
