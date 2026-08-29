@@ -10,13 +10,35 @@ Ce fichier sert de point d’entrée pour toute nouvelle conversation ChatGPT qu
 - Les données propres à chaque parc restent enregistrées dans WordPress et ne doivent jamais être écrasées par une mise à jour du code.
 - La même extension est utilisée par La Montagne des Singes et La Forêt des Singes.
 
+## Règle de mémoire impérative
+
+GitHub doit être la mémoire complète et durable de ce projet.
+
+Toute information nouvelle apprise au cours du travail et susceptible d’aider une future reprise doit être consignée dans le dépôt, même si elle ne provoque pas immédiatement une modification du code. Cela comprend notamment :
+
+- décisions fonctionnelles et règles métier validées par l’utilisateur ;
+- préférences d’interface et de fonctionnement ;
+- comportements attendus sur les deux sites ;
+- bugs observés, symptômes, captures décrites et causes identifiées ;
+- résultats d’audits et de vérifications ;
+- décisions d’architecture et raisons de ces décisions ;
+- contraintes WordPress, PHP, sécurité, performance, SEO et distribution ;
+- éléments à faire dans une future version ;
+- solutions envisagées puis abandonnées lorsqu’il est utile de savoir pourquoi ;
+- dépendances avec le thème ou du code extérieur au dépôt lorsqu’elles sont connues ;
+- état d’une mise à jour en cours et points restant à vérifier avant publication.
+
+Choisir le fichier adapté : `CHATGPT-CONTEXT.md` pour les règles et connaissances durables, `ROADMAP.md` pour les évolutions futures, `CHANGELOG.md` pour ce qui est effectivement livré, et un fichier `AUDIT-*.md` pour les investigations/incidents importants. Si aucune rubrique existante ne convient, créer une documentation dédiée plutôt que laisser l’information uniquement dans une conversation.
+
+Une nouvelle conversation doit pouvoir reprendre le projet depuis GitHub sans dépendre de la mémoire d’un ancien chat. Ne jamais considérer une information importante comme suffisamment conservée parce qu’elle existe seulement dans la conversation.
+
 ## Règle de travail impérative
 
 Avant toute modification :
 
 1. Lire ce fichier.
 2. Vérifier la version actuelle dans `horaires-tarifs-parc.php`.
-3. Lire `CHANGELOG.md` et les fichiers directement concernés.
+3. Lire `CHANGELOG.md`, `ROADMAP.md` lorsqu’il concerne le sujet, et les fichiers directement concernés.
 4. Lire le dernier fichier `AUDIT-*.md` pertinent lorsqu’il existe, en particulier après un incident ou une régression récente.
 5. Vérifier que la modification reste compatible avec les deux parcs.
 6. Ne jamais coder en dur un comportement « Forêt des Singes » ou « Montagne des Singes » si cela peut être un réglage WordPress.
@@ -27,7 +49,7 @@ Avant toute modification :
 11. Avant toute release, vérifier la compatibilité avec les versions WordPress et PHP déclarées par l’extension, ainsi que les API WordPress utilisées.
 12. Avant toute release, vérifier que la modification n’ajoute pas de charge inutile côté serveur ou navigateur.
 13. Avant toute release, vérifier les implications de sécurité et ne jamais désactiver une protection simplement pour contourner une erreur.
-14. Tout audit important, incident de production, cause identifiée, contournement temporaire ou décision d’architecture doit être consigné dans GitHub afin qu’un nouveau chat puisse reprendre le projet sans perte de contexte.
+14. Toute information importante apprise pendant le travail doit être consignée dans GitHub avant de considérer le sujet terminé.
 
 ## Principe d’architecture
 
@@ -126,6 +148,20 @@ Toujours préserver notamment :
 - absence d’exécution ou d’inclusion de données non fiables.
 
 Ne jamais utiliser `sslverify=false` comme solution permanente à une erreur de certificat.
+
+## Distribution de production et hygiène des sources
+
+Les sources complètes et commentées restent sur GitHub pour la maintenance. Le ZIP WordPress doit être une distribution minimale de production.
+
+Règles actuelles :
+
+- le package est construit avec une liste blanche : fichier principal du plugin, `uninstall.php`, `includes/` et `assets/` ;
+- les documents Markdown, audits, tests, outils de build, dépendances de développement et métadonnées GitHub ne sont pas distribués ;
+- les commentaires PHP/JS/CSS sont retirés de la copie de production, sauf l’en-tête officiel du plugin nécessaire à WordPress ;
+- les références de source maps et autres traces de développement inutiles doivent être absentes du package ;
+- la syntaxe PHP et JavaScript du package nettoyé est revalidée avant publication ;
+- le nettoyage concerne la distribution, pas les sources GitHub : ne pas rendre le dépôt illisible pour tenter de masquer l’origine d’un code ;
+- l’objectif est un package propre et professionnel, pas une obfuscation du code.
 
 ## Logique actuelle des horaires
 
@@ -269,10 +305,11 @@ Avant de considérer une version comme prête :
 5. vérifier la charge/performance ;
 6. vérifier la sécurité ;
 7. vérifier qu’aucune duplication inutile de logique n’a été ajoutée ;
-8. mettre à jour la version et le changelog ;
-9. pousser sur `main` ;
-10. vérifier le workflow GitHub Actions et la release ;
-11. ne pas supprimer la release précédente.
+8. mettre à jour la documentation GitHub avec toutes les connaissances nouvelles utiles à une future reprise ;
+9. mettre à jour la version et le changelog ;
+10. pousser sur `main` ;
+11. vérifier le workflow GitHub Actions et la release ;
+12. ne pas supprimer la release précédente.
 
 ## Fichiers à consulter en priorité
 
@@ -289,16 +326,17 @@ Selon la modification :
 - `assets/status-sync.js` — couche actuelle de synchronisation du statut, à considérer comme une rustine à auditer avant de la conserver ;
 - `.github/workflows/release.yml` — construction et publication des releases ;
 - `CHANGELOG.md` — historique fonctionnel ;
+- `ROADMAP.md` — décisions et évolutions futures déjà discutées ;
 - `AUDIT-2026-08-27.md` — audit de référence sur les divergences Forêt/Montagne et les couches d’affichage.
 
 ## Pour démarrer une nouvelle conversation ChatGPT
 
 Le message utilisateur peut simplement être :
 
-> Accède au dépôt GitHub `montagnedessinges/horaires-tarifs-parc`, lis `CHATGPT-CONTEXT.md`, le dernier `AUDIT-*.md` pertinent et `CHANGELOG.md`, puis utilise GitHub comme source de vérité avant toute modification.
+> Accède au dépôt GitHub `montagnedessinges/horaires-tarifs-parc`, lis `CHATGPT-CONTEXT.md`, le dernier `AUDIT-*.md` pertinent, `ROADMAP.md` et `CHANGELOG.md`, puis utilise GitHub comme source de vérité avant toute modification.
 
 Une fois ces fichiers lus, ne pas demander à l’utilisateur de renvoyer un ZIP si le dépôt GitHub est accessible.
 
 ## Important
 
-Ce fichier décrit les règles de travail et la logique métier connues à la date de sa dernière modification. Si le code, le changelog, un audit plus récent ou une instruction explicite de l’utilisateur est plus récent, l’information la plus récente prévaut. Mettre à jour ce fichier lorsqu’une évolution structurelle importante change ces règles.
+Ce fichier décrit les règles de travail et la logique métier connues à la date de sa dernière modification. Si le code, le changelog, un audit plus récent ou une instruction explicite de l’utilisateur est plus récent, l’information la plus récente prévaut. Mettre à jour ce fichier dès qu’une évolution, une décision ou une information importante change ou complète ces règles.
