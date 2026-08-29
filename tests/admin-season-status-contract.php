@@ -6,12 +6,15 @@ $statusJs = file_get_contents($root . '/assets/season-status-admin.js');
 $validation = file_get_contents($root . '/assets/admin-validation.js');
 $preview = file_get_contents($root . '/assets/admin-preview-enhanced.js');
 
+preg_match('/Version:\s*([0-9.]+)/', $main, $versionMatch);
+$version = isset($versionMatch[1]) ? $versionMatch[1] : '0.0.0';
+
 $checks = array(
-    'version 1.9.4' => strpos($main, 'Version: 1.9.4') !== false && strpos($main, "PARCS_HT_VERSION', '1.9.4") !== false,
+    'version supports season status layer' => version_compare($version, '1.9.4', '>='),
     'season status layer loaded' => strpos($main, 'class-parcs-ht-season-status.php') !== false && strpos($main, 'Parcs_HT_Season_Status::init()') !== false,
     'plain save preserves status' => strpos($status, '$new_status = $old_status') !== false,
-    'explicit publish exists' => strpos($status, "$action === 'publish'") !== false && strpos($statusJs, 'Publier la saison') !== false,
-    'explicit draft exists' => strpos($status, "$action === 'draft'") !== false && strpos($statusJs, 'Remettre en brouillon') !== false,
+    'explicit publish exists' => strpos($status, '$action === \'publish\'') !== false && strpos($statusJs, 'Publier la saison') !== false,
+    'explicit draft exists' => strpos($status, '$action === \'draft\'') !== false && strpos($statusJs, 'Remettre en brouillon') !== false,
     'draft save label exists' => strpos($statusJs, 'Enregistrer le brouillon') !== false,
     'published save label exists' => strpos($statusJs, 'Enregistrer les modifications') !== false,
     'legacy publication checkbox hidden' => strpos($statusJs, 'settings[general][published]') !== false,
