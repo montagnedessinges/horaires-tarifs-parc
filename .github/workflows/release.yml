@@ -54,6 +54,17 @@ jobs:
           node tests/frontend-engine.js
           node tests/status-sync-engine.js
           node tests/display-state-engine.js
+      - name: Test production source cleanup
+        shell: bash
+        run: |
+          rm -rf /tmp/htp-production-test
+          mkdir -p /tmp/htp-production-test
+          cp -R assets includes /tmp/htp-production-test/
+          cp horaires-tarifs-parc.php uninstall.php /tmp/htp-production-test/
+          php tools/prepare-production.php /tmp/htp-production-test
+          find /tmp/htp-production-test -type f -name '*.php' -print0 | xargs -0 -n1 php -l
+          find /tmp/htp-production-test/assets -type f -name '*.js' -print0 | xargs -0 -n1 node --check
+          grep -q 'Plugin Name: Horaires et tarifs du parc' /tmp/htp-production-test/horaires-tarifs-parc.php
       - name: WordPress security and PHP compatibility report
         continue-on-error: true
         run: composer lint
@@ -105,10 +116,10 @@ jobs:
           rm -rf build horaires-tarifs-parc.zip
           mkdir -p build/horaires-tarifs-parc
           rsync -a ./ build/horaires-tarifs-parc/ \
-            --exclude '.git/' --exclude '.github/' --exclude '.pkg/' --exclude 'tests/' --exclude 'vendor/' \
-            --exclude 'composer.json' --exclude 'composer.lock' --exclude 'phpcs.xml.dist' \
-            --exclude 'AUDIT-PERFORMANCE-1.7.5.md' --exclude 'CAHIER-DES-CHARGES.md' --exclude 'GITHUB-UPDATES.md' \
-            --exclude 'AUDIT-*.md' --exclude 'UPDATE-*.md' --exclude 'CHATGPT-CONTEXT.md' --exclude 'build/' --exclude 'horaires-tarifs-parc.zip'
+            --exclude '.git/' --exclude '.github/' --exclude '.pkg/' --exclude 'tests/' --exclude 'tools/' --exclude 'vendor/' \
+            --exclude '*.md' --exclude 'composer.json' --exclude 'composer.lock' --exclude 'phpcs.xml.dist' \
+            --exclude 'build/' --exclude 'horaires-tarifs-parc.zip' --exclude 'horaires-tarifs-parc.zip.sha256'
+          php tools/prepare-production.php build/horaires-tarifs-parc
           cd build
           zip -qr ../horaires-tarifs-parc.zip horaires-tarifs-parc
       - name: Validate WordPress ZIP
@@ -117,9 +128,19 @@ jobs:
         run: |
           unzip -t horaires-tarifs-parc.zip
           test "$(zipinfo -1 horaires-tarifs-parc.zip | cut -d/ -f1 | sort -u)" = "horaires-tarifs-parc"
+          if zipinfo -1 horaires-tarifs-parc.zip | grep -Ei '\.md$|/(tests|tools|vendor|\.github|\.pkg)/'; then
+            echo 'Development or documentation files found in production ZIP.' >&2
+            exit 1
+          fi
           unzip -p horaires-tarifs-parc.zip horaires-tarifs-parc/horaires-tarifs-parc.php > /tmp/horaires-tarifs-parc.php
           PACKAGE_VERSION=$(php -r '$s=file_get_contents("/tmp/horaires-tarifs-parc.php"); preg_match("/Version:\\s*([0-9.]+)/",$s,$m); echo $m[1] ?? "";')
           test "$PACKAGE_VERSION" = "${{ steps.version.outputs.version }}"
+          find build/horaires-tarifs-parc -type f -name '*.php' -print0 | xargs -0 -n1 php -l
+          find build/horaires-tarifs-parc/assets -type f -name '*.js' -print0 | xargs -0 -n1 node --check
+          if grep -RniE --include='*.php' --include='*.js' --include='*.css' 'ChatGPT|OpenAI|GitHub Copilot|generated[[:space:]-]+by[[:space:]]+(AI|artificial intelligence)|généré[[:space:]]+par[[:space:]]+(une[[:space:]]+)?IA' build/horaires-tarifs-parc; then
+            echo 'Development attribution marker found in production sources.' >&2
+            exit 1
+          fi
           sha256sum horaires-tarifs-parc.zip | tee horaires-tarifs-parc.zip.sha256
       - name: Run official WordPress Plugin Check
         if: steps.existing.outputs.exists != 'true'
