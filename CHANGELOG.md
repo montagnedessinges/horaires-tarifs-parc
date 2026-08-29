@@ -1,5 +1,13 @@
 # Historique des versions
 
+## 1.9.5
+- Nettoyage du paquet de production sans modifier les sources de maintenance conservées sur GitHub.
+- Les commentaires PHP, JavaScript et CSS sont retirés de la copie construite pour WordPress ; seul l’en-tête officiel du plugin est conservé car WordPress en a besoin pour identifier l’extension.
+- Tous les fichiers Markdown, audits, documents de travail, tests, outils de build, dépendances de développement et métadonnées GitHub sont exclus du ZIP de production.
+- La release vérifie après nettoyage la syntaxe PHP et JavaScript afin d’empêcher qu’un retrait de commentaire altère le code exécuté.
+- Un contrôle bloque la publication si une attribution de développement explicite telle que ChatGPT, OpenAI, GitHub Copilot ou « généré par IA » apparaît dans les sources livrées.
+- Aucun changement fonctionnel des horaires, tarifs, saisons, pop-up ou affichages publics dans cette version.
+
 ## 1.9.4
 - Correction définitive du faux message « Créneau 2 incomplet » : le créneau 2 est réellement facultatif et n’est signalé incomplet que si une seule des deux heures est renseignée.
 - Quand les deux heures du créneau 2 sont présentes, la validation contrôle uniquement l’ordre ouverture/fermeture et le chevauchement éventuel avec le créneau 1.
