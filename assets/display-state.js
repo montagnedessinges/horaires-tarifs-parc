@@ -6,6 +6,13 @@
   function fromMins(v){v=Math.max(0,Number(v)||0);return pad(Math.floor(v/60))+':'+pad(v%60);}
   function slots(status){return status&&status.slots&&status.slots.length?status.slots:(status&&status.openTime&&status.closeTime?[{open:status.openTime,close:status.closeTime}]:[]);}
   function timeLabel(v,lang){if(!v)return'';var p=String(v).split(':').map(Number),h=p[0],m=p[1];if(lang==='fr')return h+'h'+(m?pad(m):'');if(lang==='de')return h+(m?':'+pad(m):'')+' Uhr';var s=h>=12?'PM':'AM';return(h%12||12)+(m?':'+pad(m):'')+' '+s;}
+  function dateLabel(v,lang){
+    if(!v)return'';
+    var p=String(v).split('-').map(Number),d=new Date(Date.UTC(p[0],p[1]-1,p[2],12));
+    if(Number.isNaN(d.getTime()))return String(v);
+    var locale=lang==='de'?'de-DE':lang==='en'?'en-GB':'fr-FR';
+    return new Intl.DateTimeFormat(locale,{day:'numeric',month:'long',timeZone:'UTC'}).format(d);
+  }
   function phase(status,current){var list=slots(status),i;if(!status||!status.open||!list.length)return{type:'closed',index:-1};for(i=0;i<list.length;i++){if(current>=mins(list[i].open)&&current<mins(list[i].close))return{type:'open',index:i};if(current<mins(list[i].open))return{type:i===0?'before':'gap',index:i};}return{type:'after',index:-1};}
   function source(status){return status?(status.exception||status.period||status.source||{}):{};}
   function slotOffset(status,index){var row=source(status),general=(settings.general||{}),value='';
@@ -29,9 +36,9 @@
     else if(p.type==='open'){out.statusText=l.open;out.hoursText=remainingRanges(status,current,lang)||ranges(status,lang);out.isOpen=true;var le=lastEntry(status,p.index);out.lastEntryText=le?l.entry+timeLabel(le,lang):'';}
     else if(p.type==='before'){out.statusText=l.before+timeLabel(list[0].open,lang);out.hoursText=ranges(status,lang);}
     else if(p.type==='gap'){out.statusText=l.gap+timeLabel(list[p.index].open,lang);out.hoursText=remainingRanges(status,current,lang);}
-    else{var next=nextOpening(date);if(next){out.statusText=next.date===addDays(date,1)?l.tomorrow:l.next;out.hoursText=(next.date||'')+' · '+timeLabel(((next.status||{}).openTime)||((slots(next.status)[0]||{}).open),lang);}else out.statusText=l.closed;}
+    else{var next=nextOpening(date);if(next){var opening=timeLabel(((next.status||{}).openTime)||((slots(next.status)[0]||{}).open),lang),isTomorrow=next.date===addDays(date,1);out.statusText=isTomorrow?l.tomorrow:l.next;out.hoursText=isTomorrow?l.before+opening:dateLabel(next.date,lang)+(opening?' · '+opening:'');}else out.statusText=l.closed;}
     if(status.exceptional)out.ruleText=status.type==='closed'?'Fermeture exceptionnelle prioritaire':'Horaire exceptionnel prioritaire';else if(status.open)out.ruleText='Horaire classique';else out.ruleText='Aucun horaire applicable';
     return out;
   }
-  window.ParcsHTPDisplayState={mins:mins,slots:slots,phase:phase,lastEntry:lastEntry,slotOffset:slotOffset,timeLabel:timeLabel,ranges:ranges,state:state};
+  window.ParcsHTPDisplayState={mins:mins,slots:slots,phase:phase,lastEntry:lastEntry,slotOffset:slotOffset,timeLabel:timeLabel,dateLabel:dateLabel,ranges:ranges,state:state};
 }());
