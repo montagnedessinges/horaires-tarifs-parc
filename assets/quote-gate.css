@@ -1,2 +1,8 @@
-.parcs-ht-quote .wpcf7 form:not(.parcs-ht-gate-ready) .flex-xbetween > *:not(:has([name="visite"])) { display:none!important; }
-.parcs-ht-quote .wpcf7 form:not(.parcs-ht-gate-ready) .flex-xbetween > .cp:has([name="visite"]) { display:block!important; }
+.parcs-ht-quote-gate-message{margin:10px 0 0;line-height:1.5}
+.parcs-ht-quote-gate-message[data-kind="unavailable"],.parcs-ht-quote-gate-message[data-kind="error"]{font-weight:600}
+.parcs-ht-quote-access{max-width:900px;margin:18px auto 20px;padding:16px;border:1px solid rgba(127,127,127,.28);border-radius:10px;background:transparent;color:inherit}
+.parcs-ht-quote-access-title{margin:0 0 5px;font-size:18px;font-weight:850;line-height:1.2}
+.parcs-ht-quote-access-intro{margin:0 0 10px;line-height:1.5;opacity:.82}
+.parcs-ht-quote-access-date{width:min(100%,320px);min-height:44px;padding:8px 10px;font:inherit}
+.parcs-ht-gate-active .parcs-ht-quote-form-wrap{display:none!important}
+.parcs-ht-gate-active.parcs-ht-gate-open .parcs-ht-quote-form-wrap{display:block!important}
