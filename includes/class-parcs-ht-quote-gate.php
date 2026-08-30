@@ -18,17 +18,54 @@ final class Parcs_HT_Quote_Gate {
         return array(
             'enabled' => '1',
             'closed_enabled' => '1',
-            'closed_message' => "Le parc est fermé au public à cette date. Une visite de groupe peut toutefois être possible. Merci de nous contacter en nous indiquant la date et l’horaire souhaités afin que nous puissions vérifier si nous pouvons vous accueillir. Vous pouvez malgré tout générer votre devis automatiquement ci-dessous.",
+            'closed_message_fr' => "Le parc est fermé au public à cette date. Une visite de groupe peut toutefois être possible. Merci de nous contacter en nous indiquant la date et l’horaire souhaités afin que nous puissions vérifier si nous pouvons vous accueillir. Vous pouvez malgré tout générer votre devis automatiquement ci-dessous.",
+            'closed_message_en' => "The park is closed to the public on this date. A group visit may nevertheless be possible. Please contact us with your preferred date and time so that we can check whether we are able to welcome you. You can still generate your quote automatically below.",
+            'closed_message_de' => "Der Park ist an diesem Datum für die Öffentlichkeit geschlossen. Ein Gruppenbesuch kann dennoch möglich sein. Bitte kontaktieren Sie uns mit Ihrem gewünschten Datum und Ihrer gewünschten Uhrzeit, damit wir prüfen können, ob wir Sie empfangen können. Sie können Ihr Angebot trotzdem unten automatisch erstellen.",
             'closed_contact' => 'info@montagnedessinges.com',
             'unavailable_enabled' => '1',
-            'unavailable_message' => "Les tarifs groupes ne sont pas encore disponibles pour l’année correspondant à cette date. Le devis automatique ne peut pas encore être généré.",
+            'unavailable_message_fr' => "Les tarifs groupes ne sont pas encore disponibles pour l’année correspondant à cette date. Le devis automatique ne peut pas encore être généré.",
+            'unavailable_message_en' => "Group rates are not yet available for the year corresponding to this date. The automatic quote cannot be generated yet.",
+            'unavailable_message_de' => "Die Gruppentarife für das Jahr, das diesem Datum entspricht, sind noch nicht verfügbar. Das automatische Angebot kann noch nicht erstellt werden.",
             'unavailable_contact' => 'info@montagnedessinges.com',
         );
     }
 
     public static function settings() {
         $saved = get_option(self::OPTION, array());
-        return array_merge(self::defaults(), is_array($saved) ? $saved : array());
+        $saved = is_array($saved) ? $saved : array();
+        $out = array_merge(self::defaults(), $saved);
+
+        if (!array_key_exists('closed_message_fr', $saved) && isset($saved['closed_message'])) {
+            $out['closed_message_fr'] = (string)$saved['closed_message'];
+        }
+        if (!array_key_exists('unavailable_message_fr', $saved) && isset($saved['unavailable_message'])) {
+            $out['unavailable_message_fr'] = (string)$saved['unavailable_message'];
+        }
+
+        return $out;
+    }
+
+    private static function request_language() {
+        global $post;
+        $content = ($post && isset($post->post_content)) ? (string)$post->post_content : '';
+        foreach (array('fr','en','de') as $language) {
+            if ($content !== '' && (has_shortcode($content, 'parc_devis_groupe_' . $language) || has_shortcode($content, 'parc_devis_' . $language))) {
+                return $language;
+            }
+        }
+        $language = Parcs_HT_Schedule::language();
+        return in_array($language, array('fr','en','de'), true) ? $language : 'fr';
+    }
+
+    private static function localized_message($settings, $prefix, $language) {
+        $key = $prefix . '_message_' . $language;
+        $fr_key = $prefix . '_message_fr';
+        $legacy_key = $prefix . '_message';
+        $value = trim((string)($settings[$key] ?? ''));
+        if ($value !== '') return $value;
+        $value = trim((string)($settings[$fr_key] ?? ''));
+        if ($value !== '') return $value;
+        return trim((string)($settings[$legacy_key] ?? ''));
     }
 
     public static function menu() {
@@ -46,8 +83,12 @@ final class Parcs_HT_Quote_Gate {
         <input type="hidden" name="action" value="parcs_ht_save_quote_gate"><?php wp_nonce_field('parcs_ht_save_quote_gate'); ?>
         <table class="form-table" role="presentation">
         <tr><th>Étape préalable par date</th><td><label><input type="checkbox" name="enabled" value="1" <?php checked($s['enabled'], '1'); ?>> Activer le choix de la date avant l’affichage du formulaire complet</label></td></tr>
-        <tr><th>Date où le parc est fermé</th><td><label><input type="checkbox" name="closed_enabled" value="1" <?php checked($s['closed_enabled'], '1'); ?>> Afficher un avertissement</label><p><textarea class="large-text" rows="5" name="closed_message"><?php echo esc_textarea($s['closed_message']); ?></textarea></p><label>Contact ou lien <input class="regular-text" name="closed_contact" value="<?php echo esc_attr($s['closed_contact']); ?>"></label><p class="description">Le formulaire reste accessible et le devis reste générable.</p></td></tr>
-        <tr><th>Tarifs indisponibles</th><td><label><input type="checkbox" name="unavailable_enabled" value="1" <?php checked($s['unavailable_enabled'], '1'); ?>> Afficher le message d’indisponibilité</label><p><textarea class="large-text" rows="5" name="unavailable_message"><?php echo esc_textarea($s['unavailable_message']); ?></textarea></p><label>Contact ou lien <input class="regular-text" name="unavailable_contact" value="<?php echo esc_attr($s['unavailable_contact']); ?>"></label><p class="description">Sans grille tarifaire publiée pour l’année choisie, le formulaire complet reste masqué et aucun devis chiffré ne peut être envoyé.</p></td></tr>
+        <tr><th>Date où le parc est fermé</th><td><label><input type="checkbox" name="closed_enabled" value="1" <?php checked($s['closed_enabled'], '1'); ?>> Afficher un avertissement</label>
+        <?php foreach (array('fr'=>'FR','en'=>'EN','de'=>'DE') as $lang=>$label) : ?><p><label><strong><?php echo esc_html($label); ?></strong><br><textarea class="large-text" rows="4" name="closed_message_<?php echo esc_attr($lang); ?>"><?php echo esc_textarea($s['closed_message_' . $lang]); ?></textarea></label></p><?php endforeach; ?>
+        <label>Contact ou lien <input class="regular-text" name="closed_contact" value="<?php echo esc_attr($s['closed_contact']); ?>"></label><p class="description">Le formulaire reste accessible et le devis reste générable.</p></td></tr>
+        <tr><th>Tarifs indisponibles</th><td><label><input type="checkbox" name="unavailable_enabled" value="1" <?php checked($s['unavailable_enabled'], '1'); ?>> Afficher le message d’indisponibilité</label>
+        <?php foreach (array('fr'=>'FR','en'=>'EN','de'=>'DE') as $lang=>$label) : ?><p><label><strong><?php echo esc_html($label); ?></strong><br><textarea class="large-text" rows="4" name="unavailable_message_<?php echo esc_attr($lang); ?>"><?php echo esc_textarea($s['unavailable_message_' . $lang]); ?></textarea></label></p><?php endforeach; ?>
+        <label>Contact ou lien <input class="regular-text" name="unavailable_contact" value="<?php echo esc_attr($s['unavailable_contact']); ?>"></label><p class="description">Sans grille tarifaire publiée pour l’année choisie, le formulaire complet reste masqué et aucun devis chiffré ne peut être envoyé.</p></td></tr>
         </table><?php submit_button('Enregistrer'); ?></form></div>
         <?php
     }
@@ -58,12 +99,16 @@ final class Parcs_HT_Quote_Gate {
         $out = array(
             'enabled' => isset($_POST['enabled']) ? '1' : '0',
             'closed_enabled' => isset($_POST['closed_enabled']) ? '1' : '0',
-            'closed_message' => isset($_POST['closed_message']) ? sanitize_textarea_field(wp_unslash($_POST['closed_message'])) : '',
             'closed_contact' => isset($_POST['closed_contact']) ? sanitize_text_field(wp_unslash($_POST['closed_contact'])) : '',
             'unavailable_enabled' => isset($_POST['unavailable_enabled']) ? '1' : '0',
-            'unavailable_message' => isset($_POST['unavailable_message']) ? sanitize_textarea_field(wp_unslash($_POST['unavailable_message'])) : '',
             'unavailable_contact' => isset($_POST['unavailable_contact']) ? sanitize_text_field(wp_unslash($_POST['unavailable_contact'])) : '',
         );
+        foreach (array('fr','en','de') as $lang) {
+            $closed_key = 'closed_message_' . $lang;
+            $unavailable_key = 'unavailable_message_' . $lang;
+            $out[$closed_key] = isset($_POST[$closed_key]) ? sanitize_textarea_field(wp_unslash($_POST[$closed_key])) : '';
+            $out[$unavailable_key] = isset($_POST[$unavailable_key]) ? sanitize_textarea_field(wp_unslash($_POST[$unavailable_key])) : '';
+        }
         update_option(self::OPTION, $out, false);
         wp_safe_redirect(add_query_arg(array('page'=>self::PAGE,'updated'=>'1'), admin_url('admin.php')));
         exit;
@@ -100,13 +145,14 @@ final class Parcs_HT_Quote_Gate {
         $quote_settings = class_exists('Parcs_HT_Group_Quotes') ? Parcs_HT_Group_Quotes::settings() : array();
         $visit_field = (string)($quote_settings['visit_field'] ?? 'visite');
         $group_field = (string)($quote_settings['group_field'] ?? 'groupedevis');
+        $language = self::request_language();
         wp_enqueue_style('parcs-ht-quote-gate', PARCS_HT_URL . 'assets/quote-gate.css', array(), PARCS_HT_VERSION);
         wp_enqueue_script('parcs-ht-quote-gate', PARCS_HT_URL . 'assets/quote-gate.js', array('jquery','parcs-ht-group-quotes'), PARCS_HT_VERSION, true);
         wp_add_inline_script('parcs-ht-quote-gate', 'window.ParcsHTQuoteGate=' . wp_json_encode(array(
             'ajaxUrl'=>admin_url('admin-ajax.php'),'nonce'=>wp_create_nonce('parcs_ht_quote_gate'),
-            'visitField'=>$visit_field,'groupField'=>$group_field,
-            'closedEnabled'=>(string)$s['closed_enabled']==='1','closedMessage'=>(string)$s['closed_message'],'closedContact'=>(string)$s['closed_contact'],
-            'unavailableEnabled'=>(string)$s['unavailable_enabled']==='1','unavailableMessage'=>(string)$s['unavailable_message'],'unavailableContact'=>(string)$s['unavailable_contact'],
+            'visitField'=>$visit_field,'groupField'=>$group_field,'language'=>$language,
+            'closedEnabled'=>(string)$s['closed_enabled']==='1','closedMessage'=>self::localized_message($s, 'closed', $language),'closedContact'=>(string)$s['closed_contact'],
+            'unavailableEnabled'=>(string)$s['unavailable_enabled']==='1','unavailableMessage'=>self::localized_message($s, 'unavailable', $language),'unavailableContact'=>(string)$s['unavailable_contact'],
         )) . ';', 'before');
     }
 }
