@@ -23,6 +23,19 @@ Ce fichier consigne les idées validées ou à débattre avant développement. N
 - Supprimer les libellés ambigus « Enregistrer cet onglet » et « Enregistrer tous les réglages » si la sauvegarde réelle porte sur toute la saison.
 - Éviter une simple case « Afficher cette saison sur le site » mélangée aux réglages généraux : le statut de publication doit être une action distincte et volontaire.
 
+## Publication indépendante des horaires et tarifs 2027 — à concevoir
+- Besoin confirmé : une nouvelle saison peut avoir ses horaires connus avant ses tarifs.
+- Publier les horaires 2027 ne doit pas obliger à publier les tarifs 2027.
+- Une duplication de saison peut conserver les tarifs comme base de travail, mais les tarifs copiés doivent être considérés comme brouillons / à vérifier et ne jamais être présentés automatiquement comme tarifs de la nouvelle année.
+- Prévoir un statut de publication tarifaire indépendant de celui des horaires.
+- À étudier de préférence par catégorie : particuliers, réduits et groupes peuvent être publiés à des moments différents.
+- Prévoir éventuellement une date de début d’affichage par catégorie afin que les tarifs particuliers 2027 puissent devenir publics seulement après la fermeture de la saison 2026.
+- Si seuls les tarifs groupes 2027 sont connus, il doit être possible de publier uniquement la partie groupes et le parcours devis sans exposer de tarifs particuliers 2027.
+- Si une catégorie tarifaire n’est pas publiée ou ne contient aucune ligne publique, ne pas afficher un onglet vide.
+- L’affichage public doit toujours rendre explicite l’année des tarifs lorsqu’une page peut déjà présenter les horaires de l’année suivante.
+- Le formulaire de devis groupe repose actuellement sur Contact Form 7 et n’utilise pas directement le tableau de tarifs de l’extension. À décider : conserver deux sources indépendantes ou créer à terme une source de vérité commune pour les tarifs groupes.
+- Audit technique de référence : `AUDIT-2026-08-30-TARIFS-2027.md`.
+
 ## Validation des doubles créneaux
 - Le créneau 2 reste totalement facultatif pour les horaires classiques comme exceptionnels.
 - Si ouverture 2 et fermeture 2 sont toutes les deux vides, aucune erreur ni mise en évidence ne doit apparaître.
