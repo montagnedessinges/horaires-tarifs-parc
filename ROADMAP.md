@@ -2,6 +2,21 @@
 
 Ce fichier consigne les idées validées ou à débattre avant développement. Ne pas implémenter automatiquement ces points sans nouvelle validation utilisateur.
 
+## Devis groupes : parcours piloté par la date de visite — décision du 30/08/2026
+- Le visiteur ne doit jamais choisir manuellement « tarifs 2026 », « tarifs 2027 », etc.
+- La date de visite du formulaire CF7 (`visite`) devient la donnée de référence qui détermine automatiquement le jeu de tarifs groupes applicable.
+- UX souhaitée : demander la date de visite avant les quantités de participants et avant les montants calculés.
+- Tant qu'aucune date de visite valide n'est choisie, la partie tarif/calcul du devis doit rester masquée ou inactive.
+- Après choix de la date, le moteur recherche le jeu de tarifs groupes correspondant à cette date/année et vérifie qu'il est explicitement disponible/publié pour les devis.
+- Si les tarifs existent : déverrouiller les champs du groupe, calculer avec ces tarifs, remplir les champs cachés du PDF (`devisannee`, tarifs unitaires, totaux) et afficher clairement au visiteur un repère du type « Tarifs 2027 appliqués ».
+- Le PDF doit lui aussi afficher explicitement l'année tarifaire utilisée, afin que l'équipe sache immédiatement sur quelle grille le devis a été calculé. Le titre `DEVIS [devisannee]` peut rester dynamique, mais un libellé explicite « Tarifs appliqués : [devisannee] » est préférable pour lever toute ambiguïté entre année de visite et année de grille tarifaire.
+- Si aucun tarif n'est disponible pour la date choisie : ne pas calculer, ne pas utiliser les tarifs de l'année précédente en secours, ne pas permettre l'envoi d'un devis chiffré. Afficher un message clair indiquant que les tarifs pour cette période ne sont pas encore disponibles et invitant à revenir ultérieurement ou à contacter le parc.
+- La vérification doit exister côté serveur au moment de l'envoi CF7, et pas seulement en JavaScript, afin qu'un visiteur ne puisse pas contourner le blocage ou modifier les prix envoyés.
+- Le JavaScript sert uniquement à l'expérience instantanée : masquage/déverrouillage, message de disponibilité et aperçu des calculs.
+- Prévoir une architecture permettant à l'administration de rendre une grille de tarifs groupes disponible indépendamment des horaires et des tarifs individuels.
+- Option future utile mais non obligatoire : permettre d'afficher un message personnalisé par période non tarifée (ex. « Les tarifs groupes 2027 seront disponibles prochainement »), sans inventer automatiquement une date de publication.
+- Cette évolution est fonctionnelle et nécessite une nouvelle version de l'extension. Si la version 1.9.9 est publiée, la prochaine version fonctionnelle doit être 1.9.10 ou supérieure.
+
 ## Transition devis groupes 1.9.7 — validée le 30/08/2026
 - Le fonctionnement public reste pour le moment basé uniquement sur le formulaire français CF7 ; aucune traduction de formulaire n’est requise pour cette étape.
 - Objectif : conserver un seul formulaire FR et sélectionner automatiquement les tarifs groupes selon l’année du champ `visite`.
