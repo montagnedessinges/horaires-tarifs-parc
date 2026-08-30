@@ -36,6 +36,20 @@ Ce fichier consigne les idées validées ou à débattre avant développement. N
 - Le formulaire de devis groupe repose actuellement sur Contact Form 7 et n’utilise pas directement le tableau de tarifs de l’extension. À décider : conserver deux sources indépendantes ou créer à terme une source de vérité commune pour les tarifs groupes.
 - Audit technique de référence : `AUDIT-2026-08-30-TARIFS-2027.md`.
 
+## Devis groupes multilingues et PDF — à concevoir
+- Les devis doivent pouvoir exister simultanément pour plusieurs années et plusieurs langues : FR, EN et DE.
+- Une année doit idéalement avoir un seul jeu de tarifs groupes partagé par ses formulaires FR/EN/DE.
+- Le formulaire 2026 français existant reste la base fonctionnelle à préserver pendant la migration.
+- Le formulaire 2027 FR connu est `[contact-form-7 id="2b9aa49" title="Formulaire devis 2027"]`.
+- Les identifiants des futurs formulaires 2026 EN/DE et 2027 EN/DE doivent être documentés dès leur création.
+- Chaque formulaire de devis est également lié à une génération PDF via Contact Form 7 / extension associée. Le code/configuration exacts du PDF doivent être conservés dans la documentation GitHub dès qu'ils sont fournis ou identifiés.
+- Prévoir un modèle PDF par langue lorsque le contenu diffère réellement selon le pays/langue, tout en mutualisant autant que possible les données métier communes.
+- La traduction allemande ne doit pas reprendre automatiquement les informations uniquement utiles ou applicables aux visiteurs/structures françaises. Les différences FR/EN/DE doivent être explicitement documentées et validées.
+- Lorsqu'un code, template, HTML, CSS, JavaScript, réglage CF7 ou configuration PDF situé dans le thème ou dans WordPress est modifié mais ne fait pas partie du dépôt de l'extension, conserver malgré tout dans GitHub une copie de référence ou une documentation suffisamment complète pour pouvoir le reconstruire.
+- Pour chaque modification externe liée au module devis, consigner : date, emplacement WordPress/thème/plugin, version ou état avant modification si disponible, code/configuration de référence, modification effectuée, formulaires/années/langues concernés et raison de la modification.
+- Objectif à terme : pouvoir reprendre le système devis/PDF depuis GitHub même si une future conversation n'a plus le contexte des modifications manuelles faites dans WordPress.
+- Cette évolution nécessitera une nouvelle version de l'extension lorsqu'une partie fonctionnelle sera intégrée au plugin.
+
 ## Validation des doubles créneaux
 - Le créneau 2 reste totalement facultatif pour les horaires classiques comme exceptionnels.
 - Si ouverture 2 et fermeture 2 sont toutes les deux vides, aucune erreur ni mise en évidence ne doit apparaître.
