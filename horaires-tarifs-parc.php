@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Horaires et tarifs du parc
  * Description: Horaires, calendrier interactif, exceptions, alertes et tarifs multilingues pour les parcs.
- * Version: 1.9.6
+ * Version: 1.9.7
  * Update URI: https://github.com/montagnedessinges/horaires-tarifs-parc
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -12,7 +12,7 @@
 
 if (!defined('ABSPATH')) { exit; }
 
-define('PARCS_HT_VERSION', '1.9.6');
+define('PARCS_HT_VERSION', '1.9.7');
 define('PARCS_HT_FILE', __FILE__);
 define('PARCS_HT_DIR', plugin_dir_path(__FILE__));
 define('PARCS_HT_URL', plugin_dir_url(__FILE__));
@@ -24,6 +24,7 @@ require_once PARCS_HT_DIR . 'includes/class-parcs-ht-slot-last-entry.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-http-ssl.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-tariff-seasons.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-season-status.php';
+require_once PARCS_HT_DIR . 'includes/class-parcs-ht-group-quotes.php';
 Parcs_HT_HTTP_SSL::init();
 Parcs_HT_Tariff_Seasons::init();
 Parcs_HT_Season_Status::init();
@@ -113,6 +114,7 @@ add_action('plugins_loaded', static function () {
     } else {
         if (Parcs_HT_Defaults::has_popup_source_fast()) { require_once PARCS_HT_DIR . 'includes/class-parcs-ht-alerts.php'; Parcs_HT_Alerts::init(); }
     }
+    Parcs_HT_Group_Quotes::init();
     Parcs_HT_Slot_Last_Entry::init();
     $doing_cron = function_exists('wp_doing_cron') && wp_doing_cron();
     if (is_admin() || $doing_cron) {
