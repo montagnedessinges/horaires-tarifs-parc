@@ -26,7 +26,6 @@ final class Parcs_HT_Group_Quotes {
             'disability_value' => 'Groupe en situation de handicap',
             'seasons' => array(
                 '2026' => array(
-                    'published' => '1',
                     'child' => '6',
                     'adult' => '8.50',
                     'disability' => '6',
@@ -42,6 +41,14 @@ final class Parcs_HT_Group_Quotes {
         if (!is_array($saved)) $saved = array();
         $settings = array_replace_recursive(self::defaults(), $saved);
         $settings['enabled'] = '1';
+
+        $all = Parcs_HT_Defaults::all_settings();
+        $public_seasons = isset($all['seasons']) && is_array($all['seasons']) ? $all['seasons'] : array();
+        foreach ((array)$settings['seasons'] as $year => &$row) {
+            if (!is_array($row)) $row = array();
+            $row['published'] = isset($public_seasons[$year]) && is_array($public_seasons[$year]) && (string)($public_seasons[$year]['published'] ?? '0') === '1' ? '1' : '0';
+        }
+        unset($row);
         return $settings;
     }
 
@@ -156,7 +163,7 @@ final class Parcs_HT_Group_Quotes {
         ?>
         <div class="wrap">
             <h1>Tarifs des devis groupes</h1>
-            <p>Une seule grille de tarifs groupes est utilisée par année. La date de visite choisie dans Contact Form 7 sélectionne automatiquement la bonne année ; le visiteur ne choisit jamais lui-même une grille tarifaire.</p>
+            <p>Une seule grille de tarifs groupes est utilisée par année. Le statut public dépend uniquement de la saison correspondante : une saison brouillon ne peut jamais être utilisée pour un devis public.</p>
             <?php if (isset($_GET['updated'])) : ?><div class="notice notice-success is-dismissible"><p>Les réglages des devis groupes ont été enregistrés.</p></div><?php endif; ?>
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                 <input type="hidden" name="action" value="parcs_ht_save_group_quotes">
@@ -167,14 +174,13 @@ final class Parcs_HT_Group_Quotes {
                     <tr><th scope="row">Valeurs du type de groupe</th><td><label>Groupe scolaire <input class="regular-text" name="school_value" value="<?php echo esc_attr((string)$settings['school_value']); ?>"></label><br><label>Situation de handicap <input class="regular-text" name="disability_value" value="<?php echo esc_attr((string)$settings['disability_value']); ?>"></label></td></tr>
                 </table>
                 <h2>Tarifs par année de visite</h2>
-                <p>Si une année n’est pas disponible, le devis est bloqué : les tarifs d’une autre année ne sont jamais utilisés en secours.</p>
+                <p>Une année n’est utilisable que si la saison correspondante existe et est publiée. Les tarifs d’une autre année ne sont jamais utilisés en secours.</p>
                 <table class="widefat striped" style="max-width:1100px">
-                    <thead><tr><th>Année</th><th>Disponible</th><th>Enfant</th><th>Adulte</th><th>Handicap</th><th>Accompagnateur</th><th>1 adulte gratuit / enfants</th></tr></thead>
+                    <thead><tr><th>Année</th><th>Enfant</th><th>Adulte</th><th>Handicap</th><th>Accompagnateur</th><th>1 adulte gratuit / enfants</th></tr></thead>
                     <tbody>
                     <?php foreach ($years as $year) : $row = isset($seasons[$year]) && is_array($seasons[$year]) ? $seasons[$year] : array(); ?>
                         <tr>
                             <td><strong><?php echo esc_html($year); ?></strong><input type="hidden" name="seasons[<?php echo esc_attr($year); ?>][year]" value="<?php echo esc_attr($year); ?>"></td>
-                            <td><input type="checkbox" name="seasons[<?php echo esc_attr($year); ?>][published]" value="1" <?php checked((string)($row['published'] ?? '0'), '1'); ?>></td>
                             <td><input type="number" min="0" step="0.01" name="seasons[<?php echo esc_attr($year); ?>][child]" value="<?php echo esc_attr((string)($row['child'] ?? '')); ?>" style="width:90px"> €</td>
                             <td><input type="number" min="0" step="0.01" name="seasons[<?php echo esc_attr($year); ?>][adult]" value="<?php echo esc_attr((string)($row['adult'] ?? '')); ?>" style="width:90px"> €</td>
                             <td><input type="number" min="0" step="0.01" name="seasons[<?php echo esc_attr($year); ?>][disability]" value="<?php echo esc_attr((string)($row['disability'] ?? '')); ?>" style="width:90px"> €</td>
@@ -198,13 +204,12 @@ final class Parcs_HT_Group_Quotes {
         foreach ($rows as $year => $row) {
             $year = preg_replace('/[^0-9]/', '', (string)$year);
             if (!preg_match('/^20\d{2}$/', $year) || !is_array($row)) continue;
-            $clean = array('published' => isset($row['published']) ? '1' : '0');
+            $clean = array();
             foreach (array('child','adult','disability','companion') as $key) {
                 $value = isset($row[$key]) ? str_replace(',', '.', (string)$row[$key]) : '';
                 $clean[$key] = is_numeric($value) && (float)$value >= 0 ? (string)(float)$value : '';
             }
             $clean['free_adult_children'] = (string)max(1, isset($row['free_adult_children']) ? (int)$row['free_adult_children'] : 10);
-            if ($clean['published'] === '1') foreach (array('child','adult','disability','companion') as $key) if ($clean[$key] === '') $clean['published'] = '0';
             $out['seasons'][$year] = $clean;
         }
         update_option(self::OPTION, $out, false);
