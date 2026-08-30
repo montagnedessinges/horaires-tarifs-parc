@@ -2,6 +2,17 @@
 
 Ce fichier consigne les idées validées ou à débattre avant développement. Ne pas implémenter automatiquement ces points sans nouvelle validation utilisateur.
 
+## Transition devis groupes 1.9.7 — validée le 30/08/2026
+- Le fonctionnement public reste pour le moment basé uniquement sur le formulaire français CF7 ; aucune traduction de formulaire n’est requise pour cette étape.
+- Objectif : conserver un seul formulaire FR et sélectionner automatiquement les tarifs groupes selon l’année du champ `visite`.
+- Le moteur de devis intégré à l’extension est désactivé par défaut pendant la transition afin d’éviter un double calcul avec le JavaScript du thème.
+- Avant activation, remplacer dans le thème l’ancien moteur de calcul des devis par une version qui laisse l’extension devenir la source des tarifs/calculs.
+- Le PDF FR 2026 actuel est une base stable et ne doit jamais être écrasé dans GitHub.
+- Blocage identifié : le PDF contient `DEVIS 2026` et les prix unitaires 2026 en dur. Il ne peut donc pas être réutilisé tel quel pour 2027.
+- Le futur modèle PDF commun doit recevoir des valeurs calculées/déterminées à partir de la date de visite : année du devis, prix unitaire enfant, prix unitaire adulte, prix unitaire handicap et prix unitaire accompagnateur, en plus des totaux existants.
+- Tant que le générateur PDF exact et sa capacité à exploiter des champs dynamiques ne sont pas vérifiés, ne pas activer publiquement une saison tarifaire 2027 via le formulaire unique.
+- Conserver séparément dans GitHub la base stable du script du thème et la future version modifiée ; même règle pour le PDF.
+
 ## Règle d’administration : repère interne obligatoire, contenu public facultatif
 - Une période, un événement, une exception ou une offre doit toujours avoir un repère interne permettant de l’identifier facilement dans l’administration.
 - Le repère interne est uniquement en français ; aucune traduction EN / DE n’est nécessaire.
