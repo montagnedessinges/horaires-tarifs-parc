@@ -41,6 +41,14 @@
         return $box;
     }
 
+    function setPdfFields($form, year, row) {
+        set($form, '[name="devisannee"]', year || '');
+        set($form, '[name="tarifenfant"]', row ? euro(parseFloat(row.child || 0)) : '');
+        set($form, '[name="tarifadulte"]', row ? euro(parseFloat(row.adult || 0)) : '');
+        set($form, '[name="tarifhandicap"]', row ? euro(parseFloat(row.disability || 0)) : '');
+        set($form, '[name="tarifaccompagnateur"]', row ? euro(parseFloat(row.companion || 0)) : '');
+    }
+
     function clearCalculated($form) {
         set($form, '.nbradultgratuit', '0');
         set($form, '.nbradultpayant', '0');
@@ -48,6 +56,7 @@
         set($form, '.nbrprixadultes', '');
         set($form, '.totalprixscolaire', '');
         set($form, '.totalprixhandicape', '');
+        setPdfFields($form, '', null);
     }
 
     function currentSeason($form) {
@@ -56,6 +65,7 @@
         var $box = messageBox($form);
         if (!year) {
             $box.text('');
+            setPdfFields($form, '', null);
             return null;
         }
         if (!row) {
@@ -64,6 +74,7 @@
             return null;
         }
         $box.text('');
+        setPdfFields($form, year, row);
         return row;
     }
 
