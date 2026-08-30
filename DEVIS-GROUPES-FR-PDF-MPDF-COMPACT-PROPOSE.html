@@ -1,0 +1,179 @@
+<!--
+VERSION PROPOSÉE / APRÈS MODIFICATION — 30/08/2026
+Cible : Generate PDF using Contact Form 7 (ZealousWeb) / mPDF
+Objectif : devis FR A4 portrait sur une page, plus compact et mieux aligné.
+BASE STABLE À NE PAS MODIFIER : BASE-DEVIS-GROUPES-2026-FR-PDF.html
+
+Réglages ZealousWeb conseillés pour le test :
+- A4 portrait
+- marge haut : 15 à 20 mm
+- marge bas : 7 à 10 mm
+- marge gauche : 10 mm
+- marge droite : 10 mm
+
+Cette version utilise les champs dynamiques préparés pour le moteur devis :
+[devisannee], [tarifenfant], [tarifadulte], [tarifhandicap], [tarifaccompagnateur].
+Les champs de prix unitaires sont supposés contenir déjà le symbole €.
+-->
+<style>
+body{font-family:Arial,sans-serif;font-size:8.2px;line-height:1.15;color:#222;margin:0;padding:0}
+h1{font-size:16px;line-height:1;margin:0 0 2px 0;color:#111}
+p{margin:2px 0}
+table{width:100%;border-collapse:collapse;border-spacing:0}
+td,th{padding:3px;line-height:1.15}
+.header{margin:0 0 4px 0}
+.header td{border:0;padding:0 2px;vertical-align:top}
+.devis-title{text-align:right}
+.small{font-size:7.2px;color:#555}
+.info-table{margin:0 0 4px 0}
+.info-table td{border:0;vertical-align:top;padding:2px}
+.box{border:1px solid #d8d8d8;background:#fafafa;padding:4px;line-height:1.2}
+.intro{margin:3px 2px 4px 2px;line-height:1.18}
+.items{margin:0}
+.items th{background:#333;color:#fff;border:1px solid #333;font-size:7.8px;padding:3px}
+.items td{border:1px solid #d8d8d8;font-size:7.8px;padding:3px}
+.right{text-align:right}
+.center{text-align:center}
+.total-box{width:44%;margin:4px 0 0 auto}
+.total-box td{border:1px solid #d8d8d8;padding:3px;font-size:7.8px}
+.total-label{background:#f2f2f2;font-weight:bold}
+.note{border:1.5px solid #b30000;background:#fff5f5;color:#b30000;padding:4px 5px;margin:5px 0 0 0;font-size:7.8px;line-height:1.16;font-weight:bold}
+.note-strong{font-size:8.5px}
+.payment{border:1px solid #d8d8d8;background:#f6f6f6;padding:4px 5px;margin:4px 0 0 0;font-size:7.6px;line-height:1.15}
+.chorus{border-left:3px solid #b30000;padding-left:5px;margin-top:3px}
+.chorus-title{color:#b30000;font-weight:bold;font-size:7.8px;margin:0 0 2px 0}
+.visit-details{margin:4px 0 3px 0;padding:0;font-size:7.7px;line-height:1.15}
+.signature{margin:3px 0 0 0;page-break-inside:avoid}
+.signature td{border:1px solid #d8d8d8;height:25px;vertical-align:top;padding:3px;font-size:7.6px}
+.footer{border-top:1px solid #999;margin:4px 0 0 0;padding:3px 0 0 0;text-align:center;font-size:6.4px;line-height:1.15;color:#555;page-break-inside:avoid}
+</style>
+
+<table class="header">
+<tr>
+<td style="width:55%">
+<strong>LA MONTAGNE DES SINGES</strong><br>
+1 chemin de la Montagne – Lieu-dit Wick<br>
+67600 KINTZHEIM<br>
+Tél. +33 (0)3 88 92 11 09<br>
+info@montagnedessinges.com
+</td>
+<td class="devis-title" style="width:45%">
+<h1>DEVIS [devisannee]</h1>
+<span class="small">Document généré automatiquement</span><br>
+<strong>Date de visite :</strong> [visite]
+</td>
+</tr>
+</table>
+
+<table class="info-table">
+<tr>
+<td style="width:50%">
+<div class="box">
+<strong>Client / organisme</strong><br>
+[organisme]<br>
+[adresse]<br>
+[postal] [city] – [country]
+</div>
+</td>
+<td style="width:50%">
+<div class="box">
+<strong>Contact</strong><br>
+[nom]<br>
+Tél. : [telephone]<br>
+Email : [emailform]
+</div>
+</td>
+</tr>
+</table>
+
+<div class="intro">
+Madame, Monsieur,<br>
+Nous vous remercions pour l’intérêt que vous portez à notre parc animalier. Veuillez trouver ci-dessous le devis correspondant à votre demande.
+</div>
+
+<table class="items">
+<tr>
+<th style="width:52%">Désignation</th>
+<th style="width:12%">Qté</th>
+<th style="width:18%">Prix unit.</th>
+<th style="width:18%">Total</th>
+</tr>
+<tr>
+<td>Enfants (3 à 18 ans)</td>
+<td class="center">[nbrenfants]</td>
+<td class="right">[tarifenfant]</td>
+<td class="right">[nbrprixenfants]</td>
+</tr>
+<tr>
+<td>Adultes gratuits</td>
+<td class="center">[nbradultgratuit]</td>
+<td class="right">0,00 €</td>
+<td class="right">0,00 €</td>
+</tr>
+<tr>
+<td>Adultes</td>
+<td class="center">[nbradultpayant]</td>
+<td class="right">[tarifadulte]</td>
+<td class="right">[nbrprixadultes]</td>
+</tr>
+<tr>
+<td>Personnes en situation de handicap</td>
+<td class="center">[nbrpersohandicape]</td>
+<td class="right">[tarifhandicap]</td>
+<td class="center">-</td>
+</tr>
+<tr>
+<td>Accompagnateurs</td>
+<td class="center">[nbraccompa]</td>
+<td class="right">[tarifaccompagnateur]</td>
+<td class="center">-</td>
+</tr>
+</table>
+
+<table class="total-box">
+<tr>
+<td class="total-label">Total groupe scolaire</td>
+<td class="right"><strong>[totalprixscolaire]</strong></td>
+</tr>
+<tr>
+<td class="total-label">Total groupe handicapé</td>
+<td class="right"><strong>[totalprixhandicape]</strong></td>
+</tr>
+</table>
+
+<div class="note">
+IMPORTANT : ce devis ne fait pas office de réservation.<br>
+Pour valider votre réservation, merci de nous retourner ce devis signé avec la mention « Bon pour accord » à <strong>info@montagnedessinges.com</strong>.<br>
+<span class="note-strong">LE DEVIS SIGNÉ DOIT ÊTRE IMPRIMÉ ET PRÉSENTÉ À L’ACCUEIL LE JOUR DE LA VISITE.</span>
+</div>
+
+<div class="payment">
+<strong>Moyen de paiement prévu :</strong> ☐ Paiement sur place &nbsp;&nbsp; ☐ Paiement différé (voucher ou bon de commande) &nbsp;&nbsp; ☐ Chorus Pro<br>
+<span class="small"><strong>Facturation :</strong> la facture est établie uniquement sur place, le jour de la visite, sur la base du nombre réel de participants présents. Aucun paiement n’est demandé avant la visite.</span>
+<div class="chorus">
+<div class="chorus-title">OBLIGATOIRE EN CAS DE PAIEMENT VIA CHORUS PRO</div>
+N° SIRET de facturation (14 chiffres) : ____________________________________ &nbsp;&nbsp; Code service : ____________________<br>
+Référence d’engagement / N° bon de commande : ______________________________________________________
+</div>
+</div>
+
+<div class="visit-details">
+<strong>Langue parlée :</strong> ☐ FR &nbsp; ☐ DE &nbsp; ☐ EN &nbsp; ☐ Autre : .................... &nbsp;&nbsp;&nbsp;
+<strong>Âge des enfants :</strong> ☐ 3-5 ans &nbsp; ☐ 6-10 ans &nbsp; ☐ 11-14 ans &nbsp; ☐ 15-18 ans
+</div>
+
+<table class="signature">
+<tr>
+<td style="width:50%"><strong>Date et heure de la venue :</strong></td>
+<td style="width:50%"><strong>Responsable du groupe le jour de la visite :</strong></td>
+</tr>
+<tr>
+<td><strong>Signature :</strong><br><span class="small">Précédée de la mention « Bon pour accord »</span></td>
+<td><strong>Cachet de l’organisme :</strong></td>
+</tr>
+</table>
+
+<div class="footer">
+LA MONTAGNE DES SINGES – 1 chemin de la Montagne – Lieu-dit Wick – 67600 KINTZHEIM – Tél. +33 (0)3 88 92 11 09 – info@montagnedessinges.com<br>
+S.A.S. au capital de 656 370 € – RC Colmar TI 511 187 171 – TVA FR61 511 187 171 – SIRET 511 187 171 00018 – APE 9104Z
+</div>
