@@ -1,0 +1,2 @@
+.parcs-ht-quote .wpcf7 form:not(.parcs-ht-gate-ready) .flex-xbetween > *:not(:has([name="visite"])) { display:none!important; }
+.parcs-ht-quote .wpcf7 form:not(.parcs-ht-gate-ready) .flex-xbetween > .cp:has([name="visite"]) { display:block!important; }
