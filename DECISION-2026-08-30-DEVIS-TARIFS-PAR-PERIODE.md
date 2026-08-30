@@ -1,69 +1,39 @@
-# Décision — devis groupes piloté par la date et tarifs par période — 30/08/2026
+# Décision finale — devis groupes piloté par la date et tarifs annuels — 30/08/2026
 
 ## Principe confirmé
 - Le visiteur ne choisit jamais manuellement « tarifs 2026 », « tarifs 2027 » ou une année tarifaire.
-- La date de visite saisie dans Contact Form 7 est la seule donnée de référence pour sélectionner automatiquement la grille tarifaire applicable.
-- Si une grille couvre la date choisie et est publiée/disponible pour les devis, le formulaire se déverrouille et les calculs utilisent cette grille.
-- Si aucune grille ne couvre la date choisie, le formulaire ne doit pas générer de devis chiffré. Il doit afficher un message du type : « Les tarifs groupes correspondant à cette période ne sont pas encore disponibles. Merci de revenir ultérieurement ou de nous contacter. »
-- Il ne faut jamais réutiliser silencieusement les tarifs d’une année ou période précédente comme secours.
+- La date de visite saisie dans Contact Form 7 détermine automatiquement l’année tarifaire.
+- Il existe une seule grille de tarifs groupes par année : toute la saison 2026 utilise la grille 2026, toute la saison 2027 utilise la grille 2027, etc.
+- L’idée de tarifs groupes spéciaux ou de plusieurs grilles selon des périodes dans une même année est abandonnée et ne doit pas être développée.
+- Si la grille de l’année choisie est disponible, le calcul utilise cette grille.
+- Si elle n’est pas disponible, aucun devis chiffré ne doit être généré et aucun tarif d’une autre année ne doit être utilisé en secours.
 
-## Tarifs spéciaux par période
-Prévoir une architecture suffisamment souple pour gérer plusieurs grilles sur une même année si nécessaire, même si aucun cas précis n’est encore connu.
+## Parcours Contact Form 7
+Le parcours souhaité conserve l’affichage conditionnel existant :
+1. date de visite ;
+2. vérification automatique de la disponibilité des tarifs de l’année ;
+3. choix du type de groupe : `Groupe` ou `Groupe en situation de handicap` ;
+4. affichage des champs correspondant au type de groupe ;
+5. calcul ;
+6. envoi et génération du PDF.
 
-Exemples possibles :
-- grille standard 2027 ;
-- grille spéciale du 1er au 30 juin 2027 ;
-- grille spéciale vacances / événement / opération commerciale ;
-- autre période limitée dans le temps.
+Le choix du type de groupe reste distinct de la sélection de l’année : l’année n’est jamais demandée au visiteur.
 
-Chaque grille de devis groupes devrait pouvoir comporter au minimum :
-- repère interne ;
-- date de début de validité ;
-- date de fin de validité ;
-- statut disponible/publié pour les devis ;
-- tarif enfant ;
-- tarif adulte ;
-- tarif personne en situation de handicap ;
-- tarif accompagnateur ;
-- règle d’adulte gratuit ;
-- éventuellement un libellé public/interne de la grille.
+## Traçabilité PDF obligatoire
+Le PDF stable conserve son titre dynamique :
+- date 2026 → `DEVIS 2026` ;
+- date 2027 → `DEVIS 2027` ;
+- et ainsi de suite.
 
-La sélection se fait par date de visite, pas simplement par année civile.
+Le champ `[devisannee]` doit être alimenté par la même grille annuelle réellement utilisée pour les calculs. Ce repère permet à l’équipe de savoir immédiatement sur quelle année tarifaire le devis a été établi lorsqu’un client présente uniquement le PDF.
 
-## Traçabilité obligatoire sur le PDF
-Le PDF doit permettre à l’équipe de savoir immédiatement quelle grille a servi au calcul.
+Il n’est pas nécessaire d’ajouter un système de libellés de périodes ou de tarifs spéciaux.
 
-Le comportement actuel validé du titre dynamique doit être conservé :
-- date 2026 avec grille 2026 → `DEVIS 2026` ;
-- date 2027 avec grille 2027 → `DEVIS 2027`.
-
-En complément, prévoir un libellé explicite de la grille utilisée, par exemple :
-- `Tarifs appliqués : 2027` ;
-- ou, si une grille spéciale existe, `Tarifs appliqués : Tarif spécial juin 2027`.
-
-Le libellé ne doit jamais être déduit uniquement du texte du PDF : il doit être alimenté par la grille réellement sélectionnée par le moteur de devis.
-
-## Objectif de contrôle
-Cette traçabilité permet :
-- de vérifier rapidement la grille appliquée au devis ;
-- d’expliquer au client sur quelle base son devis a été calculé ;
-- d’identifier une éventuelle mauvaise date ou mauvaise grille ;
-- de conserver un historique compréhensible si les prix changent plus tard.
-
-## Contact Form 7
-CF7 reste le formulaire public. L’extension Horaires & Tarifs Parc doit devenir la source de vérité pour déterminer la grille et les prix selon la date de visite.
-
-Le JavaScript peut gérer l’expérience instantanée :
-- verrouillage tant qu’aucune date n’est choisie ;
-- disponibilité de la grille ;
-- déverrouillage des quantités ;
-- calcul en direct ;
-- message d’indisponibilité.
-
-Une validation serveur doit confirmer à l’envoi que la date possède toujours une grille valide et recalculer les données de référence avant génération du PDF, afin d’éviter la manipulation des prix côté navigateur.
-
-## Versioning
-Cette évolution modifie le fonctionnement du plugin et nécessitera une nouvelle version de l’extension. Si la 1.9.9 est déjà publiée, utiliser 1.9.10 ou une version supérieure.
+## Source de vérité et sécurité
+L’extension Horaires & Tarifs Parc est la source de vérité des tarifs groupes annuels. Le JavaScript assure l’expérience instantanée et les calculs visibles, mais l’envoi Contact Form 7 doit revérifier côté serveur l’année, la disponibilité de la grille et les montants. Les valeurs destinées au mail et au PDF sont recalculées côté serveur afin de ne pas faire confiance à des champs modifiables dans le navigateur.
 
 ## Conservation du PDF
-La mise en page du PDF historique qui fonctionne est la base stable. Ne pas la refondre. Les évolutions liées aux périodes tarifaires doivent se limiter aux champs dynamiques et aux libellés nécessaires à la traçabilité, sans changer la composition visuelle sauf demande explicite.
+La mise en page du PDF historique validée reste la base stable. Ne pas la refondre. Le titre reste `DEVIS [devisannee]` et les prix unitaires restent alimentés par les champs dynamiques déjà prévus.
+
+## Version
+Cette décision est mise en œuvre dans la version 1.9.10 de l’extension.
