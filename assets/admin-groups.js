@@ -6,7 +6,7 @@ $(function(){
     if(!$nav.length)return;
 
     function groupButton(id,label,children){
-        var $button=$('<button type="button" class="nav-tab htp-admin-tab htp-group-tab" role="tab" aria-selected="false"></button>').text(label).attr('data-htp-admin-group',id);
+        var $button=$('<button type="button" class="nav-tab htp-group-tab" role="tab" aria-selected="false"></button>').text(label).attr('data-htp-admin-group',id);
         var $sub=$('<div class="htp-admin-subtabs" hidden></div>').attr('data-htp-subtabs',id);
         children.forEach(function(child){
             var $old=$nav.find('[data-htp-admin-tab="'+child.id+'"]');
@@ -25,14 +25,9 @@ $(function(){
         {id:'htp-domain',label:'Accès limité'}
     ]);
 
-    var $quoteOld=$nav.find('[data-htp-admin-tab="htp-quote"]');
-    if($quoteOld.length){
-        $quoteOld.text('Devis groupe');
-    }
-
     function activate(target,group){
-        $('.htp-admin-tab').removeClass('nav-tab-active').attr('aria-selected','false');
-        $('.htp-admin-subtabs').attr('hidden',true);
+        $('.htp-admin-tab,.htp-group-tab').removeClass('nav-tab-active').attr('aria-selected','false');
+        $('.htp-admin-subtabs[data-htp-subtabs]').attr('hidden',true);
         $('.htp-admin-subtab').removeClass('button-primary');
         if(group){
             $('[data-htp-admin-group="'+group+'"]').addClass('nav-tab-active').attr('aria-selected','true');
