@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Horaires et tarifs du parc
  * Description: Horaires, calendrier interactif, exceptions, alertes et tarifs multilingues pour les parcs.
- * Version: 1.9.9
+ * Version: 1.9.10
  * Update URI: https://github.com/montagnedessinges/horaires-tarifs-parc
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -12,7 +12,7 @@
 
 if (!defined('ABSPATH')) { exit; }
 
-define('PARCS_HT_VERSION', '1.9.9');
+define('PARCS_HT_VERSION', '1.9.10');
 define('PARCS_HT_FILE', __FILE__);
 define('PARCS_HT_DIR', plugin_dir_path(__FILE__));
 define('PARCS_HT_URL', plugin_dir_url(__FILE__));
@@ -55,10 +55,7 @@ add_filter('pre_update_option_' . Parcs_HT_Defaults::OPTION, static function ($n
     if ($year === '' || !isset($new_value['seasons'][$year]) || (string)($new_value['seasons'][$year]['published'] ?? '0') === '1') return $new_value;
     foreach ((array)($old_value['seasons'] ?? array()) as $published_year => $season) {
         if ((string)$published_year === $year || !is_array($season) || (string)($season['published'] ?? '0') !== '1') continue;
-        if (!empty($season['tariffs']) && is_array($season['tariffs'])) {
-            $new_value['tariffs'] = $season['tariffs'];
-            break;
-        }
+        if (!empty($season['tariffs']) && is_array($season['tariffs'])) { $new_value['tariffs'] = $season['tariffs']; break; }
     }
     return $new_value;
 }, 50, 2);
@@ -88,17 +85,13 @@ add_action('plugins_loaded', static function () {
         require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin.php';
         Parcs_HT_Admin::init();
         Parcs_HT_Defaults::maybe_upgrade();
-
         if (get_option('parcs_ht_tariff_seasons_migrated_193', '0') !== '1') {
             $all = get_option(Parcs_HT_Defaults::OPTION, array());
             if (is_array($all) && !empty($all['seasons']) && is_array($all['seasons']) && isset($all['tariffs']) && is_array($all['tariffs'])) {
                 $changed = false;
                 foreach ($all['seasons'] as &$season) {
                     if (!is_array($season)) continue;
-                    if (!isset($season['tariffs']) || !is_array($season['tariffs'])) {
-                        $season['tariffs'] = $all['tariffs'];
-                        $changed = true;
-                    }
+                    if (!isset($season['tariffs']) || !is_array($season['tariffs'])) { $season['tariffs'] = $all['tariffs']; $changed = true; }
                 }
                 unset($season);
                 if ($changed) update_option(Parcs_HT_Defaults::OPTION, $all, false);
