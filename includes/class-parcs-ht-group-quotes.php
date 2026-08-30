@@ -16,8 +16,8 @@ final class Parcs_HT_Group_Quotes {
 
     public static function defaults() {
         return array(
-            'enabled' => '0',
-            'form_id' => '806',
+            'enabled' => '1',
+            'form_id' => '',
             'visit_field' => 'visite',
             'group_field' => 'groupedevis',
             'school_value' => 'Groupe',
@@ -38,14 +38,16 @@ final class Parcs_HT_Group_Quotes {
     public static function settings() {
         $saved = get_option(self::OPTION, array());
         if (!is_array($saved)) $saved = array();
-        return array_replace_recursive(self::defaults(), $saved);
+        $settings = array_replace_recursive(self::defaults(), $saved);
+        $settings['enabled'] = '1';
+        return $settings;
     }
 
     public static function menu() {
         add_submenu_page(
             Parcs_HT_Admin::PAGE,
-            'Devis groupes',
-            'Devis groupes',
+            'Tarifs des devis groupes',
+            'Tarifs devis groupes',
             'manage_options',
             self::PAGE,
             array(__CLASS__, 'page')
@@ -64,15 +66,14 @@ final class Parcs_HT_Group_Quotes {
         sort($years, SORT_STRING);
         ?>
         <div class="wrap">
-            <h1>Devis groupes</h1>
-            <p>Un seul formulaire Contact Form 7 français peut calculer le tarif correspondant à l’année choisie dans le champ « Date de visite ».</p>
+            <h1>Tarifs des devis groupes</h1>
+            <p>Le moteur de calcul est actif automatiquement lorsqu’un formulaire Contact Form 7 contient les champs « Date de visite » et « Type de groupe » configurés ci-dessous. Aucun bouton d’activation n’est nécessaire.</p>
             <?php if (isset($_GET['updated'])) : ?><div class="notice notice-success is-dismissible"><p>Les réglages des devis groupes ont été enregistrés.</p></div><?php endif; ?>
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                 <input type="hidden" name="action" value="parcs_ht_save_group_quotes">
                 <?php wp_nonce_field('parcs_ht_save_group_quotes'); ?>
                 <table class="form-table" role="presentation">
-                    <tr><th scope="row">Activation</th><td><label><input type="checkbox" name="enabled" value="1" <?php checked((string)$settings['enabled'], '1'); ?>> Activer le moteur de devis de l’extension</label><p class="description">Laissez désactivé tant que l’ancien calcul reste présent dans le script du thème. Activez-le après retrait de cet ancien bloc afin d’éviter deux moteurs de calcul simultanés.</p></td></tr>
-                    <tr><th scope="row"><label for="htp-form-id">ID du formulaire CF7</label></th><td><input id="htp-form-id" class="regular-text" name="form_id" value="<?php echo esc_attr((string)$settings['form_id']); ?>"><p class="description">Formulaire français actuel : 806.</p></td></tr>
+                    <tr><th scope="row">Détection du formulaire</th><td><p class="description">La détection est automatique : le moteur ne dépend plus de l’ID technique Contact Form 7, qui peut changer lors d’une duplication ou d’une migration.</p></td></tr>
                     <tr><th scope="row">Champs techniques</th><td>
                         <label>Date de visite <input name="visit_field" value="<?php echo esc_attr((string)$settings['visit_field']); ?>"></label><br>
                         <label>Type de groupe <input name="group_field" value="<?php echo esc_attr((string)$settings['group_field']); ?>"></label>
@@ -100,7 +101,7 @@ final class Parcs_HT_Group_Quotes {
                     <?php endforeach; ?>
                     </tbody>
                 </table>
-                <?php submit_button('Enregistrer les devis groupes'); ?>
+                <?php submit_button('Enregistrer les tarifs des devis groupes'); ?>
             </form>
         </div>
         <?php
@@ -110,8 +111,8 @@ final class Parcs_HT_Group_Quotes {
         if (!current_user_can('manage_options')) wp_die('Accès refusé.');
         check_admin_referer('parcs_ht_save_group_quotes');
         $out = array(
-            'enabled' => isset($_POST['enabled']) ? '1' : '0',
-            'form_id' => isset($_POST['form_id']) ? preg_replace('/[^A-Za-z0-9_-]/', '', (string)wp_unslash($_POST['form_id'])) : '806',
+            'enabled' => '1',
+            'form_id' => '',
             'visit_field' => isset($_POST['visit_field']) ? sanitize_key(wp_unslash($_POST['visit_field'])) : 'visite',
             'group_field' => isset($_POST['group_field']) ? sanitize_key(wp_unslash($_POST['group_field'])) : 'groupedevis',
             'school_value' => isset($_POST['school_value']) ? sanitize_text_field(wp_unslash($_POST['school_value'])) : 'Groupe',
@@ -143,10 +144,9 @@ final class Parcs_HT_Group_Quotes {
 
     public static function assets() {
         $settings = self::settings();
-        if ((string)$settings['enabled'] !== '1' || empty($settings['form_id'])) return;
         wp_enqueue_script('parcs-ht-group-quotes', PARCS_HT_URL . 'assets/group-quotes.js', array('jquery'), PARCS_HT_VERSION, true);
         wp_add_inline_script('parcs-ht-group-quotes', 'window.ParcsHTGroupQuotes=' . wp_json_encode(array(
-            'formId' => (string)$settings['form_id'],
+            'formId' => '',
             'visitField' => (string)$settings['visit_field'],
             'groupField' => (string)$settings['group_field'],
             'schoolValue' => (string)$settings['school_value'],
