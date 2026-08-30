@@ -2,7 +2,7 @@
     'use strict';
 
     var config = window.ParcsHTGroupQuotes || null;
-    if (!config || !config.formId) return;
+    if (!config || !config.visitField || !config.groupField) return;
 
     function number($form, selector) {
         var raw = String($form.find(selector).first().val() || '').replace(',', '.');
@@ -122,9 +122,14 @@
         }
     }
 
-    function init($wrapper) {
-        var $form = $wrapper.find('form').first();
-        if (!$form.length || $form.data('parcsHtQuoteReady')) return;
+    function isQuoteForm($form) {
+        return $form.find('[name="' + config.visitField + '"]').length > 0 &&
+            $form.find('[name="' + config.groupField + '"]').length > 0 &&
+            ($form.find('.nbrenfants,.nbradultes,.nbrpersohandicape,.nbraccompa').length > 0);
+    }
+
+    function init($form) {
+        if (!$form.length || !isQuoteForm($form) || $form.data('parcsHtQuoteReady')) return;
         $form.data('parcsHtQuoteReady', true);
         $form.find('.nbradultgratuit,.nbradultpayant,.nbrprixenfants,.nbrprixadultes,.totalprixscolaire,.totalprixhandicape').prop('readonly', true);
         $form.on('input change', '.nbrenfants,.nbradultes', function () { school($form); });
@@ -133,7 +138,12 @@
         sync($form);
     }
 
-    $(function () {
-        $('[id^="wpcf7-f' + config.formId + '-"]').each(function () { init($(this)); });
-    });
+    function scan() {
+        $('.wpcf7 form, form.wpcf7-form').each(function () {
+            init($(this));
+        });
+    }
+
+    $(scan);
+    document.addEventListener('wpcf7init', scan);
 })(jQuery);
