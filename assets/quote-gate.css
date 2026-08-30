@@ -4,5 +4,5 @@
 .parcs-ht-quote-access-title{margin:0 0 5px;font-size:18px;font-weight:850;line-height:1.2}
 .parcs-ht-quote-access-intro{margin:0 0 10px;line-height:1.5;opacity:.82}
 .parcs-ht-quote-access-date{width:min(100%,320px);min-height:44px;padding:8px 10px;font:inherit}
-.parcs-ht-gate-active .parcs-ht-quote-form-wrap{display:none!important}
-.parcs-ht-gate-active.parcs-ht-gate-open .parcs-ht-quote-form-wrap{display:block!important}
+.parcs-ht-gate-active .parcs-ht-quote-form{display:none!important}
+.parcs-ht-gate-active.parcs-ht-gate-open .parcs-ht-quote-form{display:block!important}
