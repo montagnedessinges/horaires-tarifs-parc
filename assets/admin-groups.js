@@ -73,9 +73,31 @@ $(function(){
         $quote.append($rates);
 
         var g=cfg.gate||{};
-        var $gate=$('<div class="htp-quote-admin-pane" data-htp-quote-pane="gate" hidden><h2>Accès au devis automatique</h2><p class="description">Réglages du choix de la date avant l’affichage du formulaire complet.</p><div class="htp-check-list"><label><input type="checkbox" data-g="enabled"> Activer le choix de la date avant l’affichage du formulaire complet</label></div><div class="htp-subsection"><h3>Date où le parc est fermé</h3><label><input type="checkbox" data-g="closed_enabled"> Afficher un avertissement</label><p><textarea class="large-text" rows="5" data-g="closed_message"></textarea></p><label class="htp-field"><span>Contact ou lien</span><input type="text" data-g="closed_contact"></label><p class="description">Le formulaire reste accessible et le devis reste générable.</p></div><div class="htp-subsection"><h3>Tarifs indisponibles</h3><label><input type="checkbox" data-g="unavailable_enabled"> Afficher le message d’indisponibilité</label><p><textarea class="large-text" rows="5" data-g="unavailable_message"></textarea></p><label class="htp-field"><span>Contact ou lien</span><input type="text" data-g="unavailable_contact"></label><p class="description">Sans grille tarifaire publiée pour l’année choisie, le formulaire complet reste masqué et aucun devis chiffré ne peut être envoyé.</p></div><p><button type="button" class="button button-primary" data-g-save>Enregistrer l’accès au devis</button> <span data-g-status></span></p></div>');
+        var $gate=$('<div class="htp-quote-admin-pane" data-htp-quote-pane="gate" hidden><h2>Accès au devis automatique</h2><p class="description">Réglages du choix de la date avant l’affichage du formulaire complet.</p><div class="htp-check-list"><label><input type="checkbox" data-g="enabled"> Activer le choix de la date avant l’affichage du formulaire complet</label></div><div class="htp-subsection"><h3>Date où le parc est fermé</h3><label><input type="checkbox" data-g="closed_enabled"> Afficher un avertissement</label><div class="htp-lang-tabs" data-g-lang-tabs="closed"><button type="button" class="button button-primary" data-lang="fr">FR</button><button type="button" class="button" data-lang="en">EN</button><button type="button" class="button" data-lang="de">DE</button></div><p><textarea class="large-text" rows="5" data-g-message="closed"></textarea></p><label class="htp-field"><span>Contact ou lien</span><input type="text" data-g="closed_contact"></label><p class="description">Le formulaire reste accessible et le devis reste générable.</p></div><div class="htp-subsection"><h3>Tarifs indisponibles</h3><label><input type="checkbox" data-g="unavailable_enabled"> Afficher le message d’indisponibilité</label><div class="htp-lang-tabs" data-g-lang-tabs="unavailable"><button type="button" class="button button-primary" data-lang="fr">FR</button><button type="button" class="button" data-lang="en">EN</button><button type="button" class="button" data-lang="de">DE</button></div><p><textarea class="large-text" rows="5" data-g-message="unavailable"></textarea></p><label class="htp-field"><span>Contact ou lien</span><input type="text" data-g="unavailable_contact"></label><p class="description">Sans grille tarifaire publiée pour l’année choisie, le formulaire complet reste masqué et aucun devis chiffré ne peut être envoyé.</p></div><p><button type="button" class="button button-primary" data-g-save>Enregistrer l’accès au devis</button> <span data-g-status></span></p></div>');
         ['enabled','closed_enabled','unavailable_enabled'].forEach(function(k){$gate.find('[data-g="'+k+'"]').prop('checked',String(g[k])==='1');});
-        ['closed_message','closed_contact','unavailable_message','unavailable_contact'].forEach(function(k){$gate.find('[data-g="'+k+'"]').val(g[k]||'');});
+        ['closed_contact','unavailable_contact'].forEach(function(k){$gate.find('[data-g="'+k+'"]').val(g[k]||'');});
+
+        var gateMessages={
+            closed:{fr:g.closed_message_fr||g.closed_message||'',en:g.closed_message_en||'',de:g.closed_message_de||''},
+            unavailable:{fr:g.unavailable_message_fr||g.unavailable_message||'',en:g.unavailable_message_en||'',de:g.unavailable_message_de||''}
+        };
+        var gateLang={closed:'fr',unavailable:'fr'};
+        function showGateLang(type,lang){
+            gateLang[type]=lang;
+            $gate.find('[data-g-message="'+type+'"]').val(gateMessages[type][lang]||'');
+            var $tabs=$gate.find('[data-g-lang-tabs="'+type+'"]');
+            $tabs.find('[data-lang]').removeClass('button-primary');
+            $tabs.find('[data-lang="'+lang+'"]').addClass('button-primary');
+        }
+        function storeGateMessage(type){gateMessages[type][gateLang[type]]=$gate.find('[data-g-message="'+type+'"]').val();}
+        $gate.on('input','[data-g-message]',function(){storeGateMessage($(this).data('g-message'));});
+        $gate.on('click','[data-g-lang-tabs] [data-lang]',function(){
+            var type=$(this).closest('[data-g-lang-tabs]').data('g-lang-tabs');
+            storeGateMessage(type);
+            showGateLang(type,$(this).data('lang'));
+        });
+        showGateLang('closed','fr');
+        showGateLang('unavailable','fr');
         $quote.append($gate);
 
         function quotePane($pane,$btn){$existing.add($rates).add($gate).attr('hidden',true);$contentBtn.add($ratesBtn).add($gateBtn).removeClass('button-primary');$pane.removeAttr('hidden');$btn.addClass('button-primary');}
@@ -96,9 +118,12 @@ $(function(){
             $.post(ajaxurl,data).done(function(res){$status.text(res&&res.success?res.data.message:(res.data&&res.data.message)||'Erreur.');}).fail(function(xhr){var m=xhr.responseJSON&&xhr.responseJSON.data&&xhr.responseJSON.data.message;$status.text(m||'Erreur lors de l’enregistrement.');});
         });
         $gate.on('click','[data-g-save]',function(){
+            storeGateMessage('closed');
+            storeGateMessage('unavailable');
             var data={action:'parcs_ht_save_quote_gate_settings',nonce:cfg.gate_nonce};
             ['enabled','closed_enabled','unavailable_enabled'].forEach(function(k){data[k]=$gate.find('[data-g="'+k+'"]').is(':checked')?'1':'0';});
-            ['closed_message','closed_contact','unavailable_message','unavailable_contact'].forEach(function(k){data[k]=$gate.find('[data-g="'+k+'"]').val();});
+            ['closed_contact','unavailable_contact'].forEach(function(k){data[k]=$gate.find('[data-g="'+k+'"]').val();});
+            ['fr','en','de'].forEach(function(lang){data['closed_message_'+lang]=gateMessages.closed[lang]||'';data['unavailable_message_'+lang]=gateMessages.unavailable[lang]||'';});
             var $status=$gate.find('[data-g-status]').text('Enregistrement…');
             $.post(ajaxurl,data).done(function(res){$status.text(res&&res.success?res.data.message:(res.data&&res.data.message)||'Erreur.');}).fail(function(xhr){var m=xhr.responseJSON&&xhr.responseJSON.data&&xhr.responseJSON.data.message;$status.text(m||'Erreur lors de l’enregistrement.');});
         });
