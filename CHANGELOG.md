@@ -1,5 +1,15 @@
 # Historique des versions
 
+## 1.9.16
+- Le comportement public du Devis groupe revient au principe minimal validé : tous les textes, remarques, liens, blocs et accordéons déjà configurés restent affichés comme avant.
+- Le titre configuré au-dessus du formulaire reste visible avant le choix de la date afin que le visiteur comprenne immédiatement qu’il s’agit du devis en ligne.
+- Seul le bloc Contact Form 7 est masqué avant validation de la date ; le contrôle de date du plugin est inséré directement entre le titre du formulaire et le CF7.
+- Une date dont l’année possède une grille de tarifs groupes publiée ouvre le formulaire configuré et recopie automatiquement la date dans le champ `visite`.
+- Une date fermée n’empêche pas le devis : le message de fermeture configuré est affiché et le formulaire reste accessible.
+- Une année sans grille publiée laisse le formulaire masqué et affiche le message d’indisponibilité configuré.
+- Le formulaire FR fourni le 30/08/2026, incluant `devisannee`, `tarifenfant`, `tarifadulte`, `tarifhandicap` et `tarifaccompagnateur`, est archivé séparément sans remplacer la base stable historique.
+- Le shortcode CF7 reste modifiable dans l’administration. Le formulaire français est la référence de test actuelle ; les formulaires EN/DE ne sont pas encore considérés comme adaptés et validés avec ce nouveau circuit.
+
 ## 1.9.10
 - Le devis groupe est désormais piloté par la date de visite : une date 2026 utilise uniquement la grille groupes 2026, une date 2027 uniquement la grille 2027, sans choix manuel d’année par le visiteur.
 - Une seule grille de tarifs groupes est prévue par année ; les tarifs spéciaux par période ne font pas partie de ce moteur.
