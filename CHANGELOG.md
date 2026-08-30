@@ -1,5 +1,18 @@
 # Historique des versions
 
+## 1.9.18
+- Les messages publics de l’onglet « Accès au devis » sont désormais réellement multilingues en français, anglais et allemand.
+- Les avertissements « parc fermé » et « tarifs indisponibles » disposent chacun de trois contenus FR / EN / DE dans l’administration, avec un contact ou lien commun.
+- Les réglages français déjà enregistrés avant la mise à jour sont conservés automatiquement comme version FR ; les textes EN et DE disposent de valeurs par défaut traduites.
+- Le message affiché sur le site est sélectionné selon la langue du shortcode/page de devis, avec secours vers le français si une traduction est volontairement laissée vide.
+- Les libellés d’accessibilité des boutons mois précédent / mois suivant du calendrier sont adaptés à la langue FR / EN / DE au lieu de rester uniquement en français.
+- Aucun changement n’est apporté au calcul des devis, aux tarifs annuels, au préremplissage de la date Contact Form 7 ni au PDF dynamique.
+
+## 1.9.17
+- Correction du contrôle de disponibilité des tarifs du devis : l’accès au formulaire utilise désormais les réglages canoniques du module Devis groupe au lieu de lire directement l’option brute.
+- Cette correction rétablit le fonctionnement validé du choix de date : une année disposant d’une grille de devis publiée ouvre le formulaire et recopie la date dans le champ `visite`.
+- Aucun nouveau moteur de publication par année n’est ajouté : le fonctionnement 1.9.17 testé sur le site reste la base stable du circuit devis/date.
+
 ## 1.9.16
 - Le comportement public du Devis groupe revient au principe minimal validé : tous les textes, remarques, liens, blocs et accordéons déjà configurés restent affichés comme avant.
 - Le titre configuré au-dessus du formulaire reste visible avant le choix de la date afin que le visiteur comprenne immédiatement qu’il s’agit du devis en ligne.
