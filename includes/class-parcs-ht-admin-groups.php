@@ -7,12 +7,13 @@ final class Parcs_HT_Admin_Groups {
         add_action('admin_menu', array(__CLASS__, 'cleanup_submenus'), 99);
         add_action('admin_enqueue_scripts', array(__CLASS__, 'assets'), 120);
         add_action('wp_ajax_parcs_ht_save_quote_season_rates', array(__CLASS__, 'save_quote_rates'));
+        add_action('wp_ajax_parcs_ht_save_quote_language_forms', array(__CLASS__, 'save_quote_language_forms'));
     }
 
     public static function cleanup_submenus() {
-        if (class_exists('Parcs_HT_Admin') && class_exists('Parcs_HT_Group_Quotes')) {
-            remove_submenu_page(Parcs_HT_Admin::PAGE, Parcs_HT_Group_Quotes::PAGE);
-        }
+        if (!class_exists('Parcs_HT_Admin')) return;
+        if (class_exists('Parcs_HT_Group_Quotes')) remove_submenu_page(Parcs_HT_Admin::PAGE, Parcs_HT_Group_Quotes::PAGE);
+        if (class_exists('Parcs_HT_Quote_Languages')) remove_submenu_page(Parcs_HT_Admin::PAGE, Parcs_HT_Quote_Languages::PAGE);
     }
 
     public static function assets($hook) {
@@ -22,10 +23,13 @@ final class Parcs_HT_Admin_Groups {
         $year = (string)($settings['active_season_year'] ?? $year);
         $quotes = class_exists('Parcs_HT_Group_Quotes') ? Parcs_HT_Group_Quotes::settings() : array();
         $row = isset($quotes['seasons'][$year]) && is_array($quotes['seasons'][$year]) ? $quotes['seasons'][$year] : array();
+        $forms = class_exists('Parcs_HT_Quote_Languages') ? Parcs_HT_Quote_Languages::settings() : array('fr'=>'','en'=>'','de'=>'');
         wp_enqueue_script('parcs-ht-admin-groups', PARCS_HT_URL . 'assets/admin-groups.js', array('jquery','parcs-ht-admin'), PARCS_HT_VERSION, true);
         wp_add_inline_script('parcs-ht-admin-groups', 'window.ParcsHTAdminGroups=' . wp_json_encode(array(
             'year' => $year,
             'nonce' => wp_create_nonce('parcs_ht_quote_season_rates'),
+            'forms_nonce' => wp_create_nonce('parcs_ht_quote_language_forms'),
+            'forms' => $forms,
             'rates' => array(
                 'published' => (string)($row['published'] ?? '0'),
                 'child' => (string)($row['child'] ?? ''),
@@ -58,5 +62,20 @@ final class Parcs_HT_Admin_Groups {
         $settings['seasons'][$year] = $row;
         update_option(Parcs_HT_Group_Quotes::OPTION, $settings, false);
         wp_send_json_success(array('message'=>'Tarifs du devis ' . $year . ' enregistrés.'));
+    }
+
+    public static function save_quote_language_forms() {
+        if (!current_user_can('manage_options')) wp_send_json_error(array('message'=>'Accès refusé.'), 403);
+        check_ajax_referer('parcs_ht_quote_language_forms', 'nonce');
+        $clean = Parcs_HT_Quote_Languages::defaults();
+        foreach ($clean as $lang => $unused) {
+            $value = isset($_POST[$lang]) ? trim(sanitize_text_field(wp_unslash($_POST[$lang]))) : '';
+            if ($value !== '' && !preg_match('/^\[contact-form-7(?:\s+[^\]]*)?\s*\/?\]$/i', $value)) {
+                wp_send_json_error(array('message'=>'Le shortcode ' . strtoupper($lang) . ' n’est pas un shortcode Contact Form 7 valide.'), 400);
+            }
+            $clean[$lang] = $value;
+        }
+        update_option(Parcs_HT_Quote_Languages::OPTION, $clean, false);
+        wp_send_json_success(array('message'=>'Formulaires FR / EN / DE enregistrés.'));
     }
 }
