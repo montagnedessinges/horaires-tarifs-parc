@@ -55,6 +55,17 @@ Ce fichier conserve l'état de base du formulaire Contact Form 7 français 2026 
 </div>
 ```
 
+## 1 bis. Champs conditionnels — base FR 2026
+
+Configuration confirmée du module de champs conditionnels CF7 :
+
+```text
+show [group-scolaire] if [groupedevis] equals "Groupe"
+show [group-handicape] if [groupedevis] equals "Groupe en situation de handicap"
+```
+
+Dépendance importante pour les traductions : ces règles comparent la valeur textuelle exacte du champ `groupedevis`. Si les valeurs de la liste sont traduites en anglais ou en allemand, les règles conditionnelles correspondantes devront être adaptées à ces valeurs, sauf si une future refonte sépare valeur technique stable et libellé public traduit. Ne pas modifier les règles françaises de référence sans sauvegarde.
+
 ## 2. E-mail interne reçu par l'équipe — base FR 2026
 
 ```html
