@@ -17,7 +17,7 @@ foreach ($required_gate as $key) {
     }
 }
 
-foreach (array("'closed_message_' . $lang", "'unavailable_message_' . $lang") as $admin_marker) {
+foreach (array("'closed_message_' . \$lang", "'unavailable_message_' . \$lang") as $admin_marker) {
     if (strpos($admin, $admin_marker) === false) {
         fwrite(STDERR, "Missing admin save marker: {$admin_marker}\n");
         exit(1);
@@ -38,7 +38,7 @@ foreach (array("'fr'=>'FR'", "'en'=>'EN'", "'de'=>'DE'") as $language_marker) {
     }
 }
 
-if (strpos($gate, "self::localized_message($s, 'closed', $language)") === false || strpos($gate, "self::localized_message($s, 'unavailable', $language)") === false) {
+if (strpos($gate, "self::localized_message(\$s, 'closed', \$language)") === false || strpos($gate, "self::localized_message(\$s, 'unavailable', \$language)") === false) {
     fwrite(STDERR, "Public quote messages are not selected by language.\n");
     exit(1);
 }
