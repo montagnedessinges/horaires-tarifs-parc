@@ -38,13 +38,16 @@ jobs:
           php tests/popup-language-contract.php
           php tests/tariff-seasons-contract.php
           php tests/admin-season-status-contract.php
+          php tests/quote-gate-language-contract.php
       - name: Check JavaScript and parity tests
         run: |
           node --check assets/admin.js
+          node --check assets/admin-groups.js
           node --check assets/admin-preview-enhanced.js
           node --check assets/admin-validation.js
           node --check assets/display-state.js
           node --check assets/frontend.js
+          node --check assets/frontend-i18n.js
           node --check assets/season-status-admin.js
           node --check assets/slot-last-entry-admin.js
           node --check assets/slot-last-entry-frontend.js
@@ -96,10 +99,12 @@ jobs:
         shell: bash
         run: |
           node --check assets/admin.js
+          node --check assets/admin-groups.js
           node --check assets/admin-preview-enhanced.js
           node --check assets/admin-validation.js
           node --check assets/display-state.js
           node --check assets/frontend.js
+          node --check assets/frontend-i18n.js
           node --check assets/season-status-admin.js
           node --check assets/slot-last-entry-admin.js
           node --check assets/slot-last-entry-frontend.js
