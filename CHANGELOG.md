@@ -1,5 +1,18 @@
 # Historique des versions
 
+## 1.9.10
+- Le devis groupe est désormais piloté par la date de visite : une date 2026 utilise uniquement la grille groupes 2026, une date 2027 uniquement la grille 2027, sans choix manuel d’année par le visiteur.
+- Une seule grille de tarifs groupes est prévue par année ; les tarifs spéciaux par période ne font pas partie de ce moteur.
+- Si la grille de l’année choisie n’est pas marquée disponible, aucun tarif d’une autre année n’est utilisé en secours et Contact Form 7 bloque l’envoi du devis.
+- Le choix du type de groupe reste inchangé : « Groupe » ou « Groupe en situation de handicap » ; il devient exploitable après sélection d’une date correspondant à une grille disponible.
+- Les montants et tarifs transmis au mail/PDF sont recalculés côté serveur à partir de la grille enregistrée dans l’extension afin de ne pas faire confiance aux valeurs modifiables dans le navigateur.
+- Le champ PDF `devisannee` est alimenté automatiquement avec l’année réellement utilisée. Le modèle PDF stable peut donc conserver `DEVIS [devisannee]` et afficher automatiquement `DEVIS 2026`, `DEVIS 2027`, etc., sans changement de mise en page.
+- Les prix unitaires PDF (`tarifenfant`, `tarifadulte`, `tarifhandicap`, `tarifaccompagnateur`) et les totaux sont eux aussi réécrits avec les valeurs canoniques de l’extension lors de l’envoi.
+
+## 1.9.9
+- Ajout d’une configuration indépendante des formulaires Contact Form 7 français, anglais et allemand.
+- Les shortcodes de devis FR/EN/DE peuvent utiliser chacun leur formulaire CF7, avec maintien du formulaire général comme secours lorsqu’aucun formulaire spécifique n’est configuré.
+
 ## 1.9.8
 - Correctif urgent du moteur de devis groupes après retrait de l’ancien calcul 2026 du `script.js` du thème.
 - Le moteur de devis de l’extension est désormais actif automatiquement : il n’existe plus de dépendance à une case d’activation séparée.
@@ -14,7 +27,7 @@
 - Le formulaire français peut utiliser un seul moteur pour plusieurs années : l’année est déterminée par le champ `visite` et une année non publiée n’utilise jamais silencieusement les tarifs d’une autre année.
 - Tarifs groupes 2026 initialisés : enfant 6 €, adulte 8,50 €, personne en situation de handicap 6 €, accompagnateur 6 €, avec un adulte gratuit par tranche complète de 10 enfants dans la limite du nombre d’adultes présents.
 - Le moteur de l’extension reste désactivé par défaut pendant la transition afin d’éviter un double calcul tant que l’ancien calcul existe dans le `script.js` du thème.
-- Préparation de la transition multi-années du PDF : le modèle 2026 actuel contient encore le titre `DEVIS 2026` et des prix unitaires écrits en dur. Il doit être remplacé par un modèle dynamique avant activation des tarifs 2027.
+- Préparation de la transition multi-années du PDF : le modèle 2026 actuel contient encore le titre `DEVIS 2026` et des prix unitaires 2026 en dur. Il doit être remplacé par un modèle dynamique avant activation des tarifs 2027.
 - Les modèles PDF et le script du thème restent des composants externes à l’extension : leurs bases stables sont conservées dans GitHub et les versions modifiées doivent être archivées séparément avant mise en production.
 
 ## 1.9.6
