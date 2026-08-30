@@ -1,5 +1,14 @@
 # Historique des versions
 
+## 1.9.8
+- Correctif urgent du moteur de devis groupes après retrait de l’ancien calcul 2026 du `script.js` du thème.
+- Le moteur de devis de l’extension est désormais actif automatiquement : il n’existe plus de dépendance à une case d’activation séparée.
+- La détection du formulaire Contact Form 7 ne dépend plus d’un ID technique figé (`806`). Le moteur détecte le formulaire à partir des champs fonctionnels `visite` et `groupedevis`, ce qui reste compatible avec les nouveaux identifiants CF7 alphanumériques.
+- Le formulaire français actuellement affiché utilise un identifiant CF7 alphanumérique (`6c681fb`) ; cette différence expliquait pourquoi le moteur 1.9.7 ne prenait pas la main même après retrait de l’ancien script.
+- Les tarifs groupes 2026 restent : enfant 6 €, adulte 8,50 €, personne en situation de handicap 6 €, accompagnateur 6 €, avec un adulte gratuit par tranche complète de 10 enfants, limité au nombre d’adultes présents.
+- Les champs techniques destinés au PDF (`devisannee`, `tarifenfant`, `tarifadulte`, `tarifhandicap`, `tarifaccompagnateur`) continuent d’être alimentés par le moteur.
+- La page avancée des tarifs de devis, lorsqu’elle est accessible, n’est plus nécessaire pour activer le calcul ; elle sert uniquement à gérer les paramètres et tarifs par année.
+
 ## 1.9.7
 - Ajout d’un module « Devis groupes » pour centraliser les tarifs de devis par année de visite tout en conservant, pour le moment, le formulaire Contact Form 7 français existant.
 - Le formulaire français peut utiliser un seul moteur pour plusieurs années : l’année est déterminée par le champ `visite` et une année non publiée n’utilise jamais silencieusement les tarifs d’une autre année.
