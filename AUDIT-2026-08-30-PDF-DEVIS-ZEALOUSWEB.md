@@ -111,6 +111,36 @@ Cela montre qu’il existe un problème distinct de mapping/formatage des champs
 
 Ne pas considérer le problème de prix unitaires comme un simple problème CSS.
 
+## Deuxième test réel — PDF `devis_MontagneDesSinges-1788094215-5158.pdf`
+Un second PDF réel a été fourni après tentative de correction légère du modèle.
+
+Constats confirmés sur ce fichier :
+- le PDF fait encore **2 pages** ;
+- la première page contient presque tout le devis ;
+- la deuxième page contient essentiellement le tableau de signature et les mentions légales ;
+- le logo ZealousWeb et le bloc texte du modèle restent visuellement trop proches / superposés en haut ;
+- les sections « Moyen de paiement prévu », « Langue parlée » et « Âge des enfants » restent beaucoup trop hautes ;
+- les cases à cocher sont rendues verticalement avec de grands écarts par mPDF ;
+- la tentative de mettre langue et âge dans un tableau ne suffit pas à réduire la hauteur ;
+- le tableau de signature est précisément l’élément qui bascule sur la page 2 dans ce test.
+
+Les données de test visibles confirment aussi l’anomalie de mapping des prix :
+- 10 enfants ;
+- total enfants = `60` ;
+- la colonne « Prix unit. » affiche `60` au lieu de `6,00 €` ;
+- 1 adulte gratuit ;
+- 0 adulte payant ;
+- total groupe scolaire = `60 €`.
+
+Conclusion : **la deuxième tentative n’est pas validée non plus**. Le prochain correctif ne doit plus modifier plusieurs comportements en même temps. Il faut repartir du modèle historique exact, conserver son rendu prouvé, et corriger séparément :
+1. le mapping des prix unitaires ;
+2. la hauteur du bloc paiement/Chorus ;
+3. la présentation des cases à cocher selon ce que mPDF rend réellement ;
+4. le placement de la signature et du footer ;
+5. l’espacement entre le header ZealousWeb et le corps du modèle.
+
+Ne pas poursuivre par essais CSS globaux ou refonte générale sans isoler chaque cause.
+
 ## Points de vigilance mPDF
 - privilégier les structures déjà prouvées par le modèle historique ;
 - éviter de dépendre de propriétés CSS modernes dont le support mPDF est incertain ;
