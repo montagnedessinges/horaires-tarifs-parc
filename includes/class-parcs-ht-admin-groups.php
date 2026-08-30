@@ -90,12 +90,16 @@ final class Parcs_HT_Admin_Groups {
         $out = array(
             'enabled' => isset($_POST['enabled']) && (string)$_POST['enabled'] === '1' ? '1' : '0',
             'closed_enabled' => isset($_POST['closed_enabled']) && (string)$_POST['closed_enabled'] === '1' ? '1' : '0',
-            'closed_message' => isset($_POST['closed_message']) ? sanitize_textarea_field(wp_unslash($_POST['closed_message'])) : '',
             'closed_contact' => isset($_POST['closed_contact']) ? sanitize_text_field(wp_unslash($_POST['closed_contact'])) : '',
             'unavailable_enabled' => isset($_POST['unavailable_enabled']) && (string)$_POST['unavailable_enabled'] === '1' ? '1' : '0',
-            'unavailable_message' => isset($_POST['unavailable_message']) ? sanitize_textarea_field(wp_unslash($_POST['unavailable_message'])) : '',
             'unavailable_contact' => isset($_POST['unavailable_contact']) ? sanitize_text_field(wp_unslash($_POST['unavailable_contact'])) : '',
         );
+        foreach (array('fr','en','de') as $lang) {
+            $closed_key = 'closed_message_' . $lang;
+            $unavailable_key = 'unavailable_message_' . $lang;
+            $out[$closed_key] = isset($_POST[$closed_key]) ? sanitize_textarea_field(wp_unslash($_POST[$closed_key])) : '';
+            $out[$unavailable_key] = isset($_POST[$unavailable_key]) ? sanitize_textarea_field(wp_unslash($_POST[$unavailable_key])) : '';
+        }
         update_option(Parcs_HT_Quote_Gate::OPTION, $out, false);
         wp_send_json_success(array('message'=>'Réglages d’accès au devis enregistrés.'));
     }
