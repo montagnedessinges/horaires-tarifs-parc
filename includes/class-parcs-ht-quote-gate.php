@@ -70,7 +70,7 @@ final class Parcs_HT_Quote_Gate {
     }
 
     private static function tariff_available($year) {
-        $q = get_option(Parcs_HT_Group_Quotes::OPTION, array());
+        $q = class_exists('Parcs_HT_Group_Quotes') ? Parcs_HT_Group_Quotes::settings() : array();
         $row = is_array($q) && isset($q['seasons'][$year]) && is_array($q['seasons'][$year]) ? $q['seasons'][$year] : array();
         if ((string)($row['published'] ?? '0') !== '1') return false;
         foreach (array('child','adult','disability','companion') as $key) if (!isset($row[$key]) || !is_numeric($row[$key]) || (float)$row[$key] < 0) return false;
