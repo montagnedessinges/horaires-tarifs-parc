@@ -5,22 +5,28 @@ $gate = file_get_contents($root . '/includes/class-parcs-ht-quote-gate.php');
 $admin = file_get_contents($root . '/includes/class-parcs-ht-admin-groups.php');
 $js = file_get_contents($root . '/assets/admin-groups.js');
 
-$required = array(
+$required_gate = array(
     'closed_message_fr', 'closed_message_en', 'closed_message_de',
     'unavailable_message_fr', 'unavailable_message_en', 'unavailable_message_de',
 );
 
-foreach ($required as $key) {
+foreach ($required_gate as $key) {
     if (strpos($gate, $key) === false) {
         fwrite(STDERR, "Missing quote gate key: {$key}\n");
         exit(1);
     }
-    if (strpos($admin, $key) === false) {
-        fwrite(STDERR, "Missing admin save key: {$key}\n");
+}
+
+foreach (array("'closed_message_' . $lang", "'unavailable_message_' . $lang") as $admin_marker) {
+    if (strpos($admin, $admin_marker) === false) {
+        fwrite(STDERR, "Missing admin save marker: {$admin_marker}\n");
         exit(1);
     }
-    if (strpos($js, $key) === false) {
-        fwrite(STDERR, "Missing admin UI key: {$key}\n");
+}
+
+foreach (array('closed_message_fr','closed_message_en','closed_message_de','unavailable_message_fr','unavailable_message_en','unavailable_message_de') as $js_key) {
+    if (strpos($js, $js_key) === false) {
+        fwrite(STDERR, "Missing admin UI key: {$js_key}\n");
         exit(1);
     }
 }
