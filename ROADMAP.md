@@ -47,7 +47,10 @@ Ce fichier consigne les idées validées ou à débattre avant développement. N
 - La traduction allemande ne doit pas reprendre automatiquement les informations uniquement utiles ou applicables aux visiteurs/structures françaises. Les différences FR/EN/DE doivent être explicitement documentées et validées.
 - Lorsqu'un code, template, HTML, CSS, JavaScript, réglage CF7 ou configuration PDF situé dans le thème ou dans WordPress est modifié mais ne fait pas partie du dépôt de l'extension, conserver malgré tout dans GitHub une copie de référence ou une documentation suffisamment complète pour pouvoir le reconstruire.
 - Pour chaque modification externe liée au module devis, consigner : date, emplacement WordPress/thème/plugin, version ou état avant modification si disponible, code/configuration de référence, modification effectuée, formulaires/années/langues concernés et raison de la modification.
-- Objectif à terme : pouvoir reprendre le système devis/PDF depuis GitHub même si une future conversation n'a plus le contexte des modifications manuelles faites dans WordPress.
+- Avant chaque modification importante du thème, d'un formulaire CF7, d'un modèle PDF ou de son code de génération, conserver explicitement l'état d'origine dans GitHub comme point de restauration. Ne jamais remplacer la seule copie connue de la configuration d'origine par la nouvelle version.
+- Lorsque du code source externe au dépôt est fourni par l'utilisateur, conserver la base d'origine telle quelle dans une documentation ou un fichier de référence avant de proposer une version modifiée. Les versions suivantes doivent rester comparables à cette base pour permettre un retour arrière rapide en cas de régression.
+- Pour une modification sensible, noter clairement dans GitHub quelle version est « base stable / avant modification » et quelle version est « version proposée / après modification ».
+- Objectif à terme : pouvoir reprendre le système devis/PDF depuis GitHub même si une future conversation n'a plus le contexte des modifications manuelles faites dans WordPress, et pouvoir revenir à la dernière base stable si une modification casse quelque chose.
 - Cette évolution nécessitera une nouvelle version de l'extension lorsqu'une partie fonctionnelle sera intégrée au plugin.
 
 ## Validation des doubles créneaux
