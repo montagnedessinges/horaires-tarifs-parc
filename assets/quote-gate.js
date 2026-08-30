@@ -18,8 +18,9 @@
     function init($quote) {
         if (!$quote.length || $quote.data('parcsHtGateReady')) return;
         var $wrap = $quote.find('.parcs-ht-quote-form-wrap').first();
-        var $form = $wrap.find('.wpcf7 form, form.wpcf7-form').first();
-        if (!$wrap.length || !$form.length) return;
+        var $formBox = $wrap.find('.parcs-ht-quote-form').first();
+        var $form = $formBox.find('.wpcf7 form, form.wpcf7-form').first();
+        if (!$wrap.length || !$formBox.length || !$form.length) return;
         var $cf7Date = $form.find(fieldSelector(visitField)).first();
         if (!$cf7Date.length) return;
         $quote.data('parcsHtGateReady', true).addClass('parcs-ht-gate-active');
@@ -31,7 +32,7 @@
         var $input = $('<input class="parcs-ht-quote-access-date" type="date">');
         var $status = $('<div class="parcs-ht-quote-gate-message" role="status" aria-live="polite"></div>');
         $gate.append($input, $status);
-        $wrap.before($gate);
+        $formBox.before($gate);
         var syncing = false;
         function message(textValue, contact, kind) {
             if (!textValue) { $status.empty().hide(); return; }
