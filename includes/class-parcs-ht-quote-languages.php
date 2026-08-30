@@ -9,7 +9,7 @@ final class Parcs_HT_Quote_Languages {
     const PAGE = 'parcs-ht-quote-languages';
 
     public static function init() {
-        add_action('init', array(__CLASS__, 'register_shortcodes'), 99);
+        add_filter('option_' . Parcs_HT_Defaults::OPTION, array(__CLASS__, 'apply_request_form'), 20, 1);
         if (is_admin()) {
             add_action('admin_menu', array(__CLASS__, 'menu'), 30);
             add_action('admin_post_parcs_ht_save_quote_languages', array(__CLASS__, 'save'));
@@ -25,25 +25,25 @@ final class Parcs_HT_Quote_Languages {
         return array_merge(self::defaults(), is_array($saved) ? $saved : array());
     }
 
-    public static function register_shortcodes() {
+    private static function request_language() {
+        global $post;
+        $content = ($post && isset($post->post_content)) ? (string)$post->post_content : '';
         foreach (array('fr','en','de') as $language) {
-            foreach (array('parc_devis_' . $language, 'parc_devis_groupe_' . $language) as $tag) {
-                remove_shortcode($tag);
-                add_shortcode($tag, static function ($atts = array()) use ($language) {
-                    $settings = Parcs_HT_Defaults::settings();
-                    $forms = Parcs_HT_Quote_Languages::settings();
-                    $selected = trim((string)($forms[$language] ?? ''));
-                    if ($selected === '') {
-                        $selected = trim((string)($settings['quote_page']['form_shortcode'] ?? ''));
-                    }
-                    if (!isset($settings['quote_page']) || !is_array($settings['quote_page'])) {
-                        $settings['quote_page'] = array();
-                    }
-                    $settings['quote_page']['form_shortcode'] = $selected;
-                    return Parcs_HT_Shortcodes::render('quote_page', $language, is_array($atts) ? $atts : array(), $settings);
-                });
-            }
+            if ($content !== '' && (has_shortcode($content, 'parc_devis_groupe_' . $language) || has_shortcode($content, 'parc_devis_' . $language))) return $language;
         }
+        $language = Parcs_HT_Schedule::language();
+        return in_array($language, array('fr','en','de'), true) ? $language : 'fr';
+    }
+
+    public static function apply_request_form($settings) {
+        if (is_admin() || !is_array($settings)) return $settings;
+        $forms = self::settings();
+        $language = self::request_language();
+        $selected = trim((string)($forms[$language] ?? ''));
+        if ($selected === '') return $settings;
+        if (!isset($settings['quote_page']) || !is_array($settings['quote_page'])) $settings['quote_page'] = array();
+        $settings['quote_page']['form_shortcode'] = $selected;
+        return $settings;
     }
 
     public static function menu() {
@@ -92,9 +92,7 @@ final class Parcs_HT_Quote_Languages {
         $clean = self::defaults();
         foreach ($clean as $lang=>$unused) {
             $value = trim(sanitize_text_field((string)($posted[$lang] ?? '')));
-            if ($value !== '' && !preg_match('/^\[contact-form-7(?:\s+[^\]]*)?\s*\/?\]$/i', $value)) {
-                $value = '';
-            }
+            if ($value !== '' && !preg_match('/^\[contact-form-7(?:\s+[^\]]*)?\s*\/?\]$/i', $value)) $value = '';
             $clean[$lang] = $value;
         }
         update_option(self::OPTION, $clean, false);
