@@ -26,6 +26,7 @@ require_once PARCS_HT_DIR . 'includes/class-parcs-ht-tariff-seasons.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-season-status.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-group-quotes.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-quote-languages.php';
+require_once PARCS_HT_DIR . 'includes/class-parcs-ht-quote-gate.php';
 Parcs_HT_HTTP_SSL::init();
 Parcs_HT_Tariff_Seasons::init();
 Parcs_HT_Season_Status::init();
@@ -103,6 +104,7 @@ add_action('plugins_loaded', static function () {
     }
     Parcs_HT_Group_Quotes::init();
     Parcs_HT_Quote_Languages::init();
+    Parcs_HT_Quote_Gate::init();
     Parcs_HT_Slot_Last_Entry::init();
     $doing_cron = function_exists('wp_doing_cron') && wp_doing_cron();
     if (is_admin() || $doing_cron) {
