@@ -76,12 +76,48 @@ Avant toute modification :
 7. vérifier que le footer reste sur la première page ;
 8. générer un devis réel de test avant mise en production.
 
+## Retour du test de la version compacte proposée
+Une première version fortement remaniée, `DEVIS-GROUPES-FR-PDF-MPDF-COMPACT-PROPOSE.html`, a été testée dans le plugin réel.
+
+Le résultat n’est pas validé. Le rendu généré montre notamment :
+- le bloc de paiement qui se déroule verticalement au lieu de rester compact ;
+- les langues et âges affichés sur plusieurs lignes avec de très grands espaces ;
+- une composition globale moins bonne que le modèle historique ;
+- des collisions visuelles dans l’en-tête entre les éléments du modèle et ceux du plugin ;
+- un comportement mPDF différent de ce qui était attendu sur plusieurs mises en page inline.
+
+Décision utilisateur : **le modèle d’origine fonctionnait bien et ne doit pas être remplacé par une nouvelle architecture de mise en page. Il faut uniquement l’améliorer.**
+
+Règle de travail pour la suite :
+- repartir strictement de `BASE-DEVIS-GROUPES-2026-FR-PDF.html` ;
+- conserver sa structure HTML générale ;
+- ne pas refaire entièrement le document ;
+- modifier uniquement les marges, paddings, line-height, hauteurs et espacements réellement responsables des grands vides ;
+- conserver les blocs et leur comportement qui rendaient correctement avant ;
+- ajouter uniquement les champs dynamiques nécessaires au devis multi-années sans transformer la composition ;
+- tester chaque évolution par petits écarts afin d’identifier exactement ce que mPDF accepte.
+
+La version compacte expérimentale reste conservée uniquement comme historique de test et ne doit pas servir de nouvelle base stable.
+
+## Anomalie de prix observée pendant ce test
+Sur le PDF de test :
+- 20 enfants donnent correctement un total de `120`, mais `120` apparaît dans la colonne « Prix unit. » ;
+- le tarif adulte apparaît comme `8.5` ;
+- le total global `128,5 €` reste cohérent.
+
+Cela montre qu’il existe un problème distinct de mapping/formatage des champs de prix unitaires dynamiques. Le futur travail PDF doit distinguer :
+1. le rendu / la mise en page ;
+2. la valeur réellement injectée dans les champs `[tarifenfant]`, `[tarifadulte]`, etc.
+
+Ne pas considérer le problème de prix unitaires comme un simple problème CSS.
+
 ## Points de vigilance mPDF
-- privilégier des tableaux simples pour les mises en page complexes lorsque cela améliore la stabilité du rendu ;
+- privilégier les structures déjà prouvées par le modèle historique ;
 - éviter de dépendre de propriétés CSS modernes dont le support mPDF est incertain ;
 - surveiller les `margin`, `padding`, `line-height`, hauteurs de cellules et sauts de page ;
 - ne pas utiliser de hauteur fixe inutile qui pourrait forcer un débordement ;
-- vérifier le comportement du header et du footer séparément du corps du document.
+- vérifier le comportement du header et du footer séparément du corps du document ;
+- effectuer des changements minimaux et testables plutôt qu’une refonte globale.
 
 ## Lien avec le système de devis dynamique
 Le modèle PDF reste lié au chantier du devis multi-années :
