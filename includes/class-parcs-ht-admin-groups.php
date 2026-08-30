@@ -8,12 +8,14 @@ final class Parcs_HT_Admin_Groups {
         add_action('admin_enqueue_scripts', array(__CLASS__, 'assets'), 120);
         add_action('wp_ajax_parcs_ht_save_quote_season_rates', array(__CLASS__, 'save_quote_rates'));
         add_action('wp_ajax_parcs_ht_save_quote_language_forms', array(__CLASS__, 'save_quote_language_forms'));
+        add_action('wp_ajax_parcs_ht_save_quote_gate_settings', array(__CLASS__, 'save_quote_gate_settings'));
     }
 
     public static function cleanup_submenus() {
         if (!class_exists('Parcs_HT_Admin')) return;
         if (class_exists('Parcs_HT_Group_Quotes')) remove_submenu_page(Parcs_HT_Admin::PAGE, Parcs_HT_Group_Quotes::PAGE);
         if (class_exists('Parcs_HT_Quote_Languages')) remove_submenu_page(Parcs_HT_Admin::PAGE, Parcs_HT_Quote_Languages::PAGE);
+        if (class_exists('Parcs_HT_Quote_Gate')) remove_submenu_page(Parcs_HT_Admin::PAGE, Parcs_HT_Quote_Gate::PAGE);
     }
 
     public static function assets($hook) {
@@ -24,12 +26,15 @@ final class Parcs_HT_Admin_Groups {
         $quotes = class_exists('Parcs_HT_Group_Quotes') ? Parcs_HT_Group_Quotes::settings() : array();
         $row = isset($quotes['seasons'][$year]) && is_array($quotes['seasons'][$year]) ? $quotes['seasons'][$year] : array();
         $forms = class_exists('Parcs_HT_Quote_Languages') ? Parcs_HT_Quote_Languages::settings() : array('fr'=>'','en'=>'','de'=>'');
+        $gate = class_exists('Parcs_HT_Quote_Gate') ? Parcs_HT_Quote_Gate::settings() : array();
         wp_enqueue_script('parcs-ht-admin-groups', PARCS_HT_URL . 'assets/admin-groups.js', array('jquery','parcs-ht-admin'), PARCS_HT_VERSION, true);
         wp_add_inline_script('parcs-ht-admin-groups', 'window.ParcsHTAdminGroups=' . wp_json_encode(array(
             'year' => $year,
             'nonce' => wp_create_nonce('parcs_ht_quote_season_rates'),
             'forms_nonce' => wp_create_nonce('parcs_ht_quote_language_forms'),
+            'gate_nonce' => wp_create_nonce('parcs_ht_quote_gate_settings'),
             'forms' => $forms,
+            'gate' => $gate,
             'rates' => array(
                 'published' => (string)($row['published'] ?? '0'),
                 'child' => (string)($row['child'] ?? ''),
@@ -77,5 +82,21 @@ final class Parcs_HT_Admin_Groups {
         }
         update_option(Parcs_HT_Quote_Languages::OPTION, $clean, false);
         wp_send_json_success(array('message'=>'Formulaires FR / EN / DE enregistrés.'));
+    }
+
+    public static function save_quote_gate_settings() {
+        if (!current_user_can('manage_options')) wp_send_json_error(array('message'=>'Accès refusé.'), 403);
+        check_ajax_referer('parcs_ht_quote_gate_settings', 'nonce');
+        $out = array(
+            'enabled' => isset($_POST['enabled']) && (string)$_POST['enabled'] === '1' ? '1' : '0',
+            'closed_enabled' => isset($_POST['closed_enabled']) && (string)$_POST['closed_enabled'] === '1' ? '1' : '0',
+            'closed_message' => isset($_POST['closed_message']) ? sanitize_textarea_field(wp_unslash($_POST['closed_message'])) : '',
+            'closed_contact' => isset($_POST['closed_contact']) ? sanitize_text_field(wp_unslash($_POST['closed_contact'])) : '',
+            'unavailable_enabled' => isset($_POST['unavailable_enabled']) && (string)$_POST['unavailable_enabled'] === '1' ? '1' : '0',
+            'unavailable_message' => isset($_POST['unavailable_message']) ? sanitize_textarea_field(wp_unslash($_POST['unavailable_message'])) : '',
+            'unavailable_contact' => isset($_POST['unavailable_contact']) ? sanitize_text_field(wp_unslash($_POST['unavailable_contact'])) : '',
+        );
+        update_option(Parcs_HT_Quote_Gate::OPTION, $out, false);
+        wp_send_json_success(array('message'=>'Réglages d’accès au devis enregistrés.'));
     }
 }
