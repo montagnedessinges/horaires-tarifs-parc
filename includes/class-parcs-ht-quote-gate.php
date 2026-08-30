@@ -97,9 +97,14 @@ final class Parcs_HT_Quote_Gate {
     public static function assets() {
         $s = self::settings();
         if ((string)$s['enabled'] !== '1') return;
+        $quote_settings = class_exists('Parcs_HT_Group_Quotes') ? Parcs_HT_Group_Quotes::settings() : array();
+        $visit_field = (string)($quote_settings['visit_field'] ?? 'visite');
+        $group_field = (string)($quote_settings['group_field'] ?? 'groupedevis');
+        wp_enqueue_style('parcs-ht-quote-gate', PARCS_HT_URL . 'assets/quote-gate.css', array(), PARCS_HT_VERSION);
         wp_enqueue_script('parcs-ht-quote-gate', PARCS_HT_URL . 'assets/quote-gate.js', array('jquery','parcs-ht-group-quotes'), PARCS_HT_VERSION, true);
         wp_add_inline_script('parcs-ht-quote-gate', 'window.ParcsHTQuoteGate=' . wp_json_encode(array(
             'ajaxUrl'=>admin_url('admin-ajax.php'),'nonce'=>wp_create_nonce('parcs_ht_quote_gate'),
+            'visitField'=>$visit_field,'groupField'=>$group_field,
             'closedEnabled'=>(string)$s['closed_enabled']==='1','closedMessage'=>(string)$s['closed_message'],'closedContact'=>(string)$s['closed_contact'],
             'unavailableEnabled'=>(string)$s['unavailable_enabled']==='1','unavailableMessage'=>(string)$s['unavailable_message'],'unavailableContact'=>(string)$s['unavailable_contact'],
         )) . ';', 'before');
