@@ -49,6 +49,7 @@ jobs:
           php tests/tariff-seasons-contract.php
           php tests/admin-season-status-contract.php
           php tests/quote-gate-language-contract.php
+          php tests/quote-language-save-contract.php
           php tests/public-data-regressions.php
           php tests/pdf-layout.php /tmp/htp-schedule-test.pdf
       - name: Check JavaScript and parity tests
