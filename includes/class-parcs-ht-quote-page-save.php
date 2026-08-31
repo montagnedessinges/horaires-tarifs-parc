@@ -14,7 +14,7 @@ final class Parcs_HT_Quote_Page_Save {
         if (sanitize_key(wp_unslash($_POST['action'])) !== 'parcs_ht_save') return $new_value;
         if (!wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'])), 'parcs_ht_save')) return $new_value;
 
-        $settings = wp_unslash($_POST['settings']);
+        $settings = map_deep(wp_unslash($_POST['settings']), 'sanitize_text_field');
         $complete = isset($settings['_complete']) && is_array($settings['_complete']) ? $settings['_complete'] : array();
         if (!isset($complete['quote_page']) || (string)$complete['quote_page'] !== '1') return $new_value;
 
