@@ -1,5 +1,13 @@
 # Historique des versions
 
+## 1.9.20
+- Correctif urgent après la régression constatée en 1.9.19 sur le devis groupe et la sauvegarde de l’administration.
+- Le moteur JavaScript des devis groupes est de nouveau chargé assez tôt pour garantir la disponibilité de sa dépendance avant le contrôle préalable de date ; le fonctionnement validé en 1.9.17/1.9.18 est restauré sans modifier les tarifs ni les formulaires CF7.
+- Ajout d’une protection de sauvegarde indépendante et très légère dans l’administration : lors de « Enregistrer cet onglet », les champs des autres onglets sont exclus du POST avant toute autre initialisation JavaScript. Cela évite qu’un problème d’interface secondaire ou une limite PHP `max_input_vars` empêche l’onglet actif d’être réellement enregistré.
+- La protection historique présente dans `admin.js` reste compatible ; le nouveau garde-fou est volontairement isolé afin que la sauvegarde continue de fonctionner même si une autre initialisation de l’interface d’administration échoue.
+- Aucun réglage existant, horaire, date, saison, tarif, événement, exception ou formulaire n’est remplacé par la mise à jour.
+- Ajout d’un test de non-régression vérifiant le chargement du moteur devis et l’exclusion des onglets inactifs lors d’une sauvegarde ciblée.
+
 ## 1.9.19
 - Correction des huit constats de l’audit du 31 août 2026, conservé dans `AUDIT-2026-08-31.md`.
 - Le calendrier ne déclenche plus de boucle de recalcul à la suite de ses propres modifications ; les dernières entrées des deux créneaux restent distinctes.
