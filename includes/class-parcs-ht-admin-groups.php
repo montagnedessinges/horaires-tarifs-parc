@@ -36,7 +36,7 @@ final class Parcs_HT_Admin_Groups {
             'forms' => $forms,
             'gate' => $gate,
             'rates' => array(
-                'published' => (string)($row['published'] ?? '1'),
+                'published' => (string)($row['published'] ?? ($row ? '1' : '0')),
                 'child' => (string)($row['child'] ?? ''),
                 'adult' => (string)($row['adult'] ?? ''),
                 'disability' => (string)($row['disability'] ?? ''),
