@@ -1,5 +1,19 @@
 # Historique des versions
 
+## 1.9.22
+- Correctif dédié à l’enregistrement des formulaires Contact Form 7 configurés par langue dans « Devis par langue ».
+- Retour au traitement direct et champ par champ du formulaire FR / EN / DE, sans pré-transformation globale des valeurs avant validation.
+- Un shortcode CF7 invalide n’est plus transformé silencieusement en champ vide avec retour au formulaire général : l’administration affiche désormais une erreur explicite afin d’éviter une fausse impression d’enregistrement.
+- Après écriture, l’extension relit l’option WordPress et refuse d’afficher une confirmation si les valeurs réellement stockées ne correspondent pas aux valeurs demandées.
+- Le cache LiteSpeed est purgé après modification des formulaires par langue afin que le nouveau formulaire soit visible immédiatement sur les pages publiques.
+- Ajout d’un test de contrat exécuté sur PHP 7.4, 8.1, 8.2 et 8.3 pour protéger ce circuit d’enregistrement.
+
+## 1.9.21
+- Correction de la suppression définitive des éléments du module Devis groupe.
+- Lorsqu’un « Message important », un lien rapide, un bloc complémentaire ou un accordéon est réellement supprimé puis que l’onglet Devis est enregistré, l’ancienne ligne n’est plus réinjectée depuis la configuration précédente.
+- Une liste volontairement vidée reste vide après sauvegarde ; la désactivation d’un élément reste disponible indépendamment de sa suppression.
+- Ajout d’un test de non-régression spécifique à la suppression des listes du module Devis groupe.
+
 ## 1.9.20
 - Correctif urgent après la régression constatée en 1.9.19 sur le devis groupe et la sauvegarde de l’administration.
 - Le moteur JavaScript des devis groupes est de nouveau chargé assez tôt pour garantir la disponibilité de sa dépendance avant le contrôle préalable de date ; le fonctionnement validé en 1.9.17/1.9.18 est restauré sans modifier les tarifs ni les formulaires CF7.
