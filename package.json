@@ -1,0 +1,12 @@
+{
+  "name": "horaires-tarifs-parc-tests",
+  "private": true,
+  "scripts": {
+    "test": "node tests/frontend-engine.js && node tests/status-sync-engine.js && node tests/display-state-engine.js && node tests/public-ui-regressions.js"
+  },
+  "devDependencies": {
+    "jquery": "3.7.1",
+    "jsdom": "26.1.0"
+  },
+  "packageManager": "pnpm@10.15.1"
+}

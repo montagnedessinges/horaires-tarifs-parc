@@ -20,10 +20,10 @@ final class Parcs_HT_Admin_Groups {
 
     public static function assets($hook) {
         if ($hook !== 'toplevel_page_parcs-horaires-tarifs' || !current_user_can('manage_options')) return;
-        $year = isset($_GET['season']) ? sanitize_text_field(wp_unslash($_GET['season'])) : '';
+        $year = isset($_GET['season']) ? sanitize_text_field(wp_unslash($_GET['season'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Sélection d’aperçu en lecture seule ; aucun enregistrement.
         $settings = Parcs_HT_Defaults::settings($year);
         $year = (string)($settings['active_season_year'] ?? $year);
-        $quotes = class_exists('Parcs_HT_Group_Quotes') ? Parcs_HT_Group_Quotes::settings() : array();
+        $quotes = class_exists('Parcs_HT_Group_Quotes') ? Parcs_HT_Group_Quotes::settings(false) : array();
         $row = isset($quotes['seasons'][$year]) && is_array($quotes['seasons'][$year]) ? $quotes['seasons'][$year] : array();
         $forms = class_exists('Parcs_HT_Quote_Languages') ? Parcs_HT_Quote_Languages::settings() : array('fr'=>'','en'=>'','de'=>'');
         $gate = class_exists('Parcs_HT_Quote_Gate') ? Parcs_HT_Quote_Gate::settings() : array();
@@ -36,7 +36,7 @@ final class Parcs_HT_Admin_Groups {
             'forms' => $forms,
             'gate' => $gate,
             'rates' => array(
-                'published' => (string)($row['published'] ?? '0'),
+                'published' => (string)($row['published'] ?? '1'),
                 'child' => (string)($row['child'] ?? ''),
                 'adult' => (string)($row['adult'] ?? ''),
                 'disability' => (string)($row['disability'] ?? ''),
@@ -53,7 +53,7 @@ final class Parcs_HT_Admin_Groups {
         if (!preg_match('/^20\d{2}$/', $year)) wp_send_json_error(array('message'=>'Année invalide.'), 400);
         $all = Parcs_HT_Defaults::all_settings();
         if (empty($all['seasons'][$year]) || !is_array($all['seasons'][$year])) wp_send_json_error(array('message'=>'Cette saison n’existe pas.'), 400);
-        $settings = Parcs_HT_Group_Quotes::settings();
+        $settings = Parcs_HT_Group_Quotes::settings(false);
         $row = array('published'=>isset($_POST['published']) && (string)$_POST['published']==='1' ? '1' : '0');
         foreach (array('child','adult','disability','companion') as $key) {
             $value = isset($_POST[$key]) ? str_replace(',', '.', sanitize_text_field(wp_unslash($_POST[$key]))) : '';

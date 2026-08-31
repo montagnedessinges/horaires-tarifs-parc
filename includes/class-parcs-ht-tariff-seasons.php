@@ -17,12 +17,13 @@ final class Parcs_HT_Tariff_Seasons {
     public static function store_season_tariffs($new_value, $old_value, $option) {
         unset($option);
         if (!is_array($new_value) || !is_admin()) return $new_value;
+        if (!current_user_can('manage_options') || !isset($_POST['_wpnonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'])), 'parcs_ht_save')) return $new_value;
         if (!isset($_POST['action']) || sanitize_key(wp_unslash($_POST['action'])) !== 'parcs_ht_save') return $new_value;
         $year = isset($_POST['season_year']) ? sanitize_text_field(wp_unslash($_POST['season_year'])) : '';
         if (!preg_match('/^20\d{2}$/', $year) || !isset($new_value['seasons'][$year])) return $new_value;
 
         $tariffs = isset($new_value['tariffs']) && is_array($new_value['tariffs']) ? $new_value['tariffs'] : array();
-        $raw = isset($_POST['settings']['tariffs']) && is_array($_POST['settings']['tariffs']) ? wp_unslash($_POST['settings']['tariffs']) : array();
+        $raw = isset($_POST['settings']['tariffs']) && is_array($_POST['settings']['tariffs']) ? map_deep(wp_unslash($_POST['settings']['tariffs']), 'sanitize_textarea_field') : array();
         foreach (array('individual','reduced','groups') as $group) {
             if (isset($tariffs['columns'][$group]) && is_array($tariffs['columns'][$group])) {
                 foreach ($tariffs['columns'][$group] as $i => &$column) {
@@ -49,29 +50,28 @@ final class Parcs_HT_Tariff_Seasons {
         return $new_value;
     }
 
-    public static function select_season_tariffs($value) {
+    public static function select_season_tariffs($value, $public = false) {
         if (self::$filtering || !is_array($value) || empty($value['seasons']) || !is_array($value['seasons'])) return $value;
         self::$filtering = true;
-        $year = self::requested_year($value);
+        $year = self::requested_year($value, $public);
         if ($year !== '' && isset($value['seasons'][$year]['tariffs']) && is_array($value['seasons'][$year]['tariffs'])) $value['tariffs'] = $value['seasons'][$year]['tariffs'];
-        if (!is_admin() && isset($value['tariffs']['columns']) && is_array($value['tariffs']['columns'])) {
-            foreach ($value['tariffs']['columns'] as $group => $columns) {
-                if (!is_array($columns)) continue;
-                $value['tariffs']['columns'][$group] = array_values(array_filter($columns, static function ($column) {
-                    return !is_array($column) || !isset($column['visible']) || (string)$column['visible'] !== '0';
-                }));
-            }
+        if ($public && $year === '') {
+            // Sans saison publiée, aucun ancien tarif global ne doit servir de secours public.
+            $value['tariffs'] = array('individual'=>array(),'reduced'=>array(),'groups'=>array(),'columns'=>array('individual'=>array(),'reduced'=>array(),'groups'=>array()),'notes'=>array(),'payment_methods'=>array(),'payment_items'=>array(),'print'=>array());
         }
+        // La visibilité est appliquée au rendu, jamais à l'option pouvant être réenregistrée.
         self::$filtering = false;
         return $value;
     }
 
-    private static function requested_year($settings) {
-        if (is_admin() && isset($_GET['page']) && sanitize_key(wp_unslash($_GET['page'])) === 'parcs-horaires-tarifs' && isset($_GET['season'])) {
+    private static function requested_year($settings, $public = false) {
+        global $pagenow;
+        // admin-post.php est aussi public : is_admin() seul n'autorise pas un aperçu brouillon.
+        if (!$public && is_admin() && current_user_can('manage_options') && $pagenow === 'admin.php' && isset($_GET['page']) && sanitize_key(wp_unslash($_GET['page'])) === 'parcs-horaires-tarifs' && isset($_GET['season'])) {
             $year = sanitize_text_field(wp_unslash($_GET['season']));
             if (preg_match('/^20\d{2}$/', $year) && isset($settings['seasons'][$year])) return $year;
         }
-        if (is_admin() && isset($_POST['season_year'])) {
+        if (!$public && is_admin() && current_user_can('manage_options') && isset($_POST['action'], $_POST['_wpnonce']) && sanitize_key(wp_unslash($_POST['action'])) === 'parcs_ht_save' && wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'])), 'parcs_ht_save') && isset($_POST['season_year'])) {
             $year = sanitize_text_field(wp_unslash($_POST['season_year']));
             if (preg_match('/^20\d{2}$/', $year) && isset($settings['seasons'][$year])) return $year;
         }
@@ -95,7 +95,7 @@ final class Parcs_HT_Tariff_Seasons {
 
     public static function frontend_assets() {
         if (!wp_script_is('parcs-ht-frontend', 'enqueued')) return;
-        $settings = Parcs_HT_Defaults::settings(); $meta = array();
+        $settings = self::select_season_tariffs(Parcs_HT_Defaults::settings(), true); $meta = array();
         foreach (array('individual','reduced','groups') as $group) {
             $meta[$group] = array();
             foreach ((array)($settings['tariffs'][$group] ?? array()) as $row) {
@@ -116,7 +116,7 @@ final class Parcs_HT_Tariff_Seasons {
 
     public static function render_offer_popup() {
         if (is_admin() || !wp_script_is('parcs-ht-frontend', 'enqueued')) return;
-        $settings = Parcs_HT_Defaults::settings(); $language = Parcs_HT_Schedule::language(); $seen = array();
+        $settings = self::select_season_tariffs(Parcs_HT_Defaults::settings(), true); $language = Parcs_HT_Schedule::language(); $seen = array();
         foreach (array('individual','reduced','groups') as $group) foreach ((array)($settings['tariffs'][$group] ?? array()) as $row) {
             if (!is_array($row) || (string)($row['enabled'] ?? '0') !== '1' || (string)($row['row_type'] ?? '') !== 'special' || (string)($row['offer_popup'] ?? '0') !== '1' || !self::row_visible_now($row, $settings)) continue;
             $offer = trim((string)($row['offer_group'] ?? '')); $key = $offer !== '' ? sanitize_key($offer) : $group . '-' . md5(wp_json_encode($row));

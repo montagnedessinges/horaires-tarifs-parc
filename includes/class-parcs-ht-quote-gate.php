@@ -78,7 +78,7 @@ final class Parcs_HT_Quote_Gate {
         ?>
         <div class="wrap"><h1>Accès au devis automatique</h1>
         <p>Le visiteur choisit d’abord sa date de visite. Le formulaire complet s’affiche ensuite uniquement si une grille de tarifs groupes est disponible pour l’année choisie. Une date de fermeture n’empêche pas de générer un devis : elle affiche seulement un avertissement.</p>
-        <?php if (isset($_GET['updated'])) : ?><div class="notice notice-success is-dismissible"><p>Les réglages ont été enregistrés.</p></div><?php endif; ?>
+        <?php if (isset($_GET['updated'])) : /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Paramètre de présentation en lecture seule ; aucune modification de données. */ ?><div class="notice notice-success is-dismissible"><p>Les réglages ont été enregistrés.</p></div><?php endif; ?>
         <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
         <input type="hidden" name="action" value="parcs_ht_save_quote_gate"><?php wp_nonce_field('parcs_ht_save_quote_gate'); ?>
         <table class="form-table" role="presentation">

@@ -323,11 +323,21 @@ Selon la modification :
 - `assets/frontend.js` — moteur d’affichage côté navigateur ;
 - `assets/slot-last-entry-frontend.js` — comportement des créneaux / dernières entrées ;
 - `assets/slot-last-entry-admin.js` — champs associés dans l’administration ;
-- `assets/status-sync.js` — couche actuelle de synchronisation du statut, à considérer comme une rustine à auditer avant de la conserver ;
+- `assets/display-state.js` et `assets/status-sync.js` — état partagé et rafraîchissement des blocs accueil/en-tête/Aujourd’hui, consolidés en 1.9.19 ;
 - `.github/workflows/release.yml` — construction et publication des releases ;
 - `CHANGELOG.md` — historique fonctionnel ;
 - `ROADMAP.md` — décisions et évolutions futures déjà discutées ;
 - `AUDIT-2026-08-27.md` — audit de référence sur les divergences Forêt/Montagne et les couches d’affichage.
+
+## Audit du 31 août 2026 et correctifs 1.9.19
+
+- Lire `AUDIT-2026-08-31.md` pour les huit défauts reproduits sur 1.9.18 et leurs corrections.
+- Publication des devis : saison publiée ET autorisation de devis non refusée. Préserver un indicateur explicite `published=0` dans la grille ; si cet ancien indicateur est absent, suivre la publication de la saison. `Group_Quotes::settings(false)` fournit les réglages bruts à l’administration ; `settings()` calcule l’état public sans enregistrer cette projection.
+- Les tarifs non disponibles ne sont pas sérialisés dans les scripts publics. Les prix restent toujours recalculés et validés côté serveur.
+- `is_admin()` ne signifie pas que le visiteur est administrateur : les exports publics passent par `admin-post.php`. Les aperçus brouillon sont réservés à la page d’administration autorisée ou à une sauvegarde munie de capacité/nonce valides. Le rendu public impose sa propre sélection publiée et filtre les colonnes masquées sans les effacer des réglages.
+- Un seul rafraîchissement périodique pilote les blocs horaires dynamiques via le moteur partagé. Le script calendrier observe les changements du calendrier mais se déconnecte pendant ses propres écritures, qui sont aussi idempotentes.
+- Les erreurs des contrôles de publication ne sont plus tolérées. Le contrôle officiel porte sur les sources de distribution avant retrait des commentaires afin de conserver les justifications PHPCS ponctuelles ; le nettoyeur vérifie ensuite que les tokens exécutables PHP sont inchangés. Les tests de régression tournent aussi sur les sources nettoyées.
+- Les essais locaux utilisent PHP WebAssembly 7.4/8.3 avec fonctions WordPress simulées et jsdom ; les essais PHP natifs et le contrôle WordPress sont exécutés par GitHub Actions. Cela ne prouve pas l’installation ni le bon fonctionnement complet des thèmes, CF7, envois mail et PDF des deux sites en production.
 
 ## Pour démarrer une nouvelle conversation ChatGPT
 

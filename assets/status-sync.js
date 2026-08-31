@@ -33,6 +33,12 @@
       }
 
       if(component==='header-hour'){
+        var primary=state.hoursText||state.statusText,secondary=state.lastEntryText||'';
+        var main=root.querySelector('.parcs-ht-header-hour-main'),entry=root.querySelector('.parcs-ht-header-hour-detail');
+        if(!main){root.textContent='';main=document.createElement('span');main.className='parcs-ht-header-hour-main';root.appendChild(main);}
+        main.textContent=primary;
+        if(secondary&&!entry){entry=document.createElement('span');entry.className='parcs-ht-header-hour-detail';root.appendChild(entry);}
+        if(entry){entry.textContent=secondary;entry.hidden=!secondary;}
         applyStateClasses(root,state);
         return;
       }
@@ -48,11 +54,12 @@
 
       if(component==='today'){
         var statusTarget=root.querySelector('[data-htp-today-status]'),detail=root.querySelector('[data-htp-today-detail]');
-        if(statusTarget)statusTarget.textContent=state.statusText;
+        if(statusTarget){statusTarget.textContent=state.statusText;applyStateClasses(statusTarget,state);}
         if(detail){
           var parts=[];
           if(state.hoursText)parts.push(state.hoursText);
           if(state.lastEntryText)parts.push(state.lastEntryText);
+          if(state.exceptionText)parts.push(state.exceptionText);
           detail.textContent=parts.join(' · ');
         }
         applyStateClasses(root,state);

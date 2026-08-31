@@ -63,7 +63,7 @@ final class Parcs_HT_Slot_Last_Entry {
     public static function admin_assets($hook) {
         if ($hook !== 'toplevel_page_' . Parcs_HT_Admin::PAGE) return;
 
-        $requested_year = isset($_GET['season']) ? sanitize_text_field(wp_unslash($_GET['season'])) : '';
+        $requested_year = isset($_GET['season']) ? sanitize_text_field(wp_unslash($_GET['season'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Sélection d’aperçu en lecture seule ; aucun enregistrement.
         $settings = Parcs_HT_Defaults::settings($requested_year);
         $payload = array(
             'regular_periods' => self::slot_payload(isset($settings['regular_periods']) ? $settings['regular_periods'] : array()),
@@ -119,8 +119,9 @@ final class Parcs_HT_Slot_Last_Entry {
         unset($option);
         if (!is_array($new_value) || !is_array($old_value) || empty($new_value['seasons'])) return $new_value;
 
-        $posted = isset($_POST['settings']) && is_array($_POST['settings']) ? wp_unslash($_POST['settings']) : array();
-        $year = isset($_POST['season_year']) ? sanitize_text_field(wp_unslash($_POST['season_year'])) : '';
+        $authorized = current_user_can('manage_options') && isset($_POST['_wpnonce'], $_POST['action']) && sanitize_key(wp_unslash($_POST['action'])) === 'parcs_ht_save' && wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'])), 'parcs_ht_save');
+        $posted = $authorized && isset($_POST['settings']) && is_array($_POST['settings']) ? map_deep(wp_unslash($_POST['settings']), 'sanitize_text_field') : array();
+        $year = $authorized && isset($_POST['season_year']) ? sanitize_text_field(wp_unslash($_POST['season_year'])) : '';
 
         foreach ($new_value['seasons'] as $season_year => &$season) {
             if (!is_array($season)) continue;

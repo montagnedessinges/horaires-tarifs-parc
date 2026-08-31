@@ -64,7 +64,7 @@ final class Parcs_HT_Quote_Languages {
         <div class="wrap">
             <h1>Formulaires de devis par langue</h1>
             <p>Chaque shortcode du module de devis affiche automatiquement le formulaire Contact Form 7 configuré pour sa langue.</p>
-            <?php if (isset($_GET['updated'])) : ?><div class="notice notice-success is-dismissible"><p>Les shortcodes des formulaires ont été enregistrés.</p></div><?php endif; ?>
+            <?php if (isset($_GET['updated'])) : /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Paramètre de présentation en lecture seule ; aucune modification de données. */ ?><div class="notice notice-success is-dismissible"><p>Les shortcodes des formulaires ont été enregistrés.</p></div><?php endif; ?>
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                 <input type="hidden" name="action" value="parcs_ht_save_quote_languages">
                 <?php wp_nonce_field('parcs_ht_save_quote_languages'); ?>
@@ -88,7 +88,7 @@ final class Parcs_HT_Quote_Languages {
     public static function save() {
         if (!current_user_can('manage_options')) wp_die('Accès refusé.');
         check_admin_referer('parcs_ht_save_quote_languages');
-        $posted = isset($_POST['forms']) && is_array($_POST['forms']) ? wp_unslash($_POST['forms']) : array();
+        $posted = isset($_POST['forms']) && is_array($_POST['forms']) ? map_deep(wp_unslash($_POST['forms']), 'sanitize_text_field') : array();
         $clean = self::defaults();
         foreach ($clean as $lang=>$unused) {
             $value = trim(sanitize_text_field((string)($posted[$lang] ?? '')));

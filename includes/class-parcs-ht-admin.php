@@ -36,7 +36,7 @@ final class Parcs_HT_Admin {
         }
         wp_enqueue_style('parcs-ht-admin', PARCS_HT_URL . 'assets/admin.css', array(), PARCS_HT_VERSION);
         wp_enqueue_script('parcs-ht-preview-engine', PARCS_HT_URL . 'assets/frontend.js', array(), PARCS_HT_VERSION, true);
-        $preview_year = isset($_GET['season']) ? sanitize_text_field(wp_unslash($_GET['season'])) : '';
+        $preview_year = isset($_GET['season']) ? sanitize_text_field(wp_unslash($_GET['season'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Sélection d’aperçu en lecture seule ; aucun enregistrement.
         wp_add_inline_script('parcs-ht-preview-engine', 'window.ParcsHTPData=' . wp_json_encode(array('settings'=>Parcs_HT_Schedule::public_settings(Parcs_HT_Defaults::settings($preview_year)),'dictionary'=>Parcs_HT_Schedule::dictionaries())) . ';', 'before');
         wp_enqueue_script('parcs-ht-admin', PARCS_HT_URL . 'assets/admin.js', array('parcs-ht-preview-engine','jquery-ui-sortable'), PARCS_HT_VERSION, true);
         wp_add_inline_script(
@@ -50,7 +50,7 @@ final class Parcs_HT_Admin {
         if (!current_user_can('manage_options')) {
             return;
         }
-        $requested_year = isset($_GET['season']) ? sanitize_text_field(wp_unslash($_GET['season'])) : '';
+        $requested_year = isset($_GET['season']) ? sanitize_text_field(wp_unslash($_GET['season'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Sélection d’aperçu en lecture seule ; aucun enregistrement.
         $settings = Parcs_HT_Defaults::settings($requested_year);
         $warnings = self::warnings($settings);
         $audit = Parcs_HT_Schedule::audit_season($settings);
@@ -63,19 +63,19 @@ final class Parcs_HT_Admin {
             <h1>Horaires et tarifs du parc</h1>
             <p class="description">La même extension peut être installée sur chaque site. Cette installation ne contient que les données de ce parc.</p>
 
-            <?php if (isset($_GET['updated'])) : ?>
+            <?php if (isset($_GET['updated'])) : /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Paramètre de présentation en lecture seule ; aucune modification de données. */ ?>
                 <div class="notice notice-success is-dismissible"><p>Les réglages ont été enregistrés et le cache du site a été purgé.</p></div>
             <?php endif; ?>
-            <?php if (isset($_GET['preserved'])) : ?>
+            <?php if (isset($_GET['preserved'])) : /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Paramètre de présentation en lecture seule ; aucune modification de données. */ ?>
                 <div class="notice notice-warning is-dismissible"><p>Une partie du formulaire n’a pas été reçue complètement par WordPress/PHP. Les anciennes valeurs de la section concernée ont été conservées pour éviter toute perte d’horaires ou de tarifs.</p></div>
             <?php endif; ?>
-            <?php if (isset($_GET['update-check'])) : ?>
+            <?php if (isset($_GET['update-check'])) : /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Paramètre de présentation en lecture seule ; aucune modification de données. */ ?>
                 <div class="notice notice-info is-dismissible"><p>La vérification des mises à jour WordPress et GitHub vient d’être relancée.</p></div>
             <?php endif; ?>
-            <?php if (isset($_GET['restored'])) : ?>
+            <?php if (isset($_GET['restored'])) : /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Paramètre de présentation en lecture seule ; aucune modification de données. */ ?>
                 <div class="notice notice-success is-dismissible"><p>La configuration sélectionnée a été restaurée et les caches ont été invalidés.</p></div>
             <?php endif; ?>
-            <?php if (isset($_GET['duplicated'])) : ?>
+            <?php if (isset($_GET['duplicated'])) : /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Paramètre de présentation en lecture seule ; aucune modification de données. */ ?>
                 <div class="notice notice-success is-dismissible"><p>La nouvelle saison brouillon a été créée et toutes les dates ont été décalées automatiquement. Vérifiez-la dans le diagnostic avant de la publier.</p></div>
             <?php endif; ?>
 
@@ -1125,12 +1125,12 @@ final class Parcs_HT_Admin {
             wp_die('Accès refusé.');
         }
         check_admin_referer('parcs_ht_save');
-        $raw = isset($_POST['settings']) ? wp_unslash($_POST['settings']) : array();
+        $raw = isset($_POST['settings']) ? wp_unslash($_POST['settings']) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Structure nettoyée champ par champ par self::sanitize ci-dessous, SVG inclus.
         $year = isset($_POST['season_year']) ? sanitize_text_field(wp_unslash($_POST['season_year'])) : '';
         if (!preg_match('/^20\d{2}$/', $year)) wp_die('Année de saison invalide.');
 
         if (class_exists('Parcs_HT_Updater') && !in_array(Parcs_HT_Updater::token_source(), array('constant','environment'), true)) {
-            $remove_token = isset($_POST['github_token_remove']) && (string) wp_unslash($_POST['github_token_remove']) === '1';
+            $remove_token = isset($_POST['github_token_remove']) && sanitize_text_field(wp_unslash($_POST['github_token_remove'])) === '1';
             $new_token = isset($_POST['github_token_new']) ? trim(sanitize_text_field(wp_unslash($_POST['github_token_new']))) : '';
             if ($remove_token) {
                 delete_option(Parcs_HT_Updater::TOKEN_OPTION);
@@ -1145,7 +1145,7 @@ final class Parcs_HT_Admin {
         }
 
         if (class_exists('Parcs_HT_Updater')) {
-            $auto_update = isset($_POST['github_auto_update']) && (string) wp_unslash($_POST['github_auto_update']) === '1';
+            $auto_update = isset($_POST['github_auto_update']) && sanitize_text_field(wp_unslash($_POST['github_auto_update'])) === '1';
             Parcs_HT_Updater::set_auto_update($auto_update);
         }
 
@@ -1678,7 +1678,11 @@ final class Parcs_HT_Admin {
         foreach ($settings['alerts'] as $row) if ($row['enabled'] === '1' && $row['start'] && $row['end'] && $row['end'] < $row['start']) $warnings[] = 'Une alerte se termine avant de commencer.';
         foreach (array('individual','reduced','groups') as $group) foreach ($settings['tariffs'][$group] as $row) if ($row['enabled'] === '1') {
             $has_value = false;
-            if (!empty($row['cells']) && is_array($row['cells'])) foreach ($row['cells'] as $cell) if (is_array($cell) && trim((string)($cell['value'] ?? '')) !== '') { $has_value = true; break; }
+            if (!empty($row['cells']) && is_array($row['cells'])) {
+                foreach ($row['cells'] as $cell) {
+                    if (is_array($cell) && trim((string)($cell['value'] ?? '')) !== '') { $has_value = true; break; }
+                }
+            }
             if (!$has_value && trim((string)($row['price'] ?? '')) === '') $warnings[] = 'Une ligne tarifaire active ne contient aucune valeur de prix.';
             foreach (array('fr','en','de') as $lang) if (empty($row['label'][$lang])) $warnings[] = 'Une ligne tarifaire active n’est pas traduite en ' . strtoupper($lang) . '.';
         }
@@ -1729,17 +1733,7 @@ final class Parcs_HT_Admin {
         if ($svg === '') return '';
         // Un SVG personnalisé est du contenu actif : on autorise uniquement les
         // primitives graphiques nécessaires et aucun script, lien, style ou événement.
-        $allowed = array(
-            'svg' => array('xmlns'=>true,'viewbox'=>true,'viewBox'=>true,'width'=>true,'height'=>true,'fill'=>true,'stroke'=>true,'stroke-width'=>true,'stroke-linecap'=>true,'stroke-linejoin'=>true,'focusable'=>true,'aria-hidden'=>true,'role'=>true,'class'=>true,'preserveaspectratio'=>true,'preserveAspectRatio'=>true),
-            'g' => array('fill'=>true,'stroke'=>true,'stroke-width'=>true,'stroke-linecap'=>true,'stroke-linejoin'=>true,'transform'=>true,'opacity'=>true,'class'=>true),
-            'path' => array('d'=>true,'fill'=>true,'stroke'=>true,'stroke-width'=>true,'stroke-linecap'=>true,'stroke-linejoin'=>true,'transform'=>true,'opacity'=>true,'fill-rule'=>true,'clip-rule'=>true,'class'=>true),
-            'rect' => array('x'=>true,'y'=>true,'width'=>true,'height'=>true,'rx'=>true,'ry'=>true,'fill'=>true,'stroke'=>true,'stroke-width'=>true,'transform'=>true,'opacity'=>true,'class'=>true),
-            'circle' => array('cx'=>true,'cy'=>true,'r'=>true,'fill'=>true,'stroke'=>true,'stroke-width'=>true,'transform'=>true,'opacity'=>true,'class'=>true),
-            'ellipse' => array('cx'=>true,'cy'=>true,'rx'=>true,'ry'=>true,'fill'=>true,'stroke'=>true,'stroke-width'=>true,'transform'=>true,'opacity'=>true,'class'=>true),
-            'line' => array('x1'=>true,'y1'=>true,'x2'=>true,'y2'=>true,'stroke'=>true,'stroke-width'=>true,'stroke-linecap'=>true,'transform'=>true,'opacity'=>true,'class'=>true),
-            'polyline' => array('points'=>true,'fill'=>true,'stroke'=>true,'stroke-width'=>true,'stroke-linecap'=>true,'stroke-linejoin'=>true,'transform'=>true,'opacity'=>true,'class'=>true),
-            'polygon' => array('points'=>true,'fill'=>true,'stroke'=>true,'stroke-width'=>true,'stroke-linejoin'=>true,'transform'=>true,'opacity'=>true,'class'=>true),
-        );
+        $allowed = Parcs_HT_Defaults::svg_allowed_tags();
         $clean = wp_kses($svg, $allowed);
         return stripos($clean, '<svg') !== false ? $clean : '';
     }

@@ -15,6 +15,7 @@ final class Parcs_HT_Season_Status {
     public static function enforce_explicit_status($new_value, $old_value, $option) {
         unset($option);
         if (!is_admin() || !is_array($new_value) || !is_array($old_value)) return $new_value;
+        if (!current_user_can('manage_options') || !isset($_POST['_wpnonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'])), 'parcs_ht_save')) return $new_value;
         if (!isset($_POST['action']) || sanitize_key(wp_unslash($_POST['action'])) !== 'parcs_ht_save') return $new_value;
 
         $year = isset($_POST['season_year']) ? sanitize_text_field(wp_unslash($_POST['season_year'])) : '';
@@ -39,7 +40,7 @@ final class Parcs_HT_Season_Status {
 
     public static function admin_assets($hook) {
         if ($hook !== 'toplevel_page_parcs-horaires-tarifs') return;
-        $year = isset($_GET['season']) ? sanitize_text_field(wp_unslash($_GET['season'])) : '';
+        $year = isset($_GET['season']) ? sanitize_text_field(wp_unslash($_GET['season'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Sélection d’aperçu en lecture seule ; aucun enregistrement.
         $all = Parcs_HT_Defaults::all_settings();
         if ($year === '' || !isset($all['seasons'][$year])) {
             foreach ((array)($all['seasons'] ?? array()) as $candidate => $season) { $year = (string)$candidate; break; }

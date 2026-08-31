@@ -11,7 +11,7 @@ final class Parcs_HT_Group_Quotes {
     public static function init() {
         add_action('admin_menu', array(__CLASS__, 'menu'));
         add_action('admin_post_parcs_ht_save_group_quotes', array(__CLASS__, 'save'));
-        add_action('wp_enqueue_scripts', array(__CLASS__, 'assets'), 30);
+        add_filter('wpcf7_form_elements', array(__CLASS__, 'form_assets'));
         add_filter('wpcf7_posted_data', array(__CLASS__, 'canonicalize_posted_data'), 20, 1);
         add_filter('wpcf7_validate', array(__CLASS__, 'validate_quote'), 20, 2);
     }
@@ -36,17 +36,22 @@ final class Parcs_HT_Group_Quotes {
         );
     }
 
-    public static function settings() {
+    public static function settings($public = true) {
         $saved = get_option(self::OPTION, array());
         if (!is_array($saved)) $saved = array();
         $settings = array_replace_recursive(self::defaults(), $saved);
         $settings['enabled'] = '1';
+        if (!isset($settings['seasons']) || !is_array($settings['seasons'])) $settings['seasons'] = array();
+        if (!$public) return $settings;
 
         $all = Parcs_HT_Defaults::all_settings();
         $public_seasons = isset($all['seasons']) && is_array($all['seasons']) ? $all['seasons'] : array();
-        foreach ((array)$settings['seasons'] as $year => &$row) {
+        foreach ($settings['seasons'] as $year => &$row) {
             if (!is_array($row)) $row = array();
-            $row['published'] = isset($public_seasons[$year]) && is_array($public_seasons[$year]) && (string)($public_seasons[$year]['published'] ?? '0') === '1' ? '1' : '0';
+            // Absence du champ : compatibilité avec les anciennes grilles liées à la saison.
+            // Un refus explicite des devis reste prioritaire, sans modifier l'option enregistrée.
+            $authorized = !isset($row['published']) || (string)$row['published'] === '1';
+            $row['published'] = $authorized && isset($public_seasons[$year]) && is_array($public_seasons[$year]) && (string)($public_seasons[$year]['published'] ?? '0') === '1' ? '1' : '0';
         }
         unset($row);
         return $settings;
@@ -152,7 +157,7 @@ final class Parcs_HT_Group_Quotes {
 
     public static function page() {
         if (!current_user_can('manage_options')) return;
-        $settings = self::settings();
+        $settings = self::settings(false);
         $seasons = (array)($settings['seasons'] ?? array());
         $years = array_keys($seasons);
         $current = (string)wp_date('Y');
@@ -163,8 +168,8 @@ final class Parcs_HT_Group_Quotes {
         ?>
         <div class="wrap">
             <h1>Tarifs des devis groupes</h1>
-            <p>Une seule grille de tarifs groupes est utilisée par année. Le statut public dépend uniquement de la saison correspondante : une saison brouillon ne peut jamais être utilisée pour un devis public.</p>
-            <?php if (isset($_GET['updated'])) : ?><div class="notice notice-success is-dismissible"><p>Les réglages des devis groupes ont été enregistrés.</p></div><?php endif; ?>
+            <p>Une seule grille de tarifs groupes est utilisée par année. Les devis doivent être autorisés dans la saison correspondante et celle-ci doit être publiée : une saison brouillon ne peut jamais être utilisée pour un devis public.</p>
+            <?php if (isset($_GET['updated'])) : /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Paramètre de présentation en lecture seule ; aucune modification de données. */ ?><div class="notice notice-success is-dismissible"><p>Les réglages des devis groupes ont été enregistrés.</p></div><?php endif; ?>
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                 <input type="hidden" name="action" value="parcs_ht_save_group_quotes">
                 <?php wp_nonce_field('parcs_ht_save_group_quotes'); ?>
@@ -199,8 +204,9 @@ final class Parcs_HT_Group_Quotes {
     public static function save() {
         if (!current_user_can('manage_options')) wp_die('Accès refusé.');
         check_admin_referer('parcs_ht_save_group_quotes');
+        $previous = self::settings(false);
         $out = array('enabled'=>'1','form_id'=>'','visit_field'=>isset($_POST['visit_field']) ? sanitize_key(wp_unslash($_POST['visit_field'])) : 'visite','group_field'=>isset($_POST['group_field']) ? sanitize_key(wp_unslash($_POST['group_field'])) : 'groupedevis','school_value'=>isset($_POST['school_value']) ? sanitize_text_field(wp_unslash($_POST['school_value'])) : 'Groupe','disability_value'=>isset($_POST['disability_value']) ? sanitize_text_field(wp_unslash($_POST['disability_value'])) : 'Groupe en situation de handicap','seasons'=>array());
-        $rows = isset($_POST['seasons']) && is_array($_POST['seasons']) ? wp_unslash($_POST['seasons']) : array();
+        $rows = isset($_POST['seasons']) && is_array($_POST['seasons']) ? map_deep(wp_unslash($_POST['seasons']), 'sanitize_text_field') : array();
         foreach ($rows as $year => $row) {
             $year = preg_replace('/[^0-9]/', '', (string)$year);
             if (!preg_match('/^20\d{2}$/', $year) || !is_array($row)) continue;
@@ -210,6 +216,7 @@ final class Parcs_HT_Group_Quotes {
                 $clean[$key] = is_numeric($value) && (float)$value >= 0 ? (string)(float)$value : '';
             }
             $clean['free_adult_children'] = (string)max(1, isset($row['free_adult_children']) ? (int)$row['free_adult_children'] : 10);
+            if (isset($previous['seasons'][$year]['published'])) $clean['published'] = (string)$previous['seasons'][$year]['published'];
             $out['seasons'][$year] = $clean;
         }
         update_option(self::OPTION, $out, false);
@@ -217,9 +224,22 @@ final class Parcs_HT_Group_Quotes {
         exit;
     }
 
+    public static function form_assets($html) {
+        $settings = self::settings(false);
+        $field = (string)$settings['visit_field'];
+        if (strpos($html, 'name="' . $field . '"') !== false || strpos($html, "name='" . $field . "'") !== false) self::assets();
+        return $html;
+    }
+
     public static function assets() {
+        if (wp_script_is('parcs-ht-group-quotes', 'enqueued')) return;
         $settings = self::settings();
+        $seasons = array();
+        foreach ($settings['seasons'] as $year => $unused) {
+            $row = self::published_season((string)$year, $settings);
+            if ($row) $seasons[$year] = array_intersect_key($row, array_flip(array('published','child','adult','disability','companion','free_adult_children')));
+        }
         wp_enqueue_script('parcs-ht-group-quotes', PARCS_HT_URL . 'assets/group-quotes.js', array('jquery'), PARCS_HT_VERSION, true);
-        wp_add_inline_script('parcs-ht-group-quotes', 'window.ParcsHTGroupQuotes=' . wp_json_encode(array('formId'=>'','visitField'=>(string)$settings['visit_field'],'groupField'=>(string)$settings['group_field'],'schoolValue'=>(string)$settings['school_value'],'disabilityValue'=>(string)$settings['disability_value'],'seasons'=>(array)$settings['seasons'],'unavailableMessage'=>'Les tarifs groupes ne sont pas encore disponibles pour cette année. Merci de revenir ultérieurement.')) . ';', 'before');
+        wp_add_inline_script('parcs-ht-group-quotes', 'window.ParcsHTGroupQuotes=' . wp_json_encode(array('formId'=>'','visitField'=>(string)$settings['visit_field'],'groupField'=>(string)$settings['group_field'],'schoolValue'=>(string)$settings['school_value'],'disabilityValue'=>(string)$settings['disability_value'],'seasons'=>$seasons,'unavailableMessage'=>'Les tarifs groupes ne sont pas encore disponibles pour cette année. Merci de revenir ultérieurement.')) . ';', 'before');
     }
 }

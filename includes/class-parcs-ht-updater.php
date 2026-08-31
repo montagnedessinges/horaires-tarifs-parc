@@ -275,7 +275,8 @@ final class Parcs_HT_Updater {
             return self::$release;
         }
 
-        if (isset($_GET['force-check']) && current_user_can('update_plugins')) {
+        global $pagenow;
+        if ($pagenow === 'update-core.php' && isset($_GET['force-check']) && current_user_can('update_plugins')) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Lien natif WordPress sans nonce ; seul le cache de vérification est invalidé, avec capacité update_plugins.
             delete_site_transient(self::RELEASE_CACHE_KEY);
         }
 

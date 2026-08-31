@@ -31,12 +31,22 @@
   function labels(lang){return lang==='en'?{open:'OPEN',before:'Opens at ',gap:'Reopens at ',closed:'Closed for today',tomorrow:'See you tomorrow!',next:'Next opening',entry:'Last admission: '}:lang==='de'?{open:'GEÖFFNET',before:'Öffnung um ',gap:'Wieder geöffnet um ',closed:'Für heute geschlossen',tomorrow:'Bis morgen!',next:'Nächste Öffnung',entry:'Letzter Einlass: '}:{open:'OUVERT',before:'Ouverture à ',gap:'Réouverture à ',closed:'Fermé pour aujourd’hui',tomorrow:'À demain !',next:'Prochaine ouverture',entry:'Dernière entrée : '};}
   function addDays(date,n){var p=String(date).split('-').map(Number),d=new Date(Date.UTC(p[0],p[1]-1,p[2],12));d.setUTCDate(d.getUTCDate()+n);return d.getUTCFullYear()+'-'+pad(d.getUTCMonth()+1)+'-'+pad(d.getUTCDate());}
   function nextOpening(date){return typeof api.nextOpeningAcrossSeasons==='function'?api.nextOpeningAcrossSeasons(date):null;}
-  function state(date,time,lang,useAnyDay){lang=lang||'fr';var status=(useAnyDay!==false&&typeof api.resolveAnyDay==='function')?api.resolveAnyDay(date):(typeof api.resolveDay==='function'?api.resolveDay(date):null);if(!status)return null;var current=mins(time),p=phase(status,current),list=slots(status),l=labels(lang),out={date:date,time:time,status:status,phase:p,statusText:'',hoursText:'',lastEntryText:'',isOpen:false,ruleText:''};
-    if(!status.open){out.statusText='FERMÉ';out.hoursText='';}
+  function closedState(out,date,lang,l){var next=nextOpening(date);if(next){var opening=timeLabel(((next.status||{}).openTime)||((slots(next.status)[0]||{}).open),lang),isTomorrow=next.date===addDays(date,1);out.statusText=isTomorrow?l.tomorrow:l.next;out.hoursText=isTomorrow?l.before+opening:dateLabel(next.date,lang)+(opening?' · '+opening:'');}else out.statusText=l.closed;}
+  function exceptionText(status,lang){
+    var row=status.exception;if(!status.exceptional||!row||String(row.show_public_marker)==='0')return'';
+    var dictionaries=payload.dictionary||{},d=dictionaries[lang]||{},closed=!status.open;
+    var label=closed?(d.exceptionalClosure||(lang==='en'?'Exceptional closure':lang==='de'?'Außerordentliche Schließung':'Fermeture exceptionnelle')):(d.exceptionalHours||(lang==='en'?'Exceptional opening hours':lang==='de'?'Sonderöffnungszeiten':'Horaires exceptionnels'));
+    var context=row.context||{},value=context[lang]||context.fr||'';
+    return label+(value?' · '+value:'');
+  }
+  function state(date,time,lang,useAnyDay){lang=lang||'fr';var status=(useAnyDay!==false&&typeof api.resolveAnyDay==='function')?api.resolveAnyDay(date):(typeof api.resolveDay==='function'?api.resolveDay(date):null);if(!status)return null;var current=mins(time),p=phase(status,current),list=slots(status),l=labels(lang),out={date:date,time:time,status:status,phase:p,statusText:'',hoursText:'',lastEntryText:'',exceptionText:'',isOpen:false,ruleText:''};
+    if(!status.open){closedState(out,date,lang,l);}
     else if(p.type==='open'){out.statusText=l.open;out.hoursText=remainingRanges(status,current,lang)||ranges(status,lang);out.isOpen=true;var le=lastEntry(status,p.index);out.lastEntryText=le?l.entry+timeLabel(le,lang):'';}
     else if(p.type==='before'){out.statusText=l.before+timeLabel(list[0].open,lang);out.hoursText=ranges(status,lang);}
     else if(p.type==='gap'){out.statusText=l.gap+timeLabel(list[p.index].open,lang);out.hoursText=remainingRanges(status,current,lang);}
-    else{var next=nextOpening(date);if(next){var opening=timeLabel(((next.status||{}).openTime)||((slots(next.status)[0]||{}).open),lang),isTomorrow=next.date===addDays(date,1);out.statusText=isTomorrow?l.tomorrow:l.next;out.hoursText=isTomorrow?l.before+opening:dateLabel(next.date,lang)+(opening?' · '+opening:'');}else out.statusText=l.closed;}
+    else{closedState(out,date,lang,l);}
+    if(p.type==='before'||p.type==='gap'){var upcomingEntry=lastEntry(status,p.index);out.lastEntryText=upcomingEntry?l.entry+timeLabel(upcomingEntry,lang):'';}
+    if(p.type!=='after')out.exceptionText=exceptionText(status,lang);
     if(status.exceptional)out.ruleText=status.type==='closed'?'Fermeture exceptionnelle prioritaire':'Horaire exceptionnel prioritaire';else if(status.open)out.ruleText='Horaire classique';else out.ruleText='Aucun horaire applicable';
     return out;
   }

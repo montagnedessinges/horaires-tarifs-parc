@@ -1,5 +1,18 @@
 # Historique des versions
 
+## 1.9.19
+- Correction des huit constats de l’audit du 31 août 2026, conservé dans `AUDIT-2026-08-31.md`.
+- Le calendrier ne déclenche plus de boucle de recalcul à la suite de ses propres modifications ; les dernières entrées des deux créneaux restent distinctes.
+- Une saison brouillon ne peut plus autoriser un devis, même si sa grille était auparavant disponible. L’autorisation indépendante des devis est conservée ; une grille ancienne sans indicateur explicite suit la publication de sa saison.
+- Les tarifs de devis non disponibles ne sont plus transmis au navigateur. Le script de calcul est chargé lors du rendu du devis ou d’un formulaire CF7 compatible, et non sur toutes les pages.
+- Les exports publics ignorent les demandes d’aperçu brouillon et les colonnes masquées. Sans saison publiée, le rendu public n’utilise aucun ancien prix de secours. Les données brutes restent conservées pour les sauvegardes et migrations.
+- Les réponses AJAX obsolètes ne peuvent plus rouvrir un formulaire ni remplacer sa date. Le sélecteur et le champ Contact Form 7 restent synchronisés, y compris lors d’un effacement.
+- Les journées fermées annoncent à nouveau la prochaine ouverture en FR/EN/DE. Les informations d’exception restent affichées après rafraîchissement, dans le respect du marqueur public.
+- Consolidation des rafraîchissements accueil/en-tête/Aujourd’hui dans `status-sync.js`, à partir du moteur partagé ; la couche des dernières entrées se concentre désormais sur le calendrier.
+- Renforcement des vérifications de nonce/capacité, de l’échappement CSS/SVG et des redirections PDF. Les exceptions d’analyse statique restantes sont limitées à des lignes documentées (HTML interne déjà échappé, flux PDF, paramètres de présentation et lien natif de vérification WordPress).
+- Les contrôles de sécurité/compatibilité PHP et les erreurs du contrôle officiel WordPress bloquent désormais la publication. Le contrôle WordPress précède le retrait des commentaires ; la construction vérifie l’identité des tokens exécutables PHP avant/après nettoyage.
+- Ajout de tests comportementaux des données publiques et du DOM, également exécutés sur les sources nettoyées destinées au ZIP. Aucun remplacement des réglages ou formulaires des deux parcs ; aucune nouvelle migration de données.
+
 ## 1.9.18
 - Les messages publics de l’onglet « Accès au devis » sont désormais réellement multilingues en français, anglais et allemand.
 - Les avertissements « parc fermé » et « tarifs indisponibles » disposent chacun de trois contenus FR / EN / DE dans l’administration, avec un contact ou lien commun.

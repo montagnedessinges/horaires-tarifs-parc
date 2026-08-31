@@ -10,6 +10,20 @@ final class Parcs_HT_Defaults {
     const POPUP_FLAG_OPTION = 'parcs_ht_has_popup_source';
     const SCHEMA_VERSION = 26;
 
+    public static function svg_allowed_tags() {
+        return array(
+            'svg' => array('xmlns'=>true,'viewbox'=>true,'viewBox'=>true,'width'=>true,'height'=>true,'fill'=>true,'stroke'=>true,'stroke-width'=>true,'stroke-linecap'=>true,'stroke-linejoin'=>true,'focusable'=>true,'aria-hidden'=>true,'role'=>true,'class'=>true,'preserveaspectratio'=>true,'preserveAspectRatio'=>true),
+            'g' => array('fill'=>true,'stroke'=>true,'stroke-width'=>true,'stroke-linecap'=>true,'stroke-linejoin'=>true,'transform'=>true,'opacity'=>true,'class'=>true),
+            'path' => array('d'=>true,'fill'=>true,'stroke'=>true,'stroke-width'=>true,'stroke-linecap'=>true,'stroke-linejoin'=>true,'transform'=>true,'opacity'=>true,'fill-rule'=>true,'clip-rule'=>true,'class'=>true),
+            'rect' => array('x'=>true,'y'=>true,'width'=>true,'height'=>true,'rx'=>true,'ry'=>true,'fill'=>true,'stroke'=>true,'stroke-width'=>true,'transform'=>true,'opacity'=>true,'class'=>true),
+            'circle' => array('cx'=>true,'cy'=>true,'r'=>true,'fill'=>true,'stroke'=>true,'stroke-width'=>true,'transform'=>true,'opacity'=>true,'class'=>true),
+            'ellipse' => array('cx'=>true,'cy'=>true,'rx'=>true,'ry'=>true,'fill'=>true,'stroke'=>true,'stroke-width'=>true,'transform'=>true,'opacity'=>true,'class'=>true),
+            'line' => array('x1'=>true,'y1'=>true,'x2'=>true,'y2'=>true,'stroke'=>true,'stroke-width'=>true,'stroke-linecap'=>true,'transform'=>true,'opacity'=>true,'class'=>true),
+            'polyline' => array('points'=>true,'fill'=>true,'stroke'=>true,'stroke-width'=>true,'stroke-linecap'=>true,'stroke-linejoin'=>true,'transform'=>true,'opacity'=>true,'class'=>true),
+            'polygon' => array('points'=>true,'fill'=>true,'stroke'=>true,'stroke-width'=>true,'stroke-linejoin'=>true,'transform'=>true,'opacity'=>true,'class'=>true),
+        );
+    }
+
     public static function activate() {
         if (get_option(self::OPTION, null) === null) {
             add_option(self::OPTION, self::get(), '', false);

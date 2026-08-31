@@ -7,7 +7,8 @@
         value = String(value || '').trim();
         if (!value) return '';
         var href = value.indexOf('@') > 0 && value.indexOf('://') < 0 ? 'mailto:' + value : value;
-        return ' <a href="' + $('<div>').text(href).html() + '">' + $('<div>').text(value).html() + '</a>';
+        if (!/^(https?:\/\/|mailto:|tel:)/i.test(href)) return ' ' + $('<div>').text(value).html();
+        return ' ' + $('<a>').attr('href', href).text(value).prop('outerHTML');
     }
     function fieldSelector(name) { return '[name="' + String(name).replace(/"/g, '\\"') + '"]'; }
     function labels(lang) {
@@ -34,25 +35,34 @@
         $gate.append($input, $status);
         $formBox.before($gate);
         var syncing = false;
+        var requestId = 0, pendingRequest = null;
         function message(textValue, contact, kind) {
             if (!textValue) { $status.empty().hide(); return; }
             $status.attr('data-kind', kind || '').html($('<div>').text(textValue).html() + contactHtml(contact)).show();
         }
         function closeForm() { $quote.removeClass('parcs-ht-gate-open'); }
-        function openForm(date, data) {
+        function syncDate(date) {
             syncing = true;
             $cf7Date.val(date).trigger('change');
             syncing = false;
+        }
+        function openForm(date, data) {
+            syncDate(date);
             $quote.addClass('parcs-ht-gate-open');
             if (data.closed && config.closedEnabled) message(config.closedMessage, config.closedContact, 'closed');
             else message('', '', '');
         }
         function check(date) {
+            var currentRequest = ++requestId;
+            if (pendingRequest && typeof pendingRequest.abort === 'function') pendingRequest.abort();
+            pendingRequest = null;
             date = String(date || '');
+            syncDate(date);
             if (!/^20\d{2}-\d{2}-\d{2}$/.test(date)) { closeForm(); message('', '', ''); return; }
             closeForm();
-            $.post(config.ajaxUrl, { action: 'parcs_ht_quote_date_status', nonce: config.nonce, date: date })
+            pendingRequest = $.post(config.ajaxUrl, { action: 'parcs_ht_quote_date_status', nonce: config.nonce, date: date })
                 .done(function (response) {
+                    if (currentRequest !== requestId) return;
                     var data = response && response.success ? response.data : null;
                     if (!data || !data.tariffs) {
                         closeForm();
@@ -62,6 +72,7 @@
                     openForm(date, data);
                 })
                 .fail(function () {
+                    if (currentRequest !== requestId) return;
                     closeForm();
                     message(config.unavailableEnabled ? config.unavailableMessage : 'Impossible de vérifier cette date pour le moment.', config.unavailableContact, 'error');
                 });

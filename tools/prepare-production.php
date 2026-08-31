@@ -31,6 +31,19 @@ function strip_php_comments($code, $file) {
         }
         $out .= $text;
     }
+    // Le contrôle de sécurité s'applique avant retrait des commentaires : garantir
+    // que le paquet conserve exactement les mêmes tokens exécutables PHP.
+    $executable_tokens = static function ($source) {
+        $result = array();
+        foreach (token_get_all($source, TOKEN_PARSE) as $token) {
+            if (is_array($token) && in_array($token[0], array(T_COMMENT, T_DOC_COMMENT, T_WHITESPACE), true)) continue;
+            $result[] = is_array($token) ? array($token[0], $token[1]) : $token;
+        }
+        return $result;
+    };
+    if ($executable_tokens($code) !== $executable_tokens($out)) {
+        throw new RuntimeException('Production cleanup changed PHP executable tokens: ' . $file);
+    }
     return $out;
 }
 

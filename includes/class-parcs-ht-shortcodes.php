@@ -99,7 +99,9 @@ final class Parcs_HT_Shortcodes {
         static $printed = false;
         if ($printed || !did_action('wp_head') || wp_style_is('parcs-ht-frontend', 'done')) return '';
         $printed = true;
-        return '<link rel="stylesheet" id="parcs-ht-frontend-late-css" href="' . esc_url(PARCS_HT_URL . 'assets/frontend.css?ver=' . rawurlencode(PARCS_HT_VERSION)) . '" media="all">';
+        ob_start();
+        wp_print_styles('parcs-ht-frontend');
+        return ob_get_clean();
     }
 
     public static function render($module, $language, $atts = array()) {
@@ -149,6 +151,7 @@ final class Parcs_HT_Shortcodes {
     }
 
     private static function tariffs($id, $language, $style, $settings) {
+        if (class_exists('Parcs_HT_Tariff_Seasons')) $settings = Parcs_HT_Tariff_Seasons::select_season_tariffs($settings, true);
         $dictionaries = Parcs_HT_Schedule::dictionaries();
         $d = $dictionaries[$language];
         $tariffs = $settings['tariffs'];
@@ -161,7 +164,7 @@ final class Parcs_HT_Shortcodes {
         ?>
         <section id="<?php echo esc_attr($id); ?>" class="parcs-ht-tariffs" data-htp-component="tariffs" data-htp-lang="<?php echo esc_attr($language); ?>" style="<?php echo esc_attr($style); ?>">
             <header class="parcs-ht-heading parcs-ht-tariff-heading"><p class="parcs-ht-kicker"><?php echo esc_html($d['prices']); ?></p><div class="parcs-ht-title" role="heading" aria-level="2"><?php echo esc_html($d['prices'] . (!empty($settings['general']['year']) ? ' ' . $settings['general']['year'] : '')); ?></div></header>
-            <?php echo self::payment_strip($tariffs, $language, $d); ?>
+            <?php echo self::payment_strip($tariffs, $language, $d); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Attributs, textes et SVG échappés dans payment_strip. ?>
             <div class="parcs-ht-tariff-tabs" role="tablist" aria-label="<?php echo esc_attr($d['prices']); ?>">
                 <?php $first = true; foreach ($groups as $key => $label) : ?>
                     <button type="button" id="<?php echo esc_attr($id . '-tab-' . $key); ?>" role="tab" aria-selected="<?php echo $first ? 'true' : 'false'; ?>" aria-controls="<?php echo esc_attr($id . '-panel-' . $key); ?>" tabindex="<?php echo $first ? '0' : '-1'; ?>" data-htp-tariff-tab="<?php echo esc_attr($key); ?>"><?php echo esc_html($label); ?></button>
@@ -236,7 +239,7 @@ final class Parcs_HT_Shortcodes {
             <div class="parcs-ht-actions">
                 <?php $tickets_url = isset($settings['general']['tickets_url'][$language]) ? $settings['general']['tickets_url'][$language] : ''; if ($tickets_url) : ?><a class="parcs-ht-button is-primary" href="<?php echo esc_url($tickets_url); ?>"><?php echo esc_html($d['tickets']); ?></a><?php endif; ?>
             </div>
-            <?php echo self::tariff_export_actions($tariffs, $language); ?>
+            <?php echo wp_kses_post(self::tariff_export_actions($tariffs, $language)); ?>
         </section>
         <?php
         return ob_get_clean();
@@ -288,6 +291,7 @@ final class Parcs_HT_Shortcodes {
     }
 
     private static function quote_page($id, $language, $style, $settings) {
+        if (class_exists('Parcs_HT_Group_Quotes')) Parcs_HT_Group_Quotes::assets();
         $q = isset($settings['quote_page']) && is_array($settings['quote_page']) ? $settings['quote_page'] : array();
         // Le fait d'insérer [parc_devis_groupe] dans une page suffit à activer le rendu.
         // On ne retourne plus une chaîne vide à cause d'un second interrupteur d'administration.
@@ -306,7 +310,7 @@ final class Parcs_HT_Shortcodes {
         ob_start(); ?>
         <section id="<?php echo esc_attr($id); ?>" class="parcs-ht-quote" data-htp-component="quote" data-htp-lang="<?php echo esc_attr($language); ?>" style="<?php echo esc_attr($style); ?>">
             <?php if ($title || $intro) : ?><div class="parcs-ht-quote-head"><?php if ($title) : ?><div class="parcs-ht-quote-title" role="heading" aria-level="2"><?php echo esc_html($title); ?></div><?php endif; ?><?php if ($intro) : ?><p><?php echo nl2br(esc_html($intro)); ?></p><?php endif; ?></div><?php endif; ?>
-            <?php echo $important_before; echo $quick_links; echo $before_info; echo $before_acc; ?>
+            <?php echo $important_before; echo $quick_links; echo $before_info; echo $before_acc; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- HTML interne : quote_important_messages, quote_quick_links et quote_items échappent chaque valeur selon son contexte. ?>
             <div class="parcs-ht-quote-form-wrap">
                 <?php if ($form_title) : ?><div class="parcs-ht-quote-form-title" role="heading" aria-level="3"><?php echo esc_html($form_title); ?></div><?php endif; ?>
                 <?php if ($form_result['status'] === 'ok') : ?>
@@ -319,7 +323,7 @@ final class Parcs_HT_Shortcodes {
                     <p class="parcs-ht-quote-missing"><?php echo esc_html($missing); ?></p>
                 <?php endif; ?>
             </div>
-            <?php echo $important_after; echo $after_info; echo $after_acc; ?>
+            <?php echo $important_after; echo $after_info; echo $after_acc; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- HTML interne produit par les mêmes helpers échappés que ci-dessus. ?>
         </section>
         <?php return ob_get_clean();
     }
@@ -754,8 +758,8 @@ final class Parcs_HT_Shortcodes {
         echo '<div class="actions"><button type="button" onclick="window.print()">'.esc_html($print_label).'</button>';
         if ((string)($ctx['print']['pdf_enabled'] ?? '1') === '1') echo '<a href="'.esc_url($pdf_url).'">'.esc_html($pdf_label).'</a>';
         echo '</div>';
-        echo self::tariff_export_html($ctx);
-        if (isset($_GET['auto']) && (string)$_GET['auto']==='1') echo '<script>window.addEventListener("load",function(){setTimeout(function(){window.print();},180);});</script>';
+        echo wp_kses_post(self::tariff_export_html($ctx));
+        if (isset($_GET['auto']) && (string)$_GET['auto']==='1') echo '<script>window.addEventListener("load",function(){setTimeout(function(){window.print();},180);});</script>'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Paramètre de présentation en lecture seule ; aucune modification de données.
         echo '</body></html>';
         exit;
     }
@@ -792,11 +796,12 @@ final class Parcs_HT_Shortcodes {
 
     private static function serve_cached_pdf($type, $language, $year, $download_name, $builder) {
         $cached = self::build_cached_pdf($type, $language, $year, $builder);
-        if ($cached && !empty($cached['url'])) {
-            wp_redirect(esc_url_raw($cached['url']), 302, 'Horaires-Tarifs-Parc');
+        if ($cached && !empty($cached['url']) && wp_validate_redirect($cached['url'], '') !== '') {
+            wp_safe_redirect($cached['url'], 302, 'Horaires-Tarifs-Parc');
             exit;
         }
-        $pdf = (string)call_user_func($builder);
+        // Un domaine CDN non autorisé pour les redirections reste utilisable via le fichier local.
+        $pdf = $cached && !empty($cached['path']) ? (string)file_get_contents($cached['path']) : (string)call_user_func($builder);
         if (strpos($pdf, '%PDF-') !== 0) {
             self::report_export_error('pdf_generation', 'Le PDF n’a pas pu être généré.', $type.' / '.$language.' / '.$year);
             wp_die('Le document est momentanément indisponible.', '', array('response'=>503));
@@ -873,7 +878,7 @@ final class Parcs_HT_Shortcodes {
         header('Content-Type: application/pdf');
         header('Content-Disposition: attachment; filename="' . sanitize_file_name($download_name) . '"');
         header('Content-Length: ' . strlen($pdf));
-        echo $pdf;
+        echo $pdf; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Flux binaire PDF généré côté serveur ; un échappement HTML corromprait le document.
         exit;
     }
 
@@ -897,11 +902,12 @@ final class Parcs_HT_Shortcodes {
     }
 
     private static function export_language() {
-        $lang = isset($_GET['lang']) ? sanitize_key(wp_unslash($_GET['lang'])) : Parcs_HT_Schedule::language();
+        $lang = isset($_GET['lang']) ? sanitize_key(wp_unslash($_GET['lang'])) : Parcs_HT_Schedule::language(); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Paramètre de présentation en lecture seule ; aucune modification de données.
         return in_array($lang, array('fr','en','de'), true) ? $lang : 'fr';
     }
 
     private static function tariff_export_context($settings, $language) {
+        if (class_exists('Parcs_HT_Tariff_Seasons')) $settings = Parcs_HT_Tariff_Seasons::select_season_tariffs($settings, true);
         $d = Parcs_HT_Schedule::dictionaries();
         $dict = $d[$language] ?? $d['fr'];
         $tariffs = isset($settings['tariffs']) && is_array($settings['tariffs']) ? $settings['tariffs'] : array();
@@ -1013,12 +1019,14 @@ final class Parcs_HT_Shortcodes {
         $out = array(); $seen = array();
         foreach ($columns as $column) {
             if (!is_array($column)) continue;
+            if (isset($column['visible']) && (string)$column['visible'] === '0') continue;
             $id = sanitize_key(isset($column['id']) ? $column['id'] : '');
             if ($id === '' || isset($seen[$id])) continue;
             $seen[$id] = true;
             $out[] = array('id'=>$id,'label'=>isset($column['label']) && is_array($column['label']) ? $column['label'] : array('fr'=>'Tarif','en'=>'Price','de'=>'Preis'));
         }
-        if (empty($out)) $out[] = array('id'=>'price','label'=>array('fr'=>'Tarif','en'=>'Price','de'=>'Preis'));
+        // Le secours historique ne doit pas réafficher une colonne volontairement masquée.
+        if (empty($out) && !isset($tariffs['columns'][$group])) $out[] = array('id'=>'price','label'=>array('fr'=>'Tarif','en'=>'Price','de'=>'Preis'));
         return $out;
     }
 
@@ -1091,7 +1099,7 @@ final class Parcs_HT_Shortcodes {
             <div class="parcs-ht-payment-icons">
                 <?php foreach ($visible as $item) : ?>
                     <span class="parcs-ht-payment-item" style="<?php echo esc_attr(self::payment_item_style($item)); ?>">
-                        <span class="parcs-ht-payment-icon" aria-hidden="true"><?php echo self::payment_icon_svg($item['icon'] ?? 'card', $item); ?></span>
+                        <span class="parcs-ht-payment-icon" aria-hidden="true"><?php echo wp_kses(self::payment_icon_svg($item['icon'] ?? 'card', $item), Parcs_HT_Defaults::svg_allowed_tags()); ?></span>
                         <span><?php echo esc_html($item['_label']); ?></span>
                     </span>
                 <?php endforeach; ?>
