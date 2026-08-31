@@ -85,17 +85,38 @@ final class Parcs_HT_Quote_Languages {
         <?php
     }
 
+    private static function sanitize_form_shortcode($value) {
+        $value = trim(sanitize_text_field((string)$value));
+        if ($value === '') return '';
+        if (!preg_match('/^\[contact-form-7(?:\s+[^\]]*)?\s*\/?\]$/i', $value)) return null;
+        return $value;
+    }
+
     public static function save() {
         if (!current_user_can('manage_options')) wp_die('Accès refusé.');
         check_admin_referer('parcs_ht_save_quote_languages');
-        $posted = isset($_POST['forms']) && is_array($_POST['forms']) ? map_deep(wp_unslash($_POST['forms']), 'sanitize_text_field') : array();
+
+        $posted = isset($_POST['forms']) && is_array($_POST['forms']) ? wp_unslash($_POST['forms']) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Les trois valeurs sont nettoyées et validées individuellement ci-dessous.
         $clean = self::defaults();
+        $labels = array('fr'=>'français', 'en'=>'anglais', 'de'=>'allemand');
+
         foreach ($clean as $lang=>$unused) {
-            $value = trim(sanitize_text_field((string)($posted[$lang] ?? '')));
-            if ($value !== '' && !preg_match('/^\[contact-form-7(?:\s+[^\]]*)?\s*\/?\]$/i', $value)) $value = '';
+            $value = self::sanitize_form_shortcode($posted[$lang] ?? '');
+            if ($value === null) {
+                wp_die('Le shortcode du formulaire ' . esc_html($labels[$lang]) . ' n’est pas valide. Copiez le shortcode Contact Form 7 complet, par exemple [contact-form-7 id="..."] puis réessayez.');
+            }
             $clean[$lang] = $value;
         }
+
         update_option(self::OPTION, $clean, false);
+
+        $stored = get_option(self::OPTION, array());
+        $stored = array_merge(self::defaults(), is_array($stored) ? $stored : array());
+        if ($stored !== $clean) {
+            wp_die('WordPress n’a pas confirmé l’enregistrement des formulaires de devis. Aucune fausse confirmation n’a été affichée ; réessayez après avoir vidé le cache d’administration.');
+        }
+
+        do_action('litespeed_purge_all');
         wp_safe_redirect(add_query_arg(array('page'=>self::PAGE, 'updated'=>'1'), admin_url('admin.php')));
         exit;
     }
