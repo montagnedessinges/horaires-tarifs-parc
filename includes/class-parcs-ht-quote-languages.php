@@ -5,12 +5,14 @@ if (!defined('ABSPATH')) {
 }
 
 final class Parcs_HT_Quote_Languages {
+    // Ancienne option conservée uniquement comme source de migration/retour arrière.
     const OPTION = 'parcs_ht_quote_language_shortcodes';
     const PAGE = 'parcs-ht-quote-languages';
 
     public static function init() {
         add_filter('option_' . Parcs_HT_Defaults::OPTION, array(__CLASS__, 'apply_request_form'), 20, 1);
         if (is_admin()) {
+            add_action('admin_init', array(__CLASS__, 'maybe_migrate_legacy'), 5);
             add_action('admin_menu', array(__CLASS__, 'menu'), 30);
             add_action('admin_post_parcs_ht_save_quote_languages', array(__CLASS__, 'save'));
         }
@@ -20,9 +22,47 @@ final class Parcs_HT_Quote_Languages {
         return array('fr'=>'', 'en'=>'', 'de'=>'');
     }
 
+    private static function forms_from_main_settings($settings, $use_legacy_fallback = true) {
+        if (is_array($settings)
+            && isset($settings['quote_page'])
+            && is_array($settings['quote_page'])
+            && array_key_exists('form_shortcodes', $settings['quote_page'])) {
+            $saved = is_array($settings['quote_page']['form_shortcodes']) ? $settings['quote_page']['form_shortcodes'] : array();
+            return array_merge(self::defaults(), $saved);
+        }
+
+        if ($use_legacy_fallback) {
+            $legacy = get_option(self::OPTION, array());
+            return array_merge(self::defaults(), is_array($legacy) ? $legacy : array());
+        }
+
+        return self::defaults();
+    }
+
     public static function settings() {
-        $saved = get_option(self::OPTION, array());
-        return array_merge(self::defaults(), is_array($saved) ? $saved : array());
+        $all = get_option(Parcs_HT_Defaults::OPTION, array());
+        return self::forms_from_main_settings(is_array($all) ? $all : array(), true);
+    }
+
+    public static function maybe_migrate_legacy() {
+        if (!current_user_can('manage_options')) return;
+
+        $all = get_option(Parcs_HT_Defaults::OPTION, array());
+        if (!is_array($all)) return;
+        if (isset($all['quote_page']) && is_array($all['quote_page']) && array_key_exists('form_shortcodes', $all['quote_page'])) return;
+
+        $legacy = get_option(self::OPTION, null);
+        if (!is_array($legacy)) return;
+
+        $clean = self::defaults();
+        foreach ($clean as $lang=>$unused) {
+            $value = self::sanitize_form_shortcode($legacy[$lang] ?? '');
+            $clean[$lang] = $value === null ? '' : $value;
+        }
+
+        if (!isset($all['quote_page']) || !is_array($all['quote_page'])) $all['quote_page'] = array();
+        $all['quote_page']['form_shortcodes'] = $clean;
+        update_option(Parcs_HT_Defaults::OPTION, $all, false);
     }
 
     private static function request_language() {
@@ -37,7 +77,7 @@ final class Parcs_HT_Quote_Languages {
 
     public static function apply_request_form($settings) {
         if (is_admin() || !is_array($settings)) return $settings;
-        $forms = self::settings();
+        $forms = self::forms_from_main_settings($settings, true);
         $language = self::request_language();
         $selected = trim((string)($forms[$language] ?? ''));
         if ($selected === '') return $settings;
@@ -63,8 +103,8 @@ final class Parcs_HT_Quote_Languages {
         ?>
         <div class="wrap">
             <h1>Formulaires de devis par langue</h1>
-            <p>Chaque shortcode du module de devis affiche automatiquement le formulaire Contact Form 7 configuré pour sa langue.</p>
-            <?php if (isset($_GET['updated'])) : /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Paramètre de présentation en lecture seule ; aucune modification de données. */ ?><div class="notice notice-success is-dismissible"><p>Les shortcodes des formulaires ont été enregistrés.</p></div><?php endif; ?>
+            <p>Ces trois formulaires utilisent désormais la même source de réglages que le reste du module Devis. Il n’existe plus de seconde configuration active susceptible de réinjecter une ancienne valeur.</p>
+            <?php if (isset($_GET['updated'])) : /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Paramètre de présentation en lecture seule ; aucune modification de données. */ ?><div class="notice notice-success is-dismissible"><p>Les shortcodes des formulaires ont été enregistrés dans les réglages principaux de l’extension.</p></div><?php endif; ?>
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                 <input type="hidden" name="action" value="parcs_ht_save_quote_languages">
                 <?php wp_nonce_field('parcs_ht_save_quote_languages'); ?>
@@ -74,7 +114,7 @@ final class Parcs_HT_Quote_Languages {
                             <th scope="row"><label for="parcs-ht-quote-<?php echo esc_attr($lang); ?>"><?php echo esc_html($label); ?></label></th>
                             <td>
                                 <input id="parcs-ht-quote-<?php echo esc_attr($lang); ?>" class="large-text code" type="text" name="forms[<?php echo esc_attr($lang); ?>]" value="<?php echo esc_attr($forms[$lang]); ?>" placeholder='[contact-form-7 id="..."]'>
-                                <p class="description">Utilisé par <code>[parc_devis_<?php echo esc_html($lang); ?>]</code> et <code>[parc_devis_groupe_<?php echo esc_html($lang); ?>]</code>. Si le champ est vide, le formulaire général reste utilisé en secours.</p>
+                                <p class="description">Utilisé par <code>[parc_devis_<?php echo esc_html($lang); ?>]</code> et <code>[parc_devis_groupe_<?php echo esc_html($lang); ?>]</code>. Un champ volontairement vide reste vide et utilise le formulaire général en secours.</p>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -108,12 +148,16 @@ final class Parcs_HT_Quote_Languages {
             $clean[$lang] = $value;
         }
 
-        update_option(self::OPTION, $clean, false);
+        $all = get_option(Parcs_HT_Defaults::OPTION, array());
+        if (!is_array($all)) wp_die('Les réglages principaux de l’extension sont indisponibles.');
+        if (!isset($all['quote_page']) || !is_array($all['quote_page'])) $all['quote_page'] = array();
+        $all['quote_page']['form_shortcodes'] = $clean;
+        update_option(Parcs_HT_Defaults::OPTION, $all, false);
 
-        $stored = get_option(self::OPTION, array());
-        $stored = array_merge(self::defaults(), is_array($stored) ? $stored : array());
+        $stored_all = get_option(Parcs_HT_Defaults::OPTION, array());
+        $stored = self::forms_from_main_settings(is_array($stored_all) ? $stored_all : array(), false);
         if ($stored !== $clean) {
-            wp_die('WordPress n’a pas confirmé l’enregistrement des formulaires de devis. Aucune fausse confirmation n’a été affichée ; réessayez après avoir vidé le cache d’administration.');
+            wp_die('WordPress n’a pas confirmé l’enregistrement des formulaires de devis. Aucune ancienne valeur n’a été réinjectée.');
         }
 
         do_action('litespeed_purge_all');
