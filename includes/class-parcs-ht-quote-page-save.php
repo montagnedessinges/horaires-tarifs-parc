@@ -25,7 +25,12 @@ final class Parcs_HT_Quote_Page_Save {
 
     private static function posted_settings() {
         if (!self::is_main_admin_save()) return null;
+        // Le nonce, l'action et la capacité sont vérifiés par is_main_admin_save() juste au-dessus.
+        // Cette fonction restitue volontairement la structure complète non échappée : chaque champ
+        // utilisé ensuite est validé par type, et la valeur finale est sanitizée par le Settings API.
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         if (!isset($_POST['settings']) || !is_array($_POST['settings'])) return null;
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         return wp_unslash($_POST['settings']);
     }
 
