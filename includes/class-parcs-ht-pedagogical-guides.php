@@ -70,7 +70,8 @@ final class Parcs_HT_Pedagogical_Guides {
     public static function save() {
         if (!current_user_can('manage_options')) wp_die('Accès refusé.');
         check_admin_referer('parcs_ht_save_pedagogical_guides');
-        $raw=isset($_POST['guides'])&&is_array($_POST['guides'])?$_POST['guides']:array();
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Chaque valeur imbriquée est validée et nettoyée ci-dessous selon son type.
+        $raw=isset($_POST['guides'])&&is_array($_POST['guides'])?wp_unslash($_POST['guides']):array();
         $out=array('cycles'=>array(),'guides'=>array()); $used=array();
         foreach(isset($raw['cycles'])&&is_array($raw['cycles'])?$raw['cycles']:array() as $key=>$cycle){
             if(!is_array($cycle))continue; $id=sanitize_key($cycle['id']??$key); if($id==='')$id='categorie'; $base=$id;$n=2;while(isset($used[$id])){$id=$base.'-'.$n++;}$used[$id]=true;
@@ -84,7 +85,7 @@ final class Parcs_HT_Pedagogical_Guides {
             $status=sanitize_key($item['status']??'available'); if(!in_array($status,$statuses,true))$status='available';
             $languages=array(); foreach(array('fr','de','en') as $lang)if(!empty($item['languages'][$lang]))$languages[]=$lang; if(!$languages)$languages=array('fr');
             $title=self::clean_translations($item['title']??array()); if(!array_filter($title)&&empty($item['pdf_url'])&&$status!=='coming')continue;
-            $out['guides'][]=array('enabled'=>!empty($item['enabled'])?'1':'0','cycle'=>$cycle,'languages'=>$languages,'status'=>$status,'title'=>$title,'description'=>self::clean_translations($item['description']??array(),true),'pdf_url'=>esc_url_raw(wp_unslash((string)($item['pdf_url']??''))),'cover_url'=>esc_url_raw(wp_unslash((string)($item['cover_url']??''))),'order'=>(int)($item['order']??0));
+            $out['guides'][]=array('enabled'=>!empty($item['enabled'])?'1':'0','cycle'=>$cycle,'languages'=>$languages,'status'=>$status,'title'=>$title,'description'=>self::clean_translations($item['description']??array(),true),'pdf_url'=>esc_url_raw((string)($item['pdf_url']??'')),'cover_url'=>esc_url_raw((string)($item['cover_url']??'')),'order'=>(int)($item['order']??0));
         }
         update_option(self::OPTION,$out,false); wp_safe_redirect(add_query_arg(array('page'=>self::PAGE,'updated'=>'1'),admin_url('admin.php'))); exit;
     }
