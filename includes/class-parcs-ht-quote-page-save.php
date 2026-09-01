@@ -43,8 +43,8 @@ final class Parcs_HT_Quote_Page_Save {
             }
         }
 
-        $_POST['settings'] = $posted_settings;
-        $_POST['settings']['quote_page'] = $quote_page;
+        $posted_settings['quote_page'] = $quote_page;
+        $_POST['settings'] = wp_slash($posted_settings);
     }
 
     public static function respect_explicit_list_deletions($new_value, $old_value, $option) {
