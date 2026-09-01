@@ -57,7 +57,7 @@ if (strpos($languages, 'update_option(self::OPTION, $clean') !== false) {
     exit(1);
 }
 
-foreach (array('admin_post_parcs_ht_save', 'mark_explicit_empty_lists', "['quote_page'][$list] = null", "'form_shortcodes'") as $marker) {
+foreach (array('admin_post_parcs_ht_save', 'mark_explicit_empty_lists', '[\'quote_page\'][$list] = null', "'form_shortcodes'") as $marker) {
     if (strpos($quote_save, $marker) === false) {
         fwrite(STDERR, "Quote page deletion protection is incomplete: {$marker}\n");
         exit(1);
