@@ -87,6 +87,7 @@ add_action('admin_enqueue_scripts', static function ($hook) {
 
 add_action('admin_enqueue_scripts', static function ($hook) {
     if ($hook !== 'toplevel_page_parcs-horaires-tarifs' || !wp_script_is('parcs-ht-tariff-seasons-admin', 'enqueued')) return;
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Sélection d’aperçu en lecture seule ; aucun enregistrement n’est effectué depuis ce paramètre.
     $year = isset($_GET['season']) ? sanitize_text_field(wp_unslash($_GET['season'])) : '';
     $settings = Parcs_HT_Defaults::settings($year);
     wp_add_inline_script('parcs-ht-tariff-seasons-admin', 'window.ParcsHTTariffSeasonAdmin=' . wp_json_encode(array('tariffs'=>(array)($settings['tariffs'] ?? array()))) . ';', 'before');
