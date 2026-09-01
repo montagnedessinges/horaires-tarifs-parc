@@ -23,32 +23,36 @@ final class Parcs_HT_Quote_Page_Save {
         return isset($complete['quote_page']) && (string)$complete['quote_page'] === '1';
     }
 
+    private static function posted_settings() {
+        if (!self::is_main_admin_save()) return null;
+        if (!isset($_POST['settings']) || !is_array($_POST['settings'])) return null;
+        return wp_unslash($_POST['settings']);
+    }
+
     public static function mark_explicit_empty_lists() {
-        if (!self::is_main_admin_save()) return;
-        if (!isset($_POST['settings']) || !is_array($_POST['settings'])) return;
-        if (!self::quote_section_is_complete($_POST['settings'])) return;
+        $posted_settings = self::posted_settings();
+        if (!is_array($posted_settings) || !self::quote_section_is_complete($posted_settings)) return;
 
-        if (!isset($_POST['settings']['quote_page']) || !is_array($_POST['settings']['quote_page'])) {
-            $_POST['settings']['quote_page'] = array();
-        }
-
+        $quote_page = isset($posted_settings['quote_page']) && is_array($posted_settings['quote_page']) ? $posted_settings['quote_page'] : array();
         foreach (self::$lists as $list) {
-            if (!array_key_exists($list, $_POST['settings']['quote_page'])) {
+            if (!array_key_exists($list, $quote_page)) {
                 // array_replace_recursive() conserverait l'ancienne liste si on injectait
                 // simplement un tableau vide. Une valeur scalaire force son remplacement ;
                 // le sanitizer principal la convertit ensuite proprement en tableau vide.
-                $_POST['settings']['quote_page'][$list] = null;
+                $quote_page[$list] = null;
             }
         }
+
+        $_POST['settings'] = $posted_settings;
+        $_POST['settings']['quote_page'] = $quote_page;
     }
 
     public static function respect_explicit_list_deletions($new_value, $old_value, $option) {
         unset($option);
-        if (!self::is_main_admin_save() || !is_array($new_value)) return $new_value;
-        if (!isset($_POST['settings']) || !is_array($_POST['settings'])) return $new_value;
+        if (!is_array($new_value)) return $new_value;
 
-        $posted_settings = wp_unslash($_POST['settings']);
-        if (!self::quote_section_is_complete($posted_settings)) return $new_value;
+        $posted_settings = self::posted_settings();
+        if (!is_array($posted_settings) || !self::quote_section_is_complete($posted_settings)) return $new_value;
 
         $posted_quote = isset($posted_settings['quote_page']) && is_array($posted_settings['quote_page']) ? $posted_settings['quote_page'] : array();
         if (!isset($new_value['quote_page']) || !is_array($new_value['quote_page'])) $new_value['quote_page'] = array();
