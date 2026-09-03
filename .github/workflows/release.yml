@@ -51,6 +51,7 @@ jobs:
           php tests/quote-gate-language-contract.php
           php tests/quote-language-save-contract.php
           php tests/public-data-regressions.php
+          php tests/pedagogical-guides-contract.php
           php tests/pdf-layout.php /tmp/htp-schedule-test.pdf
       - name: Check JavaScript and parity tests
         run: |
@@ -68,6 +69,7 @@ jobs:
           find /tmp/htp-production-test/assets -type f -name '*.js' -print0 | xargs -0 -n1 node --check
           PLUGIN_ROOT=/tmp/htp-production-test node tests/public-ui-regressions.js
           PLUGIN_ROOT=/tmp/htp-production-test php tests/public-data-regressions.php
+          PLUGIN_ROOT=/tmp/htp-production-test php tests/pedagogical-guides-contract.php
           grep -q 'Plugin Name: Horaires et tarifs du parc' /tmp/htp-production-test/horaires-tarifs-parc.php
           if find /tmp/htp-production-test -type f \( -name '*.map' -o -name '*.ts' -o -name '*.tsx' -o -name '*.jsx' -o -name '*.scss' -o -name '*.sass' -o -name '*.less' \) | grep -q .; then
             echo 'Development source file found after production cleanup.' >&2
