@@ -5,6 +5,7 @@ if (!defined('ABSPATH')) { exit; }
 final class Parcs_HT_Admin_Groups {
     public static function init() {
         add_action('admin_menu', array(__CLASS__, 'cleanup_submenus'), 99);
+        add_action('admin_head', array(__CLASS__, 'hide_guides_submenu'));
         add_action('admin_enqueue_scripts', array(__CLASS__, 'assets'), 120);
         add_action('wp_ajax_parcs_ht_save_quote_season_rates', array(__CLASS__, 'save_quote_rates'));
         add_action('wp_ajax_parcs_ht_save_quote_tariff_binding', array(__CLASS__, 'save_quote_tariff_binding'));
@@ -17,7 +18,24 @@ final class Parcs_HT_Admin_Groups {
         if (class_exists('Parcs_HT_Group_Quotes')) remove_submenu_page(Parcs_HT_Admin::PAGE, Parcs_HT_Group_Quotes::PAGE);
         if (class_exists('Parcs_HT_Quote_Languages')) remove_submenu_page(Parcs_HT_Admin::PAGE, Parcs_HT_Quote_Languages::PAGE);
         if (class_exists('Parcs_HT_Quote_Gate')) remove_submenu_page(Parcs_HT_Admin::PAGE, Parcs_HT_Quote_Gate::PAGE);
-        if (class_exists('Parcs_HT_Pedagogical_Guides')) remove_submenu_page(Parcs_HT_Admin::PAGE, Parcs_HT_Pedagogical_Guides::PAGE);
+        // La page Guides reste enregistrée afin que WordPress conserve son hook/capability.
+        // Elle est seulement masquée visuellement du sous-menu via hide_guides_submenu().
+    }
+
+    public static function hide_guides_submenu() {
+        if (!current_user_can('manage_options') || !class_exists('Parcs_HT_Pedagogical_Guides')) return;
+        $href = 'admin.php?page=' . Parcs_HT_Pedagogical_Guides::PAGE;
+        ?>
+        <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var links = document.querySelectorAll('#toplevel_page_parcs-horaires-tarifs .wp-submenu a[href="<?php echo esc_js($href); ?>"]');
+            links.forEach(function (link) {
+                var item = link.closest('li');
+                if (item) item.style.display = 'none';
+            });
+        });
+        </script>
+        <?php
     }
 
     private static function translation($value) {
