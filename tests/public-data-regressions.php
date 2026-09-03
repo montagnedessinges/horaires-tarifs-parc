@@ -39,33 +39,46 @@ require $root . '/includes/class-parcs-ht-shortcodes.php';
 require $root . '/includes/class-parcs-ht-schedule.php';
 require $root . '/includes/class-parcs-ht-quote-gate.php';
 
-$tariffs = array('columns'=>array('groups'=>array(
-    array('id'=>'price','label'=>array('fr'=>'Public'),'visible'=>'1'),
-    array('id'=>'future','label'=>array('fr'=>'Private'),'visible'=>'0'),
-)));
+$groupRows = array(
+    array('enabled'=>'1','label'=>array('fr'=>'Adulte'),'price'=>'8,50 €','cells'=>array('price'=>array('value'=>'8,50 €'))),
+    array('enabled'=>'1','label'=>array('fr'=>'Enfant'),'price'=>'6 €','cells'=>array('price'=>array('value'=>'6 €'))),
+    array('enabled'=>'1','label'=>array('fr'=>'Scolaire / extrascolaire'),'price'=>'6 €','cells'=>array('price'=>array('value'=>'6 €'))),
+    array('enabled'=>'1','label'=>array('fr'=>'Personne en situation de handicap et accompagnateur'),'price'=>'6 €','cells'=>array('price'=>array('value'=>'6 €'))),
+);
+$tariffs = array(
+    'columns'=>array('groups'=>array(
+        array('id'=>'price','label'=>array('fr'=>'Public'),'visible'=>'1'),
+        array('id'=>'future','label'=>array('fr'=>'Private'),'visible'=>'0'),
+    )),
+    'groups'=>$groupRows,
+);
 $settings = array('timezone'=>'Europe/Paris','seasons'=>array(
     '2026'=>array('published'=>'1','season_start'=>'2026-03-01','season_end'=>'2026-11-30','tariffs'=>$tariffs),
-    '2027'=>array('published'=>'0','season_start'=>'2027-03-01','season_end'=>'2027-11-30','tariffs'=>array('marker'=>'DRAFT_PRIVATE')),
+    '2027'=>array('published'=>'0','season_start'=>'2027-03-01','season_end'=>'2027-11-30','tariffs'=>$tariffs),
 ));
 $GLOBALS['public_settings'] = $settings;
-$GLOBALS['options']['parcs_ht_group_quotes'] = array('seasons'=>array(
-    '2027'=>array('published'=>'1','child'=>'7','adult'=>'9','disability'=>'7','companion'=>'7','free_adult_children'=>'10','private_note'=>'PRIVATE_NOTE'),
-));
+$GLOBALS['options'][Parcs_HT_Defaults::OPTION] = $settings;
+$GLOBALS['options']['parcs_ht_group_quotes'] = array(
+    'tariff_binding'=>array('column'=>'price','child_row'=>'2','child_label'=>'Scolaire / extrascolaire','adult_row'=>'0','adult_label'=>'Adulte','disability_row'=>'3','disability_label'=>'Personne en situation de handicap et accompagnateur','companion_row'=>'3','companion_label'=>'Personne en situation de handicap et accompagnateur','free_adult_children'=>'10'),
+    'seasons'=>array('2027'=>array('published'=>'1','child'=>'99','adult'=>'99','disability'=>'99','companion'=>'99','private_note'=>'PRIVATE_NOTE')),
+);
 $saved = $GLOBALS['options'];
 $quotes = Parcs_HT_Group_Quotes::settings();
-verify($quotes['seasons']['2027']['published'] === '0', 'Draft season disables previously authorized quotes');
-verify($quotes['seasons']['2026']['published'] === '1', 'Legacy quote grid follows published season');
-verify(Parcs_HT_Group_Quotes::settings(false)['seasons']['2027']['published'] === '1', 'Editor preserves independent authorization');
+verify($quotes['seasons']['2027']['published'] === '0', 'Draft season disables quote availability');
+verify($quotes['seasons']['2026']['published'] === '1', 'Published season remains available');
+verify(Parcs_HT_Group_Quotes::settings(false)['seasons']['2027']['published'] === '1', 'Legacy quote metadata remains stored for rollback only');
 verify($GLOBALS['options'] === $saved, 'Reading public settings does not modify saved options');
 Parcs_HT_Group_Quotes::assets();
 $payload = $GLOBALS['inline']['parcs-ht-group-quotes'];
-verify(strpos($payload, '2027') === false && strpos($payload, 'PRIVATE_NOTE') === false, 'Draft rates and private metadata absent from JavaScript');
-verify(strpos($payload, '2026') !== false, 'Published rates remain available');
+verify(strpos($payload, '2027') === false && strpos($payload, 'PRIVATE_NOTE') === false && strpos($payload, '99') === false, 'Draft and legacy quote rates stay out of JavaScript');
+verify(strpos($payload, '2026') !== false && strpos($payload, '8.5') !== false, 'Published shared group tariffs feed JavaScript');
+
 $GLOBALS['public_settings']['seasons']['2027']['published'] = '1';
-$GLOBALS['options']['parcs_ht_group_quotes']['seasons']['2027']['published'] = '0';
-verify(Parcs_HT_Group_Quotes::settings()['seasons']['2027']['published'] === '0', 'Explicit quote refusal remains effective on a published season');
+$GLOBALS['options'][Parcs_HT_Defaults::OPTION]['seasons']['2027']['published'] = '1';
+verify(Parcs_HT_Group_Quotes::settings()['seasons']['2027']['published'] === '1', 'Annual season publication is the only publication switch');
 $GLOBALS['public_settings'] = $settings;
-$GLOBALS['options'] = $saved;
+$GLOBALS['options'][Parcs_HT_Defaults::OPTION] = $settings;
+
 $input = array('visite'=>'2027-09-01','groupedevis'=>'Groupe','nbrenfants'=>'20','nbradultes'=>'3','totalprixscolaire'=>'1,00 €');
 verify(Parcs_HT_Group_Quotes::canonicalize_posted_data($input)['totalprixscolaire'] === '', 'Server refuses a draft-year quote');
 $GLOBALS['submission'] = $input;
@@ -74,9 +87,14 @@ Parcs_HT_Group_Quotes::validate_quote($validation, array((object)array('name'=>'
 verify(isset($validation->invalid['visite']), 'CF7 validation blocks sending a draft-year quote');
 $gate = new ReflectionMethod('Parcs_HT_Quote_Gate', 'tariff_available');
 $gate->setAccessible(true);
-verify(!$gate->invoke(null, '2027') && $gate->invoke(null, '2026'), 'Date gate shares the same publication rules');
+verify(!$gate->invoke(null, '2027') && $gate->invoke(null, '2026'), 'Date gate shares annual publication rules');
 $input['visite'] = '2026-09-01';
-verify(Parcs_HT_Group_Quotes::canonicalize_posted_data($input)['totalprixscolaire'] === '128,50 €', 'Published quote recalculated from server-owned rates');
+verify(Parcs_HT_Group_Quotes::canonicalize_posted_data($input)['totalprixscolaire'] === '128,50 €', 'Published quote recalculates from Tarifs groups');
+$GLOBALS['options'][Parcs_HT_Defaults::OPTION]['seasons']['2026']['tariffs']['groups'][0]['cells']['price']['value'] = '9 €';
+verify(Parcs_HT_Group_Quotes::canonicalize_posted_data($input)['totalprixscolaire'] === '129,00 €', 'Changing the shared group tariff changes the quote calculation');
+$GLOBALS['options'][Parcs_HT_Defaults::OPTION]['seasons']['2026']['tariffs']['groups'] = array();
+verify(Parcs_HT_Group_Quotes::canonicalize_posted_data($input)['totalprixscolaire'] === '', 'No hidden legacy quote rate is used when shared tariffs are unavailable');
+$GLOBALS['options'][Parcs_HT_Defaults::OPTION] = $settings;
 
 $columns = new ReflectionMethod('Parcs_HT_Shortcodes', 'tariff_columns');
 $columns->setAccessible(true);
@@ -98,6 +116,7 @@ foreach (array(false, true) as $admin_user) {
     verify(!isset($selected['tariffs']['marker']), 'Public export cannot request draft, even when logged in as administrator');
 }
 $GLOBALS['pagenow'] = 'admin.php';
+$settings['seasons']['2027']['tariffs']['marker'] = 'DRAFT_PRIVATE';
 $selected = Parcs_HT_Tariff_Seasons::select_season_tariffs($settings);
 verify(($selected['tariffs']['marker'] ?? '') === 'DRAFT_PRIVATE', 'Authorized editor can still preview a draft');
 $GLOBALS['pagenow'] = 'admin-post.php';
