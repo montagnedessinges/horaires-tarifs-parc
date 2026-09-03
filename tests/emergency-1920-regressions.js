@@ -7,10 +7,12 @@ const { JSDOM } = require('jsdom');
 const root = process.env.PLUGIN_ROOT || path.resolve(__dirname, '..');
 const bootstrap = fs.readFileSync(path.join(root, 'includes/class-parcs-ht-bootstrap.php'), 'utf8');
 const shortcodes = fs.readFileSync(path.join(root, 'includes/class-parcs-ht-shortcodes.php'), 'utf8');
+const admin = fs.readFileSync(path.join(root, 'assets/admin.js'), 'utf8');
 assert.match(bootstrap, /add_action\('wp_enqueue_scripts',\s*array\(__CLASS__,\s*'maybe_preload_assets'\),\s*20\)/, 'Le bootstrap doit précharger assez tôt les ressources nécessaires aux shortcodes.');
 assert.match(bootstrap, /Parcs_HT_Shortcodes::maybe_enqueue_assets\(\)/, 'Le préchargement doit déléguer au moteur de shortcodes.');
 assert.match(shortcodes, /Parcs_HT_Group_Quotes::assets\(\)/, 'Le moteur de shortcodes doit conserver le chargement des ressources du devis.');
-assert.match(shortcodes, /admin-save-guard\.js/, 'La protection indépendante de sauvegarde doit être chargée dans l’administration.');
+assert.match(admin, /function initScopedSave\(\)/, 'La protection de sauvegarde par onglet doit rester intégrée au moteur d’administration.');
+assert.match(admin, /submitter\.name!==['"]htp_save_active['"]/, 'La protection doit rester limitée à la sauvegarde de l’onglet actif.');
 
 const html = `<!doctype html><html><body>
 <div class="htp-admin">
