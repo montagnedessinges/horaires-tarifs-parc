@@ -5,9 +5,12 @@ const assert = require('node:assert/strict');
 const { JSDOM } = require('jsdom');
 
 const root = process.env.PLUGIN_ROOT || path.resolve(__dirname, '..');
-const plugin = fs.readFileSync(path.join(root, 'horaires-tarifs-parc.php'), 'utf8');
-assert.match(plugin, /add_action\('wp_enqueue_scripts',\s*array\('Parcs_HT_Group_Quotes',\s*'assets'\),\s*30\)/, 'Le moteur devis doit être chargé assez tôt pour que le contrôle de date puisse démarrer.');
-assert.match(plugin, /admin-save-guard\.js/, 'La protection indépendante de sauvegarde doit être chargée dans l’administration.');
+const bootstrap = fs.readFileSync(path.join(root, 'includes/class-parcs-ht-bootstrap.php'), 'utf8');
+const shortcodes = fs.readFileSync(path.join(root, 'includes/class-parcs-ht-shortcodes.php'), 'utf8');
+assert.match(bootstrap, /add_action\('wp_enqueue_scripts',\s*array\(__CLASS__,\s*'maybe_preload_assets'\),\s*20\)/, 'Le bootstrap doit précharger assez tôt les ressources nécessaires aux shortcodes.');
+assert.match(bootstrap, /Parcs_HT_Shortcodes::maybe_enqueue_assets\(\)/, 'Le préchargement doit déléguer au moteur de shortcodes.');
+assert.match(shortcodes, /Parcs_HT_Group_Quotes::assets\(\)/, 'Le moteur de shortcodes doit conserver le chargement des ressources du devis.');
+assert.match(shortcodes, /admin-save-guard\.js/, 'La protection indépendante de sauvegarde doit être chargée dans l’administration.');
 
 const html = `<!doctype html><html><body>
 <div class="htp-admin">
