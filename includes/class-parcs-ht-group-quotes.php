@@ -144,12 +144,22 @@ final class Parcs_HT_Group_Quotes {
 
     public static function validate_quote($result, $tags) {
         if (!class_exists('WPCF7_Submission')) return $result;
-        $submission=WPCF7_Submission::get_instance(); if(!$submission)return$result;
-        $data=$submission->get_posted_data(); if(!is_array($data))return$result;
-        $settings=self::settings(); $visit_field=(string)$settings['visit_field']; $group_field=(string)$settings['group_field'];
-        if(!array_key_exists($visit_field,$data)||!array_key_exists($group_field,$data))return$result;
-        $year=self::year_from_date($data[$visit_field]); if($year===''||self::published_season($year,$settings))return$result;
-        foreach((array)$tags as $tag) if(is_object($tag)&&isset($tag->name)&&(string)$tag->name===$visit_field){$result->invalidate($tag,'Les tarifs groupes pour '.$year.' ne sont pas encore disponibles. Merci de revenir ultérieurement.');break;}
+        $submission = WPCF7_Submission::get_instance();
+        if (!$submission) return $result;
+        $data = $submission->get_posted_data();
+        if (!is_array($data)) return $result;
+        $settings = self::settings();
+        $visit_field = (string)$settings['visit_field'];
+        $group_field = (string)$settings['group_field'];
+        if (!array_key_exists($visit_field, $data) || !array_key_exists($group_field, $data)) return $result;
+        $year = self::year_from_date($data[$visit_field]);
+        if ($year === '' || self::published_season($year, $settings)) return $result;
+        foreach ((array)$tags as $tag) {
+            if (is_object($tag) && isset($tag->name) && (string)$tag->name === $visit_field) {
+                $result->invalidate($tag, 'Les tarifs groupes pour ' . $year . ' ne sont pas encore disponibles. Merci de revenir ultérieurement.');
+                break;
+            }
+        }
         return $result;
     }
 
