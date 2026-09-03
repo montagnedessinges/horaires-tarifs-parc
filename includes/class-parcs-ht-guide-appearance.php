@@ -40,6 +40,7 @@ final class Parcs_HT_Guide_Appearance {
         if (!current_user_can('manage_options')) wp_die('Accès refusé.');
         check_admin_referer('parcs_ht_save_guide_appearance');
         $defaults = self::defaults();
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Chaque valeur est validée et nettoyée ci-dessous avant enregistrement.
         $raw = isset($_POST['appearance']) && is_array($_POST['appearance']) ? wp_unslash($_POST['appearance']) : array();
         $settings = array(
             'card_background' => self::color($raw['card_background'] ?? '', $defaults['card_background'], true),
@@ -61,7 +62,7 @@ final class Parcs_HT_Guide_Appearance {
         $s = self::settings();
         $css = '.parcs-ht-guides{--htp-guide-card-bg:' . esc_html($s['card_background']) . ';--htp-guide-text:' . esc_html($s['text_color']) . ';--htp-guide-title:' . esc_html($s['title_color']) . ';--htp-guide-primary-bg:' . esc_html($s['primary_button_background']) . ';--htp-guide-primary-text:' . esc_html($s['primary_button_text']) . ';--htp-guide-secondary:' . esc_html($s['secondary_button_color']) . ';--htp-guide-category:' . esc_html($s['category_color']) . ';--htp-guide-mobile-image-height:' . (int)$s['image_mobile_height'] . 'px;}';
         wp_add_inline_style('parcs-ht-pedagogical-guides', $css);
-        wp_register_script('parcs-ht-guide-enhancements', '', array(), PARCS_HT_VERSION, true);
+        wp_register_script('parcs-ht-guide-enhancements', false, array(), PARCS_HT_VERSION, true);
         wp_enqueue_script('parcs-ht-guide-enhancements');
         wp_add_inline_script('parcs-ht-guide-enhancements', self::frontend_script());
     }
