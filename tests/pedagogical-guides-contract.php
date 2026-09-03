@@ -14,6 +14,11 @@ function guide_contract($condition, $message) {
 
 guide_contract(strpos($php, 'const STORE_VERSION = 3') !== false, 'Guide storage contract is version 3');
 guide_contract(strpos($php, 'private static function cycle_catalog()') !== false, 'Cycles are a fixed reusable catalog');
+guide_contract(strpos($php, "'cycle4'=>array(") !== false, 'Cycle 4 is supported');
+guide_contract(strpos($php, 'Cycle 1 – Maternelle – 3 à 6 ans') !== false, 'Cycle 1 French label includes school level and ages');
+guide_contract(strpos($php, 'Cycle 2 – Primary School – Ages 6–9') !== false, 'Cycle 2 international English label is present');
+guide_contract(strpos($php, 'Zyklus 3 – Grundschule / Sekundarstufe I – 9–12 Jahre') !== false, 'Cycle 3 German label is present');
+guide_contract(strpos($php, 'Cycle 4 – Lower Secondary School – Ages 12–15') !== false, 'Cycle 4 international English label is present');
 guide_contract(strpos($php, 'data-guide-cycle-filters') !== false, 'Public cycle filters are rendered');
 guide_contract(strpos($php, 'data-guide-language-filters') !== false, 'Public language filters are rendered');
 guide_contract(strpos($php, 'count($used_cycles)>1') !== false, 'Cycle filters are hidden when only one cycle is available');
