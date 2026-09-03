@@ -29,289 +29,89 @@ final class Parcs_HT_Pedagogical_Guides {
     private static function cycle_catalog() {
         return array(
             'cycle1'=>array(
-                'fr'=>'Cycle 1 – Maternelle – 3 à 6 ans',
-                'en'=>'Cycle 1 – Preschool – Ages 3–6',
-                'de'=>'Zyklus 1 – Kindergarten / Vorschule – 3–6 Jahre',
+                'label'=>array('fr'=>'Cycle 1','en'=>'Ages 3–6','de'=>'3–6 Jahre'),
+                'detail'=>array('fr'=>'Maternelle – 3 à 6 ans','en'=>'Preschool – Ages 3–6','de'=>'Kindergarten / Vorschule – 3–6 Jahre'),
             ),
             'cycle2'=>array(
-                'fr'=>'Cycle 2 – CP à CE2 – 6 à 9 ans',
-                'en'=>'Cycle 2 – Primary School – Ages 6–9',
-                'de'=>'Zyklus 2 – Grundschule – 6–9 Jahre',
+                'label'=>array('fr'=>'Cycle 2','en'=>'Ages 6–9','de'=>'6–9 Jahre'),
+                'detail'=>array('fr'=>'CP à CE2 – 6 à 9 ans','en'=>'Primary School – Ages 6–9','de'=>'Grundschule – 6–9 Jahre'),
             ),
             'cycle3'=>array(
-                'fr'=>'Cycle 3 – CM1 à 6e – 9 à 12 ans',
-                'en'=>'Cycle 3 – Primary / Lower Secondary – Ages 9–12',
-                'de'=>'Zyklus 3 – Grundschule / Sekundarstufe I – 9–12 Jahre',
+                'label'=>array('fr'=>'Cycle 3','en'=>'Ages 9–12','de'=>'9–12 Jahre'),
+                'detail'=>array('fr'=>'CM1 à 6e – 9 à 12 ans','en'=>'Primary / Lower Secondary – Ages 9–12','de'=>'Grundschule / Sekundarstufe I – 9–12 Jahre'),
             ),
             'cycle4'=>array(
-                'fr'=>'Cycle 4 – 5e à 3e – 12 à 15 ans',
-                'en'=>'Cycle 4 – Lower Secondary School – Ages 12–15',
-                'de'=>'Zyklus 4 – Sekundarstufe I – 12–15 Jahr',
+                'label'=>array('fr'=>'Cycle 4','en'=>'Ages 12–15','de'=>'12–15 Jahre'),
+                'detail'=>array('fr'=>'5e à 3e – 12 à 15 ans','en'=>'Lower Secondary School – Ages 12–15','de'=>'Sekundarstufe I – 12–15 Jahre'),
             ),
-            'multi'=>array('fr'=>'Multiniveaux','en'=>'Multi-level','de'=>'Mehrstufig'),
+            'multi'=>array(
+                'label'=>array('fr'=>'Multiniveaux','en'=>'Multi-level','de'=>'Mehrere Stufen'),
+                'detail'=>array('fr'=>'Dossier adaptable à plusieurs niveaux','en'=>'Resource adaptable to several age groups','de'=>'Material für mehrere Altersstufen'),
+            ),
         );
     }
 
-    public static function defaults() {
-        return array('guides'=>array());
-    }
+    public static function defaults() { return array('guides'=>array()); }
 
     private static function clean_translations($value, $textarea = false) {
-        $out = array('fr'=>'','en'=>'','de'=>'');
-        $value = is_array($value) ? $value : array();
-        foreach ($out as $lang => $unused) {
-            $raw = (string)($value[$lang] ?? '');
-            $out[$lang] = $textarea ? sanitize_textarea_field(wp_unslash($raw)) : sanitize_text_field(wp_unslash($raw));
-        }
+        $out = array('fr'=>'','en'=>'','de'=>''); $value = is_array($value) ? $value : array();
+        foreach ($out as $lang => $unused) { $raw=(string)($value[$lang]??''); $out[$lang]=$textarea?sanitize_textarea_field(wp_unslash($raw)):sanitize_text_field(wp_unslash($raw)); }
         return $out;
     }
 
     private static function normalize_library($saved) {
         if (!is_array($saved) || empty($saved)) return self::defaults();
-        $out = array('guides'=>array());
-        $catalog = self::cycle_catalog();
-        foreach ((array)($saved['guides'] ?? array()) as $guide) {
+        $out=array('guides'=>array()); $catalog=self::cycle_catalog();
+        foreach ((array)($saved['guides']??array()) as $guide) {
             if (!is_array($guide)) continue;
-            $languages = array_values(array_intersect(array('fr','de','en'), array_map('sanitize_key', (array)($guide['languages'] ?? array('fr')))));
-            if (!$languages) $languages = array('fr');
-            $status = sanitize_key($guide['status'] ?? 'available');
-            if (!in_array($status, array('available','new','coming'), true)) $status = 'available';
-            $cycle = sanitize_key($guide['cycle'] ?? '');
-            if (!isset($catalog[$cycle])) $cycle = 'cycle1';
-            $out['guides'][] = array(
-                'enabled'=>(string)($guide['enabled'] ?? '0') === '1' ? '1' : '0',
-                'cycle'=>$cycle,
-                'languages'=>$languages,
-                'status'=>$status,
-                'title'=>self::clean_translations($guide['title'] ?? array()),
-                'description'=>self::clean_translations($guide['description'] ?? array(), true),
-                'pdf_url'=>esc_url_raw((string)($guide['pdf_url'] ?? '')),
-                'cover_url'=>esc_url_raw((string)($guide['cover_url'] ?? '')),
-                'order'=>(int)($guide['order'] ?? 0),
-            );
+            $languages=array_values(array_intersect(array('fr','de','en'),array_map('sanitize_key',(array)($guide['languages']??array('fr'))))); if(!$languages)$languages=array('fr');
+            $status=sanitize_key($guide['status']??'available'); if(!in_array($status,array('available','new','coming'),true))$status='available';
+            $cycle=sanitize_key($guide['cycle']??''); if(!isset($catalog[$cycle]))$cycle='cycle1';
+            $out['guides'][]=array('enabled'=>(string)($guide['enabled']??'0')==='1'?'1':'0','cycle'=>$cycle,'languages'=>$languages,'status'=>$status,'title'=>self::clean_translations($guide['title']??array()),'description'=>self::clean_translations($guide['description']??array(),true),'pdf_url'=>esc_url_raw((string)($guide['pdf_url']??'')),'cover_url'=>esc_url_raw((string)($guide['cover_url']??'')),'order'=>(int)($guide['order']??0));
         }
         return $out;
     }
 
     private static function store() {
-        $saved = get_option(self::OPTION, array());
-        if (is_array($saved) && isset($saved['seasons']) && is_array($saved['seasons'])) {
-            return array('version'=>self::STORE_VERSION, 'seasons'=>$saved['seasons']);
-        }
-        $legacy = self::normalize_library($saved);
-        $seasons = array();
-        if (class_exists('Parcs_HT_Defaults')) {
-            $all = Parcs_HT_Defaults::all_settings();
-            foreach (array_keys((array)($all['seasons'] ?? array())) as $year) $seasons[(string)$year] = $legacy;
-        }
-        return array('version'=>self::STORE_VERSION, 'seasons'=>$seasons);
+        $saved=get_option(self::OPTION,array()); if(is_array($saved)&&isset($saved['seasons'])&&is_array($saved['seasons']))return array('version'=>self::STORE_VERSION,'seasons'=>$saved['seasons']);
+        $legacy=self::normalize_library($saved); $seasons=array(); if(class_exists('Parcs_HT_Defaults')){$all=Parcs_HT_Defaults::all_settings();foreach(array_keys((array)($all['seasons']??array()))as$year)$seasons[(string)$year]=$legacy;} return array('version'=>self::STORE_VERSION,'seasons'=>$seasons);
     }
 
-    private static function current_year() {
-        if (class_exists('Parcs_HT_Defaults')) {
-            $settings = Parcs_HT_Defaults::settings();
-            $year = (string)($settings['active_season_year'] ?? '');
-            if (preg_match('/^20\\d{2}$/', $year)) return $year;
-        }
-        return (string)wp_date('Y');
-    }
+    private static function current_year() { if(class_exists('Parcs_HT_Defaults')){$settings=Parcs_HT_Defaults::settings();$year=(string)($settings['active_season_year']??'');if(preg_match('/^20\\d{2}$/',$year))return$year;}return(string)wp_date('Y'); }
+    public static function settings($year=''){$year=(string)$year;if(!preg_match('/^20\\d{2}$/',$year))$year=self::current_year();$store=self::store();return isset($store['seasons'][$year])?self::normalize_library($store['seasons'][$year]):self::defaults();}
+    public static function menu(){add_submenu_page(null,'Guides pédagogiques','Guides pédagogiques','manage_options',self::PAGE,array(__CLASS__,'page'));}
+    public static function register_assets(){wp_register_style('parcs-ht-pedagogical-guides',PARCS_HT_URL.'assets/pedagogical-guides.css',array(),PARCS_HT_VERSION);}
+    public static function admin_assets($hook){if($hook!=='toplevel_page_parcs-horaires-tarifs'&&$hook!=='admin_page_'.self::PAGE)return;wp_enqueue_media();wp_enqueue_style('parcs-ht-pedagogical-guides-admin',PARCS_HT_URL.'assets/pedagogical-guides-admin.css',array(),PARCS_HT_VERSION);wp_enqueue_script('jquery-ui-sortable');}
 
-    public static function settings($year = '') {
-        $year = (string)$year;
-        if (!preg_match('/^20\\d{2}$/', $year)) $year = self::current_year();
-        $store = self::store();
-        return isset($store['seasons'][$year]) ? self::normalize_library($store['seasons'][$year]) : self::defaults();
-    }
+    private static function sanitize_posted_library($raw){$raw=is_array($raw)?$raw:array();$out=array('guides'=>array());$catalog=self::cycle_catalog();foreach((array)($raw['items']??array())as$item){if(!is_array($item))continue;$cycle=sanitize_key($item['cycle']??'');if(!isset($catalog[$cycle]))$cycle='cycle1';$status=sanitize_key($item['status']??'available');if(!in_array($status,array('available','new','coming'),true))$status='available';$languages=array();foreach(array('fr','de','en')as$lang)if(!empty($item['languages'][$lang]))$languages[]=$lang;if(!$languages)$languages=array('fr');$title=self::clean_translations($item['title']??array());if(!array_filter($title)&&empty($item['pdf_url'])&&$status!=='coming')continue;$out['guides'][]=array('enabled'=>!empty($item['enabled'])?'1':'0','cycle'=>$cycle,'languages'=>$languages,'status'=>$status,'title'=>$title,'description'=>self::clean_translations($item['description']??array(),true),'pdf_url'=>esc_url_raw((string)($item['pdf_url']??'')),'cover_url'=>esc_url_raw((string)($item['cover_url']??'')),'order'=>(int)($item['order']??0));}return$out;}
 
-    public static function menu() {
-        add_submenu_page(null, 'Guides pédagogiques', 'Guides pédagogiques', 'manage_options', self::PAGE, array(__CLASS__, 'page'));
-    }
+    public static function save(){if(!current_user_can('manage_options'))wp_die('Accès refusé.');check_admin_referer('parcs_ht_save_pedagogical_guides');$year=isset($_POST['season_year'])?sanitize_text_field(wp_unslash($_POST['season_year'])):'';if(!preg_match('/^20\\d{2}$/',$year))wp_die('Année invalide.');// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Chaque valeur imbriquée est validée et nettoyée selon son type.
+        $raw=isset($_POST['guides'])&&is_array($_POST['guides'])?wp_unslash($_POST['guides']):array();$store=self::store();$store['seasons'][$year]=self::sanitize_posted_library($raw);update_option(self::OPTION,$store,false);wp_safe_redirect(add_query_arg(array('page'=>Parcs_HT_Admin::PAGE,'season'=>$year,'tab'=>'htp-guides','guides-updated'=>'1'),admin_url('admin.php')));exit;}
+    public static function prepare_season_duplicate(){if(!current_user_can('manage_options'))return;$year=isset($_POST['season_year'])?sanitize_text_field(wp_unslash($_POST['season_year'])):'';if(!preg_match('/^20\\d{2}$/',$year))return;$nonce=isset($_POST['_wpnonce'])?sanitize_text_field(wp_unslash($_POST['_wpnonce'])):'';if(!wp_verify_nonce($nonce,'parcs_ht_duplicate_season_'.$year))return;$all=Parcs_HT_Defaults::all_settings();if(!isset($all['seasons'][$year]))return;$target=(int)$year+1;while(isset($all['seasons'][(string)$target])&&$target<=2100)$target++;if($target<=2100)self::$pending_duplicate=array('source'=>$year,'target'=>(string)$target);}
+    public static function complete_season_duplicate($option,$old_value,$new_value){if($option!==Parcs_HT_Defaults::OPTION||!self::$pending_duplicate||!is_array($new_value))return;$source=self::$pending_duplicate['source'];$target=self::$pending_duplicate['target'];self::$pending_duplicate=null;if(isset($old_value['seasons'][$target])||!isset($new_value['seasons'][$target]))return;$store=self::store();if(isset($store['seasons'][$source])){$store['seasons'][$target]=$store['seasons'][$source];update_option(self::OPTION,$store,false);}}
 
-    public static function register_assets() {
-        wp_register_style('parcs-ht-pedagogical-guides', PARCS_HT_URL . 'assets/pedagogical-guides.css', array(), PARCS_HT_VERSION);
-    }
+    private static function tr($values,$language,$fallback=''){$values=is_array($values)?$values:array();$v=trim((string)($values[$language]??''));if($v!=='')return$v;$v=trim((string)($values['fr']??''));if($v!=='')return$v;foreach(array('de','en')as$l){$v=trim((string)($values[$l]??''));if($v!=='')return$v;}return$fallback;}
+    private static function cycle_label($cycle,$language,$detail=false){$catalog=self::cycle_catalog();$part=$detail?'detail':'label';return self::tr($catalog[$cycle][$part]??array(),$language,$cycle);}
+    private static function language_meta($language){$all=array('fr'=>array('flag'=>'🇫🇷','fr'=>'Français','en'=>'French','de'=>'Französisch'),'de'=>array('flag'=>'🇩🇪','fr'=>'Allemand','en'=>'German','de'=>'Deutsch'),'en'=>array('flag'=>'🇬🇧','fr'=>'Anglais','en'=>'English','de'=>'Englisch'));return$all[$language]??array('flag'=>'','fr'=>$language,'en'=>$language,'de'=>$language);}
+    public static function shortcode($atts=array()){return self::render(Parcs_HT_Schedule::language(),is_array($atts)?$atts:array());}
 
-    public static function admin_assets($hook) {
-        if ($hook !== 'toplevel_page_parcs-horaires-tarifs' && $hook !== 'admin_page_' . self::PAGE) return;
-        wp_enqueue_media();
-        wp_enqueue_style('parcs-ht-pedagogical-guides-admin', PARCS_HT_URL . 'assets/pedagogical-guides-admin.css', array(), PARCS_HT_VERSION);
-        wp_enqueue_script('jquery-ui-sortable');
-    }
-
-    private static function sanitize_posted_library($raw) {
-        $raw = is_array($raw) ? $raw : array();
-        $out = array('guides'=>array());
-        $catalog = self::cycle_catalog();
-        foreach ((array)($raw['items'] ?? array()) as $item) {
-            if (!is_array($item)) continue;
-            $cycle = sanitize_key($item['cycle'] ?? '');
-            if (!isset($catalog[$cycle])) $cycle = 'cycle1';
-            $status = sanitize_key($item['status'] ?? 'available');
-            if (!in_array($status, array('available','new','coming'), true)) $status = 'available';
-            $languages = array();
-            foreach (array('fr','de','en') as $lang) if (!empty($item['languages'][$lang])) $languages[] = $lang;
-            if (!$languages) $languages = array('fr');
-            $title = self::clean_translations($item['title'] ?? array());
-            if (!array_filter($title) && empty($item['pdf_url']) && $status !== 'coming') continue;
-            $out['guides'][] = array(
-                'enabled'=>!empty($item['enabled'])?'1':'0',
-                'cycle'=>$cycle,
-                'languages'=>$languages,
-                'status'=>$status,
-                'title'=>$title,
-                'description'=>self::clean_translations($item['description'] ?? array(), true),
-                'pdf_url'=>esc_url_raw((string)($item['pdf_url'] ?? '')),
-                'cover_url'=>esc_url_raw((string)($item['cover_url'] ?? '')),
-                'order'=>(int)($item['order'] ?? 0),
-            );
-        }
-        return $out;
-    }
-
-    public static function save() {
-        if (!current_user_can('manage_options')) wp_die('Accès refusé.');
-        check_admin_referer('parcs_ht_save_pedagogical_guides');
-        $year = isset($_POST['season_year']) ? sanitize_text_field(wp_unslash($_POST['season_year'])) : '';
-        if (!preg_match('/^20\\d{2}$/', $year)) wp_die('Année invalide.');
-        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Chaque valeur imbriquée est validée et nettoyée selon son type.
-        $raw = isset($_POST['guides']) && is_array($_POST['guides']) ? wp_unslash($_POST['guides']) : array();
-        $store = self::store();
-        $store['seasons'][$year] = self::sanitize_posted_library($raw);
-        update_option(self::OPTION, $store, false);
-        wp_safe_redirect(add_query_arg(array('page'=>Parcs_HT_Admin::PAGE,'season'=>$year,'tab'=>'htp-guides','guides-updated'=>'1'), admin_url('admin.php')));
-        exit;
-    }
-
-    public static function prepare_season_duplicate() {
-        if (!current_user_can('manage_options')) return;
-        $year = isset($_POST['season_year']) ? sanitize_text_field(wp_unslash($_POST['season_year'])) : '';
-        if (!preg_match('/^20\\d{2}$/', $year)) return;
-        $nonce = isset($_POST['_wpnonce']) ? sanitize_text_field(wp_unslash($_POST['_wpnonce'])) : '';
-        if (!wp_verify_nonce($nonce, 'parcs_ht_duplicate_season_' . $year)) return;
-        $all = Parcs_HT_Defaults::all_settings();
-        if (!isset($all['seasons'][$year])) return;
-        $target = (int)$year + 1;
-        while (isset($all['seasons'][(string)$target]) && $target <= 2100) $target++;
-        if ($target <= 2100) self::$pending_duplicate = array('source'=>$year,'target'=>(string)$target);
-    }
-
-    public static function complete_season_duplicate($option, $old_value, $new_value) {
-        if ($option !== Parcs_HT_Defaults::OPTION || !self::$pending_duplicate || !is_array($new_value)) return;
-        $source = self::$pending_duplicate['source'];
-        $target = self::$pending_duplicate['target'];
-        self::$pending_duplicate = null;
-        if (isset($old_value['seasons'][$target]) || !isset($new_value['seasons'][$target])) return;
-        $store = self::store();
-        if (isset($store['seasons'][$source])) {
-            $store['seasons'][$target] = $store['seasons'][$source];
-            update_option(self::OPTION, $store, false);
-        }
-    }
-
-    private static function tr($values,$language,$fallback='') {
-        $values=is_array($values)?$values:array();
-        $v=trim((string)($values[$language]??'')); if($v!=='')return $v;
-        $v=trim((string)($values['fr']??'')); if($v!=='')return $v;
-        foreach(array('de','en') as $l){$v=trim((string)($values[$l]??''));if($v!=='')return $v;}
-        return $fallback;
-    }
-
-    private static function language_meta($language) {
-        $all=array(
-            'fr'=>array('flag'=>'🇫🇷','fr'=>'Français','en'=>'French','de'=>'Französisch'),
-            'de'=>array('flag'=>'🇩🇪','fr'=>'Allemand','en'=>'German','de'=>'Deutsch'),
-            'en'=>array('flag'=>'🇬🇧','fr'=>'Anglais','en'=>'English','de'=>'Englisch'),
-        );
-        return $all[$language] ?? array('flag'=>'','fr'=>$language,'en'=>$language,'de'=>$language);
-    }
-
-    public static function shortcode($atts=array()) {
-        return self::render(Parcs_HT_Schedule::language(), is_array($atts)?$atts:array());
-    }
-
-    public static function render($language,$atts=array()) {
-        $language=in_array($language,array('fr','en','de'),true)?$language:'fr';
-        wp_enqueue_style('parcs-ht-pedagogical-guides');
-        $s=self::settings();
-        $guides=array_values(array_filter($s['guides'],static function($g){return is_array($g)&&(string)($g['enabled']??'0')==='1';}));
-        if (!$guides) return '';
-        usort($guides,static function($a,$b){return((int)($a['order']??0))<=>((int)($b['order']??0));});
-        $catalog=self::cycle_catalog();
-        $used_cycles=array(); $used_languages=array();
-        foreach($guides as $g){$used_cycles[$g['cycle']]=true;foreach((array)$g['languages'] as $lang)$used_languages[$lang]=true;}
-        $cycle_filter=sanitize_key($atts['cycle']??'');
-        if($cycle_filter!==''&&isset($used_cycles[$cycle_filter])){$guides=array_values(array_filter($guides,static function($g)use($cycle_filter){return($g['cycle']??'')===$cycle_filter;}));$used_cycles=array($cycle_filter=>true);}
-        if(!$guides)return'';
-        $ui=array(
-            'fr'=>array('resources'=>'Ressources pédagogiques','categories'=>'Cycles / niveaux','all_cycles'=>'Tous','languages'=>'Langues','all_languages'=>'Toutes les langues','new'=>'Nouveau','coming'=>'À venir','read'=>'Consulter','download'=>'Télécharger le PDF'),
-            'en'=>array('resources'=>'Teaching resources','categories'=>'Cycles / levels','all_cycles'=>'All','languages'=>'Languages','all_languages'=>'All languages','new'=>'New','coming'=>'Coming soon','read'=>'View','download'=>'Download PDF'),
-            'de'=>array('resources'=>'Pädagogische Materialien','categories'=>'Zyklen / Niveaus','all_cycles'=>'Alle','languages'=>'Sprachen','all_languages'=>'Alle Sprachen','new'=>'Neu','coming'=>'Demnächst','read'=>'Ansehen','download'=>'PDF herunterladen')
-        );
-        $u=$ui[$language]; $id='parcs-ht-guides-'.wp_rand(1000,999999);
-        ob_start(); ?>
-        <section id="<?php echo esc_attr($id); ?>" class="parcs-ht-guides" data-htp-guides>
-            <header class="parcs-ht-guides-head"><h2><?php echo esc_html($u['resources']); ?></h2></header>
-            <?php if(count($used_cycles)>1): ?><div class="parcs-ht-guide-filter-group"><strong><?php echo esc_html($u['categories']); ?></strong><div class="parcs-ht-guide-filters" data-guide-cycle-filters><button type="button" class="is-active" data-guide-cycle="all"><?php echo esc_html($u['all_cycles']); ?></button><?php foreach(array_keys($catalog) as $cid){if(empty($used_cycles[$cid]))continue;?><button type="button" data-guide-cycle="<?php echo esc_attr($cid); ?>"><?php echo esc_html(self::tr($catalog[$cid],$language,$cid));?></button><?php }?></div></div><?php endif; ?>
-            <?php if(count($used_languages)>1): ?><div class="parcs-ht-guide-filter-group"><strong><?php echo esc_html($u['languages']); ?></strong><div class="parcs-ht-guide-filters" data-guide-language-filters><button type="button" class="is-active" data-guide-language="all"><?php echo esc_html($u['all_languages']); ?></button><?php foreach(array('fr','de','en') as $lang){if(empty($used_languages[$lang]))continue;$m=self::language_meta($lang);?><button type="button" data-guide-language="<?php echo esc_attr($lang); ?>"><?php echo esc_html($m['flag'].' '.$m[$language]);?></button><?php }?></div></div><?php endif; ?>
-            <div class="parcs-ht-guide-grid" data-guide-grid>
-            <?php foreach($guides as $g): $status=(string)($g['status']??'available'); $pdf=trim((string)($g['pdf_url']??'')); $langs=array_values((array)($g['languages']??array())); ?>
-                <article class="parcs-ht-guide-card<?php echo $status==='coming'?' is-coming':'';?>" data-guide-card data-cycle="<?php echo esc_attr($g['cycle']);?>" data-languages="<?php echo esc_attr(implode(' ', $langs));?>">
-                    <div class="parcs-ht-guide-cover"><?php if(!empty($g['cover_url'])):?><img src="<?php echo esc_url($g['cover_url']); ?>" alt="" loading="lazy"><?php else:?><span class="parcs-ht-guide-book" aria-hidden="true">📘</span><?php endif;?><?php if($status==='new'):?><span class="parcs-ht-guide-status is-new"><?php echo esc_html($u['new']); ?></span><?php elseif($status==='coming'):?><span class="parcs-ht-guide-status is-coming"><?php echo esc_html($u['coming']); ?></span><?php endif;?></div>
-                    <div class="parcs-ht-guide-body"><div class="parcs-ht-guide-category"><?php echo esc_html(self::tr($catalog[$g['cycle']]??array(),$language,$g['cycle']));?></div><div class="parcs-ht-guide-languages"><?php foreach($langs as$l){$m=self::language_meta($l);echo '<span class="parcs-ht-guide-language">'.esc_html($m['flag'].' '.$m[$language]).'</span>';}?></div><h4><?php echo esc_html(self::tr($g['title'],$language)); ?></h4><?php $desc=self::tr($g['description'],$language);if($desc!==''):?><p><?php echo nl2br(esc_html($desc)); ?></p><?php endif;?><?php if($status!=='coming'&&$pdf!==''):?><div class="parcs-ht-guide-actions"><a class="parcs-ht-guide-primary" href="<?php echo esc_url($pdf); ?>" target="_blank" rel="noopener"><?php echo esc_html($u['read']); ?></a><a class="parcs-ht-guide-secondary" href="<?php echo esc_url($pdf); ?>" download><?php echo esc_html($u['download']); ?></a></div><?php endif;?></div>
-                </article>
-            <?php endforeach; ?></div>
+    public static function render($language,$atts=array()){
+        $language=in_array($language,array('fr','en','de'),true)?$language:'fr';wp_enqueue_style('parcs-ht-pedagogical-guides');$s=self::settings();$guides=array_values(array_filter($s['guides'],static function($g){return is_array($g)&&(string)($g['enabled']??'0')==='1';}));if(!$guides)return'';usort($guides,static function($a,$b){return((int)($a['order']??0))<=>((int)($b['order']??0));});$catalog=self::cycle_catalog();$used_cycles=array();$used_languages=array();foreach($guides as$g){$used_cycles[$g['cycle']]=true;foreach((array)$g['languages']as$lang)$used_languages[$lang]=true;}$cycle_filter=sanitize_key($atts['cycle']??'');if($cycle_filter!==''&&isset($used_cycles[$cycle_filter])){$guides=array_values(array_filter($guides,static function($g)use($cycle_filter){return($g['cycle']??'')===$cycle_filter;}));$used_cycles=array($cycle_filter=>true);}if(!$guides)return'';
+        $ui=array('fr'=>array('resources'=>'Ressources pédagogiques','categories'=>'Cycles / niveaux','all_cycles'=>'Tous','languages'=>'Langues','all_languages'=>'Toutes','new'=>'Nouveau','coming'=>'À venir','read'=>'Consulter','download'=>'Télécharger le PDF','info'=>'Plus d’informations'),'en'=>array('resources'=>'Teaching resources','categories'=>'Age groups / levels','all_cycles'=>'All','languages'=>'Languages','all_languages'=>'All','new'=>'New','coming'=>'Coming soon','read'=>'View','download'=>'Download PDF','info'=>'More information'),'de'=>array('resources'=>'Pädagogische Materialien','categories'=>'Altersgruppen / Niveaus','all_cycles'=>'Alle','languages'=>'Sprachen','all_languages'=>'Alle','new'=>'Neu','coming'=>'Demnächst','read'=>'Ansehen','download'=>'PDF herunterladen','info'=>'Mehr Informationen'));
+        $u=$ui[$language];$id='parcs-ht-guides-'.wp_rand(1000,999999);ob_start();?>
+        <section id="<?php echo esc_attr($id);?>" class="parcs-ht-guides" data-htp-guides data-guide-language="<?php echo esc_attr($language);?>">
+            <header class="parcs-ht-guides-head"><h2><?php echo esc_html($u['resources']);?></h2></header>
+            <?php if(count($used_cycles)>1):?><div class="parcs-ht-guide-filter-group"><strong><?php echo esc_html($u['categories']);?></strong><div class="parcs-ht-guide-filters" data-guide-cycle-filters><button type="button" class="is-active" data-guide-cycle="all"><?php echo esc_html($u['all_cycles']);?></button><?php foreach(array_keys($catalog)as$cid){if(empty($used_cycles[$cid]))continue;$label=self::cycle_label($cid,$language);$detail=self::cycle_label($cid,$language,true);?><span class="parcs-ht-guide-filter-item"><button type="button" data-guide-cycle="<?php echo esc_attr($cid);?>"><?php echo esc_html($label);?></button><button type="button" class="parcs-ht-guide-info" data-guide-info aria-label="<?php echo esc_attr($u['info'].' — '.$label);?>" aria-expanded="false">ⓘ</button><span class="parcs-ht-guide-info-pop" data-guide-info-pop hidden><?php echo esc_html($detail);?></span></span><?php }?></div></div><?php endif;?>
+            <?php if(count($used_languages)>1):?><div class="parcs-ht-guide-filter-group"><strong><?php echo esc_html($u['languages']);?></strong><div class="parcs-ht-guide-filters" data-guide-language-filters><button type="button" class="is-active" data-guide-language="all"><?php echo esc_html($u['all_languages']);?></button><?php foreach(array('fr','de','en')as$lang){if(empty($used_languages[$lang]))continue;$m=self::language_meta($lang);?><button type="button" data-guide-language="<?php echo esc_attr($lang);?>" aria-label="<?php echo esc_attr($m[$language]);?>" title="<?php echo esc_attr($m[$language]);?>"><?php echo esc_html($m['flag']);?></button><?php }?></div></div><?php endif;?>
+            <div class="parcs-ht-guide-grid" data-guide-grid><?php foreach($guides as$g):$status=(string)($g['status']??'available');$pdf=trim((string)($g['pdf_url']??''));$langs=array_values((array)($g['languages']??array()));?><article class="parcs-ht-guide-card<?php echo$status==='coming'?' is-coming':'';?>" data-guide-card data-cycle="<?php echo esc_attr($g['cycle']);?>" data-languages="<?php echo esc_attr(implode(' ',$langs));?>"><div class="parcs-ht-guide-cover"><?php if(!empty($g['cover_url'])):?><img src="<?php echo esc_url($g['cover_url']);?>" alt="" loading="lazy"><?php else:?><span class="parcs-ht-guide-book" aria-hidden="true">📘</span><?php endif;?><?php if($status==='new'):?><span class="parcs-ht-guide-status is-new"><?php echo esc_html($u['new']);?></span><?php elseif($status==='coming'):?><span class="parcs-ht-guide-status is-coming"><?php echo esc_html($u['coming']);?></span><?php endif;?></div><div class="parcs-ht-guide-body"><div class="parcs-ht-guide-category"><?php echo esc_html(self::cycle_label($g['cycle'],$language));?><small><?php echo esc_html(self::cycle_label($g['cycle'],$language,true));?></small></div><div class="parcs-ht-guide-languages"><?php foreach($langs as$l){$m=self::language_meta($l);echo'<span class="parcs-ht-guide-language">'.esc_html($m['flag'].' '.$m[$language]).'</span>';}?></div><h4><?php echo esc_html(self::tr($g['title'],$language));?></h4><?php $desc=self::tr($g['description'],$language);if($desc!==''):?><p><?php echo nl2br(esc_html($desc));?></p><?php endif;?><?php if($status!=='coming'&&$pdf!==''):?><div class="parcs-ht-guide-actions"><a class="parcs-ht-guide-primary" href="<?php echo esc_url($pdf);?>" target="_blank" rel="noopener"><?php echo esc_html($u['read']);?></a><a class="parcs-ht-guide-secondary" href="<?php echo esc_url($pdf);?>" download><?php echo esc_html($u['download']);?></a></div><?php endif;?></div></article><?php endforeach;?></div>
         </section>
-        <script>(function(){var r=document.getElementById(<?php echo wp_json_encode($id); ?>);if(!r)return;var cycle='all',lang='all';function apply(){r.querySelectorAll('[data-guide-card]').forEach(function(c){var cm=cycle==='all'||c.dataset.cycle===cycle;var lm=lang==='all'||(' '+c.dataset.languages+' ').indexOf(' '+lang+' ')!==-1;c.hidden=!(cm&&lm);});}function bind(sel,key){r.querySelectorAll(sel+' button').forEach(function(b){b.addEventListener('click',function(){r.querySelectorAll(sel+' button').forEach(function(x){x.classList.toggle('is-active',x===b);});if(key==='cycle')cycle=b.dataset.guideCycle;else lang=b.dataset.guideLanguage;apply();});});}bind('[data-guide-cycle-filters]','cycle');bind('[data-guide-language-filters]','lang');}());</script>
-        <?php return ob_get_clean();
+        <script>(function(){var r=document.getElementById(<?php echo wp_json_encode($id);?>);if(!r)return;var cycle='all',lang='all';function apply(){r.querySelectorAll('[data-guide-card]').forEach(function(c){var cm=cycle==='all'||c.dataset.cycle===cycle;var lm=lang==='all'||(' '+c.dataset.languages+' ').indexOf(' '+lang+' ')!==-1;c.hidden=!(cm&&lm);});}function bind(sel,key){r.querySelectorAll(sel+' button[data-guide-'+key+']').forEach(function(b){b.addEventListener('click',function(){r.querySelectorAll(sel+' button[data-guide-'+key+']').forEach(function(x){x.classList.toggle('is-active',x===b);});if(key==='cycle')cycle=b.dataset.guideCycle;else lang=b.dataset.guideLanguage;apply();});});}bind('[data-guide-cycle-filters]','cycle');bind('[data-guide-language-filters]','language');r.querySelectorAll('[data-guide-info]').forEach(function(b){b.addEventListener('click',function(e){e.stopPropagation();var p=b.parentNode.querySelector('[data-guide-info-pop]'),open=!p.hidden;r.querySelectorAll('[data-guide-info-pop]').forEach(function(x){x.hidden=true;});r.querySelectorAll('[data-guide-info]').forEach(function(x){x.setAttribute('aria-expanded','false');});p.hidden=open;b.setAttribute('aria-expanded',open?'false':'true');});});}());</script><?php return ob_get_clean();
     }
 
-    private static function lang_fields($base,$values,$textarea=false) {
-        $values=is_array($values)?$values:array();
-        foreach(array('fr'=>'FR','en'=>'EN','de'=>'DE')as$lang=>$label): ?>
-            <label class="htp-guide-lang-field"><span><?php echo esc_html($label);?></span><?php if($textarea):?><textarea name="<?php echo esc_attr($base.'['.$lang.']');?>" rows="2"><?php echo esc_textarea($values[$lang]??'');?></textarea><?php else:?><input type="text" name="<?php echo esc_attr($base.'['.$lang.']');?>" value="<?php echo esc_attr($values[$lang]??'');?>"><?php endif;?></label>
-        <?php endforeach;
-    }
-
-    private static function admin_content($year, $embedded = false) {
-        $s=self::settings($year); ?>
-        <div class="htp-guides-admin<?php echo $embedded?' htp-guides-admin-embedded':'';?>">
-            <?php if ($embedded): ?><h2>Guides pédagogiques — <?php echo esc_html($year); ?></h2><?php else: ?><h1>Guides pédagogiques — <?php echo esc_html($year); ?></h1><?php endif; ?>
-            <p class="description">Chaque document est rattaché directement à un cycle/niveau et à une ou plusieurs langues. Les filtres publics sont créés automatiquement uniquement avec les cycles et langues réellement présents. Lors d’une duplication d’année, les guides sont copiés à l’identique.</p>
-            <?php if(isset($_GET['guides-updated'])): /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Message de confirmation uniquement. */ ?><div class="notice notice-success inline"><p>Les guides pédagogiques ont été enregistrés.</p></div><?php endif; ?>
-            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php'));?>">
-                <input type="hidden" name="action" value="parcs_ht_save_pedagogical_guides"><input type="hidden" name="season_year" value="<?php echo esc_attr($year); ?>"><?php wp_nonce_field('parcs_ht_save_pedagogical_guides'); ?>
-                <section class="htp-guide-admin-card"><div class="htp-guide-admin-head"><h3>Documents pédagogiques</h3><button type="button" class="button" data-add-guide>Ajouter un guide</button></div><p class="description">Cycles disponibles : Cycle 1, Cycle 2, Cycle 3, Cycle 4 et Multiniveaux. Les intitulés affichés sont adaptés en français, anglais international et allemand. Un document bilingue peut simplement avoir plusieurs langues cochées.</p><div data-guide-list><?php foreach($s['guides']as$i=>$g)self::guide_admin_row($i,$g);?></div></section>
-                <?php submit_button('Enregistrer les guides'); ?>
-            </form>
-            <template class="htp-guide-template"><?php self::guide_admin_row('__INDEX__',array('enabled'=>'0','cycle'=>'cycle1','languages'=>array('fr'),'status'=>'coming','title'=>array(),'description'=>array(),'pdf_url'=>'','cover_url'=>'','order'=>0));?></template>
-        </div>
-        <?php self::admin_script();
-    }
-
-    private static function admin_script() { ?>
-        <script>(function($){var root=$('#htp-guides');if(!root.length)root=$('.htp-guides-admin').last();var gl=root.find('[data-guide-list]');root.on('click','[data-add-guide]',function(){var i=Date.now();gl.append(root.find('.htp-guide-template').html().replaceAll('__INDEX__',i));});root.on('click','[data-remove-guide]',function(){$(this).closest('[data-guide-row]').remove();});root.on('click','[data-media-field]',function(){var b=$(this),t=b.siblings('input[type=url]'),type=b.data('media-field'),f=wp.media({title:type==='pdf'?'Choisir un PDF':'Choisir une image',multiple:false,library:type==='pdf'?{type:'application/pdf'}:{type:'image'}});f.on('select',function(){t.val(f.state().get('selection').first().toJSON().url);});f.open();});if($.fn.sortable){gl.sortable({items:'[data-guide-row]',handle:'[data-guide-handle]',update:function(){gl.children().each(function(i){$(this).find('[data-guide-order]').val((i+1)*10);});}});}})(jQuery);</script>
-    <?php }
-
-    public static function embedded_admin_panel() {
-        if (!current_user_can('manage_options')) return;
-        $screen = function_exists('get_current_screen') ? get_current_screen() : null;
-        if (!$screen || $screen->id !== 'toplevel_page_' . Parcs_HT_Admin::PAGE) return;
-        $year = isset($_GET['season']) ? sanitize_text_field(wp_unslash($_GET['season'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Sélection d'année en lecture seule.
-        if (!preg_match('/^20\\d{2}$/', $year)) $year = self::current_year();
-        ?><section id="htp-guides" class="htp-card" hidden><?php self::admin_content($year, true); ?></section><script>(function(){var p=document.getElementById('htp-guides'),r=document.querySelector('.htp-admin');if(p&&r)r.appendChild(p);}());</script><?php
-    }
-
-    public static function page() {
-        if(!current_user_can('manage_options')) return;
-        $year = isset($_GET['season']) ? sanitize_text_field(wp_unslash($_GET['season'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Sélection d'année en lecture seule.
-        if (!preg_match('/^20\\d{2}$/', $year)) $year = self::current_year();
-        ?><div class="wrap"><?php self::admin_content($year, false); ?></div><?php
-    }
-
-    private static function guide_admin_row($i,$g) {
-        $catalog=self::cycle_catalog();
-        $g=wp_parse_args($g,array('enabled'=>'1','cycle'=>'cycle1','languages'=>array('fr'),'status'=>'available','title'=>array(),'description'=>array(),'pdf_url'=>'','cover_url'=>'','order'=>0)); $base='guides[items]['.$i.']'; ?>
-        <article class="htp-guide-admin-row" data-guide-row><div class="htp-guide-row-head"><button type="button" class="button" data-guide-handle>↕</button><label><input type="checkbox" name="<?php echo esc_attr($base.'[enabled]');?>" value="1" <?php checked($g['enabled'],'1');?>> Afficher</label><label class="htp-guide-select-field"><span>Cycle / niveau</span><select name="<?php echo esc_attr($base.'[cycle]');?>"><?php foreach($catalog as$cid=>$titles):?><option value="<?php echo esc_attr($cid);?>" <?php selected($g['cycle'],$cid);?>><?php echo esc_html($titles['fr']);?></option><?php endforeach;?></select></label><label class="htp-guide-select-field"><span>Statut</span><select name="<?php echo esc_attr($base.'[status]');?>"><option value="available" <?php selected($g['status'],'available');?>>Disponible</option><option value="new" <?php selected($g['status'],'new');?>>Nouveau</option><option value="coming" <?php selected($g['status'],'coming');?>>À venir</option></select></label><label class="htp-guide-order-field"><span>Ordre d’affichage</span><input type="number" class="small-text" data-guide-order name="<?php echo esc_attr($base.'[order]');?>" value="<?php echo (int)$g['order'];?>"></label><button type="button" class="button-link-delete" data-remove-guide>Supprimer</button></div><div class="htp-guide-languages-admin"><strong>Langue(s) du document :</strong><?php foreach(array('fr'=>'🇫🇷 Français','de'=>'🇩🇪 Deutsch','en'=>'🇬🇧 English')as$lang=>$label):?><label><input type="checkbox" name="<?php echo esc_attr($base.'[languages]['.$lang.']');?>" value="1" <?php checked(in_array($lang,(array)$g['languages'],true));?>> <?php echo esc_html($label);?></label><?php endforeach;?></div><div class="htp-guide-admin-grid"><div><h4>Titre affiché</h4><?php self::lang_fields($base.'[title]',$g['title']);?></div><div><h4>Description</h4><?php self::lang_fields($base.'[description]',$g['description'],true);?></div></div><div class="htp-guide-media-grid"><label>PDF <span><input type="url" name="<?php echo esc_attr($base.'[pdf_url]');?>" value="<?php echo esc_attr($g['pdf_url']);?>"><button type="button" class="button" data-media-field="pdf">Choisir</button></span></label><label>Couverture <span><input type="url" name="<?php echo esc_attr($base.'[cover_url]');?>" value="<?php echo esc_attr($g['cover_url']);?>"><button type="button" class="button" data-media-field="image">Choisir</button></span></label></div></article>
-        <?php
-    }
+    private static function lang_fields($base,$values,$textarea=false){$values=is_array($values)?$values:array();foreach(array('fr'=>'FR','en'=>'EN','de'=>'DE')as$lang=>$label):?><label class="htp-guide-lang-field"><span><?php echo esc_html($label);?></span><?php if($textarea):?><textarea name="<?php echo esc_attr($base.'['.$lang.']');?>" rows="2"><?php echo esc_textarea($values[$lang]??'');?></textarea><?php else:?><input type="text" name="<?php echo esc_attr($base.'['.$lang.']');?>" value="<?php echo esc_attr($values[$lang]??'');?>"><?php endif;?></label><?php endforeach;}
+    private static function admin_content($year,$embedded=false){$s=self::settings($year);?><div class="htp-guides-admin<?php echo$embedded?' htp-guides-admin-embedded':'';?>"><?php if($embedded):?><h2>Guides pédagogiques — <?php echo esc_html($year);?></h2><?php else:?><h1>Guides pédagogiques — <?php echo esc_html($year);?></h1><?php endif;?><p class="description">Chaque document est rattaché directement à un cycle/niveau et à une ou plusieurs langues. Les filtres publics sont créés automatiquement uniquement avec les cycles et langues réellement présents. Lors d’une duplication d’année, les guides sont copiés à l’identique.</p><?php if(isset($_GET['guides-updated'])): /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Message de confirmation uniquement. */?><div class="notice notice-success inline"><p>Les guides pédagogiques ont été enregistrés.</p></div><?php endif;?><form method="post" action="<?php echo esc_url(admin_url('admin-post.php'));?>"><input type="hidden" name="action" value="parcs_ht_save_pedagogical_guides"><input type="hidden" name="season_year" value="<?php echo esc_attr($year);?>"><?php wp_nonce_field('parcs_ht_save_pedagogical_guides');?><section class="htp-guide-admin-card"><div class="htp-guide-admin-head"><h3>Documents pédagogiques</h3><button type="button" class="button" data-add-guide>Ajouter un guide</button></div><p class="description">Cycles disponibles : Cycle 1, Cycle 2, Cycle 3, Cycle 4 et Multiniveaux. Les shortcodes FR, EN et DE imposent chacun leur affichage : cycles en français, tranches d’âge en anglais et allemand. Le bouton ⓘ donne le détail du niveau dans la langue affichée.</p><div data-guide-list><?php foreach($s['guides']as$i=>$g)self::guide_admin_row($i,$g);?></div></section><?php submit_button('Enregistrer les guides');?></form><template class="htp-guide-template"><?php self::guide_admin_row('__INDEX__',array('enabled'=>'0','cycle'=>'cycle1','languages'=>array('fr'),'status'=>'coming','title'=>array(),'description'=>array(),'pdf_url'=>'','cover_url'=>'','order'=>0));?></template></div><?php self::admin_script();}
+    private static function admin_script(){?><script>(function($){var root=$('#htp-guides');if(!root.length)root=$('.htp-guides-admin').last();var gl=root.find('[data-guide-list]');root.on('click','[data-add-guide]',function(){var i=Date.now();gl.append(root.find('.htp-guide-template').html().replaceAll('__INDEX__',i));});root.on('click','[data-remove-guide]',function(){$(this).closest('[data-guide-row]').remove();});root.on('click','[data-media-field]',function(){var b=$(this),t=b.siblings('input[type=url]'),type=b.data('media-field'),f=wp.media({title:type==='pdf'?'Choisir un PDF':'Choisir une image',multiple:false,library:type==='pdf'?{type:'application/pdf'}:{type:'image'}});f.on('select',function(){t.val(f.state().get('selection').first().toJSON().url);});f.open();});if($.fn.sortable){gl.sortable({items:'[data-guide-row]',handle:'[data-guide-handle]',update:function(){gl.children().each(function(i){$(this).find('[data-guide-order]').val((i+1)*10);});}});}})(jQuery);</script><?php }
+    public static function embedded_admin_panel(){if(!current_user_can('manage_options'))return;$screen=function_exists('get_current_screen')?get_current_screen():null;if(!$screen||$screen->id!=='toplevel_page_'.Parcs_HT_Admin::PAGE)return;$year=isset($_GET['season'])?sanitize_text_field(wp_unslash($_GET['season'])):'';/* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Sélection d'année en lecture seule. */if(!preg_match('/^20\\d{2}$/',$year))$year=self::current_year();?><section id="htp-guides" class="htp-card" hidden><?php self::admin_content($year,true);?></section><script>(function(){var p=document.getElementById('htp-guides'),r=document.querySelector('.htp-admin');if(p&&r)r.appendChild(p);}());</script><?php }
+    public static function page(){if(!current_user_can('manage_options'))return;$year=isset($_GET['season'])?sanitize_text_field(wp_unslash($_GET['season'])):'';/* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Sélection d'année en lecture seule. */if(!preg_match('/^20\\d{2}$/',$year))$year=self::current_year();?><div class="wrap"><?php self::admin_content($year,false);?></div><?php }
+    private static function guide_admin_row($i,$g){$catalog=self::cycle_catalog();$g=wp_parse_args($g,array('enabled'=>'1','cycle'=>'cycle1','languages'=>array('fr'),'status'=>'available','title'=>array(),'description'=>array(),'pdf_url'=>'','cover_url'=>'','order'=>0));$base='guides[items]['.$i.']';?><article class="htp-guide-admin-row" data-guide-row><div class="htp-guide-row-head"><button type="button" class="button" data-guide-handle>↕</button><label><input type="checkbox" name="<?php echo esc_attr($base.'[enabled]');?>" value="1" <?php checked($g['enabled'],'1');?>> Afficher</label><label class="htp-guide-select-field"><span>Cycle / niveau</span><select name="<?php echo esc_attr($base.'[cycle]');?>"><?php foreach($catalog as$cid=>$titles):?><option value="<?php echo esc_attr($cid);?>" <?php selected($g['cycle'],$cid);?>><?php echo esc_html(self::tr($titles['label'],'fr').' — '.self::tr($titles['detail'],'fr'));?></option><?php endforeach;?></select></label><label class="htp-guide-select-field"><span>Statut</span><select name="<?php echo esc_attr($base.'[status]');?>"><option value="available" <?php selected($g['status'],'available');?>>Disponible</option><option value="new" <?php selected($g['status'],'new');?>>Nouveau</option><option value="coming" <?php selected($g['status'],'coming');?>>À venir</option></select></label><label class="htp-guide-order-field"><span>Ordre d’affichage</span><input type="number" class="small-text" data-guide-order name="<?php echo esc_attr($base.'[order]');?>" value="<?php echo(int)$g['order'];?>"></label><button type="button" class="button-link-delete" data-remove-guide>Supprimer</button></div><div class="htp-guide-languages-admin"><strong>Langue(s) du document :</strong><?php foreach(array('fr'=>'🇫🇷 Français','de'=>'🇩🇪 Deutsch','en'=>'🇬🇧 English')as$lang=>$label):?><label><input type="checkbox" name="<?php echo esc_attr($base.'[languages]['.$lang.']');?>" value="1" <?php checked(in_array($lang,(array)$g['languages'],true));?>> <?php echo esc_html($label);?></label><?php endforeach;?></div><div class="htp-guide-admin-grid"><div><h4>Titre affiché</h4><?php self::lang_fields($base.'[title]',$g['title']);?></div><div><h4>Description</h4><?php self::lang_fields($base.'[description]',$g['description'],true);?></div></div><div class="htp-guide-media-grid"><label>PDF <span><input type="url" name="<?php echo esc_attr($base.'[pdf_url]');?>" value="<?php echo esc_attr($g['pdf_url']);?>"><button type="button" class="button" data-media-field="pdf">Choisir</button></span></label><label>Couverture <span><input type="url" name="<?php echo esc_attr($base.'[cover_url]');?>" value="<?php echo esc_attr($g['cover_url']);?>"><button type="button" class="button" data-media-field="image">Choisir</button></span></label></div></article><?php }
 }
