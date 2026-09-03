@@ -24,6 +24,18 @@ final class Parcs_HT_Group_Quotes {
             'group_field' => 'groupedevis',
             'school_value' => 'Groupe',
             'disability_value' => 'Groupe en situation de handicap',
+            'tariff_binding' => array(
+                'column' => 'price',
+                'child_row' => '2',
+                'child_label' => 'Scolaire / extrascolaire',
+                'adult_row' => '0',
+                'adult_label' => 'Adulte',
+                'disability_row' => '3',
+                'disability_label' => 'Personne en situation de handicap et accompagnateur',
+                'companion_row' => '3',
+                'companion_label' => 'Personne en situation de handicap et accompagnateur',
+                'free_adult_children' => '10',
+            ),
             'seasons' => array(
                 '2026' => array(
                     'child' => '6',
@@ -42,16 +54,14 @@ final class Parcs_HT_Group_Quotes {
         $settings = array_replace_recursive(self::defaults(), $saved);
         $settings['enabled'] = '1';
         if (!isset($settings['seasons']) || !is_array($settings['seasons'])) $settings['seasons'] = array();
+        if (!isset($settings['tariff_binding']) || !is_array($settings['tariff_binding'])) $settings['tariff_binding'] = self::defaults()['tariff_binding'];
         if (!$public) return $settings;
 
         $all = Parcs_HT_Defaults::all_settings();
         $public_seasons = isset($all['seasons']) && is_array($all['seasons']) ? $all['seasons'] : array();
         foreach ($settings['seasons'] as $year => &$row) {
             if (!is_array($row)) $row = array();
-            // Absence du champ : compatibilité avec les anciennes grilles liées à la saison.
-            // Un refus explicite des devis reste prioritaire, sans modifier l'option enregistrée.
-            $authorized = !isset($row['published']) || (string)$row['published'] === '1';
-            $row['published'] = $authorized && isset($public_seasons[$year]) && is_array($public_seasons[$year]) && (string)($public_seasons[$year]['published'] ?? '0') === '1' ? '1' : '0';
+            $row['published'] = isset($public_seasons[$year]) && is_array($public_seasons[$year]) && (string)($public_seasons[$year]['published'] ?? '0') === '1' ? '1' : '0';
         }
         unset($row);
         return $settings;
@@ -62,9 +72,71 @@ final class Parcs_HT_Group_Quotes {
         return preg_match('/^(20\d{2})-\d{2}-\d{2}$/', $value, $match) ? $match[1] : '';
     }
 
+    private static function numeric_price($value) {
+        $value = html_entity_decode((string)$value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $value = str_replace(array("\xc2\xa0", ' ', '€'), '', $value);
+        $value = str_replace(',', '.', $value);
+        if (!preg_match('/([0-9]+(?:\.[0-9]+)?)/', $value, $match)) return null;
+        $number = (float)$match[1];
+        return $number >= 0 ? $number : null;
+    }
+
+    private static function label_fr($row) {
+        if (!is_array($row) || !isset($row['label']) || !is_array($row['label'])) return '';
+        return trim((string)($row['label']['fr'] ?? ''));
+    }
+
+    private static function resolve_row($rows, $binding, $role) {
+        $index_key = $role . '_row';
+        $label_key = $role . '_label';
+        $index = isset($binding[$index_key]) ? (int)$binding[$index_key] : -1;
+        $expected = trim((string)($binding[$label_key] ?? ''));
+        if ($index >= 0 && isset($rows[$index]) && is_array($rows[$index])) {
+            if ($expected === '' || self::label_fr($rows[$index]) === $expected) return $rows[$index];
+        }
+        if ($expected !== '') {
+            foreach ($rows as $row) {
+                if (is_array($row) && self::label_fr($row) === $expected) return $row;
+            }
+        }
+        return ($index >= 0 && isset($rows[$index]) && is_array($rows[$index])) ? $rows[$index] : null;
+    }
+
+    private static function price_from_row($row, $column) {
+        if (!is_array($row) || (string)($row['enabled'] ?? '1') !== '1') return null;
+        $value = '';
+        if (isset($row['cells'][$column]['value'])) $value = $row['cells'][$column]['value'];
+        elseif ($column === 'price' && isset($row['price'])) $value = $row['price'];
+        return self::numeric_price($value);
+    }
+
+    private static function shared_tariffs_for_year($year, $settings) {
+        $all = get_option(Parcs_HT_Defaults::OPTION, array());
+        if (!is_array($all) || empty($all['seasons'][$year]) || !is_array($all['seasons'][$year])) return null;
+        $season = $all['seasons'][$year];
+        if ((string)($season['published'] ?? '0') !== '1') return null;
+        $tariffs = isset($season['tariffs']) && is_array($season['tariffs']) ? $season['tariffs'] : (isset($all['tariffs']) && is_array($all['tariffs']) ? $all['tariffs'] : array());
+        $rows = isset($tariffs['groups']) && is_array($tariffs['groups']) ? array_values($tariffs['groups']) : array();
+        if (!$rows) return null;
+        $binding = isset($settings['tariff_binding']) && is_array($settings['tariff_binding']) ? $settings['tariff_binding'] : self::defaults()['tariff_binding'];
+        $column = sanitize_key($binding['column'] ?? 'price');
+        if ($column === '') $column = 'price';
+        $result = array('published'=>'1','free_adult_children'=>(string)max(1, (int)($binding['free_adult_children'] ?? 10)));
+        foreach (array('child','adult','disability','companion') as $role) {
+            $row = self::resolve_row($rows, $binding, $role);
+            $price = self::price_from_row($row, $column);
+            if ($price === null) return null;
+            $result[$role] = (string)$price;
+        }
+        return $result;
+    }
+
     private static function published_season($year, $settings = null) {
         if ($settings === null) $settings = self::settings();
-        if ($year === '' || empty($settings['seasons'][$year]) || !is_array($settings['seasons'][$year])) return null;
+        if ($year === '') return null;
+        $shared = self::shared_tariffs_for_year($year, $settings);
+        if ($shared) return $shared;
+        if (empty($settings['seasons'][$year]) || !is_array($settings['seasons'][$year])) return null;
         $row = $settings['seasons'][$year];
         if ((string)($row['published'] ?? '0') !== '1') return null;
         foreach (array('child','adult','disability','companion') as $key) {
@@ -157,46 +229,11 @@ final class Parcs_HT_Group_Quotes {
 
     public static function page() {
         if (!current_user_can('manage_options')) return;
-        $settings = self::settings(false);
-        $seasons = (array)($settings['seasons'] ?? array());
-        $years = array_keys($seasons);
-        $current = (string)wp_date('Y');
-        if (!in_array($current, $years, true)) $years[] = $current;
-        $next = (string)(((int)$current) + 1);
-        if (!in_array($next, $years, true)) $years[] = $next;
-        sort($years, SORT_STRING);
         ?>
         <div class="wrap">
             <h1>Tarifs des devis groupes</h1>
-            <p>Une seule grille de tarifs groupes est utilisée par année. Les devis doivent être autorisés dans la saison correspondante et celle-ci doit être publiée : une saison brouillon ne peut jamais être utilisée pour un devis public.</p>
-            <?php if (isset($_GET['updated'])) : /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Paramètre de présentation en lecture seule ; aucune modification de données. */ ?><div class="notice notice-success is-dismissible"><p>Les réglages des devis groupes ont été enregistrés.</p></div><?php endif; ?>
-            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-                <input type="hidden" name="action" value="parcs_ht_save_group_quotes">
-                <?php wp_nonce_field('parcs_ht_save_group_quotes'); ?>
-                <table class="form-table" role="presentation">
-                    <tr><th scope="row">Détection du formulaire</th><td><p class="description">Automatique à partir des champs de date et de type de groupe. Aucun ID Contact Form 7 fixe n’est nécessaire.</p></td></tr>
-                    <tr><th scope="row">Champs techniques</th><td><label>Date de visite <input name="visit_field" value="<?php echo esc_attr((string)$settings['visit_field']); ?>"></label><br><label>Type de groupe <input name="group_field" value="<?php echo esc_attr((string)$settings['group_field']); ?>"></label></td></tr>
-                    <tr><th scope="row">Valeurs du type de groupe</th><td><label>Groupe scolaire <input class="regular-text" name="school_value" value="<?php echo esc_attr((string)$settings['school_value']); ?>"></label><br><label>Situation de handicap <input class="regular-text" name="disability_value" value="<?php echo esc_attr((string)$settings['disability_value']); ?>"></label></td></tr>
-                </table>
-                <h2>Tarifs par année de visite</h2>
-                <p>Une année n’est utilisable que si la saison correspondante existe et est publiée. Les tarifs d’une autre année ne sont jamais utilisés en secours.</p>
-                <table class="widefat striped" style="max-width:1100px">
-                    <thead><tr><th>Année</th><th>Enfant</th><th>Adulte</th><th>Handicap</th><th>Accompagnateur</th><th>1 adulte gratuit / enfants</th></tr></thead>
-                    <tbody>
-                    <?php foreach ($years as $year) : $row = isset($seasons[$year]) && is_array($seasons[$year]) ? $seasons[$year] : array(); ?>
-                        <tr>
-                            <td><strong><?php echo esc_html($year); ?></strong><input type="hidden" name="seasons[<?php echo esc_attr($year); ?>][year]" value="<?php echo esc_attr($year); ?>"></td>
-                            <td><input type="number" min="0" step="0.01" name="seasons[<?php echo esc_attr($year); ?>][child]" value="<?php echo esc_attr((string)($row['child'] ?? '')); ?>" style="width:90px"> €</td>
-                            <td><input type="number" min="0" step="0.01" name="seasons[<?php echo esc_attr($year); ?>][adult]" value="<?php echo esc_attr((string)($row['adult'] ?? '')); ?>" style="width:90px"> €</td>
-                            <td><input type="number" min="0" step="0.01" name="seasons[<?php echo esc_attr($year); ?>][disability]" value="<?php echo esc_attr((string)($row['disability'] ?? '')); ?>" style="width:90px"> €</td>
-                            <td><input type="number" min="0" step="0.01" name="seasons[<?php echo esc_attr($year); ?>][companion]" value="<?php echo esc_attr((string)($row['companion'] ?? '')); ?>" style="width:90px"> €</td>
-                            <td><input type="number" min="1" step="1" name="seasons[<?php echo esc_attr($year); ?>][free_adult_children]" value="<?php echo esc_attr((string)($row['free_adult_children'] ?? '10')); ?>" style="width:80px"></td>
-                        </tr>
-                    <?php endforeach; ?>
-                    </tbody>
-                </table>
-                <?php submit_button('Enregistrer les tarifs des devis groupes'); ?>
-            </form>
+            <div class="notice notice-info inline"><p>Depuis la version 1.11.0, les devis utilisent directement le tableau <strong>Tarifs → Groupes</strong>. Cette ancienne page est conservée uniquement pour compatibilité technique.</p></div>
+            <p><a class="button button-primary" href="<?php echo esc_url(add_query_arg(array('page'=>Parcs_HT_Admin::PAGE,'tab'=>'htp-tariffs'), admin_url('admin.php'))); ?>">Ouvrir les tarifs groupes</a></p>
         </div>
         <?php
     }
@@ -204,23 +241,7 @@ final class Parcs_HT_Group_Quotes {
     public static function save() {
         if (!current_user_can('manage_options')) wp_die('Accès refusé.');
         check_admin_referer('parcs_ht_save_group_quotes');
-        $previous = self::settings(false);
-        $out = array('enabled'=>'1','form_id'=>'','visit_field'=>isset($_POST['visit_field']) ? sanitize_key(wp_unslash($_POST['visit_field'])) : 'visite','group_field'=>isset($_POST['group_field']) ? sanitize_key(wp_unslash($_POST['group_field'])) : 'groupedevis','school_value'=>isset($_POST['school_value']) ? sanitize_text_field(wp_unslash($_POST['school_value'])) : 'Groupe','disability_value'=>isset($_POST['disability_value']) ? sanitize_text_field(wp_unslash($_POST['disability_value'])) : 'Groupe en situation de handicap','seasons'=>array());
-        $rows = isset($_POST['seasons']) && is_array($_POST['seasons']) ? map_deep(wp_unslash($_POST['seasons']), 'sanitize_text_field') : array();
-        foreach ($rows as $year => $row) {
-            $year = preg_replace('/[^0-9]/', '', (string)$year);
-            if (!preg_match('/^20\d{2}$/', $year) || !is_array($row)) continue;
-            $clean = array();
-            foreach (array('child','adult','disability','companion') as $key) {
-                $value = isset($row[$key]) ? str_replace(',', '.', (string)$row[$key]) : '';
-                $clean[$key] = is_numeric($value) && (float)$value >= 0 ? (string)(float)$value : '';
-            }
-            $clean['free_adult_children'] = (string)max(1, isset($row['free_adult_children']) ? (int)$row['free_adult_children'] : 10);
-            if (isset($previous['seasons'][$year]['published'])) $clean['published'] = (string)$previous['seasons'][$year]['published'];
-            $out['seasons'][$year] = $clean;
-        }
-        update_option(self::OPTION, $out, false);
-        wp_safe_redirect(add_query_arg(array('page'=>self::PAGE,'updated'=>'1'), admin_url('admin.php')));
+        wp_safe_redirect(add_query_arg(array('page'=>self::PAGE), admin_url('admin.php')));
         exit;
     }
 
@@ -234,8 +255,10 @@ final class Parcs_HT_Group_Quotes {
     public static function assets() {
         if (wp_script_is('parcs-ht-group-quotes', 'enqueued')) return;
         $settings = self::settings();
+        $all = Parcs_HT_Defaults::all_settings();
         $seasons = array();
-        foreach ($settings['seasons'] as $year => $unused) {
+        foreach ((array)($all['seasons'] ?? array()) as $year => $season) {
+            if (!is_array($season) || (string)($season['published'] ?? '0') !== '1') continue;
             $row = self::published_season((string)$year, $settings);
             if ($row) $seasons[$year] = array_intersect_key($row, array_flip(array('published','child','adult','disability','companion','free_adult_children')));
         }
