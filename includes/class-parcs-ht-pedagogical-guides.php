@@ -28,9 +28,26 @@ final class Parcs_HT_Pedagogical_Guides {
 
     private static function cycle_catalog() {
         return array(
-            'cycle1'=>array('fr'=>'Cycle 1 – Maternelle','en'=>'Cycle 1 – Nursery school','de'=>'Zyklus 1 – Kindergarten'),
-            'cycle2'=>array('fr'=>'Cycle 2 – Élémentaire','en'=>'Cycle 2 – Primary school','de'=>'Zyklus 2 – Grundschule'),
-            'cycle3'=>array('fr'=>'Cycle 3','en'=>'Cycle 3','de'=>'Zyklus 3'),
+            'cycle1'=>array(
+                'fr'=>'Cycle 1 – Maternelle – 3 à 6 ans',
+                'en'=>'Cycle 1 – Preschool – Ages 3–6',
+                'de'=>'Zyklus 1 – Kindergarten / Vorschule – 3–6 Jahre',
+            ),
+            'cycle2'=>array(
+                'fr'=>'Cycle 2 – CP à CE2 – 6 à 9 ans',
+                'en'=>'Cycle 2 – Primary School – Ages 6–9',
+                'de'=>'Zyklus 2 – Grundschule – 6–9 Jahre',
+            ),
+            'cycle3'=>array(
+                'fr'=>'Cycle 3 – CM1 à 6e – 9 à 12 ans',
+                'en'=>'Cycle 3 – Primary / Lower Secondary – Ages 9–12',
+                'de'=>'Zyklus 3 – Grundschule / Sekundarstufe I – 9–12 Jahre',
+            ),
+            'cycle4'=>array(
+                'fr'=>'Cycle 4 – 5e à 3e – 12 à 15 ans',
+                'en'=>'Cycle 4 – Lower Secondary School – Ages 12–15',
+                'de'=>'Zyklus 4 – Sekundarstufe I – 12–15 Jahr',
+            ),
             'multi'=>array('fr'=>'Multiniveaux','en'=>'Multi-level','de'=>'Mehrstufig'),
         );
     }
@@ -263,7 +280,7 @@ final class Parcs_HT_Pedagogical_Guides {
             <?php if(isset($_GET['guides-updated'])): /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Message de confirmation uniquement. */ ?><div class="notice notice-success inline"><p>Les guides pédagogiques ont été enregistrés.</p></div><?php endif; ?>
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php'));?>">
                 <input type="hidden" name="action" value="parcs_ht_save_pedagogical_guides"><input type="hidden" name="season_year" value="<?php echo esc_attr($year); ?>"><?php wp_nonce_field('parcs_ht_save_pedagogical_guides'); ?>
-                <section class="htp-guide-admin-card"><div class="htp-guide-admin-head"><h3>Documents pédagogiques</h3><button type="button" class="button" data-add-guide>Ajouter un guide</button></div><p class="description">Cycles disponibles : Cycle 1, Cycle 2, Cycle 3 et Multiniveaux. Un document bilingue peut simplement avoir plusieurs langues cochées.</p><div data-guide-list><?php foreach($s['guides']as$i=>$g)self::guide_admin_row($i,$g);?></div></section>
+                <section class="htp-guide-admin-card"><div class="htp-guide-admin-head"><h3>Documents pédagogiques</h3><button type="button" class="button" data-add-guide>Ajouter un guide</button></div><p class="description">Cycles disponibles : Cycle 1, Cycle 2, Cycle 3, Cycle 4 et Multiniveaux. Les intitulés affichés sont adaptés en français, anglais international et allemand. Un document bilingue peut simplement avoir plusieurs langues cochées.</p><div data-guide-list><?php foreach($s['guides']as$i=>$g)self::guide_admin_row($i,$g);?></div></section>
                 <?php submit_button('Enregistrer les guides'); ?>
             </form>
             <template class="htp-guide-template"><?php self::guide_admin_row('__INDEX__',array('enabled'=>'0','cycle'=>'cycle1','languages'=>array('fr'),'status'=>'coming','title'=>array(),'description'=>array(),'pdf_url'=>'','cover_url'=>'','order'=>0));?></template>
