@@ -20,7 +20,6 @@ final class Parcs_HT_Guide_Appearance {
             'primary_button_text' => '#ffffff',
             'secondary_button_color' => 'inherit',
             'category_color' => 'inherit',
-            'image_mobile_height' => '145',
         );
     }
 
@@ -50,7 +49,6 @@ final class Parcs_HT_Guide_Appearance {
             'primary_button_text' => self::color($raw['primary_button_text'] ?? '', $defaults['primary_button_text']),
             'secondary_button_color' => self::color($raw['secondary_button_color'] ?? '', $defaults['secondary_button_color'], true),
             'category_color' => self::color($raw['category_color'] ?? '', $defaults['category_color'], true),
-            'image_mobile_height' => (string) max(90, min(220, (int) ($raw['image_mobile_height'] ?? 145))),
         );
         update_option(self::OPTION, $settings, false);
         $year = isset($_POST['season_year']) ? sanitize_text_field(wp_unslash($_POST['season_year'])) : '';
@@ -60,7 +58,7 @@ final class Parcs_HT_Guide_Appearance {
 
     public static function public_assets() {
         $s = self::settings();
-        $css = '.parcs-ht-guides{--htp-guide-card-bg:' . esc_html($s['card_background']) . ';--htp-guide-text:' . esc_html($s['text_color']) . ';--htp-guide-title:' . esc_html($s['title_color']) . ';--htp-guide-primary-bg:' . esc_html($s['primary_button_background']) . ';--htp-guide-primary-text:' . esc_html($s['primary_button_text']) . ';--htp-guide-secondary:' . esc_html($s['secondary_button_color']) . ';--htp-guide-category:' . esc_html($s['category_color']) . ';--htp-guide-mobile-image-height:' . (int)$s['image_mobile_height'] . 'px;}';
+        $css = '.parcs-ht-guides{--htp-guide-card-bg:' . esc_html($s['card_background']) . ';--htp-guide-text:' . esc_html($s['text_color']) . ';--htp-guide-title:' . esc_html($s['title_color']) . ';--htp-guide-primary-bg:' . esc_html($s['primary_button_background']) . ';--htp-guide-primary-text:' . esc_html($s['primary_button_text']) . ';--htp-guide-secondary:' . esc_html($s['secondary_button_color']) . ';--htp-guide-category:' . esc_html($s['category_color']) . ';}';
         wp_add_inline_style('parcs-ht-pedagogical-guides', $css);
         wp_register_script('parcs-ht-guide-enhancements', false, array(), PARCS_HT_VERSION, true);
         wp_enqueue_script('parcs-ht-guide-enhancements');
@@ -80,7 +78,7 @@ final class Parcs_HT_Guide_Appearance {
         ?>
         <section class="htp-card htp-guide-appearance-panel" data-guide-appearance-panel>
             <h2>Apparence des guides</h2>
-            <p class="description">Modifiez ici les couleurs et la hauteur de l’image sur mobile. Pour contrôler le rendu réel du shortcode, utilisez l’onglet Aperçu.</p>
+            <p class="description">Modifiez ici les couleurs des cartes. Les visuels utilisent un format fixe 3:4 pour garantir un rendu cohérent sur ordinateur et mobile. Pour contrôler le rendu réel du shortcode, utilisez l’onglet Aperçu.</p>
             <?php if (isset($_GET['guide-appearance-updated'])) : /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Message uniquement. */ ?><div class="notice notice-success inline"><p>Apparence des guides enregistrée.</p></div><?php endif; ?>
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                 <input type="hidden" name="action" value="parcs_ht_save_guide_appearance">
@@ -94,12 +92,11 @@ final class Parcs_HT_Guide_Appearance {
                     <?php self::field('primary_button_background','Fond bouton principal',$s['primary_button_background']); ?>
                     <?php self::field('primary_button_text','Texte bouton principal',$s['primary_button_text']); ?>
                     <?php self::field('secondary_button_color','Bouton secondaire',$s['secondary_button_color'],true); ?>
-                    <label class="htp-guide-appearance-field"><span>Hauteur image mobile</span><input type="range" min="90" max="220" step="5" name="appearance[image_mobile_height]" value="<?php echo esc_attr($s['image_mobile_height']); ?>"><output><?php echo (int)$s['image_mobile_height']; ?> px</output></label>
                 </div>
                 <?php submit_button('Enregistrer l’apparence'); ?>
             </form>
         </section>
-        <script>(function(){var panel=document.querySelector('[data-guide-appearance-panel]'),host=document.getElementById('htp-guides');if(!panel||!host)return;host.appendChild(panel);var range=panel.querySelector('input[name="appearance[image_mobile_height]"]'),output=range?range.parentNode.querySelector('output'):null;if(range&&output)range.addEventListener('input',function(){output.textContent=range.value+' px';});}());</script>
+        <script>(function(){var panel=document.querySelector('[data-guide-appearance-panel]'),host=document.getElementById('htp-guides');if(!panel||!host)return;host.appendChild(panel);}());</script>
         <?php
     }
 
