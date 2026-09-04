@@ -42,8 +42,11 @@
     var block=document.createElement('div');
     block.className='htp-real-shortcode-preview';
     block.innerHTML='<div class="htp-real-shortcode-preview-head">'+
-      '<div><h3>Aperçus réels des shortcodes</h3><p>Enregistrez vos réglages puis vérifiez ici le rendu réellement généré par chaque shortcode.</p></div>'+
-      '<label class="htp-real-shortcode-preview-bg"><span>Fond des aperçus</span><input type="color" value="'+color+'" data-htp-shortcode-preview-bg></label>'+
+      '<div><h3>Aperçus réels des shortcodes</h3><p>Après avoir enregistré vos modifications, cliquez sur « Mettre à jour les aperçus » pour régénérer tous les shortcodes avec les dernières données enregistrées.</p></div>'+
+      '<div class="htp-real-shortcode-preview-tools">'+
+        '<button type="button" class="button button-primary" data-htp-shortcode-preview-refresh>Mettre à jour les aperçus</button>'+
+        '<label class="htp-real-shortcode-preview-bg"><span>Fond des aperçus</span><input type="color" value="'+color+'" data-htp-shortcode-preview-bg></label>'+
+      '</div>'+
       '</div><div class="htp-shortcode-preview-list" data-htp-shortcode-preview-list></div>';
 
     var historyTitle=Array.prototype.find.call(section.querySelectorAll('h3'),function(el){return /Historique de sécurité/i.test(el.textContent||'');});
@@ -60,6 +63,13 @@
       var value=picker.value;
       block.querySelectorAll('[data-htp-shortcode-preview-canvas]').forEach(function(canvas){canvas.style.backgroundColor=value;});
       saveColor(value);
+    });
+
+    var refresh=block.querySelector('[data-htp-shortcode-preview-refresh]');
+    refresh.addEventListener('click',function(){
+      refresh.disabled=true;
+      refresh.textContent='Mise à jour…';
+      window.location.reload();
     });
   }
 
