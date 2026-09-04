@@ -29,9 +29,12 @@ const html = `<!doctype html><html><body>
 
 const dom = new JSDOM(html, { runScripts: 'outside-only', url: 'https://example.test/wp-admin/admin.php' });
 const context = dom.getInternalVMContext();
-const guard = fs.readFileSync(path.join(root, 'assets/admin-save-guard.js'), 'utf8');
-vm.runInContext(guard, context);
-dom.window.document.dispatchEvent(new dom.window.Event('DOMContentLoaded', { bubbles: true }));
+
+const scopedStart = admin.indexOf('function initScopedSave()');
+const scopedEnd = admin.indexOf('\n  function applyLanguage', scopedStart);
+assert.notEqual(scopedStart, -1, 'La fonction intégrée de sauvegarde ciblée doit exister.');
+assert.notEqual(scopedEnd, -1, 'La fonction intégrée de sauvegarde ciblée doit pouvoir être isolée pour le test.');
+vm.runInContext(admin.slice(scopedStart, scopedEnd) + '\ninitScopedSave();', context);
 
 const form = dom.window.document.querySelector('form');
 const scoped = form.querySelector('[name="htp_save_active"]');
