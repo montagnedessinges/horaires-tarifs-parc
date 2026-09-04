@@ -16,36 +16,9 @@
         table.appendChild(row);
     }
 
-    function protectGuideVisibilitySave() {
-        var form = document.querySelector('form input[name="action"][value="parcs_ht_save_pedagogical_guides"]');
-        form = form ? form.form : null;
-        if (!form || form.dataset.htpGuideVisibilitySave === '1') return;
-        form.dataset.htpGuideVisibilitySave = '1';
-
-        form.addEventListener('submit', function () {
-            form.querySelectorAll('input[type="checkbox"][name$="[enabled]"]').forEach(function (checkbox) {
-                var previous = checkbox.previousElementSibling;
-                if (previous && previous.matches('input[type="hidden"][data-htp-guide-enabled-fallback]') && previous.name === checkbox.name) {
-                    return;
-                }
-                var hidden = document.createElement('input');
-                hidden.type = 'hidden';
-                hidden.name = checkbox.name;
-                hidden.value = '0';
-                hidden.setAttribute('data-htp-guide-enabled-fallback', '1');
-                checkbox.parentNode.insertBefore(hidden, checkbox);
-            });
-        }, true);
-    }
-
-    function init() {
-        addGuideShortcodesRow();
-        protectGuideVisibilitySave();
-    }
-
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
+        document.addEventListener('DOMContentLoaded', addGuideShortcodesRow);
     } else {
-        init();
+        addGuideShortcodesRow();
     }
 }());

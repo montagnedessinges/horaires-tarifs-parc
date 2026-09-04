@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Horaires et tarifs du parc
  * Description: Horaires, calendrier interactif, exceptions, alertes et tarifs multilingues pour les parcs.
- * Version: 1.12.9
+ * Version: 1.12.10
  * Update URI: https://github.com/montagnedessinges/horaires-tarifs-parc
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -12,7 +12,7 @@
 
 if (!defined('ABSPATH')) { exit; }
 
-define('PARCS_HT_VERSION', '1.12.9');
+define('PARCS_HT_VERSION', '1.12.10');
 define('PARCS_HT_FILE', __FILE__);
 define('PARCS_HT_DIR', plugin_dir_path(__FILE__));
 define('PARCS_HT_URL', plugin_dir_url(__FILE__));
@@ -32,12 +32,14 @@ require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin-groups.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-group-tariffs.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-pedagogical-guides.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-guide-appearance.php';
+require_once PARCS_HT_DIR . 'includes/class-parcs-ht-save-integrity.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-feature-hub.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin-shortcode-preview.php';
 Parcs_HT_HTTP_SSL::init();
 Parcs_HT_Tariff_Seasons::init();
 Parcs_HT_Season_Status::init();
 Parcs_HT_Quote_Page_Save::init();
+Parcs_HT_Save_Integrity::init();
 
 register_activation_hook(__FILE__, array('Parcs_HT_Defaults', 'activate'));
 register_deactivation_hook(__FILE__, static function () { require_once PARCS_HT_DIR . 'includes/class-parcs-ht-health.php'; Parcs_HT_Health::deactivate(); });
@@ -79,7 +81,6 @@ add_action('wp_footer', static function () {
 
 add_action('admin_enqueue_scripts', static function ($hook) {
     if ($hook !== 'toplevel_page_parcs-horaires-tarifs') return;
-    wp_enqueue_script('parcs-ht-admin-save-guard', PARCS_HT_URL . 'assets/admin-save-guard.js', array(), PARCS_HT_VERSION, true);
     wp_enqueue_script('parcs-ht-admin-shortcodes-guides', PARCS_HT_URL . 'assets/admin-shortcodes-guides.js', array(), PARCS_HT_VERSION, true);
 }, 1);
 
