@@ -7,6 +7,7 @@ final class Parcs_HT_Guide_Appearance {
 
     public static function init() {
         add_action('admin_post_parcs_ht_save_guide_appearance', array(__CLASS__, 'save'));
+        add_action('admin_enqueue_scripts', array(__CLASS__, 'admin_assets'));
         add_action('admin_footer', array(__CLASS__, 'admin_panel'), 20);
         add_action('wp_enqueue_scripts', array(__CLASS__, 'public_assets'), 40);
     }
@@ -58,6 +59,11 @@ final class Parcs_HT_Guide_Appearance {
         exit;
     }
 
+    public static function admin_assets($hook) {
+        if ($hook !== 'toplevel_page_parcs-horaires-tarifs') return;
+        wp_enqueue_style('parcs-ht-pedagogical-guides-preview', PARCS_HT_URL . 'assets/pedagogical-guides.css', array(), PARCS_HT_VERSION);
+    }
+
     public static function public_assets() {
         $s = self::settings();
         $css = '.parcs-ht-guides{--htp-guide-card-bg:' . esc_html($s['card_background']) . ';--htp-guide-text:' . esc_html($s['text_color']) . ';--htp-guide-title:' . esc_html($s['title_color']) . ';--htp-guide-primary-bg:' . esc_html($s['primary_button_background']) . ';--htp-guide-primary-text:' . esc_html($s['primary_button_text']) . ';--htp-guide-secondary:' . esc_html($s['secondary_button_color']) . ';--htp-guide-category:' . esc_html($s['category_color']) . ';--htp-guide-mobile-image-height:' . (int)$s['image_mobile_height'] . 'px;}';
@@ -92,6 +98,7 @@ final class Parcs_HT_Guide_Appearance {
         if (!empty($guide['description']) && is_array($guide['description'])) $description = (string)($guide['description']['fr'] ?? reset($guide['description']));
         if ($title === '') $title = 'Dossier pédagogique – Cycle 1';
         if ($description === '') $description = 'Aperçu du rendu d’un guide pédagogique sur le site.';
+        $full_preview = class_exists('Parcs_HT_Pedagogical_Guides') ? Parcs_HT_Pedagogical_Guides::render('fr') : '';
         ?>
         <section class="htp-card htp-guide-appearance-panel" data-guide-appearance-panel>
             <h2>Apparence & aperçu des guides</h2>
@@ -120,6 +127,17 @@ final class Parcs_HT_Guide_Appearance {
                 </div>
                 <?php submit_button('Enregistrer l’apparence'); ?>
             </form>
+            <div class="htp-guide-full-preview" style="--htp-guide-card-bg:<?php echo esc_attr($s['card_background']); ?>;--htp-guide-text:<?php echo esc_attr($s['text_color']); ?>;--htp-guide-title:<?php echo esc_attr($s['title_color']); ?>;--htp-guide-category:<?php echo esc_attr($s['category_color']); ?>;--htp-guide-primary-bg:<?php echo esc_attr($s['primary_button_background']); ?>;--htp-guide-primary-text:<?php echo esc_attr($s['primary_button_text']); ?>;--htp-guide-secondary:<?php echo esc_attr($s['secondary_button_color']); ?>;--htp-guide-mobile-image-height:<?php echo (int)$s['image_mobile_height']; ?>px">
+                <div class="htp-guide-full-preview-head"><h3>Aperçu complet du shortcode</h3><code>[parc_guides_pedagogiques_fr]</code></div>
+                <p class="description">Rendu complet avec les guides actuellement enregistrés. Il correspond à l’affichage du shortcode français sur le site.</p>
+                <div class="htp-guide-full-preview-canvas">
+                    <?php if ($full_preview !== '') : ?>
+                        <?php echo wp_kses_post($full_preview); ?>
+                    <?php else : ?>
+                        <p class="description">Ajoutez et activez au moins un guide pour afficher l’aperçu complet.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
         </section>
         <script>(function(){var panel=document.querySelector('[data-guide-appearance-panel]'),host=document.getElementById('htp-guides');if(!panel||!host)return;host.appendChild(panel);var preview=panel.querySelector('[data-guide-preview]');var map={card_background:'--preview-bg',text_color:'--preview-text',title_color:'--preview-title',category_color:'--preview-category',primary_button_background:'--preview-primary',primary_button_text:'--preview-primary-text',secondary_button_color:'--preview-secondary'};panel.querySelectorAll('[data-guide-style]').forEach(function(input){function sync(){var key=input.dataset.guideStyle;if(key==='image_mobile_height'){preview.style.setProperty('--preview-image-height',input.value+'px');var o=input.parentNode.querySelector('output');if(o)o.textContent=input.value+' px';return;}if(map[key])preview.style.setProperty(map[key],input.value||'inherit');}input.addEventListener('input',sync);input.addEventListener('change',sync);});}());</script>
         <?php
