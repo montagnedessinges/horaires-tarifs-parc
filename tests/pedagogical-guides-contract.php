@@ -40,6 +40,9 @@ guide_contract(strpos($appearance, "const OPTION = 'parcs_ht_guide_appearance'")
 guide_contract(strpos($appearance, 'Hauteur image mobile') !== false && strpos($appearance, 'Aperçu mobile') !== false, 'Admin exposes mobile image sizing with live preview');
 guide_contract(strpos($appearance, 'card_background') !== false && strpos($appearance, 'primary_button_background') !== false && strpos($appearance, 'category_color') !== false, 'Guide colors are configurable');
 guide_contract(strpos($appearance, 'parcs-ht-guide-single-category') !== false, 'A single available category remains visibly identified');
+guide_contract(strpos($appearance, 'Aperçu complet du shortcode') !== false && strpos($appearance, "Parcs_HT_Pedagogical_Guides::render('fr')") !== false, 'Admin shows the complete French guide shortcode using real saved guides');
+guide_contract(strpos($appearance, "assets/pedagogical-guides.css") !== false && strpos($appearance, 'admin_enqueue_scripts') !== false, 'Full admin shortcode preview loads the public guide stylesheet');
+guide_contract(strpos($adminCss, '.htp-guide-full-preview') !== false && strpos($adminCss, '.htp-guide-full-preview-canvas') !== false, 'Full shortcode preview is visually contained in admin');
 guide_contract(strpos($adminCss, '.htp-guide-live-preview') !== false && strpos($adminCss, '.htp-guide-appearance-grid') !== false, 'Appearance controls and preview are styled');
 guide_contract(strpos($main, "class-parcs-ht-guide-appearance.php") !== false && strpos($main, 'Parcs_HT_Guide_Appearance::init()') !== false, 'Guide appearance module is bootstrapped');
 
