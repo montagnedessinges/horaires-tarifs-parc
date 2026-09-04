@@ -3,7 +3,6 @@
 
   var STORAGE_BG='parcs_ht_preview_background';
   var STORAGE_DEVICE='parcs_ht_preview_device';
-  var raf=0;
 
   function q(root,name){return root.querySelector('[name="'+name.replace(/"/g,'\\"')+'"]');}
   function bySuffix(root,suffix){return root.querySelector('[name$="['+suffix+']"]');}
@@ -92,7 +91,14 @@
     'htp-tariffs':{title:'Aperçu en direct — tarifs',render:renderTariffs}
   };
 
-  function scheduleRender(section,panel,renderer){cancelAnimationFrame(raf);raf=requestAnimationFrame(function(){renderer(section,panel.querySelector('[data-preview-stage]'));});}
+  function scheduleRender(section,panel,renderer){
+    if(panel._htpPreviewRaf)cancelAnimationFrame(panel._htpPreviewRaf);
+    panel._htpPreviewRaf=requestAnimationFrame(function(){
+      panel._htpPreviewRaf=0;
+      var stage=panel.querySelector('[data-preview-stage]');
+      if(stage)renderer(section,stage);
+    });
+  }
   function enhanceSection(id,cfg){var section=document.getElementById(id);if(!section||section.dataset.htpVisualPreview==='1')return;section.dataset.htpVisualPreview='1';var panel=shell(section,cfg.title,'htp-preview-'+id);var render=function(){scheduleRender(section,panel,cfg.render);};section.addEventListener('input',render);section.addEventListener('change',render);render();}
 
   function enhanceGuides(){var guide=document.querySelector('[data-guide-appearance-panel]');if(!guide||guide.dataset.htpVisualEnvironment==='1')return;guide.dataset.htpVisualEnvironment='1';var target=guide.querySelector('.htp-guide-full-preview')||guide.querySelector('[data-guide-preview]');if(!target)return;var panel=document.createElement('div');panel.className='htp-live-preview htp-live-preview-guide-shell';panel.dataset.htpLivePreview='1';panel.innerHTML='<div class="htp-live-preview-head"><div><h3>Environnement de prévisualisation</h3><p>Testez le shortcode sur un fond clair, sombre ou personnalisé, en Desktop ou Mobile.</p></div></div><div data-toolbar-host></div><div class="htp-live-preview-canvas"><div class="htp-guide-preview-relocation"></div></div>';panel.querySelector('[data-toolbar-host]').appendChild(toolbar());target.parentNode.insertBefore(panel,target);panel.querySelector('.htp-guide-preview-relocation').appendChild(target);bindEnvironment(panel);}
