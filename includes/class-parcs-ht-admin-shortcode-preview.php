@@ -45,6 +45,21 @@ final class Parcs_HT_Admin_Shortcode_Preview {
         );
     }
 
+    /**
+     * Retire uniquement les scripts embarqués du HTML affiché dans l'aperçu admin.
+     * Le shortcode public reste inchangé ; on évite ici qu'un script inline soit
+     * transformé en texte visible par le contexte d'administration.
+     */
+    private static function preview_html($html) {
+        $html = (string)$html;
+        if ($html === '') {
+            return '';
+        }
+
+        $clean = preg_replace('#<script\b[^>]*>.*?</script\s*>#is', '', $html);
+        return is_string($clean) ? $clean : $html;
+    }
+
     public static function render_source() {
         $screen = function_exists('get_current_screen') ? get_current_screen() : null;
         if (!$screen || $screen->id !== self::SCREEN) {
@@ -67,23 +82,23 @@ final class Parcs_HT_Admin_Shortcode_Preview {
 
         echo '<div id="parcs-ht-real-shortcode-preview-sources" hidden aria-hidden="true">';
         foreach ($previews as $preview) {
-            $html = Parcs_HT_Shortcodes::render($preview['module'], 'fr', array());
+            $html = self::preview_html(Parcs_HT_Shortcodes::render($preview['module'], 'fr', array()));
             echo '<div data-htp-shortcode-preview-source="' . esc_attr($preview['key']) . '" data-label="' . esc_attr($preview['label']) . '" data-shortcode="' . esc_attr($preview['shortcode']) . '">';
             if (trim((string)$html) === '') {
                 echo '<p class="htp-shortcode-preview-empty">Aucun rendu avec les données actuellement enregistrées.</p>';
             } else {
-                echo $html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- HTML produit par le moteur interne de shortcode, déjà échappé dans ses méthodes de rendu.
+                echo $html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- HTML produit par le moteur interne de shortcode, déjà échappé dans ses méthodes de rendu et nettoyé des scripts pour l'aperçu admin.
             }
             echo '</div>';
         }
 
         if (shortcode_exists('parc_guides_pedagogiques_fr')) {
-            $guides_html = do_shortcode('[parc_guides_pedagogiques_fr]');
+            $guides_html = self::preview_html(do_shortcode('[parc_guides_pedagogiques_fr]'));
             echo '<div data-htp-shortcode-preview-source="guides" data-label="Guides pédagogiques" data-shortcode="[parc_guides_pedagogiques_fr]">';
             if (trim((string)$guides_html) === '') {
                 echo '<p class="htp-shortcode-preview-empty">Aucun guide actuellement enregistré.</p>';
             } else {
-                echo $guides_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- HTML du shortcode interne déjà échappé.
+                echo $guides_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- HTML du shortcode interne déjà échappé et nettoyé des scripts pour l'aperçu admin.
             }
             echo '</div>';
         }
