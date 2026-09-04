@@ -50,7 +50,6 @@ final class Parcs_HT_Admin_Shortcode_Preview {
                 . '--htp-guide-primary-text:' . esc_html($s['primary_button_text']) . ';'
                 . '--htp-guide-secondary:' . esc_html($s['secondary_button_color']) . ';'
                 . '--htp-guide-category:' . esc_html($s['category_color']) . ';'
-                . '--htp-guide-mobile-image-height:' . (int)$s['image_mobile_height'] . 'px;'
                 . '}';
             wp_add_inline_style('parcs-ht-pedagogical-guides', $guide_css);
         }
