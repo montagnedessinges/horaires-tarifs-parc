@@ -10,9 +10,12 @@ function live_preview_contract($condition, $message) {
     echo '[OK] ' . $message . PHP_EOL;
 }
 
-live_preview_contract(strpos($main, "if ($hook !== 'toplevel_page_parcs-horaires-tarifs') return;") !== false, 'Live preview assets remain scoped to the plugin admin screen');
-live_preview_contract(strpos($main, "assets/admin-live-visual-preview.js") !== false && strpos($main, "assets/admin-live-visual-preview.css") !== false, 'Global live preview assets are registered from the admin bootstrap');
-live_preview_contract(strpos($main, "wp_enqueue_scripts', static function") === false || strpos($main, 'admin-live-visual-preview') < strpos($main, "add_action('plugins_loaded'"), 'Live preview asset names are not added to public enqueue hooks');
+live_preview_contract(strpos($main, "if (\$hook !== 'toplevel_page_parcs-horaires-tarifs') return;") !== false, 'Live preview assets remain scoped to the plugin admin screen');
+live_preview_contract(strpos($main, 'assets/admin-live-visual-preview.js') !== false && strpos($main, 'assets/admin-live-visual-preview.css') !== false, 'Global live preview assets are registered from the admin bootstrap');
+$publicHook = strpos($main, "add_action('wp_footer'");
+$adminAsset = strpos($main, 'admin-live-visual-preview');
+$pluginsLoaded = strpos($main, "add_action('plugins_loaded'");
+live_preview_contract($publicHook !== false && $adminAsset !== false && $pluginsLoaded !== false && $adminAsset > $publicHook && $adminAsset < $pluginsLoaded, 'Live preview assets are isolated inside the admin bootstrap area');
 live_preview_contract(strpos($js, 'sessionStorage') !== false, 'Preview environment is browser-session only');
 live_preview_contract(strpos($js, 'fetch(') === false && strpos($js, 'XMLHttpRequest') === false && strpos($js, 'jQuery.ajax') === false, 'Live visual changes do not make network requests');
 live_preview_contract(strpos($js, "'htp-general'") !== false && strpos($js, "'htp-regular'") !== false && strpos($js, "'htp-holidays'") !== false && strpos($js, "'htp-alerts'") !== false && strpos($js, "'htp-tariffs'") !== false, 'Visual preview coverage includes all core appearance sections');
