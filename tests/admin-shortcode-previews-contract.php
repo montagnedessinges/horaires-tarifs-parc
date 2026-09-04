@@ -16,7 +16,7 @@ foreach (array('page','today','calendar','tariffs','alert','header_hour','header
 shortcode_preview_contract(strpos($php, "shortcode_exists('parc_guides_pedagogiques_fr')") !== false, 'Pedagogical guides preview uses the registered real shortcode');
 shortcode_preview_contract(strpos($php, 'Parcs_HT_Shortcodes::render') !== false, 'Core previews use the public shortcode renderer');
 shortcode_preview_contract(strpos($php, "assets/pedagogical-guides.css") !== false && strpos($php, "'parcs-ht-pedagogical-guides'") !== false, 'Guide preview loads the real public guide stylesheet');
-shortcode_preview_contract(strpos($php, 'Parcs_HT_Guide_Appearance::settings()') !== false && strpos($php, '--htp-guide-mobile-image-height') !== false, 'Guide preview applies the same saved appearance variables as the public shortcode');
+shortcode_preview_contract(strpos($php, 'Parcs_HT_Guide_Appearance::settings()') !== false && strpos($php, '--htp-guide-mobile-image-height') === false, 'Guide preview applies saved colors without overriding the fixed public image format');
 shortcode_preview_contract(strpos($js, 'data-htp-shortcode-preview-source') !== false, 'Admin UI consumes each generated shortcode source');
 shortcode_preview_contract(strpos($js, 'initGuidePreview') !== false && strpos($js, "[data-guide-cycle-filters]") !== false && strpos($js, "[data-guide-language-filters]") !== false, 'Guide preview restores the real filter interactions after moving shortcode markup');
 shortcode_preview_contract(strpos($js, 'Fond des aperçus') !== false && strpos($js, 'sessionStorage') !== false, 'One browser-only background color controls the previews');
