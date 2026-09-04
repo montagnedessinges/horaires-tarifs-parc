@@ -18,6 +18,46 @@
     while(source.firstChild)canvas.appendChild(source.firstChild);
   }
 
+  function initGuidePreview(root){
+    if(!root||root.dataset.htpPreviewGuideReady==='1')return;
+    root.dataset.htpPreviewGuideReady='1';
+
+    var cycle='all',lang='all';
+    function apply(){
+      root.querySelectorAll('[data-guide-card]').forEach(function(card){
+        var cycleMatch=cycle==='all'||card.dataset.cycle===cycle;
+        var langMatch=lang==='all'||(' '+card.dataset.languages+' ').indexOf(' '+lang+' ')!==-1;
+        card.hidden=!(cycleMatch&&langMatch);
+      });
+    }
+    function bind(selector,key){
+      root.querySelectorAll(selector+' button[data-guide-'+key+']').forEach(function(button){
+        button.addEventListener('click',function(){
+          root.querySelectorAll(selector+' button[data-guide-'+key+']').forEach(function(item){
+            item.classList.toggle('is-active',item===button);
+          });
+          if(key==='cycle')cycle=button.dataset.guideCycle;
+          else lang=button.dataset.guideLanguage;
+          apply();
+        });
+      });
+    }
+    bind('[data-guide-cycle-filters]','cycle');
+    bind('[data-guide-language-filters]','language');
+    root.querySelectorAll('[data-guide-info]').forEach(function(button){
+      button.addEventListener('click',function(event){
+        event.stopPropagation();
+        var pop=button.parentNode.querySelector('[data-guide-info-pop]');
+        if(!pop)return;
+        var open=!pop.hidden;
+        root.querySelectorAll('[data-guide-info-pop]').forEach(function(item){item.hidden=true;});
+        root.querySelectorAll('[data-guide-info]').forEach(function(item){item.setAttribute('aria-expanded','false');});
+        pop.hidden=open;
+        button.setAttribute('aria-expanded',open?'false':'true');
+      });
+    });
+  }
+
   function previewCard(source,color){
     var card=document.createElement('section');
     card.className='htp-shortcode-preview-item';
@@ -29,6 +69,7 @@
     var canvas=card.querySelector('[data-htp-shortcode-preview-canvas]');
     canvas.style.backgroundColor=color;
     moveContent(source,canvas);
+    canvas.querySelectorAll('[data-htp-guides]').forEach(initGuidePreview);
     return card;
   }
 
