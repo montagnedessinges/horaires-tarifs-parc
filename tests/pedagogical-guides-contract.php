@@ -34,6 +34,8 @@ guide_contract(strpos($php, 'Cycle / niveau') !== false && strpos($php, 'Langue(
 guide_contract(strpos($css, '.parcs-ht-guide-info-pop') !== false && strpos($css, '@media(max-width:800px)') !== false, 'Cycle information and public filters have responsive styles');
 guide_contract(strpos($css, '.parcs-ht-guides-head{display:none}') !== false, 'Public shortcode does not duplicate a page title above the filters');
 guide_contract(strpos($css, '--htp-guide-mobile-image-height') !== false && strpos($css, 'grid-template-columns:96px minmax(0,1fr)') !== false, 'Mobile guide image is compact and configurable');
+guide_contract(strpos($css, 'object-fit:contain') !== false && strpos($css, 'object-position:center center') !== false, 'Guide photos stay fully visible and centered across image ratios');
+guide_contract(strpos($adminCss, 'object-fit:contain') !== false && strpos($adminCss, 'object-position:center center') !== false, 'Admin preview matches the adaptive centered public image fit');
 guide_contract(strpos($appearance, "const OPTION = 'parcs_ht_guide_appearance'") !== false, 'Guide appearance has independent saved settings');
 guide_contract(strpos($appearance, 'Hauteur image mobile') !== false && strpos($appearance, 'Aperçu mobile') !== false, 'Admin exposes mobile image sizing with live preview');
 guide_contract(strpos($appearance, 'card_background') !== false && strpos($appearance, 'primary_button_background') !== false && strpos($appearance, 'category_color') !== false, 'Guide colors are configurable');
