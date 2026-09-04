@@ -105,6 +105,6 @@ final class Parcs_HT_Guide_Appearance {
 
     private static function field($key, $label, $value, $allow_special = false) {
         $type = preg_match('/^#[0-9a-fA-F]{6}$/', (string)$value) ? 'color' : 'text';
-        ?><label class="htp-guide-appearance-field"><span><?php echo esc_html($label); ?></span><div class="htp-guide-color-control"><input type="<?php echo esc_attr($type); ?>" name="appearance[<?php echo esc_attr($key); ?>" value="<?php echo esc_attr($value); ?>"><?php if ($allow_special) : ?><small>Hex, inherit ou transparent</small><?php endif; ?></div></label><?php
+        ?><label class="htp-guide-appearance-field"><span><?php echo esc_html($label); ?></span><div class="htp-guide-color-control"><input type="<?php echo esc_attr($type); ?>" name="appearance[<?php echo esc_attr($key); ?>]" value="<?php echo esc_attr($value); ?>"><?php if ($allow_special) : ?><small>Hex, inherit ou transparent</small><?php endif; ?></div></label><?php
     }
 }
