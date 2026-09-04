@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Horaires et tarifs du parc
  * Description: Horaires, calendrier interactif, exceptions, alertes et tarifs multilingues pour les parcs.
- * Version: 1.11.10
+ * Version: 1.12.0
  * Update URI: https://github.com/montagnedessinges/horaires-tarifs-parc
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -12,7 +12,7 @@
 
 if (!defined('ABSPATH')) { exit; }
 
-define('PARCS_HT_VERSION', '1.11.10');
+define('PARCS_HT_VERSION', '1.12.0');
 define('PARCS_HT_FILE', __FILE__);
 define('PARCS_HT_DIR', plugin_dir_path(__FILE__));
 define('PARCS_HT_URL', plugin_dir_url(__FILE__));
@@ -80,6 +80,8 @@ add_action('admin_enqueue_scripts', static function ($hook) {
     if ($hook !== 'toplevel_page_parcs-horaires-tarifs') return;
     wp_enqueue_script('parcs-ht-admin-save-guard', PARCS_HT_URL . 'assets/admin-save-guard.js', array(), PARCS_HT_VERSION, true);
     wp_enqueue_script('parcs-ht-admin-shortcodes-guides', PARCS_HT_URL . 'assets/admin-shortcodes-guides.js', array(), PARCS_HT_VERSION, true);
+    wp_enqueue_style('parcs-ht-admin-live-visual-preview', PARCS_HT_URL . 'assets/admin-live-visual-preview.css', array('parcs-ht-admin'), PARCS_HT_VERSION);
+    wp_enqueue_script('parcs-ht-admin-live-visual-preview', PARCS_HT_URL . 'assets/admin-live-visual-preview.js', array('parcs-ht-admin'), PARCS_HT_VERSION, true);
 }, 1);
 
 add_action('admin_enqueue_scripts', static function ($hook) {
