@@ -30,10 +30,35 @@ final class Parcs_HT_Admin_Shortcode_Preview {
             array(),
             PARCS_HT_VERSION
         );
+
+        // Le shortcode guides possède sa propre feuille publique : l'aperçu admin
+        // doit charger exactement cette feuille pour servir de vrai banc de test.
+        wp_enqueue_style(
+            'parcs-ht-pedagogical-guides',
+            PARCS_HT_URL . 'assets/pedagogical-guides.css',
+            array(),
+            PARCS_HT_VERSION
+        );
+
+        if (class_exists('Parcs_HT_Guide_Appearance')) {
+            $s = Parcs_HT_Guide_Appearance::settings();
+            $guide_css = '.parcs-ht-guides{'
+                . '--htp-guide-card-bg:' . esc_html($s['card_background']) . ';'
+                . '--htp-guide-text:' . esc_html($s['text_color']) . ';'
+                . '--htp-guide-title:' . esc_html($s['title_color']) . ';'
+                . '--htp-guide-primary-bg:' . esc_html($s['primary_button_background']) . ';'
+                . '--htp-guide-primary-text:' . esc_html($s['primary_button_text']) . ';'
+                . '--htp-guide-secondary:' . esc_html($s['secondary_button_color']) . ';'
+                . '--htp-guide-category:' . esc_html($s['category_color']) . ';'
+                . '--htp-guide-mobile-image-height:' . (int)$s['image_mobile_height'] . 'px;'
+                . '}';
+            wp_add_inline_style('parcs-ht-pedagogical-guides', $guide_css);
+        }
+
         wp_enqueue_style(
             'parcs-ht-admin-shortcode-preview',
             PARCS_HT_URL . 'assets/admin-shortcode-preview.css',
-            array('parcs-ht-admin', 'parcs-ht-admin-shortcode-frontend'),
+            array('parcs-ht-admin', 'parcs-ht-admin-shortcode-frontend', 'parcs-ht-pedagogical-guides'),
             PARCS_HT_VERSION
         );
         wp_enqueue_script(
@@ -47,8 +72,8 @@ final class Parcs_HT_Admin_Shortcode_Preview {
 
     /**
      * Retire uniquement les scripts embarqués du HTML affiché dans l'aperçu admin.
-     * Le shortcode public reste inchangé ; on évite ici qu'un script inline soit
-     * transformé en texte visible par le contexte d'administration.
+     * Le shortcode public reste inchangé ; les interactions nécessaires sont
+     * réinitialisées après insertion par le script d'aperçu admin.
      */
     private static function preview_html($html) {
         $html = (string)$html;
