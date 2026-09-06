@@ -217,7 +217,7 @@ final class Parcs_HT_Group_Tariffs {
             <?php endforeach; ?>
         </section>
         <?php if (count($years) > 1) : ?>
-        <script>(function(){var root=document.getElementById(<?php echo wp_json_encode($id); ?>);if(!root)return;root.querySelectorAll('[data-htp-group-year-tab]').forEach(function(button){button.addEventListener('click',function(){var year=button.getAttribute('data-htp-group-year-tab');root.querySelectorAll('[data-htp-group-year-tab]').forEach(function(item){item.setAttribute('aria-selected',item===button?'true':'false';});root.querySelectorAll('[data-htp-group-year-panel]').forEach(function(panel){panel.hidden=panel.getAttribute('data-htp-group-year-panel')!==year;});});});}());</script>
+        <script>(function(){var root=document.getElementById(<?php echo wp_json_encode($id); ?>);if(!root)return;root.querySelectorAll('[data-htp-group-year-tab]').forEach(function(button){button.addEventListener('click',function(){var year=button.getAttribute('data-htp-group-year-tab');root.querySelectorAll('[data-htp-group-year-tab]').forEach(function(item){item.setAttribute('aria-selected',item===button?'true':'false');});root.querySelectorAll('[data-htp-group-year-panel]').forEach(function(panel){panel.hidden=panel.getAttribute('data-htp-group-year-panel')!==year;});});});}());</script>
         <?php endif;
         return ob_get_clean();
     }
