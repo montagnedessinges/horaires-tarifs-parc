@@ -2,7 +2,12 @@
 
 if (!defined('ABSPATH')) { exit; }
 
-/** Shortcode autonome des tarifs groupes, alimenté par Groupes → Tarifs. */
+/**
+ * Shortcode autonome d'affichage des tarifs groupes.
+ *
+ * Source unique des prix : la même grille tariffs.groups de la saison publique
+ * que celle utilisée par [parc_tableau_tarifs]. Aucun tarif n'est dupliqué ici.
+ */
 final class Parcs_HT_Group_Tariffs {
     private static $instance = 0;
 
@@ -19,8 +24,112 @@ final class Parcs_HT_Group_Tariffs {
         return self::render(Parcs_HT_Schedule::language(), is_array($atts) ? $atts : array());
     }
 
-    private static function translations($value, $language, $fallback = '') {
+    private static function selected_settings() {
+        $settings = Parcs_HT_Defaults::settings();
+        if (class_exists('Parcs_HT_Tariff_Seasons')) {
+            $settings = Parcs_HT_Tariff_Seasons::select_season_tariffs($settings, true);
+        }
+        return is_array($settings) ? $settings : array();
+    }
+
+    private static function translation($value, $language, $fallback = '') {
         return Parcs_HT_Schedule::translation(is_array($value) ? $value : array(), $language, $fallback);
+    }
+
+    private static function columns($tariffs) {
+        $columns = isset($tariffs['columns']['groups']) && is_array($tariffs['columns']['groups'])
+            ? $tariffs['columns']['groups'] : array();
+        $out = array();
+        $seen = array();
+
+        foreach ($columns as $column) {
+            if (!is_array($column)) continue;
+            if (isset($column['visible']) && (string)$column['visible'] === '0') continue;
+            $id = sanitize_key(isset($column['id']) ? $column['id'] : '');
+            if ($id === '' || isset($seen[$id])) continue;
+            $seen[$id] = true;
+            $out[] = array(
+                'id'=>$id,
+                'label'=>isset($column['label']) && is_array($column['label'])
+                    ? $column['label'] : array('fr'=>'Tarif','en'=>'Price','de'=>'Preis'),
+            );
+        }
+
+        // Même secours historique que le tableau principal : uniquement si aucune
+        // configuration de colonnes n'existe, jamais si une colonne a été masquée.
+        if (!$out && !isset($tariffs['columns']['groups'])) {
+            $out[] = array('id'=>'price','label'=>array('fr'=>'Tarif','en'=>'Price','de'=>'Preis'));
+        }
+        return $out;
+    }
+
+    private static function row_is_visible($row) {
+        if (!is_array($row) || ($row['row_type'] ?? 'standard') !== 'special') return true;
+        $today = wp_date('Y-m-d', null, new DateTimeZone(Parcs_HT_Schedule::timezone(Parcs_HT_Defaults::all_settings())));
+        $from = (string)($row['display_from'] ?? '');
+        $to = (string)($row['display_to'] ?? '');
+        if ($from !== '' && $today < $from) return false;
+        if ($to !== '' && $today > $to) return false;
+        return true;
+    }
+
+    private static function row_style($row) {
+        $style = '';
+        $map = array(
+            'label_color'=>'--htp-row-label',
+            'subtitle_color'=>'--htp-row-detail',
+            'note_color'=>'--htp-row-note',
+            'price_color'=>'--htp-row-price',
+            'row_border_color'=>'--htp-row-border',
+        );
+        foreach ($map as $key=>$var) {
+            if (!empty($row[$key]) && ($color = sanitize_hex_color($row[$key]))) $style .= $var . ':' . $color . ';';
+        }
+        if (!empty($row['row_bg_transparent']) && (string)$row['row_bg_transparent'] === '1') {
+            $style .= '--htp-row-bg:transparent;';
+        } elseif (!empty($row['row_bg_color']) && ($color = sanitize_hex_color($row['row_bg_color']))) {
+            $style .= '--htp-row-bg:' . $color . ';';
+        }
+        return $style;
+    }
+
+    private static function special_offer_meta($row, $language) {
+        $lines = array();
+        $from = (string)($row['valid_from'] ?? '');
+        $to = (string)($row['valid_to'] ?? '');
+        if ($from !== '' || $to !== '') {
+            $from_text = self::date_label($from, $language);
+            $to_text = self::date_label($to, $language);
+            if ($language === 'en') {
+                $lines[] = ($from && $to) ? 'Valid from ' . $from_text . ' to ' . $to_text : ($from ? 'Valid from ' . $from_text : 'Valid until ' . $to_text);
+            } elseif ($language === 'de') {
+                $lines[] = ($from && $to) ? 'Gültig vom ' . $from_text . ' bis ' . $to_text : ($from ? 'Gültig ab ' . $from_text : 'Gültig bis ' . $to_text);
+            } else {
+                $lines[] = ($from && $to) ? 'Valable du ' . $from_text . ' au ' . $to_text : ($from ? 'Valable à partir du ' . $from_text : 'Valable jusqu’au ' . $to_text);
+            }
+        }
+        $channel = (string)($row['sale_channel'] ?? 'both');
+        if ($channel === 'online') $lines[] = $language === 'en' ? 'Online only' : ($language === 'de' ? 'Nur online' : 'Uniquement en ligne');
+        if ($channel === 'onsite') $lines[] = $language === 'en' ? 'On-site only' : ($language === 'de' ? 'Nur vor Ort' : 'Uniquement sur place');
+        return $lines;
+    }
+
+    private static function date_label($value, $language) {
+        if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', (string)$value, $m)) return (string)$value;
+        $months = array(
+            'fr'=>array(1=>'janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'),
+            'en'=>array(1=>'January','February','March','April','May','June','July','August','September','October','November','December'),
+            'de'=>array(1=>'Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'),
+        );
+        $year=(int)$m[1]; $month=(int)$m[2]; $day=(int)$m[3];
+        if ($language === 'de') return $day . '. ' . $months['de'][$month] . ' ' . $year;
+        return $day . ' ' . $months[$language === 'en' ? 'en' : 'fr'][$month] . ' ' . $year;
+    }
+
+    private static function buy_label($language) {
+        if ($language === 'en') return 'Buy';
+        if ($language === 'de') return 'Kaufen';
+        return 'Acheter';
     }
 
     private static function style_variables($general) {
@@ -31,18 +140,23 @@ final class Parcs_HT_Group_Tariffs {
             'button_bg_color'=>'--htp-button-bg','button_text_color'=>'--htp-button-text','price_color'=>'--htp-price','groups_note_text_color'=>'--htp-groups-note-text','groups_note_border_color'=>'--htp-groups-note-border',
         );
         $style = '';
-        foreach ($map as $key => $variable) {
+        foreach ($map as $key=>$variable) {
             if (empty($general[$key])) continue;
             $color = sanitize_hex_color((string)$general[$key]);
             if ($color) $style .= $variable . ':' . $color . ';';
         }
-        if (!empty($general['panel_bg_transparent']) && (string)$general['panel_bg_transparent'] === '1') $style .= '--htp-panel-bg:transparent;';
-        elseif (!empty($general['panel_bg_color']) && ($color = sanitize_hex_color((string)$general['panel_bg_color']))) $style .= '--htp-panel-bg:' . $color . ';';
+        if (!empty($general['panel_bg_transparent']) && (string)$general['panel_bg_transparent'] === '1') {
+            $style .= '--htp-panel-bg:transparent;';
+        } elseif (!empty($general['panel_bg_color']) && ($color = sanitize_hex_color((string)$general['panel_bg_color']))) {
+            $style .= '--htp-panel-bg:' . $color . ';';
+        }
         return $style;
     }
 
     private static function ensure_style() {
-        if (!wp_style_is('parcs-ht-frontend', 'registered')) wp_register_style('parcs-ht-frontend', PARCS_HT_URL . 'assets/frontend.css', array(), PARCS_HT_VERSION);
+        if (!wp_style_is('parcs-ht-frontend', 'registered')) {
+            wp_register_style('parcs-ht-frontend', PARCS_HT_URL . 'assets/frontend.css', array(), PARCS_HT_VERSION);
+        }
         wp_enqueue_style('parcs-ht-frontend');
         if (!did_action('wp_head') || wp_style_is('parcs-ht-frontend', 'done')) return '';
         ob_start();
@@ -50,175 +164,104 @@ final class Parcs_HT_Group_Tariffs {
         return ob_get_clean();
     }
 
-    private static function row_visible($row) {
-        // Les anciennes grilles n'avaient pas toujours le champ enabled. Son absence
-        // ne doit pas faire disparaître une ligne tarifaire déjà enregistrée.
-        if (!is_array($row) || (string)($row['enabled'] ?? '1') !== '1') return false;
-        if ((string)($row['row_type'] ?? 'standard') !== 'special') return true;
-        $today = wp_date('Y-m-d');
-        $from = (string)($row['display_from'] ?? '');
-        $to = (string)($row['display_to'] ?? '');
-        return !($from !== '' && $today < $from) && !($to !== '' && $today > $to);
-    }
-
-    private static function columns($tariffs) {
-        $out = array();
-        $index = 0;
-        foreach ((array)($tariffs['columns']['groups'] ?? array()) as $column) {
-            if (!is_array($column) || (string)($column['visible'] ?? '1') === '0') continue;
-            $id = sanitize_key((string)($column['id'] ?? ''));
-
-            // L'affichage public ne dépend pas des IDs permanents utilisés par le moteur
-            // de devis. Les anciennes grilles peuvent encore utiliser "price" : elles
-            // doivent rester affichables pendant et après la migration des données.
-            if ($id === '') $id = $index === 0 ? 'price' : 'group_price_' . ($index + 1);
-            $column['id'] = $id;
-            $out[] = $column;
-            $index++;
-        }
-
-        // Compatibilité avec les grilles historiques à une seule colonne qui ne
-        // possédaient pas encore de tableau columns.groups.
-        if (!$out && !empty($tariffs['groups']) && is_array($tariffs['groups'])) {
-            $out[] = array(
-                'id'=>'price',
-                'visible'=>'1',
-                'label'=>array('fr'=>'Tarif','en'=>'Price','de'=>'Preis'),
-            );
-        }
-        return $out;
-    }
-
-    private static function cell_for_column($row, $column_id, $column_index) {
-        $cells = isset($row['cells']) && is_array($row['cells']) ? $row['cells'] : array();
-        if (isset($cells[$column_id]) && is_array($cells[$column_id])) return $cells[$column_id];
-
-        // Ancien stockage : la première colonne était généralement indexée par "price".
-        if ($column_index === 0 && isset($cells['price']) && is_array($cells['price'])) return $cells['price'];
-
-        // Certaines migrations ont conservé une cellule unique sous son ancien identifiant.
-        // Pour une grille à une seule valeur, cette cellule reste une source fiable.
-        if ($column_index === 0 && count($cells) === 1) {
-            $first = reset($cells);
-            if (is_array($first)) return $first;
-        }
-
-        // Format historique antérieur aux cellules multi-colonnes.
-        if ($column_index === 0 && trim((string)($row['price'] ?? '')) !== '') {
-            return array(
-                'value'=>(string)$row['price'],
-                'old_value'=>(string)($row['old_price'] ?? ''),
-            );
-        }
-        return array('value'=>'','old_value'=>'');
-    }
-
-    private static function season_context($all, $year, $language) {
-        if (empty($all['seasons'][$year]) || !is_array($all['seasons'][$year])) return null;
-        $season = $all['seasons'][$year];
-        $tariffs = isset($season['tariffs']) && is_array($season['tariffs']) ? $season['tariffs'] : array();
-        $columns = self::columns($tariffs);
-        if (!$columns) return null;
-        $rows = array();
-        foreach ((array)($tariffs['groups'] ?? array()) as $row) {
-            if (!self::row_visible($row)) continue;
-            $cells = array();
-            $has_value = false;
-            foreach ($columns as $column_index => $column) {
-                $id = (string)$column['id'];
-                $cell = self::cell_for_column($row, $id, $column_index);
-                $value = trim((string)($cell['value'] ?? ''));
-                if ($value !== '') $has_value = true;
-                $cells[] = array('id'=>$id,'value'=>$value,'old_value'=>(string)($cell['old_value'] ?? ''),'label'=>self::translations($column['label'] ?? array(), $language, ''));
-            }
-            if (!$has_value) continue;
-            $rows[] = array(
-                'label'=>self::translations($row['label'] ?? array(), $language, ''),
-                'subtitle'=>self::translations($row['subtitle'] ?? ($row['detail'] ?? array()), $language, ''),
-                'note'=>self::translations($row['note'] ?? array(), $language, ''),
-                'special'=>(string)($row['row_type'] ?? 'standard') === 'special',
-                'badge'=>self::translations($row['special_badge'] ?? array(), $language, ''),
-                'cells'=>$cells,
-            );
-        }
-        return $rows ? array('columns'=>$columns,'rows'=>$rows) : null;
-    }
-
     public static function render($language, $atts = array()) {
+        unset($atts);
         $language = in_array($language, array('fr','en','de'), true) ? $language : 'fr';
-        $all = get_option(Parcs_HT_Defaults::OPTION, array());
-        $all = is_array($all) ? $all : array();
-        $years = class_exists('Parcs_HT_Group_Tariff_Settings') ? Parcs_HT_Group_Tariff_Settings::published_years() : array();
-        $contexts = array();
-        foreach ($years as $year) {
-            $ctx = self::season_context($all, $year, $language);
-            if ($ctx) $contexts[$year] = $ctx;
+        $settings = self::selected_settings();
+        $tariffs = isset($settings['tariffs']) && is_array($settings['tariffs']) ? $settings['tariffs'] : array();
+        $rows = isset($tariffs['groups']) && is_array($tariffs['groups']) ? $tariffs['groups'] : array();
+        $columns = self::columns($tariffs);
+
+        $visible_rows = array();
+        foreach ($rows as $row) {
+            if (!is_array($row) || !isset($row['enabled']) || (string)$row['enabled'] !== '1') continue;
+            if (!self::row_is_visible($row)) continue;
+            $visible_rows[] = $row;
         }
-        $years = array_keys($contexts);
+
         $fallbacks = array(
             'fr'=>'Les tarifs groupes ne sont pas disponibles pour le moment.',
             'en'=>'Group rates are not available at the moment.',
             'de'=>'Die Gruppentarife sind derzeit nicht verfügbar.',
         );
-        if (!$years) return '<p class="parcs-ht-group-tariffs-empty">' . esc_html($fallbacks[$language]) . '</p>';
+        if (!$columns || !$visible_rows) {
+            return '<p class="parcs-ht-group-tariffs-empty">' . esc_html($fallbacks[$language]) . '</p>';
+        }
 
-        $default_year = class_exists('Parcs_HT_Group_Tariff_Settings') ? Parcs_HT_Group_Tariff_Settings::public_year() : (string)end($years);
-        if (!isset($contexts[$default_year])) $default_year = (string)$years[0];
         self::$instance++;
         $id = 'parcs-ht-group-tariffs-' . self::$instance;
-        $general = isset($all['general']) && is_array($all['general']) ? $all['general'] : array();
+        $general = isset($settings['general']) && is_array($settings['general']) ? $settings['general'] : array();
         $style = self::style_variables($general);
         $late_style = self::ensure_style();
-        $show_heading_attr = !isset($atts['titre']) || (string)$atts['titre'] !== '0';
+        $year = trim((string)($general['year'] ?? ''));
+        $titles = array('fr'=>'Tarifs groupes','en'=>'Group rates','de'=>'Gruppentarife');
+        $title = $titles[$language] . ($year !== '' ? ' ' . $year : '');
+        $show_head = count($columns) > 1;
+
+        $groups_url = isset($general['groups_url'][$language]) ? (string)$general['groups_url'][$language] : '';
+        $groups_booking_note = self::translation($general['groups_booking_note'] ?? array(), $language, '');
+        $groups_button_label = self::translation($general['groups_button_label'] ?? array(), $language, '');
+        if ($groups_button_label === '') {
+            $groups_button_label = $language === 'en' ? 'Request a quote' : ($language === 'de' ? 'Angebot anfordern' : 'Faire une demande de devis');
+        }
 
         ob_start();
         echo $late_style; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Feuille de style WordPress déjà échappée.
         ?>
-        <section id="<?php echo esc_attr($id); ?>" class="parcs-ht-group-tariffs-only parcs-ht-tariffs" data-htp-group-tariffs data-htp-lang="<?php echo esc_attr($language); ?>" style="<?php echo esc_attr($style); ?>">
-            <?php if (count($years) > 1) : ?>
-                <div class="parcs-ht-tariff-tabs" role="tablist" aria-label="<?php echo esc_attr($language === 'fr' ? 'Année des tarifs groupes' : ($language === 'de' ? 'Jahr der Gruppentarife' : 'Group rate year')); ?>">
-                    <?php foreach ($years as $year) : ?><button type="button" role="tab" aria-selected="<?php echo $year === $default_year ? 'true' : 'false'; ?>" data-htp-group-year-tab="<?php echo esc_attr($year); ?>"><?php echo esc_html($year); ?></button><?php endforeach; ?>
-                </div>
-            <?php endif; ?>
-            <?php foreach ($contexts as $year => $context) :
-                $settings = Parcs_HT_Group_Tariff_Settings::settings($year);
-                $title = self::translations($settings['title'] ?? array(), $language, '');
-                if ($title === '') $title = Parcs_HT_Group_Tariff_Settings::default_title($language, $year);
-                $intro = self::translations($settings['intro'] ?? array(), $language, '');
-                $show_heading = $show_heading_attr && (string)($settings['show_heading'] ?? '1') === '1';
-                $future_year = (string)($settings['future_year'] ?? ((int)$year + 1));
-                $future_notice = self::translations($settings['future_notice'] ?? array(), $language, '');
-                if ($future_notice === '') $future_notice = Parcs_HT_Group_Tariff_Settings::default_future_notice($language, $future_year);
-                $show_future = (string)($settings['show_future_notice'] ?? '0') === '1' && $future_year !== '' && !Parcs_HT_Group_Tariff_Settings::is_published($future_year);
-                $booking_note = self::translations($general['groups_booking_note'] ?? array(), $language, '');
-                $button_label = self::translations($settings['button_label'] ?? array(), $language, '');
-                $button_url = self::translations($settings['button_url'] ?? array(), $language, '');
-                if ($button_url === '') $button_url = self::translations($general['groups_url'] ?? array(), $language, '');
-                $show_button = (string)($settings['show_quote_button'] ?? '1') === '1' && $button_url !== '';
-                $columns = $context['columns'];
-                $show_head = count($columns) > 1;
-            ?>
-                <div class="parcs-ht-tariff-panel" data-htp-group-year-panel="<?php echo esc_attr($year); ?>" <?php if ($year !== $default_year) echo 'hidden'; ?>>
-                    <?php if ($show_heading) : ?><header class="parcs-ht-heading parcs-ht-tariff-heading"><div class="parcs-ht-title" role="heading" aria-level="2"><?php echo esc_html($title); ?></div></header><?php endif; ?>
-                    <?php if ($intro !== '') : ?><p class="parcs-ht-groups-booking-note"><?php echo nl2br(esc_html($intro)); ?></p><?php endif; ?>
-                    <div class="parcs-ht-price-list" style="--htp-tariff-column-count:<?php echo (int)count($columns); ?>">
-                        <?php if ($show_head) : ?><div class="parcs-ht-price-head" aria-hidden="true"><span></span><?php foreach ($columns as $column) : ?><span><?php echo esc_html(self::translations($column['label'] ?? array(), $language, '')); ?></span><?php endforeach; ?></div><?php endif; ?>
-                        <?php foreach ($context['rows'] as $row) : ?>
-                            <div class="parcs-ht-price-row<?php echo $row['special'] ? ' is-special' : ''; ?>">
-                                <div class="parcs-ht-price-label"><strong><?php echo esc_html($row['label']); ?></strong><?php if ($row['badge'] !== '') : ?><span class="parcs-ht-special-badge"><?php echo esc_html($row['badge']); ?></span><?php endif; ?><?php if ($row['subtitle'] !== '') : ?><span class="parcs-ht-price-detail"><?php echo esc_html($row['subtitle']); ?></span><?php endif; ?><?php if ($row['note'] !== '') : ?><span class="parcs-ht-price-detail"><?php echo esc_html($row['note']); ?></span><?php endif; ?></div>
-                                <?php foreach ($row['cells'] as $cell) : ?><div class="parcs-ht-price-value"><?php if ($row['special'] && $cell['old_value'] !== '') : ?><span class="parcs-ht-old-price"><?php echo esc_html($cell['old_value']); ?></span><?php endif; ?><?php echo esc_html($cell['value']); ?></div><?php endforeach; ?>
+        <section id="<?php echo esc_attr($id); ?>" class="parcs-ht-tariffs parcs-ht-group-tariffs-only" data-htp-lang="<?php echo esc_attr($language); ?>" style="<?php echo esc_attr($style); ?>">
+            <header class="parcs-ht-heading parcs-ht-tariff-heading">
+                <div class="parcs-ht-title" role="heading" aria-level="2"><?php echo esc_html($title); ?></div>
+            </header>
+            <div class="parcs-ht-tariff-panel">
+                <div class="parcs-ht-price-list" style="--htp-tariff-column-count:<?php echo (int)count($columns); ?>">
+                    <?php if ($show_head) : ?>
+                        <div class="parcs-ht-price-head" aria-hidden="true"><span></span><?php foreach ($columns as $column) : ?><span><?php echo esc_html(self::translation($column['label'], $language, '')); ?></span><?php endforeach; ?></div>
+                    <?php endif; ?>
+                    <?php foreach ($visible_rows as $row) :
+                        $is_special = isset($row['row_type']) && $row['row_type'] === 'special';
+                        $row_style = self::row_style($row);
+                        $label_text = self::translation($row['label'] ?? array(), $language, '');
+                        $subtitle = self::translation($row['subtitle'] ?? ($row['detail'] ?? array()), $language, '');
+                        $note = self::translation($row['note'] ?? array(), $language, '');
+                        $badge = $is_special ? self::translation($row['special_badge'] ?? array(), $language, '') : '';
+                        $meta = $is_special ? self::special_offer_meta($row, $language) : array();
+                        $purchase_url = $is_special ? self::translation($row['purchase_url'] ?? array(), $language, '') : '';
+                        $classes = 'parcs-ht-price-row' . ($is_special ? ' is-special-offer' : '');
+                    ?>
+                        <div class="<?php echo esc_attr($classes); ?>"<?php echo $row_style !== '' ? ' style="' . esc_attr($row_style) . '"' : ''; ?>>
+                            <div class="parcs-ht-price-label">
+                                <div class="parcs-ht-price-label-line">
+                                    <?php if ($is_special && (string)($row['show_special_dot'] ?? '1') === '1') : ?><span class="parcs-ht-special-dot" aria-hidden="true"></span><?php endif; ?>
+                                    <strong><?php echo esc_html($label_text); ?></strong>
+                                    <?php if ($badge !== '') : ?><span class="parcs-ht-special-badge"><?php echo esc_html($badge); ?></span><?php endif; ?>
+                                </div>
+                                <?php if ($subtitle !== '') : ?><small class="parcs-ht-price-subtitle"><?php echo esc_html($subtitle); ?></small><?php endif; ?>
+                                <?php if ($note !== '') : ?><small class="parcs-ht-price-note"><?php echo esc_html($note); ?></small><?php endif; ?>
+                                <?php foreach ($meta as $line) : ?><small class="parcs-ht-special-meta"><?php echo esc_html($line); ?></small><?php endforeach; ?>
+                                <?php if ($purchase_url !== '') : ?><a class="parcs-ht-special-buy" href="<?php echo esc_url($purchase_url); ?>"><?php echo esc_html(self::buy_label($language)); ?></a><?php endif; ?>
                             </div>
-                        <?php endforeach; ?>
-                    </div>
-                    <?php if ($booking_note !== '') : ?><p class="parcs-ht-groups-booking-note"><?php echo nl2br(esc_html($booking_note)); ?></p><?php endif; ?>
-                    <?php if ($show_future) : ?><p class="parcs-ht-groups-booking-note parcs-ht-group-future-notice"><strong><?php echo esc_html($future_notice); ?></strong></p><?php endif; ?>
-                    <?php if ($show_button) : ?><div class="parcs-ht-panel-actions"><a class="parcs-ht-button" href="<?php echo esc_url($button_url); ?>"><?php echo esc_html($button_label !== '' ? $button_label : ($language === 'fr' ? 'Faire une demande de devis' : ($language === 'de' ? 'Angebot anfordern' : 'Request a quote'))); ?></a></div><?php endif; ?>
+                            <div class="parcs-ht-price-values">
+                                <?php foreach ($columns as $column) :
+                                    $col_id = $column['id'];
+                                    $cell = isset($row['cells'][$col_id]) && is_array($row['cells'][$col_id]) ? $row['cells'][$col_id] : array();
+                                    $value = isset($cell['value']) ? (string)$cell['value'] : ($col_id === 'price' ? (string)($row['price'] ?? '') : '');
+                                    $old_value = isset($cell['old_value']) ? (string)$cell['old_value'] : '';
+                                    $col_label = self::translation($column['label'], $language, '');
+                                ?>
+                                    <div class="parcs-ht-price-cell"<?php echo !$show_head && $col_label !== '' ? ' aria-label="' . esc_attr($col_label) . '"' : ''; ?>>
+                                        <?php if ($is_special && $old_value !== '') : ?><del><?php echo esc_html($old_value); ?></del><?php endif; ?>
+                                        <b><?php echo esc_html($value); ?></b>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
                 </div>
-            <?php endforeach; ?>
+                <?php if ($groups_booking_note !== '') : ?><p class="parcs-ht-groups-booking-note"><?php echo nl2br(esc_html($groups_booking_note)); ?></p><?php endif; ?>
+                <?php if ($groups_url !== '') : ?><div class="parcs-ht-panel-actions"><a class="parcs-ht-button" href="<?php echo esc_url($groups_url); ?>"><?php echo esc_html($groups_button_label); ?></a></div><?php endif; ?>
+            </div>
         </section>
-        <?php if (count($years) > 1) : ?>
-        <script>(function(){var root=document.getElementById(<?php echo wp_json_encode($id); ?>);if(!root)return;root.querySelectorAll('[data-htp-group-year-tab]').forEach(function(button){button.addEventListener('click',function(){var year=button.getAttribute('data-htp-group-year-tab');root.querySelectorAll('[data-htp-group-year-tab]').forEach(function(item){item.setAttribute('aria-selected',item===button?'true':'false');});root.querySelectorAll('[data-htp-group-year-panel]').forEach(function(panel){panel.hidden=panel.getAttribute('data-htp-group-year-panel')!==year;});});});}());</script>
-        <?php endif;
+        <?php
         return ob_get_clean();
     }
 }
