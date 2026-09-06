@@ -5,8 +5,8 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * Bootstrap léger : enregistre les shortcodes et endpoints sans parser le gros
- * moteur de rendu sur les pages qui n'utilisent pas l'extension.
+ * Bootstrap léger : enregistre les shortcodes du moteur principal et endpoints
+ * sans parser le gros moteur de rendu sur les pages qui n'utilisent pas l'extension.
  */
 final class Parcs_HT_Bootstrap {
     private static $tags = null;
@@ -64,23 +64,19 @@ final class Parcs_HT_Bootstrap {
 
     private static function tags() {
         if (is_array(self::$tags)) return self::$tags;
-        $base = array(
-            'parc_horaires_tarifs' => 'page',
-            'parc_horaires_aujourdhui' => 'today',
-            'parc_calendrier' => 'calendar',
-            'parc_tableau_tarifs' => 'tariffs',
-            'parc_fermeture_exceptionnelle' => 'alert',
-            'parc_horaire' => 'header_hour',
-            'parc_statut' => 'header_status',
-            'parc_horaire_accueil' => 'home_opening',
-            'parc_devis' => 'quote_page',
-            'parc_devis_groupe' => 'quote_page',
-        );
         $tags = array();
-        foreach ($base as $tag => $module) {
-            $tags[$tag] = array('module' => $module, 'language' => '');
-            foreach (array('fr', 'en', 'de') as $language) {
-                $tags[$tag . '_' . $language] = array('module' => $module, 'language' => $language);
+        if (!class_exists('Parcs_HT_Shortcode_Registry')) {
+            self::$tags = $tags;
+            return self::$tags;
+        }
+        foreach (Parcs_HT_Shortcode_Registry::definitions() as $base => $definition) {
+            // Les modules Groupes et Guides possèdent leur propre bootstrap léger.
+            if (($definition['kind'] ?? '') !== 'core') continue;
+            $module = sanitize_key((string)($definition['module'] ?? ''));
+            if ($module === '') continue;
+            $tags[$base] = array('module'=>$module,'language'=>'');
+            foreach (Parcs_HT_Shortcode_Registry::languages() as $language) {
+                $tags[$base . '_' . $language] = array('module'=>$module,'language'=>$language);
             }
         }
         self::$tags = $tags;

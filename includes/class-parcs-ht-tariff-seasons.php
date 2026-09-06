@@ -50,11 +50,23 @@ final class Parcs_HT_Tariff_Seasons {
         return $new_value;
     }
 
+    private static function hide_unpublished_groups($tariffs, $year) {
+        if (!is_array($tariffs)) $tariffs = array();
+        if ($year === '' || !class_exists('Parcs_HT_Group_Tariff_Settings') || Parcs_HT_Group_Tariff_Settings::is_published($year)) return $tariffs;
+        $tariffs['groups'] = array();
+        if (!isset($tariffs['columns']) || !is_array($tariffs['columns'])) $tariffs['columns'] = array();
+        $tariffs['columns']['groups'] = array();
+        return $tariffs;
+    }
+
     public static function select_season_tariffs($value, $public = false) {
         if (self::$filtering || !is_array($value) || empty($value['seasons']) || !is_array($value['seasons'])) return $value;
         self::$filtering = true;
         $year = self::requested_year($value, $public);
-        if ($year !== '' && isset($value['seasons'][$year]['tariffs']) && is_array($value['seasons'][$year]['tariffs'])) $value['tariffs'] = $value['seasons'][$year]['tariffs'];
+        if ($year !== '' && isset($value['seasons'][$year]['tariffs']) && is_array($value['seasons'][$year]['tariffs'])) {
+            $value['tariffs'] = $value['seasons'][$year]['tariffs'];
+            if ($public) $value['tariffs'] = self::hide_unpublished_groups($value['tariffs'], $year);
+        }
         if ($public && $year === '') {
             // Sans saison publiée, aucun ancien tarif global ne doit servir de secours public.
             $value['tariffs'] = array('individual'=>array(),'reduced'=>array(),'groups'=>array(),'columns'=>array('individual'=>array(),'reduced'=>array(),'groups'=>array()),'notes'=>array(),'payment_methods'=>array(),'payment_items'=>array(),'print'=>array());

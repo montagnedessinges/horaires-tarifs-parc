@@ -9,6 +9,7 @@ final class Parcs_HT_Admin_Groups {
         add_action('admin_enqueue_scripts', array(__CLASS__, 'assets'), 120);
         add_action('wp_ajax_parcs_ht_save_quote_season_rates', array(__CLASS__, 'save_quote_rates'));
         add_action('wp_ajax_parcs_ht_save_quote_tariff_binding', array(__CLASS__, 'save_quote_tariff_binding'));
+        add_action('wp_ajax_parcs_ht_save_group_tariff_settings', array(__CLASS__, 'save_group_tariff_settings'));
         add_action('wp_ajax_parcs_ht_save_quote_language_forms', array(__CLASS__, 'save_quote_language_forms'));
         add_action('wp_ajax_parcs_ht_save_quote_gate_settings', array(__CLASS__, 'save_quote_gate_settings'));
     }
@@ -18,8 +19,6 @@ final class Parcs_HT_Admin_Groups {
         if (class_exists('Parcs_HT_Group_Quotes')) remove_submenu_page(Parcs_HT_Admin::PAGE, Parcs_HT_Group_Quotes::PAGE);
         if (class_exists('Parcs_HT_Quote_Languages')) remove_submenu_page(Parcs_HT_Admin::PAGE, Parcs_HT_Quote_Languages::PAGE);
         if (class_exists('Parcs_HT_Quote_Gate')) remove_submenu_page(Parcs_HT_Admin::PAGE, Parcs_HT_Quote_Gate::PAGE);
-        // La page Guides reste enregistrée afin que WordPress conserve son hook/capability.
-        // Elle est seulement masquée visuellement du sous-menu via hide_guides_submenu().
     }
 
     public static function hide_guides_submenu() {
@@ -47,40 +46,42 @@ final class Parcs_HT_Admin_Groups {
         return '';
     }
 
+    private static function snapshot($year, $reason) {
+        if (class_exists('Parcs_HT_Save_Integrity')) Parcs_HT_Save_Integrity::store_daily_snapshot($year, $reason);
+    }
+
+    private static function same($a, $b) {
+        return hash('sha256', wp_json_encode($a)) === hash('sha256', wp_json_encode($b));
+    }
+
     public static function assets($hook) {
         if ($hook !== 'toplevel_page_parcs-horaires-tarifs' || !current_user_can('manage_options')) return;
-        $year = isset($_GET['season']) ? sanitize_text_field(wp_unslash($_GET['season'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Sélection d’aperçu en lecture seule.
+        $year = isset($_GET['season']) ? sanitize_text_field(wp_unslash($_GET['season'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Sélection en lecture seule.
         $settings = Parcs_HT_Defaults::settings($year);
         $year = (string)($settings['active_season_year'] ?? $year);
         $quotes = class_exists('Parcs_HT_Group_Quotes') ? Parcs_HT_Group_Quotes::settings(false) : array();
         $forms = class_exists('Parcs_HT_Quote_Languages') ? Parcs_HT_Quote_Languages::settings() : array('fr'=>'','en'=>'','de'=>'');
         $gate = class_exists('Parcs_HT_Quote_Gate') ? Parcs_HT_Quote_Gate::settings() : array();
-        $binding = isset($quotes['tariff_binding']) && is_array($quotes['tariff_binding']) ? $quotes['tariff_binding'] : array();
-        $tariffs = isset($settings['tariffs']) && is_array($settings['tariffs']) ? $settings['tariffs'] : array();
-        $columns = array();
-        foreach ((array)($tariffs['columns']['groups'] ?? array()) as $column) {
-            if (!is_array($column)) continue;
-            $id = sanitize_key($column['id'] ?? '');
-            if ($id === '') continue;
-            $columns[] = array('id'=>$id, 'label'=>self::translation($column['label'] ?? array()) ?: $id);
-        }
-        $rows = array();
-        foreach ((array)($tariffs['groups'] ?? array()) as $index => $row) {
-            if (!is_array($row)) continue;
-            $rows[] = array('index'=>(string)$index, 'label'=>self::translation($row['label'] ?? array()) ?: ('Ligne ' . ((int)$index + 1)));
-        }
+        $binding = class_exists('Parcs_HT_Group_Quotes') ? Parcs_HT_Group_Quotes::binding_for_year($year, $quotes) : null;
+        $identities = class_exists('Parcs_HT_Tariff_Identities') ? Parcs_HT_Tariff_Identities::identity_snapshot($settings) : array();
+        $group_identity = isset($identities['groups']) && is_array($identities['groups']) ? $identities['groups'] : array('rows'=>array(),'columns'=>array());
+        $group_settings = class_exists('Parcs_HT_Group_Tariff_Settings') ? Parcs_HT_Group_Tariff_Settings::settings($year) : array();
+
         wp_enqueue_script('parcs-ht-admin-groups', PARCS_HT_URL . 'assets/admin-groups.js', array('jquery','parcs-ht-admin'), PARCS_HT_VERSION, true);
         wp_add_inline_script('parcs-ht-admin-groups', 'window.ParcsHTAdminGroups=' . wp_json_encode(array(
             'year' => $year,
             'nonce' => wp_create_nonce('parcs_ht_quote_season_rates'),
             'binding_nonce' => wp_create_nonce('parcs_ht_quote_tariff_binding'),
+            'group_tariff_nonce' => wp_create_nonce('parcs_ht_group_tariff_settings'),
             'forms_nonce' => wp_create_nonce('parcs_ht_quote_language_forms'),
             'gate_nonce' => wp_create_nonce('parcs_ht_quote_gate_settings'),
             'forms' => $forms,
             'gate' => $gate,
-            'binding' => $binding,
-            'tariff_columns' => $columns,
-            'tariff_rows' => $rows,
+            'binding' => is_array($binding) ? $binding : array(),
+            'tariff_columns' => $group_identity['columns'],
+            'tariff_rows' => $group_identity['rows'],
+            'tariff_identities' => $identities,
+            'group_tariff' => $group_settings,
             'guides_url' => class_exists('Parcs_HT_Pedagogical_Guides') ? add_query_arg(array('page'=>Parcs_HT_Pedagogical_Guides::PAGE), admin_url('admin.php')) : '',
         )) . ';', 'before');
     }
@@ -92,29 +93,79 @@ final class Parcs_HT_Admin_Groups {
         if (!preg_match('/^20\d{2}$/', $year)) wp_send_json_error(array('message'=>'Année invalide.'), 400);
         $all = Parcs_HT_Defaults::all_settings();
         if (empty($all['seasons'][$year]) || !is_array($all['seasons'][$year])) wp_send_json_error(array('message'=>'Cette saison n’existe pas.'), 400);
-        $settings = Parcs_HT_Group_Quotes::settings(false);
-        $column = isset($_POST['column']) ? sanitize_key(wp_unslash($_POST['column'])) : 'price';
-        if ($column === '') $column = 'price';
-        $binding = array('column'=>$column);
+        if (!class_exists('Parcs_HT_Tariff_Identities')) wp_send_json_error(array('message'=>'Le registre des identifiants tarifaires est indisponible.'), 500);
+
         $tariffs = Parcs_HT_Defaults::settings($year);
-        $rows = (array)($tariffs['tariffs']['groups'] ?? array());
+        $tariffs = isset($tariffs['tariffs']) && is_array($tariffs['tariffs']) ? $tariffs['tariffs'] : array();
+        $rows = (array)($tariffs['groups'] ?? array());
+        $columns = (array)($tariffs['columns']['groups'] ?? array());
+        $column_id = isset($_POST['column_id']) ? sanitize_key(wp_unslash($_POST['column_id'])) : '';
+        if (!Parcs_HT_Tariff_Identities::column_exists($columns, $column_id)) wp_send_json_error(array('message'=>'La colonne tarifaire sélectionnée n’existe plus.'), 400);
+
+        $binding = array('column_id'=>$column_id);
         foreach (array('child','adult','disability','companion') as $role) {
-            $key = $role . '_row';
-            $index = isset($_POST[$key]) ? absint($_POST[$key]) : 0;
-            if (!isset($rows[$index]) || !is_array($rows[$index])) wp_send_json_error(array('message'=>'Une ligne tarifaire sélectionnée n’existe plus.'), 400);
-            $binding[$key] = (string)$index;
-            $binding[$role . '_label'] = self::translation($rows[$index]['label'] ?? array());
+            $key = $role . '_row_id';
+            $id = isset($_POST[$key]) ? sanitize_key(wp_unslash($_POST[$key])) : '';
+            if (!Parcs_HT_Tariff_Identities::row_by_id($rows, $id)) wp_send_json_error(array('message'=>'Un tarif lié au devis n’existe plus. Sélectionnez un nouveau tarif.'), 400);
+            $binding[$key] = $id;
         }
-        $binding['free_adult_children'] = (string)max(1, isset($_POST['free_adult_children']) ? absint($_POST['free_adult_children']) : 10);
-        $settings['tariff_binding'] = $binding;
+        $ratio = max(1, isset($_POST['free_adult_children']) ? absint($_POST['free_adult_children']) : 10);
+        $threshold = max(1, isset($_POST['free_adult_round_threshold']) ? absint($_POST['free_adult_round_threshold']) : 5);
+        $binding['free_adult_children'] = (string)$ratio;
+        $binding['free_adult_round_threshold'] = (string)min($ratio, $threshold);
+
+        $settings = Parcs_HT_Group_Quotes::settings(false);
+        if (!isset($settings['tariff_bindings']) || !is_array($settings['tariff_bindings'])) $settings['tariff_bindings'] = array();
+        $settings['tariff_bindings'][$year] = $binding;
+        $settings['binding_version'] = 2;
         update_option(Parcs_HT_Group_Quotes::OPTION, $settings, false);
-        wp_send_json_success(array('message'=>'Liaison avec le tableau Tarifs groupes enregistrée.'));
+        $stored = Parcs_HT_Group_Quotes::binding_for_year($year, Parcs_HT_Group_Quotes::settings(false));
+        if (!$stored || !self::same($binding, $stored)) wp_send_json_error(array('message'=>'WordPress n’a pas confirmé la nouvelle liaison du devis.'), 500);
+        self::snapshot($year, 'Liaison tarifs / devis groupe');
+        wp_send_json_success(array('message'=>'Liaison du devis enregistrée pour ' . $year . '.'));
+    }
+
+    public static function save_group_tariff_settings() {
+        if (!current_user_can('manage_options')) wp_send_json_error(array('message'=>'Accès refusé.'), 403);
+        check_ajax_referer('parcs_ht_group_tariff_settings', 'nonce');
+        $year = isset($_POST['year']) ? sanitize_text_field(wp_unslash($_POST['year'])) : '';
+        if (!preg_match('/^20\d{2}$/', $year)) wp_send_json_error(array('message'=>'Année invalide.'), 400);
+        $all = Parcs_HT_Defaults::all_settings();
+        if (empty($all['seasons'][$year]) || !is_array($all['seasons'][$year])) wp_send_json_error(array('message'=>'Cette saison n’existe pas.'), 400);
+        if (!class_exists('Parcs_HT_Group_Tariff_Settings')) wp_send_json_error(array('message'=>'Le module des tarifs groupes est indisponible.'), 500);
+
+        $raw = array(
+            'published'=>isset($_POST['published']) ? sanitize_text_field(wp_unslash($_POST['published'])) : '0',
+            'show_heading'=>isset($_POST['show_heading']) ? sanitize_text_field(wp_unslash($_POST['show_heading'])) : '0',
+            'show_future_notice'=>isset($_POST['show_future_notice']) ? sanitize_text_field(wp_unslash($_POST['show_future_notice'])) : '0',
+            'future_year'=>isset($_POST['future_year']) ? sanitize_text_field(wp_unslash($_POST['future_year'])) : '',
+            'show_quote_button'=>isset($_POST['show_quote_button']) ? sanitize_text_field(wp_unslash($_POST['show_quote_button'])) : '0',
+            'title'=>array(),'intro'=>array(),'future_notice'=>array(),'button_label'=>array(),'button_url'=>array(),
+        );
+        foreach (array('fr','en','de') as $lang) {
+            foreach (array('title','intro','future_notice','button_label','button_url') as $field) {
+                $key = $field . '_' . $lang;
+                if (!isset($_POST[$key])) {
+                    $raw[$field][$lang] = '';
+                } elseif (in_array($field, array('intro','future_notice'), true)) {
+                    $raw[$field][$lang] = sanitize_textarea_field(wp_unslash($_POST[$key]));
+                } elseif ($field === 'button_url') {
+                    $raw[$field][$lang] = esc_url_raw(wp_unslash($_POST[$key]));
+                } else {
+                    $raw[$field][$lang] = sanitize_text_field(wp_unslash($_POST[$key]));
+                }
+            }
+        }
+        if (!Parcs_HT_Group_Tariff_Settings::save($year, $raw)) wp_send_json_error(array('message'=>'WordPress n’a pas confirmé l’enregistrement des réglages groupes.'), 500);
+        self::snapshot($year, 'Affichage et publication des tarifs groupes');
+        do_action('litespeed_purge_all');
+        wp_send_json_success(array('message'=>'Affichage des tarifs groupes enregistré pour ' . $year . '.'));
     }
 
     public static function save_quote_rates() {
         if (!current_user_can('manage_options')) wp_send_json_error(array('message'=>'Accès refusé.'), 403);
         check_ajax_referer('parcs_ht_quote_season_rates', 'nonce');
-        wp_send_json_error(array('message'=>'Cette ancienne grille n’est plus utilisée. Modifiez désormais Tarifs > Groupes.'), 410);
+        wp_send_json_error(array('message'=>'Cette ancienne grille n’est plus utilisée. Modifiez désormais Groupes → Tarifs.'), 410);
     }
 
     public static function save_quote_language_forms() {
@@ -129,6 +180,9 @@ final class Parcs_HT_Admin_Groups {
             $clean[$lang] = $value;
         }
         update_option(Parcs_HT_Quote_Languages::OPTION, $clean, false);
+        $stored = get_option(Parcs_HT_Quote_Languages::OPTION, array());
+        if (!is_array($stored) || !self::same($clean, $stored)) wp_send_json_error(array('message'=>'WordPress n’a pas confirmé l’enregistrement des formulaires.'), 500);
+        self::snapshot('', 'Formulaires du devis groupe');
         wp_send_json_success(array('message'=>'Formulaires FR / EN / DE enregistrés.'));
     }
 
@@ -149,6 +203,9 @@ final class Parcs_HT_Admin_Groups {
             $out[$unavailable_key] = isset($_POST[$unavailable_key]) ? sanitize_textarea_field(wp_unslash($_POST[$unavailable_key])) : '';
         }
         update_option(Parcs_HT_Quote_Gate::OPTION, $out, false);
+        $stored = get_option(Parcs_HT_Quote_Gate::OPTION, array());
+        if (!is_array($stored) || !self::same($out, $stored)) wp_send_json_error(array('message'=>'WordPress n’a pas confirmé les réglages d’accès au devis.'), 500);
+        self::snapshot('', 'Accès au devis groupe');
         wp_send_json_success(array('message'=>'Réglages d’accès au devis enregistrés.'));
     }
 }

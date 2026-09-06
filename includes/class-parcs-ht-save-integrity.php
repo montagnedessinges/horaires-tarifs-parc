@@ -43,6 +43,10 @@ final class Parcs_HT_Save_Integrity {
             $year = sanitize_text_field(wp_unslash($_POST['season_year'])); // phpcs:ignore WordPress.Security.NonceVerification.Missing
             if (preg_match('/^20\d{2}$/', $year)) return $year;
         }
+        if (isset($_POST['year'])) { // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Libellé de sauvegarde des réglages groupes.
+            $year = sanitize_text_field(wp_unslash($_POST['year'])); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+            if (preg_match('/^20\d{2}$/', $year)) return $year;
+        }
         $main = get_option(Parcs_HT_Defaults::OPTION, array());
         if (is_array($main)) {
             $year = (string)($main['active_season_year'] ?? '');
@@ -221,6 +225,11 @@ final class Parcs_HT_Save_Integrity {
             Parcs_HT_Guide_Appearance::OPTION,
         );
         if (class_exists('Parcs_HT_Quote_Languages')) $options[] = Parcs_HT_Quote_Languages::OPTION;
+        if (class_exists('Parcs_HT_Group_Quotes')) $options[] = Parcs_HT_Group_Quotes::OPTION;
+        if (class_exists('Parcs_HT_Quote_Gate')) $options[] = Parcs_HT_Quote_Gate::OPTION;
+        if (class_exists('Parcs_HT_Group_Tariff_Settings')) $options[] = Parcs_HT_Group_Tariff_Settings::OPTION;
+        // Le registre d'identifiants n'est volontairement jamais restauré : son compteur
+        // doit rester monotone même lorsqu'une ancienne configuration est restaurée.
         return array_values(array_unique($options));
     }
 
@@ -332,6 +341,10 @@ final class Parcs_HT_Save_Integrity {
             update_option($option, $value, false);
         }
         self::$restoring = false;
+
+        // Une restauration peut ramener d'anciens IDs dans les réglages, mais le registre
+        // permanent n'est jamais restauré : il les réclamera sans jamais faire reculer ses compteurs.
+        if (class_exists('Parcs_HT_Tariff_Identities')) Parcs_HT_Tariff_Identities::ensure_existing_ids();
 
         $year = (string)($revision['year'] ?? self::request_year());
         self::store_daily_snapshot($year, 'Restauration');
