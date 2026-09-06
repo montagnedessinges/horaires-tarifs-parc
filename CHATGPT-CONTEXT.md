@@ -50,6 +50,7 @@ Avant toute modification :
 12. Avant toute release, vérifier que la modification n’ajoute pas de charge inutile côté serveur ou navigateur.
 13. Avant toute release, vérifier les implications de sécurité et ne jamais désactiver une protection simplement pour contourner une erreur.
 14. Toute information importante apprise pendant le travail doit être consignée dans GitHub avant de considérer le sujet terminé.
+15. Lorsqu’une mise à jour de l’extension est demandée, ne revenir vers l’utilisateur avec le résultat final que lorsque la nouvelle version est réellement publiée dans les Releases GitHub et que le ZIP de production est disponible. Un commit poussé, un workflow en cours, une version seulement présente dans le code ou des tests encore en cours ne constituent pas une mise à jour publiée. En cas d’échec ou de contrôle encore en cours, poursuivre les corrections et vérifications sans annoncer la mise à jour comme terminée ni demander à l’utilisateur de l’installer.
 
 ## Principe d’architecture
 
