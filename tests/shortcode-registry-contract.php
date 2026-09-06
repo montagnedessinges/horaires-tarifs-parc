@@ -19,7 +19,7 @@ $required = array(
 );
 foreach ($required as $shortcode) shortcode_registry_check(strpos($registry, "'" . $shortcode . "'") !== false, 'registry contains ' . $shortcode);
 shortcode_registry_check(strpos($registry, "array('fr','en','de')") !== false, 'registry exposes FR EN DE variants');
-shortcode_registry_check(strpos($registry, "'shortcodes'=>array('auto'=>self::shortcode($base))") !== false, 'registry exposes the automatic-language shortcode for every module');
+shortcode_registry_check(strpos($registry, "'shortcodes'=>array('auto'=>self::shortcode(\$base))") !== false, 'registry exposes the automatic-language shortcode for every module');
 shortcode_registry_check(strpos($hub, 'Parcs_HT_Shortcode_Registry::public_rows()') !== false, 'Shortcodes tab is generated from registry');
 shortcode_registry_check(strpos($hub, "['auto','fr','en','de']") !== false, 'Shortcodes tab lists automatic, FR, EN and DE variants');
 shortcode_registry_check(strpos($hub, '<th>Automatique</th>') !== false, 'Shortcodes tab labels the automatic-language column');
