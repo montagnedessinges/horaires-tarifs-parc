@@ -14,19 +14,26 @@ final class Parcs_HT_Group_Quotes {
         add_filter('wpcf7_validate', array(__CLASS__, 'validate_quote'), 20, 2);
     }
 
+    public static function legacy_binding_defaults() {
+        return array(
+            'column'=>'price',
+            'child_row'=>'2','child_label'=>'Scolaire / extrascolaire',
+            'adult_row'=>'0','adult_label'=>'Adulte',
+            'disability_row'=>'3','disability_label'=>'Personne en situation de handicap et accompagnateur',
+            'companion_row'=>'3','companion_label'=>'Personne en situation de handicap et accompagnateur',
+            'free_adult_children'=>'10',
+            'free_adult_round_threshold'=>'5',
+        );
+    }
+
     public static function defaults() {
         return array(
             'enabled'=>'1','form_id'=>'','visit_field'=>'visite','group_field'=>'groupedevis',
             'school_value'=>'Groupe','disability_value'=>'Groupe en situation de handicap',
-            'tariff_binding'=>array(
-                'column'=>'price',
-                'child_row'=>'2','child_label'=>'Scolaire / extrascolaire',
-                'adult_row'=>'0','adult_label'=>'Adulte',
-                'disability_row'=>'3','disability_label'=>'Personne en situation de handicap et accompagnateur',
-                'companion_row'=>'3','companion_label'=>'Personne en situation de handicap et accompagnateur',
-                'free_adult_children'=>'10',
-            ),
-            // Conservé uniquement pour migration/retour arrière. Ces montants ne sont plus utilisés en 1.11+.
+            'binding_version'=>2,
+            'tariff_bindings'=>array(),
+            // Conservé uniquement pour migration/retour arrière. Le moteur 1.13+ ne l'utilise jamais pour calculer un devis.
+            'tariff_binding'=>self::legacy_binding_defaults(),
             'seasons'=>array('2026'=>array('child'=>'6','adult'=>'8.50','disability'=>'6','companion'=>'6','free_adult_children'=>'10')),
         );
     }
@@ -36,17 +43,29 @@ final class Parcs_HT_Group_Quotes {
         if (!is_array($saved)) $saved = array();
         $settings = array_replace_recursive(self::defaults(), $saved);
         $settings['enabled'] = '1';
-        if (!isset($settings['tariff_binding']) || !is_array($settings['tariff_binding'])) $settings['tariff_binding'] = self::defaults()['tariff_binding'];
+        if (!isset($settings['tariff_bindings']) || !is_array($settings['tariff_bindings'])) $settings['tariff_bindings'] = array();
+        if (!isset($settings['tariff_binding']) || !is_array($settings['tariff_binding'])) $settings['tariff_binding'] = self::legacy_binding_defaults();
         if (!isset($settings['seasons']) || !is_array($settings['seasons'])) $settings['seasons'] = array();
         if (!$public) return $settings;
-        $all = Parcs_HT_Defaults::all_settings();
         foreach ($settings['seasons'] as $year => &$row) {
             if (!is_array($row)) $row = array();
-            $season = $all['seasons'][$year] ?? array();
-            $row['published'] = is_array($season) && (string)($season['published'] ?? '0') === '1' ? '1' : '0';
+            $row['published'] = class_exists('Parcs_HT_Group_Tariff_Settings') && Parcs_HT_Group_Tariff_Settings::is_published((string)$year) ? '1' : '0';
         }
         unset($row);
         return $settings;
+    }
+
+    public static function binding_for_year($year, $settings = null) {
+        if ($settings === null) $settings = self::settings(false);
+        $binding = isset($settings['tariff_bindings'][$year]) && is_array($settings['tariff_bindings'][$year]) ? $settings['tariff_bindings'][$year] : array();
+        if (!class_exists('Parcs_HT_Tariff_Identities')) return null;
+        if (!Parcs_HT_Tariff_Identities::is_column_id($binding['column_id'] ?? '')) return null;
+        foreach (array('child','adult','disability','companion') as $role) {
+            if (!Parcs_HT_Tariff_Identities::is_row_id($binding[$role . '_row_id'] ?? '')) return null;
+        }
+        $binding['free_adult_children'] = (string)max(1, (int)($binding['free_adult_children'] ?? 10));
+        $binding['free_adult_round_threshold'] = (string)max(1, min((int)$binding['free_adult_children'], (int)($binding['free_adult_round_threshold'] ?? 5)));
+        return $binding;
     }
 
     private static function year_from_date($value) {
@@ -60,42 +79,33 @@ final class Parcs_HT_Group_Quotes {
         return preg_match('/([0-9]+(?:\.[0-9]+)?)/', $value, $match) ? (float)$match[1] : null;
     }
 
-    private static function row_label($row) {
-        if (!is_array($row) || !isset($row['label']) || !is_array($row['label'])) return '';
-        return trim((string)($row['label']['fr'] ?? ''));
-    }
-
-    private static function resolve_row($rows, $binding, $role) {
-        $index = isset($binding[$role . '_row']) ? (int)$binding[$role . '_row'] : -1;
-        $expected = trim((string)($binding[$role . '_label'] ?? ''));
-        if ($index >= 0 && isset($rows[$index]) && is_array($rows[$index]) && ($expected === '' || self::row_label($rows[$index]) === $expected)) return $rows[$index];
-        if ($expected !== '') foreach ($rows as $row) if (is_array($row) && self::row_label($row) === $expected) return $row;
-        return ($index >= 0 && isset($rows[$index]) && is_array($rows[$index])) ? $rows[$index] : null;
-    }
-
-    private static function price_from_row($row, $column) {
+    private static function price_from_row($row, $column_id) {
         if (!is_array($row) || (string)($row['enabled'] ?? '1') !== '1') return null;
-        if (isset($row['cells'][$column]['value'])) return self::numeric_price($row['cells'][$column]['value']);
-        if ($column === 'price' && isset($row['price'])) return self::numeric_price($row['price']);
-        return null;
+        if (!isset($row['cells'][$column_id]) || !is_array($row['cells'][$column_id])) return null;
+        return self::numeric_price($row['cells'][$column_id]['value'] ?? '');
     }
 
     private static function published_season($year, $settings = null) {
-        if ($settings === null) $settings = self::settings();
-        if ($year === '') return null;
+        if ($settings === null) $settings = self::settings(false);
+        if ($year === '' || !class_exists('Parcs_HT_Group_Tariff_Settings') || !Parcs_HT_Group_Tariff_Settings::is_published($year)) return null;
         $all = get_option(Parcs_HT_Defaults::OPTION, array());
         if (!is_array($all) || empty($all['seasons'][$year]) || !is_array($all['seasons'][$year])) return null;
         $season = $all['seasons'][$year];
-        if ((string)($season['published'] ?? '0') !== '1') return null;
         $tariffs = isset($season['tariffs']) && is_array($season['tariffs']) ? $season['tariffs'] : array();
         $rows = isset($tariffs['groups']) && is_array($tariffs['groups']) ? array_values($tariffs['groups']) : array();
-        if (!$rows) return null;
-        $binding = $settings['tariff_binding'];
-        $column = sanitize_key($binding['column'] ?? 'price');
-        if ($column === '') $column = 'price';
-        $result = array('published'=>'1','free_adult_children'=>(string)max(1, (int)($binding['free_adult_children'] ?? 10)));
+        $columns = isset($tariffs['columns']['groups']) && is_array($tariffs['columns']['groups']) ? array_values($tariffs['columns']['groups']) : array();
+        if (!$rows || !$columns || !class_exists('Parcs_HT_Tariff_Identities')) return null;
+
+        $binding = self::binding_for_year($year, $settings);
+        if (!$binding || !Parcs_HT_Tariff_Identities::column_exists($columns, $binding['column_id'])) return null;
+        $result = array(
+            'published'=>'1',
+            'free_adult_children'=>$binding['free_adult_children'],
+            'free_adult_round_threshold'=>$binding['free_adult_round_threshold'],
+        );
         foreach (array('child','adult','disability','companion') as $role) {
-            $price = self::price_from_row(self::resolve_row($rows, $binding, $role), $column);
+            $row = Parcs_HT_Tariff_Identities::row_by_id($rows, $binding[$role . '_row_id']);
+            $price = self::price_from_row($row, $binding['column_id']);
             if ($price === null || $price < 0) return null;
             $result[$role] = (string)$price;
         }
@@ -109,9 +119,25 @@ final class Parcs_HT_Group_Quotes {
 
     private static function euro($value) { return number_format((float)$value, 2, ',', ' ') . ' €'; }
 
+    /**
+     * Règle scolaire : 1 gratuité par tranche, avec arrondi à la tranche
+     * supérieure lorsque le reliquat atteint le seuil configuré.
+     * Exemple officiel actuel : ratio 10, seuil 5 => 26 enfants = 3 gratuités.
+     */
+    public static function complimentary_adults($children, $adults, $ratio = 10, $threshold = 5) {
+        $children = max(0, (int)$children);
+        $adults = max(0, (int)$adults);
+        $ratio = max(1, (int)$ratio);
+        $threshold = max(1, min($ratio, (int)$threshold));
+        $base = (int)floor($children / $ratio);
+        $remainder = $children % $ratio;
+        if ($remainder >= $threshold) $base++;
+        return min($adults, $base);
+    }
+
     public static function canonicalize_posted_data($data) {
         if (!is_array($data)) return $data;
-        $settings = self::settings();
+        $settings = self::settings(false);
         $visit_field = (string)$settings['visit_field'];
         $group_field = (string)$settings['group_field'];
         if (!array_key_exists($visit_field, $data) || !array_key_exists($group_field, $data)) return $data;
@@ -129,7 +155,8 @@ final class Parcs_HT_Group_Quotes {
         $type = is_array($data[$group_field]) ? implode('', $data[$group_field]) : (string)$data[$group_field];
         if ($type === (string)$settings['school_value']) {
             $children=self::number_value($data['nbrenfants']??0); $adults=self::number_value($data['nbradultes']??0);
-            $ratio=max(1,(int)$row['free_adult_children']); $free=min($adults,floor($children/$ratio)); $paying=max(0,$adults-$free);
+            $free=self::complimentary_adults($children,$adults,(int)$row['free_adult_children'],(int)$row['free_adult_round_threshold']);
+            $paying=max(0,$adults-$free);
             $children_total=$children*(float)$row['child']; $adults_total=$paying*(float)$row['adult'];
             $data['nbradultgratuit']=(string)(int)$free; $data['nbradultpayant']=(string)(int)$paying;
             $data['nbrprixenfants']=self::euro($children_total); $data['nbrprixadultes']=self::euro($adults_total);
@@ -148,7 +175,7 @@ final class Parcs_HT_Group_Quotes {
         if (!$submission) return $result;
         $data = $submission->get_posted_data();
         if (!is_array($data)) return $result;
-        $settings = self::settings();
+        $settings = self::settings(false);
         $visit_field = (string)$settings['visit_field'];
         $group_field = (string)$settings['group_field'];
         if (!array_key_exists($visit_field, $data) || !array_key_exists($group_field, $data)) return $result;
@@ -166,7 +193,7 @@ final class Parcs_HT_Group_Quotes {
     public static function menu() { add_submenu_page(Parcs_HT_Admin::PAGE,'Tarifs des devis groupes','Tarifs devis groupes','manage_options',self::PAGE,array(__CLASS__,'page')); }
     public static function page() {
         if(!current_user_can('manage_options'))return; ?>
-        <div class="wrap"><h1>Tarifs des devis groupes</h1><div class="notice notice-info inline"><p>Depuis la version 1.11.0, les devis utilisent directement le tableau <strong>Tarifs → Groupes</strong>. Cette page est conservée uniquement pour compatibilité technique.</p></div><p><a class="button button-primary" href="<?php echo esc_url(add_query_arg(array('page'=>Parcs_HT_Admin::PAGE,'tab'=>'htp-tariffs'),admin_url('admin.php'))); ?>">Ouvrir les tarifs groupes</a></p></div><?php
+        <div class="wrap"><h1>Tarifs des devis groupes</h1><div class="notice notice-info inline"><p>Les devis utilisent les identifiants permanents du module <strong>Groupes → Tarifs</strong>. Cette page est conservée uniquement pour compatibilité technique.</p></div><p><a class="button button-primary" href="<?php echo esc_url(add_query_arg(array('page'=>Parcs_HT_Admin::PAGE,'tab'=>'htp-tariffs-groups'),admin_url('admin.php'))); ?>">Ouvrir les tarifs groupes</a></p></div><?php
     }
     public static function save() { if(!current_user_can('manage_options'))wp_die('Accès refusé.');check_admin_referer('parcs_ht_save_group_quotes');wp_safe_redirect(add_query_arg(array('page'=>self::PAGE),admin_url('admin.php')));exit; }
 
@@ -178,8 +205,8 @@ final class Parcs_HT_Group_Quotes {
 
     public static function assets() {
         if(wp_script_is('parcs-ht-group-quotes','enqueued'))return;
-        $settings=self::settings(); $all=Parcs_HT_Defaults::all_settings(); $seasons=array();
-        foreach((array)($all['seasons']??array()) as $year=>$season){if(!is_array($season)||(string)($season['published']??'0')!=='1')continue;$row=self::published_season((string)$year,$settings);if($row)$seasons[$year]=array_intersect_key($row,array_flip(array('published','child','adult','disability','companion','free_adult_children')));}
+        $settings=self::settings(false); $all=Parcs_HT_Defaults::all_settings(); $seasons=array();
+        foreach((array)($all['seasons']??array()) as $year=>$season){if(!is_array($season))continue;$row=self::published_season((string)$year,$settings);if($row)$seasons[$year]=array_intersect_key($row,array_flip(array('published','child','adult','disability','companion','free_adult_children','free_adult_round_threshold')));}
         wp_enqueue_script('parcs-ht-group-quotes',PARCS_HT_URL.'assets/group-quotes.js',array('jquery'),PARCS_HT_VERSION,true);
         wp_add_inline_script('parcs-ht-group-quotes','window.ParcsHTGroupQuotes='.wp_json_encode(array('formId'=>'','visitField'=>(string)$settings['visit_field'],'groupField'=>(string)$settings['group_field'],'schoolValue'=>(string)$settings['school_value'],'disabilityValue'=>(string)$settings['disability_value'],'seasons'=>$seasons,'unavailableMessage'=>'Les tarifs groupes ne sont pas encore disponibles pour cette année. Merci de revenir ultérieurement.')).';','before');
     }
