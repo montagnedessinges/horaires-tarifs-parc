@@ -19,7 +19,10 @@ $required = array(
 );
 foreach ($required as $shortcode) shortcode_registry_check(strpos($registry, "'" . $shortcode . "'") !== false, 'registry contains ' . $shortcode);
 shortcode_registry_check(strpos($registry, "array('fr','en','de')") !== false, 'registry exposes FR EN DE variants');
+shortcode_registry_check(strpos($registry, "'shortcodes'=>array('auto'=>self::shortcode($base))") !== false, 'registry exposes the automatic-language shortcode for every module');
 shortcode_registry_check(strpos($hub, 'Parcs_HT_Shortcode_Registry::public_rows()') !== false, 'Shortcodes tab is generated from registry');
+shortcode_registry_check(strpos($hub, "['auto','fr','en','de']") !== false, 'Shortcodes tab lists automatic, FR, EN and DE variants');
+shortcode_registry_check(strpos($hub, '<th>Automatique</th>') !== false, 'Shortcodes tab labels the automatic-language column');
 shortcode_registry_check(strpos($preview, 'Parcs_HT_Shortcode_Registry::public_rows()') !== false && strpos($preview, 'Parcs_HT_Shortcode_Registry::render_preview') !== false, 'Aperçu is generated from the same registry and real renderers');
 shortcode_registry_check(strpos($preview_js, "['fr','en','de']") !== false && strpos($preview_js, 'data-htp-preview-lang-button') !== false, 'each preview can switch between FR EN DE');
 shortcode_registry_check(strpos($bootstrap, 'Parcs_HT_Shortcode_Registry::definitions()') !== false, 'core runtime bootstrap derives from central registry');
