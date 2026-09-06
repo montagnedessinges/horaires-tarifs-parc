@@ -20,9 +20,7 @@ final class Parcs_HT_Admin_Shortcode_Preview {
     }
 
     public static function assets($hook) {
-        if ($hook !== self::SCREEN) {
-            return;
-        }
+        if ($hook !== self::SCREEN) return;
 
         wp_enqueue_style(
             'parcs-ht-admin-shortcode-frontend',
@@ -69,65 +67,37 @@ final class Parcs_HT_Admin_Shortcode_Preview {
         );
     }
 
-    /**
-     * Retire uniquement les scripts embarqués du HTML affiché dans l'aperçu admin.
-     * Le shortcode public reste inchangé ; les interactions nécessaires sont
-     * réinitialisées après insertion par le script d'aperçu admin.
-     */
+    /** Retire uniquement les scripts embarqués de la copie d'aperçu admin. */
     private static function preview_html($html) {
         $html = (string)$html;
-        if ($html === '') {
-            return '';
-        }
-
+        if ($html === '') return '';
         $clean = preg_replace('#<script\b[^>]*>.*?</script\s*>#is', '', $html);
         return is_string($clean) ? $clean : $html;
     }
 
     public static function render_source() {
         $screen = function_exists('get_current_screen') ? get_current_screen() : null;
-        if (!$screen || $screen->id !== self::SCREEN) {
-            return;
-        }
-
-        require_once PARCS_HT_DIR . 'includes/class-parcs-ht-shortcodes.php';
-
-        $previews = array(
-            array('key'=>'full','label'=>'Page complète','shortcode'=>'[parc_horaires_tarifs]','module'=>'page'),
-            array('key'=>'today','label'=>'Horaire du jour','shortcode'=>'[parc_horaires_aujourdhui]','module'=>'today'),
-            array('key'=>'calendar','label'=>'Calendrier interactif','shortcode'=>'[parc_calendrier]','module'=>'calendar'),
-            array('key'=>'tariffs','label'=>'Tableau des tarifs','shortcode'=>'[parc_tableau_tarifs]','module'=>'tariffs'),
-            array('key'=>'alert','label'=>'Alerte de fermeture','shortcode'=>'[parc_fermeture_exceptionnelle]','module'=>'alert'),
-            array('key'=>'header-hour','label'=>'Texte horaire pour l’en-tête','shortcode'=>'[parc_horaire]','module'=>'header_hour'),
-            array('key'=>'header-status','label'=>'Statut OUVERT / FERMÉ','shortcode'=>'[parc_statut]','module'=>'header_status'),
-            array('key'=>'home-opening','label'=>'Horaire d’accueil','shortcode'=>'[parc_horaire_accueil]','module'=>'home_opening'),
-            array('key'=>'quote','label'=>'Devis groupe','shortcode'=>'[parc_devis_groupe]','module'=>'quote_page'),
-        );
+        if (!$screen || $screen->id !== self::SCREEN || !class_exists('Parcs_HT_Shortcode_Registry')) return;
 
         echo '<div id="parcs-ht-real-shortcode-preview-sources" hidden aria-hidden="true">';
-        foreach ($previews as $preview) {
-            $html = self::preview_html(Parcs_HT_Shortcodes::render($preview['module'], 'fr', array()));
-            echo '<div data-htp-shortcode-preview-source="' . esc_attr($preview['key']) . '" data-label="' . esc_attr($preview['label']) . '" data-shortcode="' . esc_attr($preview['shortcode']) . '">';
-            if (trim((string)$html) === '') {
-                echo '<p class="htp-shortcode-preview-empty">Aucun rendu avec les données actuellement enregistrées.</p>';
-            } else {
-                echo $html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- HTML produit par le moteur interne de shortcode, déjà échappé dans ses méthodes de rendu et nettoyé des scripts pour l'aperçu admin.
+        foreach (Parcs_HT_Shortcode_Registry::public_rows() as $row) {
+            if (empty($row['preview'])) continue;
+            $base = sanitize_key((string)$row['base']);
+            foreach (Parcs_HT_Shortcode_Registry::languages() as $language) {
+                $shortcode = isset($row['shortcodes'][$language]) ? (string)$row['shortcodes'][$language] : Parcs_HT_Shortcode_Registry::shortcode($base, $language);
+                $html = self::preview_html(Parcs_HT_Shortcode_Registry::render_preview($base, $language));
+                echo '<div data-htp-shortcode-preview-source data-base="' . esc_attr($base) . '" data-lang="' . esc_attr($language) . '" data-label="' . esc_attr($row['label']) . '" data-shortcode="' . esc_attr($shortcode) . '">';
+                if (trim((string)$html) === '') {
+                    echo '<p class="htp-shortcode-preview-empty">Aucun rendu avec les données actuellement enregistrées.</p>';
+                } else {
+                    echo $html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- HTML des moteurs internes, déjà échappé puis nettoyé des scripts pour l'aperçu admin.
+                }
+                echo '</div>';
             }
-            echo '</div>';
-        }
-
-        if (shortcode_exists('parc_guides_pedagogiques_fr')) {
-            $guides_html = self::preview_html(do_shortcode('[parc_guides_pedagogiques_fr]'));
-            echo '<div data-htp-shortcode-preview-source="guides" data-label="Guides pédagogiques" data-shortcode="[parc_guides_pedagogiques_fr]">';
-            if (trim((string)$guides_html) === '') {
-                echo '<p class="htp-shortcode-preview-empty">Aucun guide actuellement enregistré.</p>';
-            } else {
-                echo $guides_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- HTML du shortcode interne déjà échappé et nettoyé des scripts pour l'aperçu admin.
-            }
-            echo '</div>';
         }
         echo '</div>';
 
+        // Le vrai frontend de la page admin est fourni sous un handle dédié.
         wp_dequeue_script('parcs-ht-frontend');
         wp_dequeue_style('parcs-ht-frontend');
     }
