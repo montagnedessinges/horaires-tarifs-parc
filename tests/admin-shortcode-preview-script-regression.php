@@ -1,21 +1,20 @@
 <?php
 
-$root = dirname(__DIR__);
+$root = getenv('PLUGIN_ROOT') ?: dirname(__DIR__);
 $file = $root . '/includes/class-parcs-ht-admin-shortcode-preview.php';
 $source = file_get_contents($file);
 
 $checks = array(
     'preview helper exists' => strpos($source, 'private static function preview_html') !== false,
     'script blocks are stripped from preview HTML' => strpos($source, "preg_replace('#<script\\b[^>]*>.*?</script\\s*>#is', '', $html)") !== false,
-    'guide preview is sanitized before output' => strpos($source, "self::preview_html(do_shortcode('[parc_guides_pedagogiques_fr]'))") !== false,
-    'standard shortcode previews are sanitized before output' => strpos($source, "self::preview_html(Parcs_HT_Shortcodes::render(") !== false,
+    'registry previews are sanitized before output' => strpos($source, 'self::preview_html(Parcs_HT_Shortcode_Registry::render_preview(') !== false,
+    'preview enumerates central registry only' => strpos($source, 'Parcs_HT_Shortcode_Registry::public_rows()') !== false,
+    'legacy hardcoded preview list removed' => strpos($source, "array('key'=>'full'") === false,
 );
 
 $failed = array();
 foreach ($checks as $label => $ok) {
-    if (!$ok) {
-        $failed[] = $label;
-    }
+    if (!$ok) $failed[] = $label;
 }
 
 if ($failed) {
