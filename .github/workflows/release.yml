@@ -3,13 +3,15 @@ name: Build and publish WordPress release
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: horaires-tarifs-release-main
+  group: horaires-tarifs-release-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -94,6 +96,7 @@ jobs:
         run: composer lint
 
   release:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: quality
     runs-on: ubuntu-latest
     steps:
