@@ -1,5 +1,13 @@
 # Historique des versions
 
+## 1.13.4
+- Correction du shortcode `[parc_tarifs_groupes]` et de ses variantes FR / EN / DE lorsqu’une installation possède encore des tarifs groupes enregistrés avec l’ancien format de données.
+- Le rendu public n’exige plus qu’une colonne tarifaire possède déjà un identifiant permanent `tariff_col_...` : les anciennes colonnes `price`, cellules `cells['price']` et valeurs historiques `row['price']` restent lisibles.
+- Une ancienne ligne tarifaire sans champ `enabled` reste affichable ; une ligne explicitement désactivée reste masquée.
+- Le format actuel à identifiants permanents reste prioritaire et inchangé. Ces identifiants restent utilisés pour les liaisons métier du moteur de devis, mais ne sont plus une condition artificielle pour afficher les tarifs groupes.
+- Aucun tarif ni réglage WordPress n’est réécrit par ce correctif : il s’agit uniquement d’une compatibilité de lecture du shortcode public.
+- Ajout d’un test d’exécution réel couvrant notamment une ligne « Senior » au format historique et une grille actuelle à identifiants permanents. Ce test est aussi exécuté sur les sources nettoyées destinées au ZIP de production.
+- Incident et cause technique documentés dans `AUDIT-2026-09-06-SHORTCODE-TARIFS-GROUPES.md`.
 ## 1.13.3
 - Remplacement direct de l’ancienne page « Shortcodes » dans l’administration : aucune surcouche JavaScript ni réécriture après affichage.
 - La page contient statiquement les 48 shortcodes utilisables : 12 modules, chacun en version Automatique, FR, EN et DE.
