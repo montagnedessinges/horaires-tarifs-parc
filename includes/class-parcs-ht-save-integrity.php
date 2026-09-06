@@ -90,7 +90,10 @@ final class Parcs_HT_Save_Integrity {
             $pdf_url = esc_url_raw((string)($item['pdf_url'] ?? ''));
             if (!array_filter($title) && $pdf_url === '' && $status !== 'coming') continue;
 
-            $out['guides'][] = array(
+            $id = class_exists('Parcs_HT_Guide_Stats')
+                ? Parcs_HT_Guide_Stats::claim_id($item['id'] ?? '')
+                : sanitize_key($item['id'] ?? '');
+            $guide = array(
                 'enabled' => isset($item['enabled']) && (string)$item['enabled'] === '1' ? '1' : '0',
                 'cycle' => $cycle,
                 'languages' => $languages,
@@ -101,6 +104,8 @@ final class Parcs_HT_Save_Integrity {
                 'cover_url' => esc_url_raw((string)($item['cover_url'] ?? '')),
                 'order' => (int)($item['order'] ?? 0),
             );
+            if ($id !== '') $guide['id'] = $id;
+            $out['guides'][] = $guide;
         }
 
         return $out;
