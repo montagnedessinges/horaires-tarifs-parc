@@ -1,5 +1,14 @@
 # Historique des versions
 
+## 1.13.5
+- Refonte du shortcode `[parc_tarifs_groupes]` comme bloc visuel autonome alimenté directement par la même source que le tableau principal.
+- Le shortcode lit la saison publique via `Parcs_HT_Tariff_Seasons::select_season_tariffs(..., true)`, puis uniquement `tariffs.groups` et `tariffs.columns.groups`.
+- Aucun tarif n’est dupliqué, copié ou stocké dans une option propre au shortcode ; une modification de la grille Groupes canonique est immédiatement reflétée dans le shortcode.
+- Le rendu n’utilise plus le système précédent de publication/titre/notice propre au shortcode pour retrouver ses prix et ne dépend plus directement de `Parcs_HT_Group_Tariff_Settings`.
+- Le statut de publication annuel et les protections du moteur de devis restent inchangés : le shortcode reçoit la même grille publique déjà filtrée que le tableau général.
+- Le bloc autonome reprend les lignes actives, colonnes visibles, traductions FR/EN/DE, sous-titres, notes, offres spéciales, styles de lignes, note groupe et bouton de devis.
+- Ajout d’un test d’exécution vérifiant qu’un changement de prix dans la source canonique apparaît immédiatement dans le shortcode et qu’aucune valeur dupliquée ne subsiste.
+- Aucun tarif, horaire, formulaire ou réglage de parc n’est réécrit par cette mise à jour.
 ## 1.13.4
 - Correction du shortcode `[parc_tarifs_groupes]` et de ses variantes FR / EN / DE lorsqu’une installation possède encore des tarifs groupes enregistrés avec l’ancien format de données.
 - Le rendu public n’exige plus qu’une colonne tarifaire possède déjà un identifiant permanent `tariff_col_...` : les anciennes colonnes `price`, cellules `cells['price']` et valeurs historiques `row['price']` restent lisibles.
