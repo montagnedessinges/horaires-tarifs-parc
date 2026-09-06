@@ -60,7 +60,8 @@ final class Parcs_HT_Group_Tariff_Settings {
     public static function is_published($year) { return $year === '2026'; }
 }
 
-require_once dirname(__DIR__) . '/includes/class-parcs-ht-group-tariffs.php';
+$root = getenv('PLUGIN_ROOT') ?: dirname(__DIR__);
+require_once $root . '/includes/class-parcs-ht-group-tariffs.php';
 
 function group_runtime_assert($condition, $message) {
     if (!$condition) {
