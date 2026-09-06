@@ -24,5 +24,8 @@ tariff_identity_check(strpos($quotes, 'row_by_id') !== false && strpos($quotes, 
 tariff_identity_check(strpos($quotes, 'private static function resolve_row') === false, 'legacy runtime row index/label resolver is removed');
 tariff_identity_check(strpos($quotes, "isset(\$row['price'])") === false, 'quote runtime no longer falls back to legacy row price');
 tariff_identity_check(strpos($admin_js, "clone.querySelector('[data-htp-tariff-row-id-input]')") !== false, 'manual row duplication clears the identity before save');
+tariff_identity_check(strpos($admin_js, 'new MutationObserver(function(){decorateTariffIdentities();})') === false, 'tariff identity observer cannot recursively refresh on its own badge mutations');
+tariff_identity_check(strpos($admin_js, 'identityRefreshPending') !== false && strpos($admin_js, 'mutation.addedNodes') !== false, 'tariff identity observer refreshes only for newly added tariff structures');
+tariff_identity_check(strpos($admin_js, 'setBadgeText') !== false && strpos($admin_js, 'hydrateExistingTariffIds=false') !== false, 'tariff identity decoration is idempotent and new rows do not inherit an existing ID by position');
 
 echo "Tariff identities contract: OK\n";
