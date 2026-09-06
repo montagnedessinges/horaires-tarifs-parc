@@ -1,15 +1,16 @@
 <?php
 
-// Test d'exécution réel du shortcode Tarifs groupes avec données historiques et actuelles.
+// Test d'exécution du shortcode Tarifs groupes : il doit lire exclusivement
+// la même grille tariffs.groups de la saison publique que le tableau principal.
 define('ABSPATH', __DIR__);
 define('PARCS_HT_URL', 'https://example.test/wp-content/plugins/horaires-tarifs-parc/');
 define('PARCS_HT_VERSION', 'test');
 
 $GLOBALS['parcs_ht_test_shortcodes'] = array();
-$GLOBALS['parcs_ht_test_options'] = array();
+$GLOBALS['parcs_ht_test_settings'] = array();
+$GLOBALS['parcs_ht_tariff_selector_called'] = 0;
 
 function add_shortcode($tag, $callback) { $GLOBALS['parcs_ht_test_shortcodes'][$tag] = $callback; }
-function get_option($key, $default = false) { return array_key_exists($key, $GLOBALS['parcs_ht_test_options']) ? $GLOBALS['parcs_ht_test_options'][$key] : $default; }
 function sanitize_key($value) { return preg_replace('/[^a-z0-9_\-]/', '', strtolower((string)$value)); }
 function sanitize_hex_color($value) { return preg_match('/^#[0-9a-fA-F]{6}$/', (string)$value) ? (string)$value : null; }
 function wp_style_is($handle, $state = 'enqueued') { return false; }
@@ -21,14 +22,22 @@ function wp_date($format, $timestamp = null, $timezone = null) { return $format 
 function esc_html($value) { return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8'); }
 function esc_attr($value) { return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8'); }
 function esc_url($value) { return (string)$value; }
-function wp_json_encode($value) { return json_encode($value); }
 
 final class Parcs_HT_Defaults {
-    const OPTION = 'parcs_ht_settings';
+    public static function settings() { return $GLOBALS['parcs_ht_test_settings']; }
+    public static function all_settings() { return $GLOBALS['parcs_ht_test_settings']; }
+}
+
+final class Parcs_HT_Tariff_Seasons {
+    public static function select_season_tariffs($settings, $public = false) {
+        $GLOBALS['parcs_ht_tariff_selector_called']++;
+        return $settings;
+    }
 }
 
 final class Parcs_HT_Schedule {
     public static function language() { return 'fr'; }
+    public static function timezone($settings = array()) { return 'Europe/Paris'; }
     public static function translation($value, $language, $fallback = '') {
         if (is_array($value) && isset($value[$language]) && (string)$value[$language] !== '') return (string)$value[$language];
         if (is_array($value)) {
@@ -36,28 +45,6 @@ final class Parcs_HT_Schedule {
         }
         return (string)$fallback;
     }
-}
-
-final class Parcs_HT_Group_Tariff_Settings {
-    public static function published_years() { return array('2026'); }
-    public static function public_year() { return '2026'; }
-    public static function settings($year) {
-        return array(
-            'published'=>'1',
-            'show_heading'=>'1',
-            'title'=>array('fr'=>'Tarifs groupes','en'=>'Group rates','de'=>'Gruppentarife'),
-            'intro'=>array('fr'=>'','en'=>'','de'=>''),
-            'show_future_notice'=>'0',
-            'future_year'=>'2027',
-            'future_notice'=>array('fr'=>'','en'=>'','de'=>''),
-            'show_quote_button'=>'0',
-            'button_label'=>array('fr'=>'','en'=>'','de'=>''),
-            'button_url'=>array('fr'=>'','en'=>'','de'=>''),
-        );
-    }
-    public static function default_title($language, $year) { return 'Tarifs groupes ' . $year; }
-    public static function default_future_notice($language, $year) { return ''; }
-    public static function is_published($year) { return $year === '2026'; }
 }
 
 $root = getenv('PLUGIN_ROOT') ?: dirname(__DIR__);
@@ -76,57 +63,60 @@ foreach (array('parc_tarifs_groupes','parc_tarifs_groupes_fr','parc_tarifs_group
     group_runtime_assert(isset($GLOBALS['parcs_ht_test_shortcodes'][$tag]), 'registered shortcode ' . $tag);
 }
 
-// Cas réellement problématique : ancienne colonne "price", ligne sans enabled/cells,
-// tarif encore stocké directement dans row[price]. Le shortcode doit l'afficher.
-$GLOBALS['parcs_ht_test_options'][Parcs_HT_Defaults::OPTION] = array(
-    'general'=>array(),
-    'seasons'=>array(
-        '2026'=>array(
-            'published'=>'1',
-            'tariffs'=>array(
-                'columns'=>array(
-                    'groups'=>array(
-                        array('id'=>'price','visible'=>'1','label'=>array('fr'=>'Tarif','en'=>'Price','de'=>'Preis')),
-                    ),
-                ),
-                'groups'=>array(
-                    array(
-                        'label'=>array('fr'=>'Senior','en'=>'Senior','de'=>'Senior'),
-                        'detail'=>array('fr'=>'Groupe senior','en'=>'Senior group','de'=>'Seniorengruppe'),
-                        'price'=>'9 €',
-                    ),
-                ),
+$GLOBALS['parcs_ht_test_settings'] = array(
+    'general'=>array(
+        'year'=>'2026',
+        'groups_booking_note'=>array('fr'=>'Réservation groupe recommandée.','en'=>'Group booking recommended.','de'=>'Gruppenreservierung empfohlen.'),
+        'groups_button_label'=>array('fr'=>'Faire une demande de devis','en'=>'Request a quote','de'=>'Angebot anfordern'),
+        'groups_url'=>array('fr'=>'https://example.test/devis','en'=>'https://example.test/en/quote','de'=>'https://example.test/de/angebot'),
+    ),
+    'tariffs'=>array(
+        'columns'=>array(
+            'groups'=>array(
+                array('id'=>'tariff_col_000001','visible'=>'1','label'=>array('fr'=>'Tarif','en'=>'Price','de'=>'Preis')),
             ),
         ),
-    ),
-);
-
-$html = Parcs_HT_Group_Tariffs::render('fr');
-group_runtime_assert(strpos($html, 'Senior') !== false, 'legacy group row is rendered');
-group_runtime_assert(strpos($html, '9 €') !== false, 'legacy row price is rendered');
-group_runtime_assert(strpos($html, 'ne sont pas disponibles') === false, 'legacy data does not fall back to unavailable message');
-
-// Format actuel avec IDs permanents : la compatibilité descendante ne doit rien casser.
-$GLOBALS['parcs_ht_test_options'][Parcs_HT_Defaults::OPTION]['seasons']['2026']['tariffs'] = array(
-    'columns'=>array(
+        'individual'=>array(
+            array('enabled'=>'1','label'=>array('fr'=>'Individuel à ne pas afficher'),'cells'=>array('price'=>array('value'=>'99 €'))),
+        ),
         'groups'=>array(
-            array('id'=>'tariff_col_000001','visible'=>'1','label'=>array('fr'=>'Tarif','en'=>'Price','de'=>'Preis')),
-        ),
-    ),
-    'groups'=>array(
-        array(
-            'id'=>'tariff_row_000001',
-            'enabled'=>'1',
-            'label'=>array('fr'=>'Adulte groupe','en'=>'Group adult','de'=>'Gruppenerwachsene'),
-            'cells'=>array(
-                'tariff_col_000001'=>array('value'=>'8,50 €','old_value'=>''),
+            array(
+                'id'=>'tariff_row_000001',
+                'enabled'=>'1',
+                'label'=>array('fr'=>'Senior','en'=>'Senior','de'=>'Senior'),
+                'subtitle'=>array('fr'=>'Groupe senior','en'=>'Senior group','de'=>'Seniorengruppe'),
+                'cells'=>array('tariff_col_000001'=>array('value'=>'9 €','old_value'=>'')),
+            ),
+            array(
+                'id'=>'tariff_row_000002',
+                'enabled'=>'0',
+                'label'=>array('fr'=>'Ligne masquée'),
+                'cells'=>array('tariff_col_000001'=>array('value'=>'1 €','old_value'=>'')),
             ),
         ),
     ),
 );
 
 $html = Parcs_HT_Group_Tariffs::render('fr');
-group_runtime_assert(strpos($html, 'Adulte groupe') !== false, 'current permanent-ID row is rendered');
-group_runtime_assert(strpos($html, '8,50 €') !== false, 'current permanent-ID value is rendered');
+group_runtime_assert($GLOBALS['parcs_ht_tariff_selector_called'] > 0, 'public tariff season selector is used');
+group_runtime_assert(strpos($html, 'Tarifs groupes 2026') !== false, 'standalone group heading is rendered');
+group_runtime_assert(strpos($html, 'Senior') !== false, 'canonical group row is rendered');
+group_runtime_assert(strpos($html, '9 €') !== false, 'canonical group price is rendered');
+group_runtime_assert(strpos($html, 'Individuel à ne pas afficher') === false, 'individual tariffs are not rendered');
+group_runtime_assert(strpos($html, 'Ligne masquée') === false, 'disabled group row stays hidden');
+group_runtime_assert(strpos($html, 'Réservation groupe recommandée.') !== false, 'canonical group booking note is rendered');
+group_runtime_assert(strpos($html, 'https://example.test/devis') !== false, 'canonical group URL is rendered');
+
+// Si la source canonique change, le shortcode doit changer immédiatement,
+// sans copie de prix ni option tarifaire parallèle.
+$GLOBALS['parcs_ht_test_settings']['tariffs']['groups'][0]['cells']['tariff_col_000001']['value'] = '10 €';
+$html_updated = Parcs_HT_Group_Tariffs::render('fr');
+group_runtime_assert(strpos($html_updated, '10 €') !== false, 'updated canonical group price is read directly');
+group_runtime_assert(strpos($html_updated, '9 €') === false, 'no duplicated stale group price remains');
+
+$source = file_get_contents($root . '/includes/class-parcs-ht-group-tariffs.php');
+group_runtime_assert(strpos($source, 'Parcs_HT_Group_Tariff_Settings') === false, 'shortcode has no separate group tariff settings dependency');
+group_runtime_assert(strpos($source, 'Parcs_HT_Defaults::settings()') !== false, 'shortcode reads canonical settings');
+group_runtime_assert(strpos($source, 'Parcs_HT_Tariff_Seasons::select_season_tariffs') !== false, 'shortcode uses the same public season selection as the main tariff table');
 
 echo "Group tariff shortcode runtime: OK\n";
