@@ -51,7 +51,9 @@ final class Parcs_HT_Group_Tariffs {
     }
 
     private static function row_visible($row) {
-        if (!is_array($row) || (string)($row['enabled'] ?? '0') !== '1') return false;
+        // Les anciennes grilles n'avaient pas toujours le champ enabled. Son absence
+        // ne doit pas faire disparaître une ligne tarifaire déjà enregistrée.
+        if (!is_array($row) || (string)($row['enabled'] ?? '1') !== '1') return false;
         if ((string)($row['row_type'] ?? 'standard') !== 'special') return true;
         $today = wp_date('Y-m-d');
         $from = (string)($row['display_from'] ?? '');
@@ -61,13 +63,54 @@ final class Parcs_HT_Group_Tariffs {
 
     private static function columns($tariffs) {
         $out = array();
+        $index = 0;
         foreach ((array)($tariffs['columns']['groups'] ?? array()) as $column) {
             if (!is_array($column) || (string)($column['visible'] ?? '1') === '0') continue;
             $id = sanitize_key((string)($column['id'] ?? ''));
-            if (!class_exists('Parcs_HT_Tariff_Identities') || !Parcs_HT_Tariff_Identities::is_column_id($id)) continue;
+
+            // L'affichage public ne dépend pas des IDs permanents utilisés par le moteur
+            // de devis. Les anciennes grilles peuvent encore utiliser "price" : elles
+            // doivent rester affichables pendant et après la migration des données.
+            if ($id === '') $id = $index === 0 ? 'price' : 'group_price_' . ($index + 1);
+            $column['id'] = $id;
             $out[] = $column;
+            $index++;
+        }
+
+        // Compatibilité avec les grilles historiques à une seule colonne qui ne
+        // possédaient pas encore de tableau columns.groups.
+        if (!$out && !empty($tariffs['groups']) && is_array($tariffs['groups'])) {
+            $out[] = array(
+                'id'=>'price',
+                'visible'=>'1',
+                'label'=>array('fr'=>'Tarif','en'=>'Price','de'=>'Preis'),
+            );
         }
         return $out;
+    }
+
+    private static function cell_for_column($row, $column_id, $column_index) {
+        $cells = isset($row['cells']) && is_array($row['cells']) ? $row['cells'] : array();
+        if (isset($cells[$column_id]) && is_array($cells[$column_id])) return $cells[$column_id];
+
+        // Ancien stockage : la première colonne était généralement indexée par "price".
+        if ($column_index === 0 && isset($cells['price']) && is_array($cells['price'])) return $cells['price'];
+
+        // Certaines migrations ont conservé une cellule unique sous son ancien identifiant.
+        // Pour une grille à une seule valeur, cette cellule reste une source fiable.
+        if ($column_index === 0 && count($cells) === 1) {
+            $first = reset($cells);
+            if (is_array($first)) return $first;
+        }
+
+        // Format historique antérieur aux cellules multi-colonnes.
+        if ($column_index === 0 && trim((string)($row['price'] ?? '')) !== '') {
+            return array(
+                'value'=>(string)$row['price'],
+                'old_value'=>(string)($row['old_price'] ?? ''),
+            );
+        }
+        return array('value'=>'','old_value'=>'');
     }
 
     private static function season_context($all, $year, $language) {
@@ -81,9 +124,9 @@ final class Parcs_HT_Group_Tariffs {
             if (!self::row_visible($row)) continue;
             $cells = array();
             $has_value = false;
-            foreach ($columns as $column) {
+            foreach ($columns as $column_index => $column) {
                 $id = (string)$column['id'];
-                $cell = isset($row['cells'][$id]) && is_array($row['cells'][$id]) ? $row['cells'][$id] : array();
+                $cell = self::cell_for_column($row, $id, $column_index);
                 $value = trim((string)($cell['value'] ?? ''));
                 if ($value !== '') $has_value = true;
                 $cells[] = array('id'=>$id,'value'=>$value,'old_value'=>(string)($cell['old_value'] ?? ''),'label'=>self::translations($column['label'] ?? array(), $language, ''));
@@ -174,7 +217,7 @@ final class Parcs_HT_Group_Tariffs {
             <?php endforeach; ?>
         </section>
         <?php if (count($years) > 1) : ?>
-        <script>(function(){var root=document.getElementById(<?php echo wp_json_encode($id); ?>);if(!root)return;root.querySelectorAll('[data-htp-group-year-tab]').forEach(function(button){button.addEventListener('click',function(){var year=button.getAttribute('data-htp-group-year-tab');root.querySelectorAll('[data-htp-group-year-tab]').forEach(function(item){item.setAttribute('aria-selected',item===button?'true':'false');});root.querySelectorAll('[data-htp-group-year-panel]').forEach(function(panel){panel.hidden=panel.getAttribute('data-htp-group-year-panel')!==year;});});});}());</script>
+        <script>(function(){var root=document.getElementById(<?php echo wp_json_encode($id); ?>);if(!root)return;root.querySelectorAll('[data-htp-group-year-tab]').forEach(function(button){button.addEventListener('click',function(){var year=button.getAttribute('data-htp-group-year-tab');root.querySelectorAll('[data-htp-group-year-tab]').forEach(function(item){item.setAttribute('aria-selected',item===button?'true':'false';});root.querySelectorAll('[data-htp-group-year-panel]').forEach(function(panel){panel.hidden=panel.getAttribute('data-htp-group-year-panel')!==year;});});});}());</script>
         <?php endif;
         return ob_get_clean();
     }
