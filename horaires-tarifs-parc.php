@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Horaires et tarifs du parc
  * Description: Horaires, calendrier interactif, exceptions, alertes et tarifs multilingues pour les parcs.
- * Version: 1.12.15
+ * Version: 1.13.0
  * Update URI: https://github.com/montagnedessinges/horaires-tarifs-parc
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -12,18 +12,21 @@
 
 if (!defined('ABSPATH')) { exit; }
 
-define('PARCS_HT_VERSION', '1.12.15');
+define('PARCS_HT_VERSION', '1.13.0');
 define('PARCS_HT_FILE', __FILE__);
 define('PARCS_HT_DIR', plugin_dir_path(__FILE__));
 define('PARCS_HT_URL', plugin_dir_url(__FILE__));
 
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-defaults.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-schedule.php';
+require_once PARCS_HT_DIR . 'includes/class-parcs-ht-shortcode-registry.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-bootstrap.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-slot-last-entry.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-http-ssl.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-tariff-seasons.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-season-status.php';
+require_once PARCS_HT_DIR . 'includes/class-parcs-ht-tariff-identities.php';
+require_once PARCS_HT_DIR . 'includes/class-parcs-ht-group-tariff-settings.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-group-quotes.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-quote-languages.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-quote-gate.php';
@@ -39,6 +42,8 @@ require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin-shortcode-preview.php
 Parcs_HT_HTTP_SSL::init();
 Parcs_HT_Tariff_Seasons::init();
 Parcs_HT_Season_Status::init();
+Parcs_HT_Tariff_Identities::init();
+Parcs_HT_Group_Tariff_Settings::init();
 Parcs_HT_Quote_Page_Save::init();
 Parcs_HT_Save_Integrity::init();
 
@@ -61,29 +66,12 @@ add_action('added_option', static function ($option, $value) {
     }
 }, 10, 2);
 
-add_filter('pre_update_option_' . Parcs_HT_Defaults::OPTION, static function ($new_value, $old_value) {
-    if (!current_user_can('manage_options') || !isset($_POST['_wpnonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'])), 'parcs_ht_save')) return $new_value;
-    if (!is_array($new_value) || !is_admin() || !isset($_POST['action']) || sanitize_key(wp_unslash($_POST['action'])) !== 'parcs_ht_save') return $new_value;
-    $year = isset($_POST['season_year']) ? sanitize_text_field(wp_unslash($_POST['season_year'])) : '';
-    if ($year === '' || !isset($new_value['seasons'][$year]) || (string)($new_value['seasons'][$year]['published'] ?? '0') === '1') return $new_value;
-    foreach ((array)($old_value['seasons'] ?? array()) as $published_year => $season) {
-        if ((string)$published_year === $year || !is_array($season) || (string)($season['published'] ?? '0') !== '1') continue;
-        if (!empty($season['tariffs']) && is_array($season['tariffs'])) { $new_value['tariffs'] = $season['tariffs']; break; }
-    }
-    return $new_value;
-}, 50, 2);
-
 add_action('wp_footer', static function () {
     if (!wp_script_is('parcs-ht-frontend', 'enqueued')) return;
     wp_enqueue_script('parcs-ht-frontend-i18n', PARCS_HT_URL . 'assets/frontend-i18n.js', array('parcs-ht-frontend'), PARCS_HT_VERSION, true);
     wp_enqueue_script('parcs-ht-display-state', PARCS_HT_URL . 'assets/display-state.js', array('parcs-ht-frontend'), PARCS_HT_VERSION, true);
     wp_enqueue_script('parcs-ht-status-sync', PARCS_HT_URL . 'assets/status-sync.js', array('parcs-ht-display-state','parcs-ht-slot-last-entry-frontend'), PARCS_HT_VERSION, true);
 }, 2);
-
-add_action('admin_enqueue_scripts', static function ($hook) {
-    if ($hook !== 'toplevel_page_parcs-horaires-tarifs') return;
-    wp_enqueue_script('parcs-ht-admin-shortcodes-guides', PARCS_HT_URL . 'assets/admin-shortcodes-guides.js', array(), PARCS_HT_VERSION, true);
-}, 1);
 
 add_action('admin_enqueue_scripts', static function ($hook) {
     if ($hook !== 'toplevel_page_parcs-horaires-tarifs' || !wp_script_is('parcs-ht-tariff-seasons-admin', 'enqueued')) return;
