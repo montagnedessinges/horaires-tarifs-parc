@@ -52,6 +52,7 @@ jobs:
           php tests/tariff-identities-contract.php
           php tests/group-gratuity-contract.php
           php tests/group-tariff-publication-contract.php
+          php tests/group-tariff-shortcode-runtime.php
           php tests/shortcode-registry-contract.php
           php tests/admin-shortcode-previews-contract.php
           php tests/admin-shortcode-preview-script-regression.php
@@ -82,6 +83,7 @@ jobs:
           PLUGIN_ROOT=/tmp/htp-production-test php tests/tariff-identities-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/group-gratuity-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/group-tariff-publication-contract.php
+          PLUGIN_ROOT=/tmp/htp-production-test php tests/group-tariff-shortcode-runtime.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/shortcode-registry-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/admin-shortcode-previews-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/admin-shortcode-preview-script-regression.php
