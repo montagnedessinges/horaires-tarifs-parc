@@ -1,5 +1,7 @@
 # Mise à jour 1.13.5 — shortcode Tarifs groupes
 
+Version cible : 1.13.5.
+
 ## Objectif
 
 Refaire `[parc_tarifs_groupes]` comme un visuel autonome simple, sans créer ni maintenir une deuxième grille de prix.
