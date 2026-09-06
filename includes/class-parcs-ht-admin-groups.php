@@ -145,7 +145,15 @@ final class Parcs_HT_Admin_Groups {
         foreach (array('fr','en','de') as $lang) {
             foreach (array('title','intro','future_notice','button_label','button_url') as $field) {
                 $key = $field . '_' . $lang;
-                $raw[$field][$lang] = isset($_POST[$key]) ? wp_unslash($_POST[$key]) : '';
+                if (!isset($_POST[$key])) {
+                    $raw[$field][$lang] = '';
+                } elseif (in_array($field, array('intro','future_notice'), true)) {
+                    $raw[$field][$lang] = sanitize_textarea_field(wp_unslash($_POST[$key]));
+                } elseif ($field === 'button_url') {
+                    $raw[$field][$lang] = esc_url_raw(wp_unslash($_POST[$key]));
+                } else {
+                    $raw[$field][$lang] = sanitize_text_field(wp_unslash($_POST[$key]));
+                }
             }
         }
         if (!Parcs_HT_Group_Tariff_Settings::save($year, $raw)) wp_send_json_error(array('message'=>'WordPress n’a pas confirmé l’enregistrement des réglages groupes.'), 500);
