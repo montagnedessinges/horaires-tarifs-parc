@@ -25,8 +25,10 @@ final class Parcs_HT_Shortcode_Registry {
         return array('fr','en','de');
     }
 
-    public static function shortcode($base, $language) {
-        return '[' . sanitize_key($base) . '_' . sanitize_key($language) . ']';
+    public static function shortcode($base, $language = '') {
+        $base = sanitize_key($base);
+        $language = sanitize_key($language);
+        return '[' . $base . ($language !== '' ? '_' . $language : '') . ']';
     }
 
     public static function render_preview($base, $language) {
@@ -51,8 +53,15 @@ final class Parcs_HT_Shortcode_Registry {
     public static function public_rows() {
         $out = array();
         foreach (self::definitions() as $base => $definition) {
-            $row = array('base'=>$base,'label'=>$definition['label'],'preview'=>!empty($definition['preview']),'shortcodes'=>array());
-            foreach (self::languages() as $language) $row['shortcodes'][$language] = self::shortcode($base, $language);
+            $row = array(
+                'base'=>$base,
+                'label'=>$definition['label'],
+                'preview'=>!empty($definition['preview']),
+                'shortcodes'=>array('auto'=>self::shortcode($base)),
+            );
+            foreach (self::languages() as $language) {
+                $row['shortcodes'][$language] = self::shortcode($base, $language);
+            }
             $out[] = $row;
         }
         return $out;
