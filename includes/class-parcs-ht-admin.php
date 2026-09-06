@@ -1003,25 +1003,39 @@ final class Parcs_HT_Admin {
 
 
     private static function shortcodes_section() {
-        $modules = array(
-            'parc_horaires_tarifs' => 'Page complète',
-            'parc_horaires_aujourdhui' => 'Horaire du jour',
-            'parc_calendrier' => 'Calendrier interactif',
-            'parc_tableau_tarifs' => 'Tableau des tarifs',
-            'parc_fermeture_exceptionnelle' => 'Alerte de fermeture',
-            'parc_horaire' => 'Texte horaire dynamique pour l’en-tête',
-            'parc_statut' => 'Statut OUVERT / FERMÉ pour l’en-tête',
-            'parc_devis_groupe' => 'Devis groupe autour du formulaire Contact Form 7',
-            'parc_devis' => 'Alias compatible du module Devis groupe',
+        $shortcodes = array(
+            array('label'=>'Page complète','auto'=>'[parc_horaires_tarifs]','fr'=>'[parc_horaires_tarifs_fr]','en'=>'[parc_horaires_tarifs_en]','de'=>'[parc_horaires_tarifs_de]'),
+            array('label'=>'Horaire du jour','auto'=>'[parc_horaires_aujourdhui]','fr'=>'[parc_horaires_aujourdhui_fr]','en'=>'[parc_horaires_aujourdhui_en]','de'=>'[parc_horaires_aujourdhui_de]'),
+            array('label'=>'Calendrier interactif','auto'=>'[parc_calendrier]','fr'=>'[parc_calendrier_fr]','en'=>'[parc_calendrier_en]','de'=>'[parc_calendrier_de]'),
+            array('label'=>'Tableau des tarifs','auto'=>'[parc_tableau_tarifs]','fr'=>'[parc_tableau_tarifs_fr]','en'=>'[parc_tableau_tarifs_en]','de'=>'[parc_tableau_tarifs_de]'),
+            array('label'=>'Tarifs groupes uniquement','auto'=>'[parc_tarifs_groupes]','fr'=>'[parc_tarifs_groupes_fr]','en'=>'[parc_tarifs_groupes_en]','de'=>'[parc_tarifs_groupes_de]'),
+            array('label'=>'Alerte de fermeture','auto'=>'[parc_fermeture_exceptionnelle]','fr'=>'[parc_fermeture_exceptionnelle_fr]','en'=>'[parc_fermeture_exceptionnelle_en]','de'=>'[parc_fermeture_exceptionnelle_de]'),
+            array('label'=>'Texte horaire dynamique pour l’en-tête','auto'=>'[parc_horaire]','fr'=>'[parc_horaire_fr]','en'=>'[parc_horaire_en]','de'=>'[parc_horaire_de]'),
+            array('label'=>'Statut OUVERT / FERMÉ pour l’en-tête','auto'=>'[parc_statut]','fr'=>'[parc_statut_fr]','en'=>'[parc_statut_en]','de'=>'[parc_statut_de]'),
+            array('label'=>'Horaire d’accueil','auto'=>'[parc_horaire_accueil]','fr'=>'[parc_horaire_accueil_fr]','en'=>'[parc_horaire_accueil_en]','de'=>'[parc_horaire_accueil_de]'),
+            array('label'=>'Devis groupe autour du formulaire Contact Form 7','auto'=>'[parc_devis_groupe]','fr'=>'[parc_devis_groupe_fr]','en'=>'[parc_devis_groupe_en]','de'=>'[parc_devis_groupe_de]'),
+            array('label'=>'Alias compatible du module Devis groupe','auto'=>'[parc_devis]','fr'=>'[parc_devis_fr]','en'=>'[parc_devis_en]','de'=>'[parc_devis_de]'),
+            array('label'=>'Guides pédagogiques','auto'=>'[parc_guides_pedagogiques]','fr'=>'[parc_guides_pedagogiques_fr]','en'=>'[parc_guides_pedagogiques_en]','de'=>'[parc_guides_pedagogiques_de]'),
         );
         ?>
         <section id="htp-shortcodes" class="htp-card">
             <h2>Shortcodes</h2>
-            <p>Sélectionnez la langue dans qTranslate-XT, puis copiez le shortcode correspondant.</p>
-            <table class="widefat striped"><thead><tr><th>Module</th><th>FR</th><th>EN</th><th>DE</th></tr></thead><tbody>
-                <?php foreach ($modules as $code => $label) : ?><tr><th><?php echo esc_html($label); ?></th><?php foreach (array('fr','en','de') as $lang) : ?><td><code>[<?php echo esc_html($code . '_' . $lang); ?>]</code></td><?php endforeach; ?></tr><?php endforeach; ?>
-            </tbody></table>
-            <p>Les alertes configurées dans l’onglet « Alertes » s’affichent désormais automatiquement en pop-up sur le site. Les shortcodes d’alerte restent disponibles uniquement pour compatibilité ou affichage manuel.</p>
+            <p>Tous les shortcodes utilisables sont listés ci-dessous. Copiez celui dont vous avez besoin. La version « Automatique » suit la langue de la page ; les versions FR, EN et DE forcent la langue.</p>
+            <table class="widefat striped">
+                <thead><tr><th>Module</th><th>Automatique</th><th>FR</th><th>EN</th><th>DE</th></tr></thead>
+                <tbody>
+                    <?php foreach ($shortcodes as $row) : ?>
+                        <tr>
+                            <th><?php echo esc_html($row['label']); ?></th>
+                            <td><code><?php echo esc_html($row['auto']); ?></code></td>
+                            <td><code><?php echo esc_html($row['fr']); ?></code></td>
+                            <td><code><?php echo esc_html($row['en']); ?></code></td>
+                            <td><code><?php echo esc_html($row['de']); ?></code></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+            <p>Les alertes configurées dans l’onglet « Alertes » s’affichent automatiquement en pop-up sur le site. Les shortcodes d’alerte restent disponibles pour compatibilité ou affichage manuel.</p>
         </section>
         <?php
     }

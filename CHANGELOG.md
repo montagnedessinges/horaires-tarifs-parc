@@ -1,5 +1,13 @@
 # Historique des versions
 
+## 1.13.3
+- Remplacement direct de l’ancienne page « Shortcodes » dans l’administration : aucune surcouche JavaScript ni réécriture après affichage.
+- La page contient statiquement les 48 shortcodes utilisables : 12 modules, chacun en version Automatique, FR, EN et DE.
+- Ajout explicite des shortcodes Tarifs groupes, Horaire d’accueil et Guides pédagogiques qui manquaient dans l’ancienne page.
+- Suppression du composant `Parcs_HT_Feature_Hub` qui servait uniquement à remplacer l’ancienne table après son rendu.
+- Le registre central reste utilisé pour l’exécution des shortcodes et les aperçus, mais la page de référence des shortcodes n’en dépend plus.
+- Aucun réglage, horaire, tarif, devis, formulaire ou donnée des parcs n’est modifié.
+
 ## 1.9.22
 - Correctif dédié à l’enregistrement des formulaires Contact Form 7 configurés par langue dans « Devis par langue ».
 - Retour au traitement direct et champ par champ du formulaire FR / EN / DE, sans pré-transformation globale des valeurs avant validation.

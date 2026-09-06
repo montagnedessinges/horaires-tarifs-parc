@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.9.19
+Stable tag: 1.13.3
 
 Gestion multilingue des horaires, saisons, calendrier, exceptions, alertes et tarifs des parcs.
 
