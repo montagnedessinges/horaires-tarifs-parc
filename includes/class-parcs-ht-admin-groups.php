@@ -46,6 +46,14 @@ final class Parcs_HT_Admin_Groups {
         return '';
     }
 
+    private static function snapshot($year, $reason) {
+        if (class_exists('Parcs_HT_Save_Integrity')) Parcs_HT_Save_Integrity::store_daily_snapshot($year, $reason);
+    }
+
+    private static function same($a, $b) {
+        return hash('sha256', wp_json_encode($a)) === hash('sha256', wp_json_encode($b));
+    }
+
     public static function assets($hook) {
         if ($hook !== 'toplevel_page_parcs-horaires-tarifs' || !current_user_can('manage_options')) return;
         $year = isset($_GET['season']) ? sanitize_text_field(wp_unslash($_GET['season'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Sélection en lecture seule.
@@ -111,6 +119,9 @@ final class Parcs_HT_Admin_Groups {
         $settings['tariff_bindings'][$year] = $binding;
         $settings['binding_version'] = 2;
         update_option(Parcs_HT_Group_Quotes::OPTION, $settings, false);
+        $stored = Parcs_HT_Group_Quotes::binding_for_year($year, Parcs_HT_Group_Quotes::settings(false));
+        if (!$stored || !self::same($binding, $stored)) wp_send_json_error(array('message'=>'WordPress n’a pas confirmé la nouvelle liaison du devis.'), 500);
+        self::snapshot($year, 'Liaison tarifs / devis groupe');
         wp_send_json_success(array('message'=>'Liaison du devis enregistrée pour ' . $year . '.'));
     }
 
@@ -138,6 +149,7 @@ final class Parcs_HT_Admin_Groups {
             }
         }
         if (!Parcs_HT_Group_Tariff_Settings::save($year, $raw)) wp_send_json_error(array('message'=>'WordPress n’a pas confirmé l’enregistrement des réglages groupes.'), 500);
+        self::snapshot($year, 'Affichage et publication des tarifs groupes');
         do_action('litespeed_purge_all');
         wp_send_json_success(array('message'=>'Affichage des tarifs groupes enregistré pour ' . $year . '.'));
     }
@@ -160,6 +172,9 @@ final class Parcs_HT_Admin_Groups {
             $clean[$lang] = $value;
         }
         update_option(Parcs_HT_Quote_Languages::OPTION, $clean, false);
+        $stored = get_option(Parcs_HT_Quote_Languages::OPTION, array());
+        if (!is_array($stored) || !self::same($clean, $stored)) wp_send_json_error(array('message'=>'WordPress n’a pas confirmé l’enregistrement des formulaires.'), 500);
+        self::snapshot('', 'Formulaires du devis groupe');
         wp_send_json_success(array('message'=>'Formulaires FR / EN / DE enregistrés.'));
     }
 
@@ -180,6 +195,9 @@ final class Parcs_HT_Admin_Groups {
             $out[$unavailable_key] = isset($_POST[$unavailable_key]) ? sanitize_textarea_field(wp_unslash($_POST[$unavailable_key])) : '';
         }
         update_option(Parcs_HT_Quote_Gate::OPTION, $out, false);
+        $stored = get_option(Parcs_HT_Quote_Gate::OPTION, array());
+        if (!is_array($stored) || !self::same($out, $stored)) wp_send_json_error(array('message'=>'WordPress n’a pas confirmé les réglages d’accès au devis.'), 500);
+        self::snapshot('', 'Accès au devis groupe');
         wp_send_json_success(array('message'=>'Réglages d’accès au devis enregistrés.'));
     }
 }
