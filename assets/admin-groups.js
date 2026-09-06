@@ -81,42 +81,71 @@ $(function(){
     schedule.$sub.on('click','[data-htp-target]',function(){activate($(this).data('htp-target'),'schedule');});
 
     function escaped(value){return $('<div>').text(String(value==null?'':value)).html();}
+    function readableLabel(value,fallback){
+        if(value&&typeof value==='object')value=value.fr||value.en||value.de||'';
+        value=String(value||fallback||'');
+        return value;
+    }
     function optionList(items,valueKey,labelKey,selected){
         return (items||[]).map(function(item){
             var value=String(item[valueKey]||'');
-            var rawLabel=String(item[labelKey]||value);
+            var rawLabel=readableLabel(item[labelKey],value);
             var label=rawLabel+(value&&rawLabel.indexOf(value)===-1?' — '+value:'');
             return '<option value="'+escaped(value)+'"'+(String(selected)===value?' selected':'')+'>'+escaped(label)+'</option>';
         }).join('');
     }
 
+    var hydrateExistingTariffIds=true;
+    function setBadgeText($badge,text){if($badge.text()!==text)$badge.text(text);}
     function decorateTariffIdentities(){
         var identities=cfg.tariff_identities||{};
         $('#htp-tariffs [data-htp-tariff-group]').each(function(){
             var $group=$(this),group=String($group.data('htp-tariff-group')||''),data=identities[group]||{rows:[],columns:[]};
             $group.find('.htp-tariff-repeater > .htp-repeater-rows > [data-htp-tariff-row]').each(function(index){
-                var $row=$(this),stored=data.rows&&data.rows[index]?String(data.rows[index].id||''):'';
+                var $row=$(this),stored=hydrateExistingTariffIds&&data.rows&&data.rows[index]?String(data.rows[index].id||''):'';
                 if(!$row.find('[data-htp-tariff-row-id-input]').length){
                     var name='settings[tariffs]['+group+']['+index+'][id]';
                     $('<input type="hidden" data-htp-tariff-row-id-input>').attr('name',name).val(stored).appendTo($row);
                 }
                 var value=String($row.find('[data-htp-tariff-row-id-input]').val()||'');
-                var $head=$row.find('.htp-row-head').first();
-                if(!$head.find('[data-htp-tariff-id-badge]').length){
-                    $('<code class="htp-tariff-id-badge" data-htp-tariff-id-badge></code>').text(/^tariff_row_\d{6,}$/.test(value)?value:'ID attribué à l’enregistrement').insertAfter($head.find('strong').first());
-                }else $head.find('[data-htp-tariff-id-badge]').text(/^tariff_row_\d{6,}$/.test(value)?value:'ID attribué à l’enregistrement');
+                var badgeText=/^tariff_row_\d{6,}$/.test(value)?value:'ID attribué à l’enregistrement';
+                var $head=$row.find('.htp-row-head').first(),$badge=$head.find('[data-htp-tariff-id-badge]').first();
+                if(!$badge.length){
+                    $badge=$('<code class="htp-tariff-id-badge" data-htp-tariff-id-badge></code>').text(badgeText).insertAfter($head.find('strong').first());
+                }else setBadgeText($badge,badgeText);
             });
-            $group.find('[data-htp-tariff-columns] > [data-htp-tariff-column]').each(function(){
-                var $column=$(this),value=String($column.find('[data-htp-column-id-input]').val()||$column.attr('data-col-id')||'');
-                if(!$column.find('[data-htp-tariff-col-id-badge]').length){
-                    $('<code class="htp-tariff-id-badge" data-htp-tariff-col-id-badge></code>').text(/^tariff_col_\d{6,}$/.test(value)?value:'ID attribué à l’enregistrement').insertAfter($column.find('.htp-sort-handle-column').first());
-                }else $column.find('[data-htp-tariff-col-id-badge]').text(/^tariff_col_\d{6,}$/.test(value)?value:'ID attribué à l’enregistrement');
+            $group.find('[data-htp-tariff-columns] > [data-htp-tariff-column]').each(function(index){
+                var $column=$(this),stored=hydrateExistingTariffIds&&data.columns&&data.columns[index]?String(data.columns[index].id||''):'';
+                var $idInput=$column.find('[data-htp-column-id-input]').first();
+                if($idInput.length&&!/^tariff_col_\d{6,}$/.test(String($idInput.val()||''))&&/^tariff_col_\d{6,}$/.test(stored))$idInput.val(stored);
+                var value=String($idInput.val()||$column.attr('data-col-id')||'');
+                var badgeText=/^tariff_col_\d{6,}$/.test(value)?value:'ID attribué à l’enregistrement';
+                var $badge=$column.find('[data-htp-tariff-col-id-badge]').first();
+                if(!$badge.length){
+                    $badge=$('<code class="htp-tariff-id-badge" data-htp-tariff-col-id-badge></code>').text(badgeText).insertAfter($column.find('.htp-sort-handle-column').first());
+                }else setBadgeText($badge,badgeText);
             });
         });
     }
     decorateTariffIdentities();
+    hydrateExistingTariffIds=false;
     var tariffRoot=document.querySelector('#htp-tariffs');
-    if(tariffRoot&&window.MutationObserver){new MutationObserver(function(){decorateTariffIdentities();}).observe(tariffRoot,{childList:true,subtree:true});}
+    if(tariffRoot&&window.MutationObserver){
+        var identityRefreshPending=false;
+        new MutationObserver(function(mutations){
+            var needsRefresh=false;
+            mutations.forEach(function(mutation){
+                Array.prototype.forEach.call(mutation.addedNodes||[],function(node){
+                    if(needsRefresh||!node||node.nodeType!==1)return;
+                    if((node.matches&&node.matches('[data-htp-tariff-row],[data-htp-tariff-column]'))||(node.querySelector&&node.querySelector('[data-htp-tariff-row],[data-htp-tariff-column]')))needsRefresh=true;
+                });
+            });
+            if(!needsRefresh||identityRefreshPending)return;
+            identityRefreshPending=true;
+            var refresh=function(){identityRefreshPending=false;decorateTariffIdentities();};
+            if(window.requestAnimationFrame)window.requestAnimationFrame(refresh);else window.setTimeout(refresh,0);
+        }).observe(tariffRoot,{childList:true,subtree:true});
+    }
     document.addEventListener('click',function(event){
         var button=event.target.closest('[data-htp-duplicate-tariff-row]');
         if(!button)return;
