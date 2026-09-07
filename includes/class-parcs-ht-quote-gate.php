@@ -115,11 +115,9 @@ final class Parcs_HT_Quote_Gate {
     }
 
     private static function tariff_available($year) {
-        $q = class_exists('Parcs_HT_Group_Quotes') ? Parcs_HT_Group_Quotes::settings() : array();
-        $row = is_array($q) && isset($q['seasons'][$year]) && is_array($q['seasons'][$year]) ? $q['seasons'][$year] : array();
-        if ((string)($row['published'] ?? '0') !== '1') return false;
-        foreach (array('child','adult','disability','companion') as $key) if (!isset($row[$key]) || !is_numeric($row[$key]) || (float)$row[$key] < 0) return false;
-        return true;
+        if (!class_exists('Parcs_HT_Group_Quotes') || !method_exists('Parcs_HT_Group_Quotes', 'readiness')) return false;
+        $status = Parcs_HT_Group_Quotes::readiness((string)$year);
+        return !empty($status['ready']);
     }
 
     public static function date_status() {
