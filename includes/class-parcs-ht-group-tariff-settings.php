@@ -5,7 +5,7 @@ if (!defined('ABSPATH')) { exit; }
 /** Réglages publics propres aux tarifs groupes, enregistrés par saison. */
 final class Parcs_HT_Group_Tariff_Settings {
     const OPTION = 'parcs_ht_group_tariff_settings';
-    const STORE_VERSION = 3;
+    const STORE_VERSION = 4;
 
     public static function init() {
         add_action('admin_init', array(__CLASS__, 'ensure_store'), 6);
@@ -26,6 +26,11 @@ final class Parcs_HT_Group_Tariff_Settings {
         $out = array('fr'=>'','en'=>'','de'=>'');
         foreach ($out as $lang => $unused) $out[$lang] = esc_url_raw((string)($value[$lang] ?? ''));
         return $out;
+    }
+
+    private static function clean_date($value) {
+        $value = trim((string)$value);
+        return preg_match('/^20\d{2}-\d{2}-\d{2}$/', $value) ? $value : '';
     }
 
     private static function icon_choices() {
@@ -184,6 +189,7 @@ final class Parcs_HT_Group_Tariff_Settings {
         $year = preg_match('/^20\d{2}$/', (string)$year) ? (string)$year : (string)wp_date('Y');
         return array(
             'published'=>'0',
+            'display_from'=>'',
             'show_heading'=>'1',
             'title'=>array('fr'=>'','en'=>'','de'=>''),
             'intro'=>array('fr'=>'','en'=>'','de'=>''),
@@ -320,6 +326,16 @@ final class Parcs_HT_Group_Tariff_Settings {
                 $saved['seasons'][(string)$year] = $row;
             }
             $saved['version'] = 3;
+            $version = 3;
+        }
+        if ($version < 4) {
+            foreach ((array)($saved['seasons'] ?? array()) as $year => $old) {
+                if (!preg_match('/^20\d{2}$/', (string)$year) || !is_array($old)) continue;
+                $row = array_replace_recursive(self::defaults((string)$year), $old);
+                $row['display_from'] = self::clean_date($old['display_from'] ?? '');
+                $saved['seasons'][(string)$year] = $row;
+            }
+            $saved['version'] = 4;
         }
         return $saved;
     }
@@ -351,10 +367,12 @@ final class Parcs_HT_Group_Tariff_Settings {
         $year = (string)$year;
         if (!preg_match('/^20\d{2}$/', $year)) return false;
         $raw = is_array($raw) ? $raw : array();
+        $existing = self::settings($year);
         $future_year = isset($raw['future_year']) ? sanitize_text_field(wp_unslash($raw['future_year'])) : (string)((int)$year + 1);
         if (!preg_match('/^20\d{2}$/', $future_year)) $future_year = (string)((int)$year + 1);
         $clean = array(
             'published'=>isset($raw['published']) && (string)$raw['published'] === '1' ? '1' : '0',
+            'display_from'=>array_key_exists('display_from', $raw) ? self::clean_date(wp_unslash($raw['display_from'])) : self::clean_date($existing['display_from'] ?? ''),
             'show_heading'=>isset($raw['show_heading']) && (string)$raw['show_heading'] === '1' ? '1' : '0',
             'title'=>self::clean_translations($raw['title'] ?? array()),
             'intro'=>self::clean_translations($raw['intro'] ?? array(), true),
@@ -380,13 +398,49 @@ final class Parcs_HT_Group_Tariff_Settings {
         return wp_json_encode($clean) === wp_json_encode(array_intersect_key($stored, $clean));
     }
 
+    public static function save_display_from($year, $date) {
+        $year = (string)$year;
+        if (!preg_match('/^20\d{2}$/', $year)) return false;
+        $store = self::store();
+        $current = isset($store['seasons'][$year]) && is_array($store['seasons'][$year]) ? $store['seasons'][$year] : array();
+        $row = array_replace_recursive(self::defaults($year), $current);
+        $row['display_from'] = self::clean_date($date);
+        $store['version'] = self::STORE_VERSION;
+        $store['seasons'][$year] = $row;
+        update_option(self::OPTION, $store, false);
+        return (string)(self::settings($year)['display_from'] ?? '') === $row['display_from'];
+    }
+
+    private static function enabled_group_rows($season) {
+        $out = array();
+        foreach ((array)($season['tariffs']['groups'] ?? array()) as $row) {
+            if (!is_array($row) || (string)($row['enabled'] ?? '1') !== '1') continue;
+            $out[] = $row;
+        }
+        return $out;
+    }
+
+    public static function has_grid($year) {
+        $year = (string)$year;
+        if (!preg_match('/^20\d{2}$/', $year)) return false;
+        $all = self::raw_all_settings();
+        $season = isset($all['seasons'][$year]) && is_array($all['seasons'][$year]) ? $all['seasons'][$year] : null;
+        if (!$season || !self::enabled_group_rows($season)) return false;
+        $tariffs = isset($season['tariffs']) && is_array($season['tariffs']) ? $season['tariffs'] : array();
+        if (!isset($tariffs['columns']['groups'])) return true;
+        foreach ((array)$tariffs['columns']['groups'] as $column) {
+            if (!is_array($column) || (string)($column['visible'] ?? '1') === '0') continue;
+            if (sanitize_key((string)($column['id'] ?? '')) !== '') return true;
+        }
+        return false;
+    }
+
     public static function is_published($year) {
         $year = (string)$year;
         if (!preg_match('/^20\d{2}$/', $year)) return false;
         $all = self::raw_all_settings();
         $season = isset($all['seasons'][$year]) && is_array($all['seasons'][$year]) ? $all['seasons'][$year] : null;
-        if (!$season || (string)($season['published'] ?? '0') !== '1') return false;
-        if (empty($season['tariffs']['groups']) || !is_array($season['tariffs']['groups'])) return false;
+        if (!$season || !self::has_grid($year)) return false;
         return (string)(self::settings($year)['published'] ?? '0') === '1';
     }
 
@@ -398,14 +452,110 @@ final class Parcs_HT_Group_Tariff_Settings {
         return $years;
     }
 
-    public static function public_year() {
-        $years = self::published_years();
-        if (!$years) return '';
-        $current = (string)wp_date('Y');
-        if (in_array($current, $years, true)) return $current;
-        $past = array_values(array_filter($years, static function ($year) use ($current) { return (int)$year <= (int)$current; }));
-        if ($past) return (string)end($past);
-        return (string)$years[0];
+    public static function effective_display_date($year) {
+        $year = (string)$year;
+        if (!preg_match('/^20\d{2}$/', $year)) return '';
+        $configured = self::clean_date(self::settings($year)['display_from'] ?? '');
+        return $configured !== '' ? $configured : $year . '-01-01';
+    }
+
+    private static function today($override = '') {
+        $override = self::clean_date($override);
+        if ($override !== '') return $override;
+        $all = self::raw_all_settings();
+        $timezone = class_exists('Parcs_HT_Schedule') ? Parcs_HT_Schedule::timezone($all) : (string)($all['timezone'] ?? 'Europe/Paris');
+        try { $tz = new DateTimeZone($timezone); } catch (Exception $e) { $tz = new DateTimeZone('Europe/Paris'); }
+        return wp_date('Y-m-d', null, $tz);
+    }
+
+    public static function public_year($today = '') {
+        $today = self::today($today);
+        $eligible = array();
+        foreach (self::published_years() as $year) {
+            $effective = self::effective_display_date($year);
+            if ($effective === '' || $effective > $today) continue;
+            $eligible[] = array('year'=>$year,'date'=>$effective);
+        }
+        if (!$eligible) return '';
+        usort($eligible, static function ($a, $b) {
+            if ($a['date'] === $b['date']) return (int)$a['year'] <=> (int)$b['year'];
+            return strcmp($a['date'], $b['date']);
+        });
+        $selected = end($eligible);
+        return is_array($selected) ? (string)$selected['year'] : '';
+    }
+
+    public static function next_switch($today = '') {
+        $today = self::today($today);
+        $next = null;
+        foreach (self::published_years() as $year) {
+            $effective = self::effective_display_date($year);
+            if ($effective === '' || $effective <= $today) continue;
+            if ($next === null || $effective < $next['date'] || ($effective === $next['date'] && (int)$year < (int)$next['year'])) {
+                $next = array('year'=>(string)$year,'date'=>$effective);
+            }
+        }
+        return $next;
+    }
+
+    public static function quote_binding_valid($year) {
+        $year = (string)$year;
+        if (!preg_match('/^20\d{2}$/', $year) || !class_exists('Parcs_HT_Group_Quotes') || !class_exists('Parcs_HT_Tariff_Identities')) return false;
+        $quotes = Parcs_HT_Group_Quotes::settings(false);
+        $binding = Parcs_HT_Group_Quotes::binding_for_year($year, $quotes);
+        if (!$binding) return false;
+        $all = self::raw_all_settings();
+        $season = isset($all['seasons'][$year]) && is_array($all['seasons'][$year]) ? $all['seasons'][$year] : array();
+        $tariffs = isset($season['tariffs']) && is_array($season['tariffs']) ? $season['tariffs'] : array();
+        $rows = array_values((array)($tariffs['groups'] ?? array()));
+        $columns = array_values((array)($tariffs['columns']['groups'] ?? array()));
+        if (!Parcs_HT_Tariff_Identities::column_exists($columns, $binding['column_id'])) return false;
+        foreach (array('child','adult','disability','companion') as $role) {
+            if (!Parcs_HT_Tariff_Identities::row_by_id($rows, $binding[$role . '_row_id'])) return false;
+        }
+        return true;
+    }
+
+    public static function readiness($year, $today = '') {
+        $year = (string)$year;
+        $today = self::today($today);
+        $all = self::raw_all_settings();
+        $season = isset($all['seasons'][$year]) && is_array($all['seasons'][$year]) ? $all['seasons'][$year] : null;
+        $display = self::settings($year);
+        $display_from = self::clean_date($display['display_from'] ?? '');
+        $grid_ready = self::has_grid($year);
+        $group_published = (string)($display['published'] ?? '0') === '1';
+        $commercially_published = self::is_published($year);
+        $quote_binding_valid = self::quote_binding_valid($year);
+        $warnings = array();
+        if ($display_from !== '' && $display_from <= $today && !$commercially_published) {
+            $warnings[] = 'La date de bascule est atteinte, mais la grille groupes de ' . $year . ' n’est pas prête ou pas publiée.';
+        }
+        if ($commercially_published && !$quote_binding_valid) {
+            $warnings[] = 'Les tarifs groupes ' . $year . ' sont publiés, mais la liaison avec le devis n’est pas valide.';
+        }
+        if ($display_from !== '' && $display_from > $today && (!$grid_ready || !$group_published || !$quote_binding_valid)) {
+            try {
+                $days = (new DateTimeImmutable($today))->diff(new DateTimeImmutable($display_from))->days;
+                if ($days !== false && $days <= 14) $warnings[] = 'La bascule vers ' . $year . ' est prévue dans ' . (int)$days . ' jour(s), mais tous les contrôles ne sont pas encore au vert.';
+            } catch (Exception $e) {
+                // Date déjà normalisée : aucune action nécessaire si DateTime échoue malgré tout.
+            }
+        }
+        return array(
+            'year'=>$year,
+            'season_exists'=>is_array($season),
+            'general_published'=>is_array($season) && (string)($season['published'] ?? '0') === '1',
+            'grid_ready'=>$grid_ready,
+            'group_published'=>$group_published,
+            'commercially_published'=>$commercially_published,
+            'quote_binding_valid'=>$quote_binding_valid,
+            'display_from'=>$display_from,
+            'effective_display_date'=>self::effective_display_date($year),
+            'active_year'=>self::public_year($today),
+            'next_switch'=>self::next_switch($today),
+            'warnings'=>$warnings,
+        );
     }
 
     public static function default_title($language, $year) {
