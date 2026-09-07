@@ -7,7 +7,7 @@ define('PARCS_HT_VERSION', 'test');
 $GLOBALS['parcs_ht_test_shortcodes'] = array();
 $GLOBALS['parcs_ht_test_settings'] = array();
 $GLOBALS['parcs_ht_test_group_display'] = array();
-$GLOBALS['parcs_ht_tariff_selector_called'] = 0;
+$GLOBALS['parcs_ht_test_group_year'] = '2026';
 
 function add_shortcode($tag, $callback) { $GLOBALS['parcs_ht_test_shortcodes'][$tag] = $callback; }
 function sanitize_key($value) { return preg_replace('/[^a-z0-9_\-]/', '', strtolower((string)$value)); }
@@ -24,12 +24,16 @@ function esc_url($value) { return (string)$value; }
 function wp_kses($value, $allowed_html) { return (string)$value; }
 
 final class Parcs_HT_Defaults {
-    public static function settings() { return $GLOBALS['parcs_ht_test_settings']; }
+    public static function settings($requested_year = '') {
+        $settings = $GLOBALS['parcs_ht_test_settings'];
+        if ($requested_year !== '') {
+            $settings['general']['year'] = (string)$requested_year;
+            $settings['active_season_year'] = (string)$requested_year;
+        }
+        return $settings;
+    }
     public static function all_settings() { return $GLOBALS['parcs_ht_test_settings']; }
     public static function svg_allowed_tags() { return array('svg'=>array(),'rect'=>array(),'path'=>array(),'circle'=>array()); }
-}
-final class Parcs_HT_Tariff_Seasons {
-    public static function select_season_tariffs($settings, $public = false) { $GLOBALS['parcs_ht_tariff_selector_called']++; return $settings; }
 }
 final class Parcs_HT_Schedule {
     public static function language() { return 'fr'; }
@@ -42,6 +46,7 @@ final class Parcs_HT_Schedule {
 }
 final class Parcs_HT_Group_Tariff_Settings {
     public static function settings($year) { return $GLOBALS['parcs_ht_test_group_display']; }
+    public static function public_year() { return $GLOBALS['parcs_ht_test_group_year']; }
 }
 
 $root = getenv('PLUGIN_ROOT') ?: dirname(__DIR__);
@@ -55,6 +60,17 @@ function group_runtime_assert($condition, $message) {
 Parcs_HT_Group_Tariffs::init();
 foreach (array('parc_tarifs_groupes','parc_tarifs_groupes_fr','parc_tarifs_groupes_en','parc_tarifs_groupes_de') as $tag) group_runtime_assert(isset($GLOBALS['parcs_ht_test_shortcodes'][$tag]), 'registered shortcode ' . $tag);
 
+$canonical_2026 = array(
+    'columns'=>array('groups'=>array(array('id'=>'tariff_col_000001','visible'=>'1','label'=>array('fr'=>'Tarif')))),
+    'individual'=>array(array('enabled'=>'1','label'=>array('fr'=>'Individuel à ne pas afficher'),'cells'=>array('price'=>array('value'=>'99 €')))),
+    'groups'=>array(
+        array('id'=>'tariff_row_000001','enabled'=>'1','label'=>array('fr'=>'Senior'),'subtitle'=>array('fr'=>'Groupe senior'),'label_color'=>'#800080','price_color'=>'#800080','cells'=>array('tariff_col_000001'=>array('value'=>'9 €','old_value'=>''))),
+        array('id'=>'tariff_row_000002','enabled'=>'0','label'=>array('fr'=>'Ligne masquée'),'cells'=>array('tariff_col_000001'=>array('value'=>'1 €','old_value'=>''))),
+    ),
+);
+$canonical_2027 = $canonical_2026;
+$canonical_2027['groups'][0]['cells']['tariff_col_000001']['value'] = '11 €';
+
 $GLOBALS['parcs_ht_test_settings'] = array(
     'site_type'=>'fds',
     'general'=>array(
@@ -64,13 +80,10 @@ $GLOBALS['parcs_ht_test_settings'] = array(
         'groups_url'=>array('fr'=>'https://example.test/general'),
         'primary_color'=>'#006757','tariff_title_color'=>'#800080','button_bg_color'=>'#800080','payment_item_bg_color'=>'#800080','payment_item_text_color'=>'#ffffff','payment_icon_color'=>'#ffffff',
     ),
-    'tariffs'=>array(
-        'columns'=>array('groups'=>array(array('id'=>'tariff_col_000001','visible'=>'1','label'=>array('fr'=>'Tarif')))),
-        'individual'=>array(array('enabled'=>'1','label'=>array('fr'=>'Individuel à ne pas afficher'),'cells'=>array('price'=>array('value'=>'99 €')))),
-        'groups'=>array(
-            array('id'=>'tariff_row_000001','enabled'=>'1','label'=>array('fr'=>'Senior'),'subtitle'=>array('fr'=>'Groupe senior'),'label_color'=>'#800080','price_color'=>'#800080','cells'=>array('tariff_col_000001'=>array('value'=>'9 €','old_value'=>''))),
-            array('id'=>'tariff_row_000002','enabled'=>'0','label'=>array('fr'=>'Ligne masquée'),'cells'=>array('tariff_col_000001'=>array('value'=>'1 €','old_value'=>''))),
-        ),
+    'tariffs'=>$canonical_2026,
+    'seasons'=>array(
+        '2026'=>array('tariffs'=>$canonical_2026),
+        '2027'=>array('tariffs'=>$canonical_2027),
     ),
 );
 $GLOBALS['parcs_ht_test_group_display'] = array(
@@ -89,7 +102,6 @@ $GLOBALS['parcs_ht_test_group_display'] = array(
 );
 
 $html = Parcs_HT_Group_Tariffs::render('fr');
-group_runtime_assert($GLOBALS['parcs_ht_tariff_selector_called'] > 0, 'public tariff season selector is used');
 group_runtime_assert(strpos($html, 'Tarifs groupes personnalisés') !== false, 'custom heading is rendered');
 group_runtime_assert(strpos($html, 'Introduction personnalisable.') !== false, 'custom intro is rendered');
 group_runtime_assert(strpos($html, 'Senior') !== false && strpos($html, '9 €') !== false, 'canonical group row and price are rendered');
@@ -119,16 +131,21 @@ group_runtime_assert(strpos($html_minimal, 'Note générique de réservation.') 
 
 $GLOBALS['parcs_ht_test_settings']['general']['tariff_title_color'] = '#00aa00';
 $GLOBALS['parcs_ht_test_settings']['general']['button_bg_color'] = '#00aa00';
-$GLOBALS['parcs_ht_test_settings']['tariffs']['groups'][0]['label_color'] = '#00aa00';
-$GLOBALS['parcs_ht_test_settings']['tariffs']['groups'][0]['cells']['tariff_col_000001']['value'] = '10 €';
+$GLOBALS['parcs_ht_test_settings']['seasons']['2026']['tariffs']['groups'][0]['label_color'] = '#00aa00';
+$GLOBALS['parcs_ht_test_settings']['seasons']['2026']['tariffs']['groups'][0]['cells']['tariff_col_000001']['value'] = '10 €';
 $html_updated = Parcs_HT_Group_Tariffs::render('fr');
 group_runtime_assert(strpos($html_updated, '10 €') !== false && strpos($html_updated, '9 €') === false, 'updated canonical group price is read directly');
 group_runtime_assert(strpos($html_updated, '--htp-tariff-title:#ff69b4;') !== false && strpos($html_updated, '--htp-tariff-title:#00aa00;') === false, 'changing classic tariff colors later does not change the group shortcode');
 group_runtime_assert(strpos($html_updated, '--htp-row-label:#ff1493;') !== false && strpos($html_updated, '--htp-row-label:#00aa00;') === false, 'changing canonical row colors later does not change the group shortcode row styling');
 
+$GLOBALS['parcs_ht_test_group_year'] = '2027';
+$html_2027 = Parcs_HT_Group_Tariffs::render('fr');
+group_runtime_assert(strpos($html_2027, '11 €') !== false && strpos($html_2027, '10 €') === false, 'commercial year switch changes the canonical group tariff payload independently from the general year');
+
 $source = file_get_contents($root . '/includes/class-parcs-ht-group-tariffs.php');
-group_runtime_assert(strpos($source, 'Parcs_HT_Defaults::settings()') !== false, 'shortcode reads canonical tariff settings');
-group_runtime_assert(strpos($source, 'Parcs_HT_Tariff_Seasons::select_season_tariffs') !== false, 'shortcode uses the same public season selection as the main tariff table');
+group_runtime_assert(strpos($source, 'Parcs_HT_Defaults::settings($year)') !== false, 'shortcode reads the selected canonical season settings');
+group_runtime_assert(strpos($source, 'Parcs_HT_Group_Tariff_Settings::public_year()') !== false, 'shortcode uses the dedicated commercial group year');
+group_runtime_assert(strpos($source, 'Parcs_HT_Tariff_Seasons::select_season_tariffs') === false, 'shortcode does not reuse the general public tariff selector');
 group_runtime_assert(strpos($source, 'Parcs_HT_Group_Tariff_Settings::settings') !== false, 'shortcode reads separate presentation settings only');
 group_runtime_assert(strpos($source, 'is_mds(') === false && strpos($source, 'Bon de commande / voucher') === false, 'renderer contains no MDS-specific display rule or payment text');
 
