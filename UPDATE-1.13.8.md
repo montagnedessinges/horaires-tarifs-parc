@@ -14,3 +14,5 @@ Exemple attendu et testé : le tableau général peut être violet tandis que le
 ## Migration
 
 À la première migration vers 1.13.8, les couleurs qui étaient jusque-là héritées du tableau général sont copiées dans les réglages du shortcode groupes afin de conserver le visuel existant. Cette copie n’est effectuée qu’une fois. Ensuite, chaque shortcode évolue indépendamment.
+
+Les tests ciblés de migration, de rendu du shortcode groupes, de publication des tarifs groupes et de gratuité groupes ont été validés avant le déclenchement de la release.
