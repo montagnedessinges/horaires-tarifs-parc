@@ -1,0 +1,58 @@
+name: Apply 1.13.7 configurability
+
+on:
+  push:
+    paths:
+      - '.prepare-1.13.7-trigger'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Prepare 1.13.7
+        run: php tools/prepare-1.13.7.php
+
+      - name: Check PHP syntax
+        run: |
+          php -l includes/class-parcs-ht-group-tariff-settings.php
+          php -l includes/class-parcs-ht-admin-groups.php
+          php -l includes/class-parcs-ht-group-tariffs.php
+          php -l tests/group-tariff-shortcode-runtime.php
+          php -l tests/group-tariff-publication-contract.php
+          php -l tests/group-tariff-display-settings-runtime.php
+          php -l horaires-tarifs-parc.php
+
+      - name: Check JavaScript syntax
+        run: node --check assets/admin-groups.js
+
+      - name: Run group tariff regression tests
+        run: |
+          php tests/group-tariff-shortcode-runtime.php
+          php tests/group-tariff-publication-contract.php
+          php tests/group-tariff-display-settings-runtime.php
+
+      - name: Verify version metadata
+        run: |
+          grep -F 'Version: 1.13.7' horaires-tarifs-parc.php
+          grep -F "define('PARCS_HT_VERSION', '1.13.7');" horaires-tarifs-parc.php
+          grep -F 'Stable tag: 1.13.7' readme.txt
+          grep -F '## 1.13.7' CHANGELOG.md
+
+      - name: Remove one-shot files
+        run: rm -f tools/prepare-1.13.7.php .github/workflows/apply-1.13.7-configurability.yml .prepare-1.13.7-trigger
+
+      - name: Commit 1.13.7
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Prepare 1.13.7 — configurable group tariff content'
+          git push origin HEAD:main
