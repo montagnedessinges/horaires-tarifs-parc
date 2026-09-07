@@ -22,6 +22,8 @@ Le rendu public ne contient plus de règle conditionnelle propre à `site_type=m
 
 Le contenu MDS introduit en 1.13.6 est conservé automatiquement lors de la migration vers 1.13.7, mais devient ensuite entièrement modifiable dans l’administration. La Forêt des Singes et les autres installations ne reçoivent pas automatiquement les conditions MDS.
 
+La migration est sans effet de bord sur les lectures publiques : elle peut préparer l’affichage en mémoire, mais l’écriture de la nouvelle structure est effectuée dans le contexte d’administration ou lors d’un enregistrement explicite.
+
 ## Source unique des tarifs
 
 Les prix ne sont pas stockés dans ces nouveaux réglages d’affichage. Le shortcode continue de lire exclusivement la grille canonique `tariffs.groups` de la saison publique, comme le tableau tarifaire principal et le moteur de devis.
