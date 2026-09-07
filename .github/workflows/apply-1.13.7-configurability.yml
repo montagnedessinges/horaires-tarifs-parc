@@ -17,6 +17,24 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Fix preparation markers
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('tools/prepare-1.13.7.php')
+          text = path.read_text()
+          replacements = {
+              '$admin_replacement . $admin_end);': '$admin_replacement);',
+              '$js_new_panel . "\\n\\n    function showGroupTariffs(){");': '$js_new_panel . "\\n\\n");',
+              '$js_save . "\\n\\n    var requested=\'\';");': '$js_save . "\\n\\n");',
+          }
+          for old, new in replacements.items():
+              if old not in text:
+                  raise SystemExit(f'Marker not found: {old}')
+              text = text.replace(old, new, 1)
+          path.write_text(text)
+          PY
+
       - name: Prepare 1.13.7
         run: php tools/prepare-1.13.7.php
 
