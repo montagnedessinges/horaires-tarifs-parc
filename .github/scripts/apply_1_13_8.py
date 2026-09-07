@@ -144,6 +144,9 @@ replace_once(path,
             $row['row_styles'] = self::row_styles_from_rows($season['tariffs']['groups'] ?? array());
             $store['seasons'][(string)$year] = $row;""")
 replace_once(path,
+    "        if ($version < 2) {",
+    "        $migrated_from_pre_v2 = $version < 2;\n        if ($version < 2) {")
+replace_once(path,
 """            $saved['version'] = 2;
         }
         return $saved;""",
@@ -157,12 +160,12 @@ replace_once(path,
                 if (!preg_match('/^20\d{2}$/', (string)$year) || !is_array($season)) continue;
                 $old = isset($saved['seasons'][$year]) && is_array($saved['seasons'][$year]) ? $saved['seasons'][$year] : array();
                 $row = array_replace_recursive(self::defaults((string)$year), $old);
-                if (!isset($old['appearance']) || !is_array($old['appearance'])) {
+                if ($migrated_from_pre_v2 || !isset($old['appearance']) || !is_array($old['appearance'])) {
                     $row['appearance'] = self::appearance_from_general($general);
                 } else {
                     $row['appearance'] = self::clean_appearance($old['appearance']);
                 }
-                if (!isset($old['row_styles']) || !is_array($old['row_styles'])) {
+                if ($migrated_from_pre_v2 || !isset($old['row_styles']) || !is_array($old['row_styles'])) {
                     $row['row_styles'] = self::row_styles_from_rows($season['tariffs']['groups'] ?? array());
                 } else {
                     $row['row_styles'] = self::clean_row_styles($old['row_styles']);
