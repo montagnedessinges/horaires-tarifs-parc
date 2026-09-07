@@ -36,3 +36,5 @@ jobs:
           git add -A
           git commit -m 'Add independent colors for group tariff shortcode 1.13.8'
           git push
+
+# Retry after migration-snapshot regression fix.
