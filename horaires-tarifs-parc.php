@@ -23,6 +23,7 @@ require_once PARCS_HT_DIR . 'includes/class-parcs-ht-shortcode-registry.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-bootstrap.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-slot-last-entry.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-http-ssl.php';
+require_once PARCS_HT_DIR . 'includes/class-parcs-ht-tariff-public-switch.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-tariff-seasons.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-season-status.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-tariff-identities.php';
@@ -38,7 +39,9 @@ require_once PARCS_HT_DIR . 'includes/class-parcs-ht-pedagogical-guides.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-guide-appearance.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-save-integrity.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin-shortcode-preview.php';
+require_once PARCS_HT_DIR . 'includes/class-parcs-ht-advent.php';
 Parcs_HT_HTTP_SSL::init();
+Parcs_HT_Tariff_Public_Switch::init();
 Parcs_HT_Tariff_Seasons::init();
 Parcs_HT_Season_Status::init();
 Parcs_HT_Tariff_Identities::init();
@@ -47,6 +50,7 @@ Parcs_HT_Quote_Page_Save::init();
 Parcs_HT_Save_Integrity::init();
 
 register_activation_hook(__FILE__, array('Parcs_HT_Defaults', 'activate'));
+register_activation_hook(__FILE__, array('Parcs_HT_Advent', 'activate'));
 register_deactivation_hook(__FILE__, static function () { require_once PARCS_HT_DIR . 'includes/class-parcs-ht-health.php'; Parcs_HT_Health::deactivate(); });
 
 add_action('updated_option', static function ($option, $old_value, $value) {
@@ -82,12 +86,16 @@ add_action('admin_enqueue_scripts', static function ($hook) {
 
 add_action('plugins_loaded', static function () {
     Parcs_HT_Bootstrap::init();
+    Parcs_HT_Advent::init();
     if (is_admin()) {
         require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin.php';
         Parcs_HT_Admin::init();
         Parcs_HT_Admin_Groups::init();
         Parcs_HT_Admin_Shortcode_Preview::init();
         Parcs_HT_Defaults::maybe_upgrade();
+        if ((int)get_option('parcs_ht_advent_db_version', 0) < Parcs_HT_Advent::DB_VERSION) {
+            Parcs_HT_Advent::activate();
+        }
         if (get_option('parcs_ht_tariff_seasons_migrated_193', '0') !== '1') {
             $all = get_option(Parcs_HT_Defaults::OPTION, array());
             if (is_array($all) && !empty($all['seasons']) && is_array($all['seasons']) && isset($all['tariffs']) && is_array($all['tariffs'])) {
