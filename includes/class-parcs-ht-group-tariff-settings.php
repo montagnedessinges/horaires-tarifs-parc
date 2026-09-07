@@ -182,10 +182,10 @@ final class Parcs_HT_Group_Tariff_Settings {
         return $saved;
     }
 
-    public static function store() {
+    public static function store($persist = false) {
         $saved = get_option(self::OPTION, array());
         $migrated = self::migrate_store($saved);
-        if (!is_array($saved) || wp_json_encode($saved) !== wp_json_encode($migrated)) {
+        if ($persist && (!is_array($saved) || wp_json_encode($saved) !== wp_json_encode($migrated))) {
             update_option(self::OPTION, $migrated, false);
         }
         if (!isset($migrated['seasons']) || !is_array($migrated['seasons'])) $migrated['seasons'] = array();
@@ -195,7 +195,7 @@ final class Parcs_HT_Group_Tariff_Settings {
 
     public static function ensure_store() {
         if (!current_user_can('manage_options')) return;
-        self::store();
+        self::store(true);
     }
 
     public static function settings($year) {

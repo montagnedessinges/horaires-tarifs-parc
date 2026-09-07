@@ -22,9 +22,11 @@ function setting_assert($condition, $message) { if (!$condition) { fwrite(STDERR
 $GLOBALS['opts'][Parcs_HT_Defaults::OPTION] = array('site_type'=>'mds','general'=>array(),'seasons'=>array('2026'=>array('published'=>'1','tariffs'=>array('groups'=>array(array('enabled'=>'1'))))));
 $GLOBALS['opts'][Parcs_HT_Group_Tariff_Settings::OPTION] = array('version'=>1,'seasons'=>array('2026'=>array('published'=>'1','show_heading'=>'1','show_quote_button'=>'1')));
 $mds = Parcs_HT_Group_Tariff_Settings::settings('2026');
-setting_assert((int)$GLOBALS['opts'][Parcs_HT_Group_Tariff_Settings::OPTION]['version'] === 2, 'legacy store is migrated to version 2');
-setting_assert($mds['show_payment_methods'] === '1' && count($mds['payment_methods']) === 5, 'existing MDS 1.13.6 payment content is preserved by migration');
-setting_assert($mds['show_info_blocks'] === '1' && count($mds['info_blocks']) === 2, 'existing MDS 1.13.6 information content is preserved by migration');
+setting_assert((int)$GLOBALS['opts'][Parcs_HT_Group_Tariff_Settings::OPTION]['version'] === 1, 'public settings read does not rewrite the stored option');
+setting_assert($mds['show_payment_methods'] === '1' && count($mds['payment_methods']) === 5, 'existing MDS 1.13.6 payment content is preserved by in-memory migration');
+setting_assert($mds['show_info_blocks'] === '1' && count($mds['info_blocks']) === 2, 'existing MDS 1.13.6 information content is preserved by in-memory migration');
+Parcs_HT_Group_Tariff_Settings::ensure_store();
+setting_assert((int)$GLOBALS['opts'][Parcs_HT_Group_Tariff_Settings::OPTION]['version'] === 2, 'administration persists the migration to version 2');
 
 $GLOBALS['opts'][Parcs_HT_Defaults::OPTION] = array('site_type'=>'fds','general'=>array(),'seasons'=>array('2026'=>array('published'=>'1','tariffs'=>array('groups'=>array(array('enabled'=>'1'))))));
 $GLOBALS['opts'][Parcs_HT_Group_Tariff_Settings::OPTION] = array('version'=>1,'seasons'=>array('2026'=>array('published'=>'1','show_heading'=>'1','show_quote_button'=>'1')));
