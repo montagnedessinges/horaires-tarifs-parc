@@ -134,16 +134,30 @@ final class Parcs_HT_Admin_Groups {
         if (empty($all['seasons'][$year]) || !is_array($all['seasons'][$year])) wp_send_json_error(array('message'=>'Cette saison n’existe pas.'), 400);
         if (!class_exists('Parcs_HT_Group_Tariff_Settings')) wp_send_json_error(array('message'=>'Le module des tarifs groupes est indisponible.'), 500);
 
+        $payment_methods = array();
+        if (isset($_POST['payment_methods_json'])) {
+            $decoded = json_decode(wp_unslash($_POST['payment_methods_json']), true);
+            if (is_array($decoded)) $payment_methods = $decoded;
+        }
+        $info_blocks = array();
+        if (isset($_POST['info_blocks_json'])) {
+            $decoded = json_decode(wp_unslash($_POST['info_blocks_json']), true);
+            if (is_array($decoded)) $info_blocks = $decoded;
+        }
         $raw = array(
             'published'=>isset($_POST['published']) ? sanitize_text_field(wp_unslash($_POST['published'])) : '0',
             'show_heading'=>isset($_POST['show_heading']) ? sanitize_text_field(wp_unslash($_POST['show_heading'])) : '0',
             'show_future_notice'=>isset($_POST['show_future_notice']) ? sanitize_text_field(wp_unslash($_POST['show_future_notice'])) : '0',
             'future_year'=>isset($_POST['future_year']) ? sanitize_text_field(wp_unslash($_POST['future_year'])) : '',
             'show_quote_button'=>isset($_POST['show_quote_button']) ? sanitize_text_field(wp_unslash($_POST['show_quote_button'])) : '0',
-            'title'=>array(),'intro'=>array(),'future_notice'=>array(),'button_label'=>array(),'button_url'=>array(),
+            'show_payment_methods'=>isset($_POST['show_payment_methods']) ? sanitize_text_field(wp_unslash($_POST['show_payment_methods'])) : '0',
+            'show_info_blocks'=>isset($_POST['show_info_blocks']) ? sanitize_text_field(wp_unslash($_POST['show_info_blocks'])) : '0',
+            'payment_methods'=>$payment_methods,
+            'info_blocks'=>$info_blocks,
+            'title'=>array(),'intro'=>array(),'future_notice'=>array(),'button_label'=>array(),'button_url'=>array(),'payment_title'=>array(),
         );
         foreach (array('fr','en','de') as $lang) {
-            foreach (array('title','intro','future_notice','button_label','button_url') as $field) {
+            foreach (array('title','intro','future_notice','button_label','button_url','payment_title') as $field) {
                 $key = $field . '_' . $lang;
                 if (!isset($_POST[$key])) {
                     $raw[$field][$lang] = '';
@@ -155,8 +169,7 @@ final class Parcs_HT_Admin_Groups {
                     $raw[$field][$lang] = sanitize_text_field(wp_unslash($_POST[$key]));
                 }
             }
-        }
-        if (!Parcs_HT_Group_Tariff_Settings::save($year, $raw)) wp_send_json_error(array('message'=>'WordPress n’a pas confirmé l’enregistrement des réglages groupes.'), 500);
+        }        if (!Parcs_HT_Group_Tariff_Settings::save($year, $raw)) wp_send_json_error(array('message'=>'WordPress n’a pas confirmé l’enregistrement des réglages groupes.'), 500);
         self::snapshot($year, 'Affichage et publication des tarifs groupes');
         do_action('litespeed_purge_all');
         wp_send_json_success(array('message'=>'Affichage des tarifs groupes enregistré pour ' . $year . '.'));

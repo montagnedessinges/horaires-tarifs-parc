@@ -179,16 +179,44 @@ $(function(){
         return html+'</div>';
     }
 
+    function groupListTranslations(prefix,label,multiline,values){
+        values=values||{};
+        var html='<div class="htp-field"><span>'+escaped(label)+'</span><div class="htp-grid htp-grid-3">';
+        ['fr','en','de'].forEach(function(lang){
+            var value=values[lang]||'';
+            html+='<label><small>'+lang.toUpperCase()+'</small>'+(multiline?'<textarea rows="3" data-list-field="'+prefix+'_'+lang+'">'+escaped(value)+'</textarea>':'<input type="text" data-list-field="'+prefix+'_'+lang+'" value="'+escaped(value)+'">')+'</label>';
+        });
+        return html+'</div></div>';
+    }
+
+    function paymentMethodRow(item){
+        item=item||{};var label=item.label||{};
+        var icons={card:'Carte',cash:'Espèces',cheque:'Chèque',document:'Document / bon',chorus:'Administration / portail',bank:'Banque / virement',online:'En ligne',other:'Autre'};
+        var options='';Object.keys(icons).forEach(function(key){options+='<option value="'+key+'"'+(String(item.icon||'other')===key?' selected':'')+'>'+icons[key]+'</option>';});
+        return '<div class="htp-subsection" data-gt-payment-row><div class="htp-row-head"><strong>Moyen de paiement</strong><span><button type="button" class="button button-small" data-gt-move="up">↑</button> <button type="button" class="button button-small" data-gt-move="down">↓</button> <button type="button" class="button button-small button-link-delete" data-gt-remove>Supprimer</button></span></div><label><input type="checkbox" data-list-enabled '+(String(item.enabled||'1')!=='0'?'checked':'')+'> Afficher</label><label class="htp-field"><span>Icône</span><select data-list-icon>'+options+'</select></label>'+groupListTranslations('label','Libellé',false,label)+'</div>';
+    }
+
+    function infoBlockRow(item){
+        item=item||{};
+        return '<div class="htp-subsection" data-gt-info-row><div class="htp-row-head"><strong>Bloc d’information</strong><span><button type="button" class="button button-small" data-gt-move="up">↑</button> <button type="button" class="button button-small" data-gt-move="down">↓</button> <button type="button" class="button button-small button-link-delete" data-gt-remove>Supprimer</button></span></div><label><input type="checkbox" data-list-enabled '+(String(item.enabled||'1')!=='0'?'checked':'')+'> Afficher</label>'+groupListTranslations('title','Titre',false,item.title||{})+groupListTranslations('text','Texte',true,item.text||{})+'</div>';
+    }
+
     function ensureGroupSettingsPanel(){
         var $group=$('#htp-tariffs [data-htp-tariff-group="groups"]');
         if(!$group.length||$('#htp-tariffs [data-htp-group-tariff-settings]').length)return;
         var g=cfg.group_tariff||{};
-        var html='<div class="htp-subsection" data-htp-group-tariff-settings data-htp-group-context hidden><h3>Publication et affichage des tarifs groupes</h3><p class="description">Ces réglages sont propres à la saison '+escaped(cfg.year||'')+'. Les horaires peuvent être publiés sans publier les tarifs groupes. Un devis ne sera jamais calculé avec les tarifs d’une autre année.</p><div class="htp-check-list"><label><input type="checkbox" data-gt="published"> Publier les tarifs groupes de cette année</label><label><input type="checkbox" data-gt="show_heading"> Afficher le titre du bloc</label><label><input type="checkbox" data-gt="show_future_notice"> Afficher un message pour une année future non disponible</label><label><input type="checkbox" data-gt="show_quote_button"> Afficher le bouton de devis</label></div><div class="htp-grid htp-grid-2">'+groupTranslationFields('title','Titre du bloc (vide = titre automatique)',false)+groupTranslationFields('intro','Texte d’introduction facultatif',true)+'<label class="htp-field"><span>Année future annoncée</span><input type="number" min="2020" max="2100" data-gt="future_year"></label>'+groupTranslationFields('future_notice','Message année future (vide = texte automatique)',true)+groupTranslationFields('button_label','Texte du bouton devis',false)+groupTranslationFields('button_url','Lien du bouton devis',false)+'</div><p><button type="button" class="button button-primary" data-gt-save>Enregistrer l’affichage groupes</button> <span data-gt-status></span></p></div>';
+        var html='<div class="htp-subsection" data-htp-group-tariff-settings data-htp-group-context hidden><h3>Publication et affichage des tarifs groupes</h3><p class="description">Ces réglages sont propres à cette installation et à la saison '+escaped(cfg.year||'')+'. Le contenu peut donc être différent à la Montagne des Singes, à la Forêt des Singes ou sur un autre site utilisant l’extension.</p><div class="htp-check-list"><label><input type="checkbox" data-gt="published"> Publier les tarifs groupes de cette année</label><label><input type="checkbox" data-gt="show_heading"> Afficher le titre du bloc</label><label><input type="checkbox" data-gt="show_future_notice"> Afficher un message pour une année future non disponible</label><label><input type="checkbox" data-gt="show_quote_button"> Afficher le bouton de devis</label><label><input type="checkbox" data-gt="show_payment_methods"> Afficher les moyens de paiement</label><label><input type="checkbox" data-gt="show_info_blocks"> Afficher les blocs d’information</label></div><div class="htp-grid htp-grid-2">'+groupTranslationFields('title','Titre du bloc (vide = titre automatique)',false)+groupTranslationFields('intro','Texte d’introduction facultatif',true)+'<label class="htp-field"><span>Année future annoncée</span><input type="number" min="2020" max="2100" data-gt="future_year"></label>'+groupTranslationFields('future_notice','Message année future (vide = texte automatique)',true)+groupTranslationFields('button_label','Texte du bouton devis',false)+groupTranslationFields('button_url','Lien du bouton devis',false)+groupTranslationFields('payment_title','Titre des moyens de paiement',false)+'</div><details class="htp-advanced" open><summary>Moyens de paiement</summary><div class="htp-advanced-content"><p class="description">Ajoutez uniquement les moyens acceptés sur ce site. L’ordre ci-dessous est l’ordre d’affichage public.</p><div data-gt-payment-list></div><p><button type="button" class="button" data-gt-add-payment>Ajouter un moyen de paiement</button></p></div></details><details class="htp-advanced" open><summary>Informations pratiques sous les tarifs</summary><div class="htp-advanced-content"><p class="description">Ces blocs sont libres : paiement, facturation, réservation, justificatifs ou toute autre information utile. Ils sont traduisibles et réordonnables.</p><div data-gt-info-list></div><p><button type="button" class="button" data-gt-add-info>Ajouter un bloc d’information</button></p></div></details><p><button type="button" class="button button-primary" data-gt-save>Enregistrer l’affichage groupes</button> <span data-gt-status></span></p></div>';
         var $panel=$(html);
-        ['published','show_heading','show_future_notice','show_quote_button'].forEach(function(k){$panel.find('[data-gt="'+k+'"]').prop('checked',String(g[k])==='1');});
+        ['published','show_heading','show_future_notice','show_quote_button','show_payment_methods','show_info_blocks'].forEach(function(k){$panel.find('[data-gt="'+k+'"]').prop('checked',String(g[k])==='1');});
         $panel.find('[data-gt="future_year"]').val(g.future_year||((parseInt(cfg.year,10)||new Date().getFullYear())+1));
-        ['title','intro','future_notice','button_label','button_url'].forEach(function(field){['fr','en','de'].forEach(function(lang){$panel.find('[data-gt-field="'+field+'_'+lang+'"]').val((g[field]&&g[field][lang])||'');});});
+        ['title','intro','future_notice','button_label','button_url','payment_title'].forEach(function(field){['fr','en','de'].forEach(function(lang){$panel.find('[data-gt-field="'+field+'_'+lang+'"]').val((g[field]&&g[field][lang])||'');});});
         $panel.on('click','[data-gt-trans] [data-gt-lang]',function(){var $wrap=$(this).closest('[data-gt-trans]'),lang=$(this).data('gt-lang');$wrap.find('[data-gt-lang]').removeClass('button-primary');$(this).addClass('button-primary');$wrap.find('[data-gt-field]').attr('hidden',true);$wrap.find('[data-gt-field$="_'+lang+'"]').removeAttr('hidden');});
+        (g.payment_methods||[]).forEach(function(item){$panel.find('[data-gt-payment-list]').append(paymentMethodRow(item));});
+        (g.info_blocks||[]).forEach(function(item){$panel.find('[data-gt-info-list]').append(infoBlockRow(item));});
+        $panel.on('click','[data-gt-add-payment]',function(){$panel.find('[data-gt-payment-list]').append(paymentMethodRow({enabled:'1',icon:'card',label:{fr:'',en:'',de:''}}));});
+        $panel.on('click','[data-gt-add-info]',function(){$panel.find('[data-gt-info-list]').append(infoBlockRow({enabled:'1',title:{fr:'',en:'',de:''},text:{fr:'',en:'',de:''}}));});
+        $panel.on('click','[data-gt-remove]',function(){$(this).closest('[data-gt-payment-row],[data-gt-info-row]').remove();});
+        $panel.on('click','[data-gt-move]',function(){var $row=$(this).closest('[data-gt-payment-row],[data-gt-info-row]');if($(this).data('gt-move')==='up')$row.prev().before($row);else $row.next().after($row);});
         $panel.insertAfter($group);
     }
 
@@ -247,7 +275,18 @@ $(function(){
 
     $('#htp-tariffs').on('click','[data-bind-save]',function(){var $panel=$(this).closest('[data-htp-quote-binding]');var data={action:'parcs_ht_save_quote_tariff_binding',nonce:cfg.binding_nonce,year:cfg.year};['column_id','child_row_id','adult_row_id','disability_row_id','companion_row_id','free_adult_children','free_adult_round_threshold'].forEach(function(k){data[k]=$panel.find('[data-bind="'+k+'"]').val();});var $status=$panel.find('[data-bind-status]').text('Enregistrement…');$.post(ajaxurl,data).done(function(res){$status.text(res&&res.success?res.data.message:(res.data&&res.data.message)||'Erreur.');}).fail(function(xhr){var m=xhr.responseJSON&&xhr.responseJSON.data&&xhr.responseJSON.data.message;$status.text(m||'Erreur lors de l’enregistrement.');});});
 
-    $('#htp-tariffs').on('click','[data-gt-save]',function(){var $panel=$(this).closest('[data-htp-group-tariff-settings]');var data={action:'parcs_ht_save_group_tariff_settings',nonce:cfg.group_tariff_nonce,year:cfg.year};['published','show_heading','show_future_notice','show_quote_button'].forEach(function(k){data[k]=$panel.find('[data-gt="'+k+'"]').is(':checked')?'1':'0';});data.future_year=$panel.find('[data-gt="future_year"]').val();['title','intro','future_notice','button_label','button_url'].forEach(function(field){['fr','en','de'].forEach(function(lang){data[field+'_'+lang]=$panel.find('[data-gt-field="'+field+'_'+lang+'"]').val();});});var $status=$panel.find('[data-gt-status]').text('Enregistrement…');$.post(ajaxurl,data).done(function(res){$status.text(res&&res.success?res.data.message:(res.data&&res.data.message)||'Erreur.');}).fail(function(xhr){var m=xhr.responseJSON&&xhr.responseJSON.data&&xhr.responseJSON.data.message;$status.text(m||'Erreur lors de l’enregistrement.');});});
+    $('#htp-tariffs').on('click','[data-gt-save]',function(){
+        var $panel=$(this).closest('[data-htp-group-tariff-settings]');
+        var data={action:'parcs_ht_save_group_tariff_settings',nonce:cfg.group_tariff_nonce,year:cfg.year};
+        ['published','show_heading','show_future_notice','show_quote_button','show_payment_methods','show_info_blocks'].forEach(function(k){data[k]=$panel.find('[data-gt="'+k+'"]').is(':checked')?'1':'0';});
+        data.future_year=$panel.find('[data-gt="future_year"]').val();
+        ['title','intro','future_notice','button_label','button_url','payment_title'].forEach(function(field){['fr','en','de'].forEach(function(lang){data[field+'_'+lang]=$panel.find('[data-gt-field="'+field+'_'+lang+'"]').val();});});
+        var payments=[];$panel.find('[data-gt-payment-row]').each(function(){var $row=$(this),labels={};['fr','en','de'].forEach(function(lang){labels[lang]=$row.find('[data-list-field="label_'+lang+'"]').val()||'';});payments.push({enabled:$row.find('[data-list-enabled]').is(':checked')?'1':'0',icon:$row.find('[data-list-icon]').val()||'other',label:labels});});
+        var blocks=[];$panel.find('[data-gt-info-row]').each(function(){var $row=$(this),title={},text={};['fr','en','de'].forEach(function(lang){title[lang]=$row.find('[data-list-field="title_'+lang+'"]').val()||'';text[lang]=$row.find('[data-list-field="text_'+lang+'"]').val()||'';});blocks.push({enabled:$row.find('[data-list-enabled]').is(':checked')?'1':'0',title:title,text:text});});
+        data.payment_methods_json=JSON.stringify(payments);data.info_blocks_json=JSON.stringify(blocks);
+        var $status=$panel.find('[data-gt-status]').text('Enregistrement…');
+        $.post(ajaxurl,data).done(function(res){$status.text(res&&res.success?res.data.message:(res.data&&res.data.message)||'Erreur.');if(res&&res.success){cfg.group_tariff=cfg.group_tariff||{};cfg.group_tariff.payment_methods=payments;cfg.group_tariff.info_blocks=blocks;}}).fail(function(xhr){var m=xhr.responseJSON&&xhr.responseJSON.data&&xhr.responseJSON.data.message;$status.text(m||'Erreur lors de l’enregistrement.');});
+    });
 
     var requested='';try{requested=new URL(window.location.href).searchParams.get('tab')||'';}catch(error){}
     if(requested==='htp-guides'&&$('#htp-guides').length)activate('htp-guides','groups');

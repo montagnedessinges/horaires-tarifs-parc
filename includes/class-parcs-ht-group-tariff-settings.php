@@ -5,7 +5,7 @@ if (!defined('ABSPATH')) { exit; }
 /** Réglages publics propres aux tarifs groupes, enregistrés par saison. */
 final class Parcs_HT_Group_Tariff_Settings {
     const OPTION = 'parcs_ht_group_tariff_settings';
-    const STORE_VERSION = 1;
+    const STORE_VERSION = 2;
 
     public static function init() {
         add_action('admin_init', array(__CLASS__, 'ensure_store'), 6);
@@ -28,6 +28,43 @@ final class Parcs_HT_Group_Tariff_Settings {
         return $out;
     }
 
+    private static function icon_choices() {
+        return array('card','cash','cheque','document','chorus','bank','online','other');
+    }
+
+    private static function clean_payment_methods($value) {
+        $out = array();
+        foreach (array_slice(is_array($value) ? $value : array(), 0, 20) as $item) {
+            if (!is_array($item)) continue;
+            $icon = sanitize_key((string)($item['icon'] ?? 'other'));
+            if (!in_array($icon, self::icon_choices(), true)) $icon = 'other';
+            $labels = self::clean_translations($item['label'] ?? array());
+            if ($labels['fr'] === '' && $labels['en'] === '' && $labels['de'] === '') continue;
+            $out[] = array(
+                'enabled'=>isset($item['enabled']) && (string)$item['enabled'] === '0' ? '0' : '1',
+                'icon'=>$icon,
+                'label'=>$labels,
+            );
+        }
+        return $out;
+    }
+
+    private static function clean_info_blocks($value) {
+        $out = array();
+        foreach (array_slice(is_array($value) ? $value : array(), 0, 20) as $item) {
+            if (!is_array($item)) continue;
+            $title = self::clean_translations($item['title'] ?? array());
+            $text = self::clean_translations($item['text'] ?? array(), true);
+            if ($title['fr'] === '' && $title['en'] === '' && $title['de'] === '' && $text['fr'] === '' && $text['en'] === '' && $text['de'] === '') continue;
+            $out[] = array(
+                'enabled'=>isset($item['enabled']) && (string)$item['enabled'] === '0' ? '0' : '1',
+                'title'=>$title,
+                'text'=>$text,
+            );
+        }
+        return $out;
+    }
+
     public static function defaults($year = '') {
         $year = preg_match('/^20\d{2}$/', (string)$year) ? (string)$year : (string)wp_date('Y');
         return array(
@@ -45,30 +82,67 @@ final class Parcs_HT_Group_Tariff_Settings {
                 'de'=>'Angebot anfordern',
             ),
             'button_url'=>array('fr'=>'','en'=>'','de'=>''),
+            'show_payment_methods'=>'0',
+            'payment_title'=>array(
+                'fr'=>'Moyens de paiement',
+                'en'=>'Payment methods',
+                'de'=>'Zahlungsmöglichkeiten',
+            ),
+            'payment_methods'=>array(),
+            'show_info_blocks'=>'0',
+            'info_blocks'=>array(),
         );
     }
 
-    public static function store() {
-        $saved = get_option(self::OPTION, array());
-        if (!is_array($saved)) $saved = array();
-        if (!isset($saved['seasons']) || !is_array($saved['seasons'])) $saved['seasons'] = array();
-        $saved['version'] = self::STORE_VERSION;
-        return $saved;
+    /**
+     * Contenu historique de la 1.13.6, utilisé uniquement pour migrer les installations MDS
+     * existantes vers les nouveaux réglages modifiables. Le rendu public ne dépend plus du site_type.
+     */
+    private static function legacy_mds_payment_methods() {
+        return array(
+            array('enabled'=>'1','icon'=>'card','label'=>array('fr'=>'Carte bancaire','en'=>'Bank card','de'=>'Bankkarte')),
+            array('enabled'=>'1','icon'=>'cash','label'=>array('fr'=>'Espèces','en'=>'Cash','de'=>'Bargeld')),
+            array('enabled'=>'1','icon'=>'cheque','label'=>array('fr'=>'Chèque','en'=>'Cheque','de'=>'Scheck')),
+            array('enabled'=>'1','icon'=>'document','label'=>array('fr'=>'Bon de commande / voucher','en'=>'Purchase order / voucher','de'=>'Bestellschein / Voucher')),
+            array('enabled'=>'1','icon'=>'chorus','label'=>array('fr'=>'Chorus Pro','en'=>'Chorus Pro','de'=>'Chorus Pro')),
+        );
     }
 
-    public static function ensure_store() {
-        if (!current_user_can('manage_options')) return;
-        $existing = get_option(self::OPTION, null);
-        if (is_array($existing) && (int)($existing['version'] ?? 0) >= self::STORE_VERSION && isset($existing['seasons']) && is_array($existing['seasons'])) return;
+    private static function legacy_mds_info_blocks() {
+        return array(
+            array(
+                'enabled'=>'1',
+                'title'=>array('fr'=>'Paiement et facturation','en'=>'Payment and invoicing','de'=>'Zahlung und Rechnung'),
+                'text'=>array(
+                    'fr'=>'Paiement sur place : carte bancaire, espèces ou chèque. Pour un règlement différé, présentez le jour de la visite un devis signé, un bon de commande ou un voucher. Les structures publiques peuvent régler via Chorus Pro et doivent prévoir le numéro SIRET, l’adresse complète de facturation, un contact administratif et le code service. La facture est établie le jour de la visite selon le nombre réel de participants présents. Aucun paiement n’est demandé avant la visite et il n’est pas nécessaire de signaler un changement d’effectif.',
+                    'en'=>'On-site payment: bank card, cash or cheque. For deferred payment, please present a signed quote, purchase order or voucher on the day of your visit. Public-sector organisations may pay via Chorus Pro and must provide their SIRET number, full billing address, administrative contact and service code. The invoice is issued on the day of the visit according to the actual number of participants present. No payment is requested before the visit and there is no need to report a change in group size.',
+                    'de'=>'Zahlung vor Ort: Bankkarte, Bargeld oder Scheck. Für eine spätere Zahlung legen Sie am Besuchstag ein unterschriebenes Angebot, einen Bestellschein oder einen Voucher vor. Öffentliche Einrichtungen können über Chorus Pro zahlen und müssen ihre SIRET-Nummer, die vollständige Rechnungsadresse, einen Verwaltungskontakt und den Servicecode bereithalten. Die Rechnung wird am Besuchstag anhand der tatsächlich anwesenden Teilnehmerzahl erstellt. Vor dem Besuch ist keine Zahlung erforderlich; Änderungen der Gruppengröße müssen nicht gemeldet werden.',
+                ),
+            ),
+            array(
+                'enabled'=>'1',
+                'title'=>array('fr'=>'Devis et réservation','en'=>'Quote and booking','de'=>'Angebot und Reservierung'),
+                'text'=>array(
+                    'fr'=>'La réservation est obligatoire pour bénéficier des tarifs groupes. Le devis est généré automatiquement après la demande et envoyé par e-mail. Pour confirmer la réservation, renvoyez-le signé avec la mention « Bon pour accord ». Le devis imprimé doit être présenté à l’accueil le jour de la visite.',
+                    'en'=>'Booking is required to benefit from group rates. The quote is generated automatically after your request and sent by email. To confirm the booking, return the signed quote with the wording “Bon pour accord”. The printed quote must be presented at reception on the day of the visit.',
+                    'de'=>'Eine Reservierung ist erforderlich, um die Gruppentarife in Anspruch zu nehmen. Das Angebot wird nach der Anfrage automatisch erstellt und per E-Mail versandt. Zur Bestätigung der Reservierung senden Sie das unterschriebene Angebot mit dem Vermerk „Bon pour accord“ zurück. Das ausgedruckte Angebot muss am Besuchstag am Empfang vorgelegt werden.',
+                ),
+            ),
+        );
+    }
 
-        $all = get_option(Parcs_HT_Defaults::OPTION, array());
-        $store = array('version'=>self::STORE_VERSION,'seasons'=>array());
-        foreach ((array)(is_array($all) ? ($all['seasons'] ?? array()) : array()) as $year => $season) {
+    private static function raw_all_settings() {
+        $saved = get_option(Parcs_HT_Defaults::OPTION, array());
+        return is_array($saved) ? $saved : array();
+    }
+
+    private static function initial_store() {
+        $all = self::raw_all_settings();
+        $store = array('version'=>1,'seasons'=>array());
+        foreach ((array)($all['seasons'] ?? array()) as $year => $season) {
             if (!preg_match('/^20\d{2}$/', (string)$year) || !is_array($season)) continue;
             $row = self::defaults((string)$year);
             $has_groups = !empty($season['tariffs']['groups']) && is_array($season['tariffs']['groups']);
-            // Migration prudente : seules les saisons déjà publiées avec une grille groupes
-            // deviennent publiées dans ce nouveau sous-statut.
             $row['published'] = ((string)($season['published'] ?? '0') === '1' && $has_groups) ? '1' : '0';
             $general = is_array($all['general'] ?? null) ? $all['general'] : array();
             if (isset($general['groups_url']) && is_array($general['groups_url'])) $row['button_url'] = self::clean_urls($general['groups_url']);
@@ -78,7 +152,50 @@ final class Parcs_HT_Group_Tariff_Settings {
             }
             $store['seasons'][(string)$year] = $row;
         }
-        update_option(self::OPTION, $store, false);
+        return $store;
+    }
+
+    private static function migrate_store($saved) {
+        $saved = is_array($saved) ? $saved : array();
+        $version = (int)($saved['version'] ?? 0);
+        if ($version < 1 || !isset($saved['seasons']) || !is_array($saved['seasons'])) {
+            $saved = self::initial_store();
+            $version = 1;
+        }
+        if ($version < 2) {
+            $all = self::raw_all_settings();
+            $site_type = sanitize_key((string)($all['site_type'] ?? ''));
+            foreach ((array)($all['seasons'] ?? array()) as $year => $season) {
+                if (!preg_match('/^20\d{2}$/', (string)$year) || !is_array($season)) continue;
+                $old = isset($saved['seasons'][$year]) && is_array($saved['seasons'][$year]) ? $saved['seasons'][$year] : array();
+                $row = array_replace_recursive(self::defaults((string)$year), $old);
+                if ($site_type === 'mds' && !array_key_exists('show_payment_methods', $old)) {
+                    $row['show_payment_methods'] = '1';
+                    $row['payment_methods'] = self::legacy_mds_payment_methods();
+                    $row['show_info_blocks'] = '1';
+                    $row['info_blocks'] = self::legacy_mds_info_blocks();
+                }
+                $saved['seasons'][(string)$year] = $row;
+            }
+            $saved['version'] = 2;
+        }
+        return $saved;
+    }
+
+    public static function store() {
+        $saved = get_option(self::OPTION, array());
+        $migrated = self::migrate_store($saved);
+        if (!is_array($saved) || wp_json_encode($saved) !== wp_json_encode($migrated)) {
+            update_option(self::OPTION, $migrated, false);
+        }
+        if (!isset($migrated['seasons']) || !is_array($migrated['seasons'])) $migrated['seasons'] = array();
+        $migrated['version'] = self::STORE_VERSION;
+        return $migrated;
+    }
+
+    public static function ensure_store() {
+        if (!current_user_can('manage_options')) return;
+        self::store();
     }
 
     public static function settings($year) {
@@ -105,17 +222,18 @@ final class Parcs_HT_Group_Tariff_Settings {
             'show_quote_button'=>isset($raw['show_quote_button']) && (string)$raw['show_quote_button'] === '1' ? '1' : '0',
             'button_label'=>self::clean_translations($raw['button_label'] ?? array()),
             'button_url'=>self::clean_urls($raw['button_url'] ?? array()),
+            'show_payment_methods'=>isset($raw['show_payment_methods']) && (string)$raw['show_payment_methods'] === '1' ? '1' : '0',
+            'payment_title'=>self::clean_translations($raw['payment_title'] ?? array()),
+            'payment_methods'=>self::clean_payment_methods($raw['payment_methods'] ?? array()),
+            'show_info_blocks'=>isset($raw['show_info_blocks']) && (string)$raw['show_info_blocks'] === '1' ? '1' : '0',
+            'info_blocks'=>self::clean_info_blocks($raw['info_blocks'] ?? array()),
         );
         $store = self::store();
+        $store['version'] = self::STORE_VERSION;
         $store['seasons'][$year] = $clean;
         update_option(self::OPTION, $store, false);
         $stored = self::settings($year);
         return wp_json_encode($clean) === wp_json_encode(array_intersect_key($stored, $clean));
-    }
-
-    private static function raw_all_settings() {
-        $saved = get_option(Parcs_HT_Defaults::OPTION, array());
-        return is_array($saved) ? $saved : array();
     }
 
     public static function is_published($year) {
@@ -147,11 +265,7 @@ final class Parcs_HT_Group_Tariff_Settings {
     }
 
     public static function default_title($language, $year) {
-        $labels = array(
-            'fr'=>'Tarifs groupes',
-            'en'=>'Group rates',
-            'de'=>'Gruppentarife',
-        );
+        $labels = array('fr'=>'Tarifs groupes','en'=>'Group rates','de'=>'Gruppentarife');
         return ($labels[$language] ?? $labels['fr']) . ($year !== '' ? ' ' . $year : '');
     }
 

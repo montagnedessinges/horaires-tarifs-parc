@@ -1,5 +1,14 @@
 # Historique des versions
 
+## 1.13.7
+- Généralisation complète du contenu public du shortcode `[parc_tarifs_groupes]` : les moyens de paiement et les blocs d’information ne dépendent plus de `site_type` dans le rendu.
+- Ajout dans Groupes → Tarifs de réglages modifiables par saison et par installation pour activer/masquer les moyens de paiement, modifier leur titre, ajouter/supprimer/réordonner les moyens, choisir une icône et saisir les libellés FR/EN/DE.
+- Ajout d’une liste libre de blocs d’information sous les tarifs, chacun activable, supprimable, réordonnable et entièrement éditable en FR/EN/DE.
+- Le titre, l’introduction et le bouton de devis du shortcode utilisent désormais réellement les réglages d’affichage groupes existants, sans créer de deuxième source de tarifs.
+- Migration automatique du contenu MDS introduit en 1.13.6 vers les nouveaux réglages éditables afin de conserver l’affichage actuel après mise à jour.
+- Les installations FDS et les autres sites ne reçoivent aucune condition MDS par défaut ; ils peuvent définir leurs propres moyens de paiement et informations.
+- Les prix restent exclusivement issus de la grille canonique `tariffs.groups` de la saison publique ; les réglages d’affichage ne contiennent aucun prix.
+- Ajout de tests couvrant la migration MDS, l’absence de fuite vers FDS, la personnalisation d’un autre site, l’ordre d’affichage et la source tarifaire unique.
 ## 1.13.6
 - Amélioration du shortcode `[parc_tarifs_groupes]` pour la Montagne des Singes 2026 : le bloc reprend désormais la même hiérarchie visuelle que les tarifs classiques, avec les moyens de paiement placés sous le titre et avant les prix.
 - Ajout des moyens de paiement groupes confirmés pour la Montagne des Singes : carte bancaire, espèces, chèque, bon de commande / voucher et Chorus Pro. Les ANCV individuels ne sont pas réutilisés automatiquement pour les groupes.
