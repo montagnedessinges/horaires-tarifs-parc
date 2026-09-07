@@ -1,0 +1,54 @@
+name: Fix 1.13.8 color sanitizer regression
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fix-1.13.8-color-sanitizer.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Make color sanitization test-runtime safe
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('includes/class-parcs-ht-group-tariff-settings.php')
+          s=p.read_text()
+          marker="    private static function clean_appearance($value) {\n"
+          helper="""    private static function clean_color($value) {
+              $value = (string)$value;
+              if (function_exists('sanitize_hex_color')) return sanitize_hex_color($value);
+              return preg_match('/^#[0-9a-fA-F]{6}$/', $value) ? strtolower($value) : null;
+          }
+
+"""
+          if marker not in s: raise SystemExit('clean_appearance marker missing')
+          s=s.replace('sanitize_hex_color($raw)', 'self::clean_color($raw)')
+          s=s.replace("sanitize_hex_color((string)$fallback)", "self::clean_color((string)$fallback)")
+          s=s.replace(marker, helper+marker, 1)
+          p.write_text(s)
+          PY
+      - name: Validate affected regressions
+        run: |
+          php -l includes/class-parcs-ht-group-tariff-settings.php
+          PLUGIN_ROOT="$PWD" php tests/group-tariff-display-settings-runtime.php
+          PLUGIN_ROOT="$PWD" php tests/group-tariff-shortcode-runtime.php
+          PLUGIN_ROOT="$PWD" php tests/group-tariff-publication-contract.php
+          PLUGIN_ROOT="$PWD" php tests/group-gratuity-contract.php
+          php tests/public-data-regressions.php
+      - name: Remove one-shot workflow and commit
+        run: |
+          rm -f .github/workflows/fix-1.13.8-color-sanitizer.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Fix 1.13.8 color sanitization regression'
+          git push
