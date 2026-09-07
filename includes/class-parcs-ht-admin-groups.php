@@ -135,13 +135,19 @@ final class Parcs_HT_Admin_Groups {
         if (!class_exists('Parcs_HT_Group_Tariff_Settings')) wp_send_json_error(array('message'=>'Le module des tarifs groupes est indisponible.'), 500);
 
         $payment_methods = array();
-        if (isset($_POST['payment_methods_json'])) {
-            $decoded = json_decode(wp_unslash($_POST['payment_methods_json']), true);
+        $payment_methods_json = isset($_POST['payment_methods_json']) && is_string($_POST['payment_methods_json'])
+            ? sanitize_textarea_field(wp_unslash($_POST['payment_methods_json']))
+            : '';
+        if ($payment_methods_json !== '') {
+            $decoded = json_decode($payment_methods_json, true);
             if (is_array($decoded)) $payment_methods = $decoded;
         }
         $info_blocks = array();
-        if (isset($_POST['info_blocks_json'])) {
-            $decoded = json_decode(wp_unslash($_POST['info_blocks_json']), true);
+        $info_blocks_json = isset($_POST['info_blocks_json']) && is_string($_POST['info_blocks_json'])
+            ? sanitize_textarea_field(wp_unslash($_POST['info_blocks_json']))
+            : '';
+        if ($info_blocks_json !== '') {
+            $decoded = json_decode($info_blocks_json, true);
             if (is_array($decoded)) $info_blocks = $decoded;
         }
         $raw = array(
