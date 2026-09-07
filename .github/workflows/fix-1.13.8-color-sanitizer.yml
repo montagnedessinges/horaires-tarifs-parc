@@ -20,20 +20,21 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p=Path('includes/class-parcs-ht-group-tariff-settings.php')
-          s=p.read_text()
-          marker="    private static function clean_appearance($value) {\n"
-          helper="""    private static function clean_color($value) {
-              $value = (string)$value;
-              if (function_exists('sanitize_hex_color')) return sanitize_hex_color($value);
-              return preg_match('/^#[0-9a-fA-F]{6}$/', $value) ? strtolower($value) : null;
-          }
-
-"""
-          if marker not in s: raise SystemExit('clean_appearance marker missing')
-          s=s.replace('sanitize_hex_color($raw)', 'self::clean_color($raw)')
-          s=s.replace("sanitize_hex_color((string)$fallback)", "self::clean_color((string)$fallback)")
-          s=s.replace(marker, helper+marker, 1)
+          p = Path('includes/class-parcs-ht-group-tariff-settings.php')
+          s = p.read_text()
+          marker = "    private static function clean_appearance($value) {\n"
+          helper = (
+              "    private static function clean_color($value) {\n"
+              "        $value = (string)$value;\n"
+              "        if (function_exists('sanitize_hex_color')) return sanitize_hex_color($value);\n"
+              "        return preg_match('/^#[0-9a-fA-F]{6}$/', $value) ? strtolower($value) : null;\n"
+              "    }\n\n"
+          )
+          if marker not in s:
+              raise SystemExit('clean_appearance marker missing')
+          s = s.replace('sanitize_hex_color($raw)', 'self::clean_color($raw)')
+          s = s.replace("sanitize_hex_color((string)$fallback)", "self::clean_color((string)$fallback)")
+          s = s.replace(marker, helper + marker, 1)
           p.write_text(s)
           PY
       - name: Validate affected regressions
