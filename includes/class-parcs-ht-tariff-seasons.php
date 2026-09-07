@@ -65,11 +65,19 @@ final class Parcs_HT_Tariff_Seasons {
         $year = self::requested_year($value, $public);
         if ($year !== '' && isset($value['seasons'][$year]['tariffs']) && is_array($value['seasons'][$year]['tariffs'])) {
             $value['tariffs'] = $value['seasons'][$year]['tariffs'];
+            if (!isset($value['general']) || !is_array($value['general'])) $value['general'] = array();
+            // Le titre et les réglages tarifaires doivent toujours porter la même année
+            // que la grille réellement sélectionnée, y compris après une bascule anticipée.
+            $value['general']['year'] = $year;
+            $value['active_tariff_year'] = $year;
             if ($public) $value['tariffs'] = self::hide_unpublished_groups($value['tariffs'], $year);
         }
         if ($public && $year === '') {
             // Sans saison publiée, aucun ancien tarif global ne doit servir de secours public.
             $value['tariffs'] = array('individual'=>array(),'reduced'=>array(),'groups'=>array(),'columns'=>array('individual'=>array(),'reduced'=>array(),'groups'=>array()),'notes'=>array(),'payment_methods'=>array(),'payment_items'=>array(),'print'=>array());
+            if (!isset($value['general']) || !is_array($value['general'])) $value['general'] = array();
+            $value['general']['year'] = '';
+            $value['active_tariff_year'] = '';
         }
         // La visibilité est appliquée au rendu, jamais à l'option pouvant être réenregistrée.
         self::$filtering = false;
@@ -87,6 +95,11 @@ final class Parcs_HT_Tariff_Seasons {
             $year = sanitize_text_field(wp_unslash($_POST['season_year']));
             if (preg_match('/^20\d{2}$/', $year) && isset($settings['seasons'][$year])) return $year;
         }
+
+        if ($public && class_exists('Parcs_HT_Tariff_Public_Switch')) {
+            return Parcs_HT_Tariff_Public_Switch::public_year($settings);
+        }
+
         $today = wp_date('Y-m-d', null, new DateTimeZone(isset($settings['timezone']) ? (string)$settings['timezone'] : 'Europe/Paris'));
         $candidate = '';
         foreach ($settings['seasons'] as $year => $season) {
