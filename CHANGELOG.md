@@ -1,5 +1,13 @@
 # Historique des versions
 
+## 1.13.6
+- Amélioration du shortcode `[parc_tarifs_groupes]` pour la Montagne des Singes 2026 : le bloc reprend désormais la même hiérarchie visuelle que les tarifs classiques, avec les moyens de paiement placés sous le titre et avant les prix.
+- Ajout des moyens de paiement groupes confirmés pour la Montagne des Singes : carte bancaire, espèces, chèque, bon de commande / voucher et Chorus Pro. Les ANCV individuels ne sont pas réutilisés automatiquement pour les groupes.
+- Ajout après le tableau d'un rappel compact « Paiement et facturation » : règlement sur place, conditions du règlement différé, informations Chorus Pro, facturation selon le nombre réel de participants présents et absence de paiement avant la visite.
+- Ajout d'un rappel « Devis et réservation » : réservation obligatoire, devis généré automatiquement et envoyé par e-mail, retour signé avec la mention « Bon pour accord » et présentation du devis imprimé le jour de la visite.
+- Les informations spécifiques à la Montagne des Singes sont conditionnées au `site_type=mds` et ne sont pas appliquées automatiquement à la Forêt des Singes.
+- Les tarifs restent lus exclusivement depuis la grille Groupes canonique de la saison publique ; aucun tarif ni moyen de paiement individuel n'est copié dans une seconde grille.
+- Extension du test d'exécution du shortcode pour vérifier l'ordre moyens de paiement → tarifs → informations → bouton, ainsi que l'absence de fuite des règles MDS vers FDS.
 ## 1.13.5
 - Refonte du shortcode `[parc_tarifs_groupes]` comme bloc visuel autonome alimenté directement par la même source que le tableau principal.
 - Le shortcode lit la saison publique via `Parcs_HT_Tariff_Seasons::select_season_tariffs(..., true)`, puis uniquement `tariffs.groups` et `tariffs.columns.groups`.
