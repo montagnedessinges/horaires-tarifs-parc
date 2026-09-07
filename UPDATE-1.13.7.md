@@ -24,6 +24,10 @@ Le contenu MDS introduit en 1.13.6 est conservé automatiquement lors de la migr
 
 La migration est sans effet de bord sur les lectures publiques : elle peut préparer l’affichage en mémoire, mais l’écriture de la nouvelle structure est effectuée dans le contexte d’administration ou lors d’un enregistrement explicite.
 
+## Sécurité de l’enregistrement
+
+Les listes configurables de moyens de paiement et de blocs d’information sont assainies avant leur décodage puis chaque champ est à nouveau validé et assaini avant l’enregistrement. Cette étape permet de respecter les contrôles WordPress sans modifier la logique de personnalisation.
+
 ## Source unique des tarifs
 
 Les prix ne sont pas stockés dans ces nouveaux réglages d’affichage. Le shortcode continue de lire exclusivement la grille canonique `tariffs.groups` de la saison publique, comme le tableau tarifaire principal et le moteur de devis.
