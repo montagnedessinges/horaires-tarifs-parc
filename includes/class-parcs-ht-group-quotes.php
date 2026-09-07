@@ -85,31 +85,77 @@ final class Parcs_HT_Group_Quotes {
         return self::numeric_price($row['cells'][$column_id]['value'] ?? '');
     }
 
-    private static function published_season($year, $settings = null) {
+    /**
+     * Diagnostic complet d'une année de devis. Cette méthode et le moteur de
+     * calcul lisent exactement la même grille canonique et la même liaison.
+     */
+    public static function readiness($year, $settings = null) {
+        $year = (string)$year;
+        $out = array(
+            'ready'=>false,'year'=>$year,'message'=>'Configuration incomplète.',
+            'season_exists'=>false,'season_published'=>false,'groups_published'=>false,
+            'rows_present'=>false,'columns_present'=>false,'binding_valid'=>false,'column_valid'=>false,
+            'roles'=>array('child'=>false,'adult'=>false,'disability'=>false,'companion'=>false),
+            'prices'=>array(),
+        );
+        if (!preg_match('/^20\d{2}$/', $year)) { $out['message'] = 'Année invalide.'; return $out; }
         if ($settings === null) $settings = self::settings(false);
-        if ($year === '' || !class_exists('Parcs_HT_Group_Tariff_Settings') || !Parcs_HT_Group_Tariff_Settings::is_published($year)) return null;
         $all = get_option(Parcs_HT_Defaults::OPTION, array());
-        if (!is_array($all) || empty($all['seasons'][$year]) || !is_array($all['seasons'][$year])) return null;
+        if (!is_array($all) || empty($all['seasons'][$year]) || !is_array($all['seasons'][$year])) { $out['message'] = 'Saison absente.'; return $out; }
+        $out['season_exists'] = true;
         $season = $all['seasons'][$year];
+        $out['season_published'] = (string)($season['published'] ?? '0') === '1';
+        if (!$out['season_published']) { $out['message'] = 'La saison est encore en brouillon.'; return $out; }
+        $out['groups_published'] = class_exists('Parcs_HT_Group_Tariff_Settings') && Parcs_HT_Group_Tariff_Settings::is_published($year);
+        if (!$out['groups_published']) { $out['message'] = 'Les tarifs groupes ne sont pas publiés.'; return $out; }
+
         $tariffs = isset($season['tariffs']) && is_array($season['tariffs']) ? $season['tariffs'] : array();
         $rows = isset($tariffs['groups']) && is_array($tariffs['groups']) ? array_values($tariffs['groups']) : array();
         $columns = isset($tariffs['columns']['groups']) && is_array($tariffs['columns']['groups']) ? array_values($tariffs['columns']['groups']) : array();
-        if (!$rows || !$columns || !class_exists('Parcs_HT_Tariff_Identities')) return null;
+        $out['rows_present'] = !empty($rows);
+        $out['columns_present'] = !empty($columns);
+        if (!$rows) { $out['message'] = 'Aucune ligne de tarifs groupes.'; return $out; }
+        if (!$columns) { $out['message'] = 'Aucune colonne de prix groupes.'; return $out; }
+        if (!class_exists('Parcs_HT_Tariff_Identities')) { $out['message'] = 'Registre des identifiants tarifaires indisponible.'; return $out; }
 
         $binding = self::binding_for_year($year, $settings);
-        if (!$binding || !Parcs_HT_Tariff_Identities::column_exists($columns, $binding['column_id'])) return null;
-        $result = array(
-            'published'=>'1',
-            'free_adult_children'=>$binding['free_adult_children'],
-            'free_adult_round_threshold'=>$binding['free_adult_round_threshold'],
-        );
+        $out['binding_valid'] = is_array($binding);
+        if (!$binding) { $out['message'] = 'La liaison avec le devis n’est pas complète.'; return $out; }
+        $out['column_valid'] = Parcs_HT_Tariff_Identities::column_exists($columns, $binding['column_id']);
+        if (!$out['column_valid']) { $out['message'] = 'La colonne de prix liée au devis n’existe plus.'; return $out; }
+
         foreach (array('child','adult','disability','companion') as $role) {
             $row = Parcs_HT_Tariff_Identities::row_by_id($rows, $binding[$role . '_row_id']);
+            if (!$row) { $out['message'] = 'Une ligne liée au devis n’existe plus : ' . $role . '.'; return $out; }
             $price = self::price_from_row($row, $binding['column_id']);
-            if ($price === null || $price < 0) return null;
-            $result[$role] = (string)$price;
+            if ($price === null || $price < 0) { $out['message'] = 'Un prix lié au devis est vide ou invalide : ' . $role . '.'; return $out; }
+            $out['roles'][$role] = true;
+            $out['prices'][$role] = (string)$price;
         }
-        return $result;
+        if ((int)$binding['free_adult_children'] < 1 || (int)$binding['free_adult_round_threshold'] < 1 || (int)$binding['free_adult_round_threshold'] > (int)$binding['free_adult_children']) {
+            $out['message'] = 'La règle de gratuité scolaire est invalide.';
+            return $out;
+        }
+        $out['ready'] = true;
+        $out['message'] = 'Devis prêt pour ' . $year . '.';
+        $out['free_adult_children'] = $binding['free_adult_children'];
+        $out['free_adult_round_threshold'] = $binding['free_adult_round_threshold'];
+        return $out;
+    }
+
+    /** Retourne uniquement les données canoniques utilisables par le calcul. */
+    public static function canonical_season($year, $settings = null) {
+        $status = self::readiness($year, $settings);
+        if (empty($status['ready'])) return null;
+        return array(
+            'published'=>'1',
+            'child'=>$status['prices']['child'],
+            'adult'=>$status['prices']['adult'],
+            'disability'=>$status['prices']['disability'],
+            'companion'=>$status['prices']['companion'],
+            'free_adult_children'=>$status['free_adult_children'],
+            'free_adult_round_threshold'=>$status['free_adult_round_threshold'],
+        );
     }
 
     private static function number_value($value) {
@@ -142,7 +188,7 @@ final class Parcs_HT_Group_Quotes {
         $group_field = (string)$settings['group_field'];
         if (!array_key_exists($visit_field, $data) || !array_key_exists($group_field, $data)) return $data;
         $year = self::year_from_date($data[$visit_field]);
-        $row = self::published_season($year, $settings);
+        $row = self::canonical_season($year, $settings);
         if (!$row) {
             foreach (array('devisannee','tarifenfant','tarifadulte','tarifhandicap','tarifaccompagnateur','nbrprixenfants','nbrprixadultes','totalprixscolaire','totalprixhandicape') as $field) $data[$field] = '';
             return $data;
@@ -180,7 +226,7 @@ final class Parcs_HT_Group_Quotes {
         $group_field = (string)$settings['group_field'];
         if (!array_key_exists($visit_field, $data) || !array_key_exists($group_field, $data)) return $result;
         $year = self::year_from_date($data[$visit_field]);
-        if ($year === '' || self::published_season($year, $settings)) return $result;
+        if ($year === '' || self::canonical_season($year, $settings)) return $result;
         foreach ((array)$tags as $tag) {
             if (is_object($tag) && isset($tag->name) && (string)$tag->name === $visit_field) {
                 $result->invalidate($tag, 'Les tarifs groupes pour ' . $year . ' ne sont pas encore disponibles. Merci de revenir ultérieurement.');
@@ -206,7 +252,7 @@ final class Parcs_HT_Group_Quotes {
     public static function assets() {
         if(wp_script_is('parcs-ht-group-quotes','enqueued'))return;
         $settings=self::settings(false); $all=Parcs_HT_Defaults::all_settings(); $seasons=array();
-        foreach((array)($all['seasons']??array()) as $year=>$season){if(!is_array($season))continue;$row=self::published_season((string)$year,$settings);if($row)$seasons[$year]=array_intersect_key($row,array_flip(array('published','child','adult','disability','companion','free_adult_children','free_adult_round_threshold')));}
+        foreach((array)($all['seasons']??array()) as $year=>$season){if(!is_array($season))continue;$row=self::canonical_season((string)$year,$settings);if($row)$seasons[$year]=array_intersect_key($row,array_flip(array('published','child','adult','disability','companion','free_adult_children','free_adult_round_threshold')));}
         wp_enqueue_script('parcs-ht-group-quotes',PARCS_HT_URL.'assets/group-quotes.js',array('jquery'),PARCS_HT_VERSION,true);
         wp_add_inline_script('parcs-ht-group-quotes','window.ParcsHTGroupQuotes='.wp_json_encode(array('formId'=>'','visitField'=>(string)$settings['visit_field'],'groupField'=>(string)$settings['group_field'],'schoolValue'=>(string)$settings['school_value'],'disabilityValue'=>(string)$settings['disability_value'],'seasons'=>$seasons,'unavailableMessage'=>'Les tarifs groupes ne sont pas encore disponibles pour cette année. Merci de revenir ultérieurement.')).';','before');
     }
