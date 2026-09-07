@@ -18,6 +18,7 @@ final class Parcs_HT_Shortcode_Registry {
             'parc_devis_groupe' => array('label'=>'Devis groupe autour du formulaire Contact Form 7','kind'=>'core','module'=>'quote_page','preview'=>true),
             'parc_devis' => array('label'=>'Alias compatible du module Devis groupe','kind'=>'core','module'=>'quote_page','preview'=>true),
             'parc_guides_pedagogiques' => array('label'=>'Guides pédagogiques','kind'=>'guides','module'=>'guides','preview'=>true),
+            'parc_calendrier_avent' => array('label'=>'Calendrier de l’Avent','kind'=>'advent','module'=>'advent','preview'=>true),
         );
     }
 
@@ -46,6 +47,9 @@ final class Parcs_HT_Shortcode_Registry {
         }
         if ($definition['kind'] === 'guides') {
             return do_shortcode(self::shortcode($base, $language));
+        }
+        if ($definition['kind'] === 'advent' && class_exists('Parcs_HT_Advent')) {
+            return Parcs_HT_Advent::render_preview($language);
         }
         return '';
     }
