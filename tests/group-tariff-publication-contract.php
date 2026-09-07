@@ -13,7 +13,7 @@ function group_publication_check($condition, $message) {
 }
 
 group_publication_check(strpos($settings, "const OPTION = 'parcs_ht_group_tariff_settings'") !== false, 'group publication and presentation keep their own settings store');
-group_publication_check(strpos($settings, 'const STORE_VERSION = 2') !== false, 'group display settings store migrated to version 2');
+group_publication_check(strpos($settings, 'const STORE_VERSION = 3') !== false, 'group display settings store migrated to version 3');
 group_publication_check(strpos($settings, 'public static function is_published') !== false, 'group publication exposes an explicit per-year status');
 group_publication_check(strpos($settings, "(string)(\$season['published'] ?? '0') !== '1'") !== false, 'group tariffs can only publish inside a published season');
 group_publication_check(strpos($seasons, 'hide_unpublished_groups') !== false && strpos($seasons, "\$tariffs['groups'] = array();") !== false, 'general public tariff rendering cannot expose unpublished group rates');

@@ -150,6 +150,22 @@ final class Parcs_HT_Admin_Groups {
             $decoded = json_decode($info_blocks_json, true);
             if (is_array($decoded)) $info_blocks = $decoded;
         }
+        $appearance = array();
+        $appearance_json = isset($_POST['appearance_json']) && is_string($_POST['appearance_json'])
+            ? sanitize_textarea_field(wp_unslash($_POST['appearance_json']))
+            : '';
+        if ($appearance_json !== '') {
+            $decoded = json_decode($appearance_json, true);
+            if (is_array($decoded)) $appearance = $decoded;
+        }
+        $row_styles = array();
+        $row_styles_json = isset($_POST['row_styles_json']) && is_string($_POST['row_styles_json'])
+            ? sanitize_textarea_field(wp_unslash($_POST['row_styles_json']))
+            : '';
+        if ($row_styles_json !== '') {
+            $decoded = json_decode($row_styles_json, true);
+            if (is_array($decoded)) $row_styles = $decoded;
+        }
         $raw = array(
             'published'=>isset($_POST['published']) ? sanitize_text_field(wp_unslash($_POST['published'])) : '0',
             'show_heading'=>isset($_POST['show_heading']) ? sanitize_text_field(wp_unslash($_POST['show_heading'])) : '0',
@@ -160,6 +176,8 @@ final class Parcs_HT_Admin_Groups {
             'show_info_blocks'=>isset($_POST['show_info_blocks']) ? sanitize_text_field(wp_unslash($_POST['show_info_blocks'])) : '0',
             'payment_methods'=>$payment_methods,
             'info_blocks'=>$info_blocks,
+            'appearance'=>$appearance,
+            'row_styles'=>$row_styles,
             'title'=>array(),'intro'=>array(),'future_notice'=>array(),'button_label'=>array(),'button_url'=>array(),'payment_title'=>array(),
         );
         foreach (array('fr','en','de') as $lang) {

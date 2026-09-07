@@ -201,11 +201,67 @@ $(function(){
         return '<div class="htp-subsection" data-gt-info-row><div class="htp-row-head"><strong>Bloc d’information</strong><span><button type="button" class="button button-small" data-gt-move="up">↑</button> <button type="button" class="button button-small" data-gt-move="down">↓</button> <button type="button" class="button button-small button-link-delete" data-gt-remove>Supprimer</button></span></div><label><input type="checkbox" data-list-enabled '+(String(item.enabled||'1')!=='0'?'checked':'')+'> Afficher</label>'+groupListTranslations('title','Titre',false,item.title||{})+groupListTranslations('text','Texte',true,item.text||{})+'</div>';
     }
 
+    function groupColorField(key,label,value,optional){
+        value=String(value||'');
+        if(optional){
+            return '<label class="htp-field"><span>'+escaped(label)+'</span><input type="text" data-gt-appearance="'+key+'" value="'+escaped(value)+'" placeholder="#RRGGBB (vide = thème)"></label>';
+        }
+        if(!/^#[0-9a-fA-F]{6}$/.test(value))value='#ffffff';
+        return '<label class="htp-field"><span>'+escaped(label)+'</span><input type="color" data-gt-appearance="'+key+'" value="'+escaped(value)+'"></label>';
+    }
+
+    function groupAppearancePanel(g){
+        var a=g.appearance||{};
+        var html='<details class="htp-advanced" open data-gt-appearance-panel><summary>Apparence du shortcode Tarifs groupes</summary><div class="htp-advanced-content"><p class="description">Même logique de couleurs que le tableau des tarifs, mais ces valeurs appartiennent uniquement à <code>[parc_tarifs_groupes]</code>. Modifier ici ne change pas <code>[parc_tableau_tarifs]</code>.</p><div class="htp-grid htp-grid-3">';
+        html+=groupColorField('tariff_title_color','Titre Tarifs groupes — texte',a.tariff_title_color,true);
+        html+=groupColorField('tariff_title_bg_color','Titre Tarifs groupes — fond',a.tariff_title_bg_color,false);
+        html+='<label class="htp-field"><span>Titre Tarifs groupes — fond transparent</span><span><input type="checkbox" data-gt-appearance-toggle="tariff_title_bg_transparent" '+(String(a.tariff_title_bg_transparent)==='1'?'checked':'')+'> Transparent</span></label>';
+        html+=groupColorField('payment_title_color','Moyens de paiement — titre',a.payment_title_color,true);
+        html+=groupColorField('payment_title_bg_color','Moyens de paiement — fond du titre',a.payment_title_bg_color,false);
+        html+='<label class="htp-field"><span>Moyens de paiement — fond du titre transparent</span><span><input type="checkbox" data-gt-appearance-toggle="payment_title_bg_transparent" '+(String(a.payment_title_bg_transparent)==='1'?'checked':'')+'> Transparent</span></label>';
+        html+=groupColorField('payment_item_bg_color','Pictogrammes — fond',a.payment_item_bg_color,false);
+        html+=groupColorField('payment_item_text_color','Pictogrammes — texte',a.payment_item_text_color,false);
+        html+=groupColorField('payment_icon_color','Pictogrammes — icône',a.payment_icon_color,false);
+        html+=groupColorField('payment_border_color','Moyens de paiement — bordure',a.payment_border_color,true);
+        html+='<label class="htp-field"><span>Bordure du bloc paiement</span><span><input type="checkbox" data-gt-appearance-toggle="payment_border_enabled" '+(String(a.payment_border_enabled)==='1'?'checked':'')+'> Afficher la bordure</span></label>';
+        html+=groupColorField('panel_text_color','Panneau — texte par défaut',a.panel_text_color,true);
+        html+=groupColorField('panel_border_color','Panneau — bordure',a.panel_border_color,true);
+        html+='<label class="htp-field"><span>Bordure du panneau tarifaire</span><span><input type="checkbox" data-gt-appearance-toggle="panel_border_enabled" '+(String(a.panel_border_enabled)==='1'?'checked':'')+'> Afficher la bordure</span></label>';
+        html+=groupColorField('panel_bg_color','Panneau — fond',a.panel_bg_color,false);
+        html+='<label class="htp-field"><span>Panneau — fond transparent</span><span><input type="checkbox" data-gt-appearance-toggle="panel_bg_transparent" '+(String(a.panel_bg_transparent)==='1'?'checked':'')+'> Transparent</span></label>';
+        html+=groupColorField('price_color','Prix — couleur par défaut',a.price_color,true);
+        html+=groupColorField('groups_note_text_color','Message groupes — texte',a.groups_note_text_color,true);
+        html+=groupColorField('groups_note_border_color','Message groupes — bordure',a.groups_note_border_color,true);
+        html+=groupColorField('button_bg_color','Bouton devis — fond',a.button_bg_color,false);
+        html+=groupColorField('button_text_color','Bouton devis — texte',a.button_text_color,false);
+        return html+'</div></div></details>';
+    }
+
+    function groupRowAppearancePanel(g){
+        var styles=g.row_styles||{},rows=cfg.tariff_rows||[];
+        if(!rows.length)return '';
+        var html='<details class="htp-advanced" data-gt-row-appearance-panel><summary>Couleurs des lignes dans le shortcode Tarifs groupes</summary><div class="htp-advanced-content"><p class="description">Ces couleurs sont indépendantes des couleurs de ligne utilisées dans <code>[parc_tableau_tarifs]</code>. Les libellés et les prix restent issus de la même ligne tarifaire.</p>';
+        rows.forEach(function(row){
+            var id=String(row.id||''),s=styles[id]||{},label=readableLabel(row.label,id);
+            if(!/^tariff_row_\d{6,}$/.test(id))return;
+            html+='<div class="htp-subsection" data-gt-row-style="'+escaped(id)+'"><div class="htp-row-head"><strong>'+escaped(label)+'</strong><code>'+escaped(id)+'</code></div><div class="htp-grid htp-grid-3">';
+            html+=groupColorField('label_color','Nom du tarif — couleur',s.label_color,true).replace(/data-gt-appearance=/g,'data-gt-row-color=');
+            html+=groupColorField('subtitle_color','Sous-titre — couleur',s.subtitle_color,true).replace(/data-gt-appearance=/g,'data-gt-row-color=');
+            html+=groupColorField('note_color','Texte secondaire — couleur',s.note_color,true).replace(/data-gt-appearance=/g,'data-gt-row-color=');
+            html+=groupColorField('price_color','Prix — couleur',s.price_color,true).replace(/data-gt-appearance=/g,'data-gt-row-color=');
+            html+=groupColorField('row_bg_color','Fond de la ligne',s.row_bg_color||'#ffffff',false).replace(/data-gt-appearance=/g,'data-gt-row-color=');
+            html+='<label class="htp-field"><span>Fond de la ligne transparent</span><span><input type="checkbox" data-gt-row-toggle="row_bg_transparent" '+(String(s.row_bg_transparent||'1')==='1'?'checked':'')+'> Transparent</span></label>';
+            html+=groupColorField('row_border_color','Séparateur / bordure',s.row_border_color,true).replace(/data-gt-appearance=/g,'data-gt-row-color=');
+            html+='</div></div>';
+        });
+        return html+'</div></details>';
+    }
+
     function ensureGroupSettingsPanel(){
         var $group=$('#htp-tariffs [data-htp-tariff-group="groups"]');
         if(!$group.length||$('#htp-tariffs [data-htp-group-tariff-settings]').length)return;
         var g=cfg.group_tariff||{};
-        var html='<div class="htp-subsection" data-htp-group-tariff-settings data-htp-group-context hidden><h3>Publication et affichage des tarifs groupes</h3><p class="description">Ces réglages sont propres à cette installation et à la saison '+escaped(cfg.year||'')+'. Le contenu peut donc être différent à la Montagne des Singes, à la Forêt des Singes ou sur un autre site utilisant l’extension.</p><div class="htp-check-list"><label><input type="checkbox" data-gt="published"> Publier les tarifs groupes de cette année</label><label><input type="checkbox" data-gt="show_heading"> Afficher le titre du bloc</label><label><input type="checkbox" data-gt="show_future_notice"> Afficher un message pour une année future non disponible</label><label><input type="checkbox" data-gt="show_quote_button"> Afficher le bouton de devis</label><label><input type="checkbox" data-gt="show_payment_methods"> Afficher les moyens de paiement</label><label><input type="checkbox" data-gt="show_info_blocks"> Afficher les blocs d’information</label></div><div class="htp-grid htp-grid-2">'+groupTranslationFields('title','Titre du bloc (vide = titre automatique)',false)+groupTranslationFields('intro','Texte d’introduction facultatif',true)+'<label class="htp-field"><span>Année future annoncée</span><input type="number" min="2020" max="2100" data-gt="future_year"></label>'+groupTranslationFields('future_notice','Message année future (vide = texte automatique)',true)+groupTranslationFields('button_label','Texte du bouton devis',false)+groupTranslationFields('button_url','Lien du bouton devis',false)+groupTranslationFields('payment_title','Titre des moyens de paiement',false)+'</div><details class="htp-advanced" open><summary>Moyens de paiement</summary><div class="htp-advanced-content"><p class="description">Ajoutez uniquement les moyens acceptés sur ce site. L’ordre ci-dessous est l’ordre d’affichage public.</p><div data-gt-payment-list></div><p><button type="button" class="button" data-gt-add-payment>Ajouter un moyen de paiement</button></p></div></details><details class="htp-advanced" open><summary>Informations pratiques sous les tarifs</summary><div class="htp-advanced-content"><p class="description">Ces blocs sont libres : paiement, facturation, réservation, justificatifs ou toute autre information utile. Ils sont traduisibles et réordonnables.</p><div data-gt-info-list></div><p><button type="button" class="button" data-gt-add-info>Ajouter un bloc d’information</button></p></div></details><p><button type="button" class="button button-primary" data-gt-save>Enregistrer l’affichage groupes</button> <span data-gt-status></span></p></div>';
+        var html='<div class="htp-subsection" data-htp-group-tariff-settings data-htp-group-context hidden><h3>Publication et affichage des tarifs groupes</h3><p class="description">Ces réglages sont propres à cette installation et à la saison '+escaped(cfg.year||'')+'. Le contenu peut donc être différent à la Montagne des Singes, à la Forêt des Singes ou sur un autre site utilisant l’extension.</p><div class="htp-check-list"><label><input type="checkbox" data-gt="published"> Publier les tarifs groupes de cette année</label><label><input type="checkbox" data-gt="show_heading"> Afficher le titre du bloc</label><label><input type="checkbox" data-gt="show_future_notice"> Afficher un message pour une année future non disponible</label><label><input type="checkbox" data-gt="show_quote_button"> Afficher le bouton de devis</label><label><input type="checkbox" data-gt="show_payment_methods"> Afficher les moyens de paiement</label><label><input type="checkbox" data-gt="show_info_blocks"> Afficher les blocs d’information</label></div><div class="htp-grid htp-grid-2">'+groupTranslationFields('title','Titre du bloc (vide = titre automatique)',false)+groupTranslationFields('intro','Texte d’introduction facultatif',true)+'<label class="htp-field"><span>Année future annoncée</span><input type="number" min="2020" max="2100" data-gt="future_year"></label>'+groupTranslationFields('future_notice','Message année future (vide = texte automatique)',true)+groupTranslationFields('button_label','Texte du bouton devis',false)+groupTranslationFields('button_url','Lien du bouton devis',false)+groupTranslationFields('payment_title','Titre des moyens de paiement',false)+'</div>'+groupAppearancePanel(g)+groupRowAppearancePanel(g)+'<details class="htp-advanced" open><summary>Moyens de paiement</summary><div class="htp-advanced-content"><p class="description">Ajoutez uniquement les moyens acceptés sur ce site. L’ordre ci-dessous est l’ordre d’affichage public.</p><div data-gt-payment-list></div><p><button type="button" class="button" data-gt-add-payment>Ajouter un moyen de paiement</button></p></div></details><details class="htp-advanced" open><summary>Informations pratiques sous les tarifs</summary><div class="htp-advanced-content"><p class="description">Ces blocs sont libres : paiement, facturation, réservation, justificatifs ou toute autre information utile. Ils sont traduisibles et réordonnables.</p><div data-gt-info-list></div><p><button type="button" class="button" data-gt-add-info>Ajouter un bloc d’information</button></p></div></details><p><button type="button" class="button button-primary" data-gt-save>Enregistrer l’affichage groupes</button> <span data-gt-status></span></p></div>';
         var $panel=$(html);
         ['published','show_heading','show_future_notice','show_quote_button','show_payment_methods','show_info_blocks'].forEach(function(k){$panel.find('[data-gt="'+k+'"]').prop('checked',String(g[k])==='1');});
         $panel.find('[data-gt="future_year"]').val(g.future_year||((parseInt(cfg.year,10)||new Date().getFullYear())+1));
@@ -283,9 +339,14 @@ $(function(){
         ['title','intro','future_notice','button_label','button_url','payment_title'].forEach(function(field){['fr','en','de'].forEach(function(lang){data[field+'_'+lang]=$panel.find('[data-gt-field="'+field+'_'+lang+'"]').val();});});
         var payments=[];$panel.find('[data-gt-payment-row]').each(function(){var $row=$(this),labels={};['fr','en','de'].forEach(function(lang){labels[lang]=$row.find('[data-list-field="label_'+lang+'"]').val()||'';});payments.push({enabled:$row.find('[data-list-enabled]').is(':checked')?'1':'0',icon:$row.find('[data-list-icon]').val()||'other',label:labels});});
         var blocks=[];$panel.find('[data-gt-info-row]').each(function(){var $row=$(this),title={},text={};['fr','en','de'].forEach(function(lang){title[lang]=$row.find('[data-list-field="title_'+lang+'"]').val()||'';text[lang]=$row.find('[data-list-field="text_'+lang+'"]').val()||'';});blocks.push({enabled:$row.find('[data-list-enabled]').is(':checked')?'1':'0',title:title,text:text});});
-        data.payment_methods_json=JSON.stringify(payments);data.info_blocks_json=JSON.stringify(blocks);
+        var appearance={};
+        $panel.find('[data-gt-appearance]').each(function(){appearance[$(this).data('gt-appearance')]=$(this).val()||'';});
+        $panel.find('[data-gt-appearance-toggle]').each(function(){appearance[$(this).data('gt-appearance-toggle')]=$(this).is(':checked')?'1':'0';});
+        var rowStyles={};
+        $panel.find('[data-gt-row-style]').each(function(){var $row=$(this),id=String($row.data('gt-row-style')||''),style={};$row.find('[data-gt-row-color]').each(function(){style[$(this).data('gt-row-color')]=$(this).val()||'';});$row.find('[data-gt-row-toggle]').each(function(){style[$(this).data('gt-row-toggle')]=$(this).is(':checked')?'1':'0';});if(id)rowStyles[id]=style;});
+        data.payment_methods_json=JSON.stringify(payments);data.info_blocks_json=JSON.stringify(blocks);data.appearance_json=JSON.stringify(appearance);data.row_styles_json=JSON.stringify(rowStyles);
         var $status=$panel.find('[data-gt-status]').text('Enregistrement…');
-        $.post(ajaxurl,data).done(function(res){$status.text(res&&res.success?res.data.message:(res.data&&res.data.message)||'Erreur.');if(res&&res.success){cfg.group_tariff=cfg.group_tariff||{};cfg.group_tariff.payment_methods=payments;cfg.group_tariff.info_blocks=blocks;}}).fail(function(xhr){var m=xhr.responseJSON&&xhr.responseJSON.data&&xhr.responseJSON.data.message;$status.text(m||'Erreur lors de l’enregistrement.');});
+        $.post(ajaxurl,data).done(function(res){$status.text(res&&res.success?res.data.message:(res.data&&res.data.message)||'Erreur.');if(res&&res.success){cfg.group_tariff=cfg.group_tariff||{};cfg.group_tariff.payment_methods=payments;cfg.group_tariff.info_blocks=blocks;cfg.group_tariff.appearance=appearance;cfg.group_tariff.row_styles=rowStyles;}}).fail(function(xhr){var m=xhr.responseJSON&&xhr.responseJSON.data&&xhr.responseJSON.data.message;$status.text(m||'Erreur lors de l’enregistrement.');});
     });
 
     var requested='';try{requested=new URL(window.location.href).searchParams.get('tab')||'';}catch(error){}

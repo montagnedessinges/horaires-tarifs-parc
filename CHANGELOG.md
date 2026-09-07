@@ -1,5 +1,12 @@
 # Historique des versions
 
+## 1.13.8
+- Séparation complète de l’apparence entre `[parc_tableau_tarifs]` et `[parc_tarifs_groupes]` : les deux shortcodes continuent de lire les mêmes données tarifaires, mais leurs couleurs sont désormais indépendantes.
+- Ajout dans Groupes → Tarifs d’un bloc « Apparence du shortcode Tarifs groupes » reprenant le même modèle de couleurs utile au visuel tarifaire : titre, moyens de paiement, panneau, prix, message groupes et bouton de devis.
+- Les couleurs de chaque ligne groupe sont également enregistrées séparément par identifiant permanent pour éviter qu’une couleur de ligne du tableau général ne modifie le shortcode groupes.
+- Migration sans rupture visuelle : lors du passage en 1.13.8, la palette actuelle du tableau général et les couleurs actuelles des lignes groupes sont copiées une seule fois dans les réglages propres au shortcode groupes. Les modifications ultérieures sont indépendantes.
+- Aucun tarif, libellé, colonne, règle de devis, moyen de paiement ou contenu public n’est dupliqué : seule la présentation est séparée.
+- Ajout de tests vérifiant qu’une palette violette du tableau général peut coexister avec une palette rose du shortcode groupes, tout en partageant immédiatement le même prix canonique.
 ## 1.13.7
 - Généralisation complète du contenu public du shortcode `[parc_tarifs_groupes]` : les moyens de paiement et les blocs d’information ne dépendent plus de `site_type` dans le rendu.
 - Ajout dans Groupes → Tarifs de réglages modifiables par saison et par installation pour activer/masquer les moyens de paiement, modifier leur titre, ajouter/supprimer/réordonner les moyens, choisir une icône et saisir les libellés FR/EN/DE.

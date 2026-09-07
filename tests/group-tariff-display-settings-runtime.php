@@ -11,6 +11,7 @@ function wp_unslash($value) { return $value; }
 function sanitize_text_field($value) { return trim(strip_tags((string)$value)); }
 function sanitize_textarea_field($value) { return trim(strip_tags((string)$value)); }
 function sanitize_key($value) { return preg_replace('/[^a-z0-9_\-]/', '', strtolower((string)$value)); }
+function sanitize_hex_color($value) { return preg_match('/^#[0-9a-fA-F]{6}$/', (string)$value) ? strtolower((string)$value) : null; }
 function esc_url_raw($value) { return (string)$value; }
 function wp_json_encode($value) { return json_encode($value); }
 final class Parcs_HT_Defaults { const OPTION = 'parcs_ht_settings'; }
@@ -19,14 +20,16 @@ $root = getenv('PLUGIN_ROOT') ?: dirname(__DIR__);
 require_once $root . '/includes/class-parcs-ht-group-tariff-settings.php';
 function setting_assert($condition, $message) { if (!$condition) { fwrite(STDERR, '[FAIL] ' . $message . PHP_EOL); exit(1); } echo '[OK] ' . $message . PHP_EOL; }
 
-$GLOBALS['opts'][Parcs_HT_Defaults::OPTION] = array('site_type'=>'mds','general'=>array(),'seasons'=>array('2026'=>array('published'=>'1','tariffs'=>array('groups'=>array(array('enabled'=>'1'))))));
+$GLOBALS['opts'][Parcs_HT_Defaults::OPTION] = array('site_type'=>'mds','general'=>array('tariff_title_color'=>'#663399','button_bg_color'=>'#663399'),'seasons'=>array('2026'=>array('published'=>'1','tariffs'=>array('groups'=>array(array('id'=>'tariff_row_000001','enabled'=>'1','label_color'=>'#224466','row_bg_color'=>'#ffffff','row_bg_transparent'=>'1'))))));
 $GLOBALS['opts'][Parcs_HT_Group_Tariff_Settings::OPTION] = array('version'=>1,'seasons'=>array('2026'=>array('published'=>'1','show_heading'=>'1','show_quote_button'=>'1')));
 $mds = Parcs_HT_Group_Tariff_Settings::settings('2026');
 setting_assert((int)$GLOBALS['opts'][Parcs_HT_Group_Tariff_Settings::OPTION]['version'] === 1, 'public settings read does not rewrite the stored option');
 setting_assert($mds['show_payment_methods'] === '1' && count($mds['payment_methods']) === 5, 'existing MDS 1.13.6 payment content is preserved by in-memory migration');
 setting_assert($mds['show_info_blocks'] === '1' && count($mds['info_blocks']) === 2, 'existing MDS 1.13.6 information content is preserved by in-memory migration');
 Parcs_HT_Group_Tariff_Settings::ensure_store();
-setting_assert((int)$GLOBALS['opts'][Parcs_HT_Group_Tariff_Settings::OPTION]['version'] === 2, 'administration persists the migration to version 2');
+setting_assert((int)$GLOBALS['opts'][Parcs_HT_Group_Tariff_Settings::OPTION]['version'] === 3, 'administration persists the migration to version 3');
+setting_assert($mds['appearance']['tariff_title_color'] === '#663399' && $mds['appearance']['button_bg_color'] === '#663399', 'migration snapshots the current classic tariff palette for the group shortcode');
+setting_assert($mds['row_styles']['tariff_row_000001']['label_color'] === '#224466', 'migration snapshots current group-row colors so the public appearance does not change');
 
 $GLOBALS['opts'][Parcs_HT_Defaults::OPTION] = array('site_type'=>'fds','general'=>array(),'seasons'=>array('2026'=>array('published'=>'1','tariffs'=>array('groups'=>array(array('enabled'=>'1'))))));
 $GLOBALS['opts'][Parcs_HT_Group_Tariff_Settings::OPTION] = array('version'=>1,'seasons'=>array('2026'=>array('published'=>'1','show_heading'=>'1','show_quote_button'=>'1')));
@@ -44,5 +47,12 @@ setting_assert(Parcs_HT_Group_Tariff_Settings::save('2026', $custom), 'custom si
 $saved = Parcs_HT_Group_Tariff_Settings::settings('2026');
 setting_assert($saved['payment_methods'][0]['label']['fr'] === 'Virement FDS', 'custom payment method is stored per installation');
 setting_assert($saved['info_blocks'][0]['text']['fr'] === 'Texte FDS', 'custom information block is stored per installation');
+$custom['appearance']['tariff_title_color'] = '#ff69b4';
+$custom['appearance']['button_bg_color'] = '#ff69b4';
+$custom['row_styles'] = array('tariff_row_000001'=>array('label_color'=>'#ff1493','subtitle_color'=>'','note_color'=>'','price_color'=>'','row_bg_color'=>'#ffffff','row_bg_transparent'=>'1','row_border_color'=>''));
+setting_assert(Parcs_HT_Group_Tariff_Settings::save('2026', $custom), 'independent group shortcode colors save successfully');
+$saved = Parcs_HT_Group_Tariff_Settings::settings('2026');
+setting_assert($saved['appearance']['tariff_title_color'] === '#ff69b4', 'group shortcode palette is stored independently');
+setting_assert($saved['row_styles']['tariff_row_000001']['label_color'] === '#ff1493', 'group shortcode row colors are stored independently by permanent row id');
 
 echo "Group tariff display settings runtime: OK\n";

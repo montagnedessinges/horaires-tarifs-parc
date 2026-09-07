@@ -5,7 +5,7 @@ if (!defined('ABSPATH')) { exit; }
 /** Réglages publics propres aux tarifs groupes, enregistrés par saison. */
 final class Parcs_HT_Group_Tariff_Settings {
     const OPTION = 'parcs_ht_group_tariff_settings';
-    const STORE_VERSION = 2;
+    const STORE_VERSION = 3;
 
     public static function init() {
         add_action('admin_init', array(__CLASS__, 'ensure_store'), 6);
@@ -65,6 +65,115 @@ final class Parcs_HT_Group_Tariff_Settings {
         return $out;
     }
 
+    private static function appearance_defaults() {
+        return array(
+            'tariff_title_color'=>'',
+            'tariff_title_bg_color'=>'#ffffff',
+            'tariff_title_bg_transparent'=>'1',
+            'payment_title_color'=>'',
+            'payment_title_bg_color'=>'#ffffff',
+            'payment_title_bg_transparent'=>'1',
+            'payment_item_bg_color'=>'#006757',
+            'payment_item_text_color'=>'#ffffff',
+            'payment_icon_color'=>'#ffffff',
+            'payment_border_color'=>'',
+            'payment_border_enabled'=>'0',
+            'panel_text_color'=>'',
+            'panel_border_color'=>'',
+            'panel_border_enabled'=>'0',
+            'panel_bg_color'=>'#ffffff',
+            'panel_bg_transparent'=>'1',
+            'price_color'=>'',
+            'groups_note_text_color'=>'',
+            'groups_note_border_color'=>'',
+            'button_bg_color'=>'#006757',
+            'button_text_color'=>'#ffffff',
+        );
+    }
+
+    private static function clean_appearance($value) {
+        $value = is_array($value) ? $value : array();
+        $defaults = self::appearance_defaults();
+        $toggles = array('tariff_title_bg_transparent','payment_title_bg_transparent','payment_border_enabled','panel_border_enabled','panel_bg_transparent');
+        $out = array();
+        foreach ($defaults as $key => $fallback) {
+            if (in_array($key, $toggles, true)) {
+                $out[$key] = isset($value[$key]) && (string)$value[$key] === '1' ? '1' : '0';
+                continue;
+            }
+            $raw = array_key_exists($key, $value) ? (string)$value[$key] : (string)$fallback;
+            if ($raw === '') {
+                $out[$key] = '';
+                continue;
+            }
+            $color = sanitize_hex_color($raw);
+            $out[$key] = $color ?: (sanitize_hex_color((string)$fallback) ?: '');
+        }
+        return $out;
+    }
+
+    private static function appearance_from_general($general) {
+        $general = is_array($general) ? $general : array();
+        return self::clean_appearance(array_replace(self::appearance_defaults(), array_intersect_key($general, self::appearance_defaults())));
+    }
+
+    private static function row_style_defaults() {
+        return array(
+            'label_color'=>'','subtitle_color'=>'','note_color'=>'','price_color'=>'',
+            'row_bg_color'=>'#ffffff','row_bg_transparent'=>'1','row_border_color'=>'',
+        );
+    }
+
+    private static function clean_row_style($value) {
+        $value = is_array($value) ? $value : array();
+        $defaults = self::row_style_defaults();
+        $out = array();
+        foreach ($defaults as $key => $fallback) {
+            if ($key === 'row_bg_transparent') {
+                $out[$key] = isset($value[$key]) && (string)$value[$key] === '1' ? '1' : '0';
+                continue;
+            }
+            $raw = array_key_exists($key, $value) ? (string)$value[$key] : (string)$fallback;
+            if ($raw === '') {
+                $out[$key] = '';
+                continue;
+            }
+            $color = sanitize_hex_color($raw);
+            $out[$key] = $color ?: (sanitize_hex_color((string)$fallback) ?: '');
+        }
+        return $out;
+    }
+
+    private static function clean_row_styles($value) {
+        $out = array();
+        foreach (is_array($value) ? $value : array() as $row_id => $style) {
+            $row_id = sanitize_key((string)$row_id);
+            if (!preg_match('/^tariff_row_\d{6,}$/', $row_id) || !is_array($style)) continue;
+            $out[$row_id] = self::clean_row_style($style);
+        }
+        return $out;
+    }
+
+    private static function row_styles_from_rows($rows) {
+        $out = array();
+        foreach (is_array($rows) ? $rows : array() as $row) {
+            if (!is_array($row)) continue;
+            $row_id = sanitize_key((string)($row['id'] ?? ''));
+            if (!preg_match('/^tariff_row_\d{6,}$/', $row_id)) continue;
+            $source = array(
+                'label_color'=>(string)($row['label_color'] ?? ''),
+                'subtitle_color'=>(string)($row['subtitle_color'] ?? ($row['detail_color'] ?? '')),
+                'note_color'=>(string)($row['note_color'] ?? ''),
+                'price_color'=>(string)($row['price_color'] ?? ''),
+                'row_bg_color'=>(string)($row['row_bg_color'] ?? '#ffffff'),
+                'row_bg_transparent'=>(string)($row['row_bg_transparent'] ?? '1'),
+                'row_border_color'=>(string)($row['row_border_color'] ?? ''),
+            );
+            $out[$row_id] = self::clean_row_style($source);
+        }
+        return $out;
+    }
+
     public static function defaults($year = '') {
         $year = preg_match('/^20\d{2}$/', (string)$year) ? (string)$year : (string)wp_date('Y');
         return array(
@@ -91,6 +200,8 @@ final class Parcs_HT_Group_Tariff_Settings {
             'payment_methods'=>array(),
             'show_info_blocks'=>'0',
             'info_blocks'=>array(),
+            'appearance'=>self::appearance_defaults(),
+            'row_styles'=>array(),
         );
     }
 
@@ -150,6 +261,8 @@ final class Parcs_HT_Group_Tariff_Settings {
                 $labels = self::clean_translations($general['groups_button_label']);
                 foreach ($labels as $lang => $label) if ($label !== '') $row['button_label'][$lang] = $label;
             }
+            $row['appearance'] = self::appearance_from_general($general);
+            $row['row_styles'] = self::row_styles_from_rows($season['tariffs']['groups'] ?? array());
             $store['seasons'][(string)$year] = $row;
         }
         return $store;
@@ -162,6 +275,7 @@ final class Parcs_HT_Group_Tariff_Settings {
             $saved = self::initial_store();
             $version = 1;
         }
+        $migrated_from_pre_v2 = $version < 2;
         if ($version < 2) {
             $all = self::raw_all_settings();
             $site_type = sanitize_key((string)($all['site_type'] ?? ''));
@@ -178,6 +292,28 @@ final class Parcs_HT_Group_Tariff_Settings {
                 $saved['seasons'][(string)$year] = $row;
             }
             $saved['version'] = 2;
+            $version = 2;
+        }
+        if ($version < 3) {
+            $all = self::raw_all_settings();
+            $general = is_array($all['general'] ?? null) ? $all['general'] : array();
+            foreach ((array)($all['seasons'] ?? array()) as $year => $season) {
+                if (!preg_match('/^20\d{2}$/', (string)$year) || !is_array($season)) continue;
+                $old = isset($saved['seasons'][$year]) && is_array($saved['seasons'][$year]) ? $saved['seasons'][$year] : array();
+                $row = array_replace_recursive(self::defaults((string)$year), $old);
+                if ($migrated_from_pre_v2 || !isset($old['appearance']) || !is_array($old['appearance'])) {
+                    $row['appearance'] = self::appearance_from_general($general);
+                } else {
+                    $row['appearance'] = self::clean_appearance($old['appearance']);
+                }
+                if ($migrated_from_pre_v2 || !isset($old['row_styles']) || !is_array($old['row_styles'])) {
+                    $row['row_styles'] = self::row_styles_from_rows($season['tariffs']['groups'] ?? array());
+                } else {
+                    $row['row_styles'] = self::clean_row_styles($old['row_styles']);
+                }
+                $saved['seasons'][(string)$year] = $row;
+            }
+            $saved['version'] = 3;
         }
         return $saved;
     }
@@ -227,6 +363,8 @@ final class Parcs_HT_Group_Tariff_Settings {
             'payment_methods'=>self::clean_payment_methods($raw['payment_methods'] ?? array()),
             'show_info_blocks'=>isset($raw['show_info_blocks']) && (string)$raw['show_info_blocks'] === '1' ? '1' : '0',
             'info_blocks'=>self::clean_info_blocks($raw['info_blocks'] ?? array()),
+            'appearance'=>self::clean_appearance($raw['appearance'] ?? array()),
+            'row_styles'=>self::clean_row_styles($raw['row_styles'] ?? array()),
         );
         $store = self::store();
         $store['version'] = self::STORE_VERSION;

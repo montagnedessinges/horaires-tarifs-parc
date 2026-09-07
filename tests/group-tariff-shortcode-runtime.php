@@ -62,13 +62,13 @@ $GLOBALS['parcs_ht_test_settings'] = array(
         'groups_booking_note'=>array('fr'=>'Note générique de réservation.'),
         'groups_button_label'=>array('fr'=>'Bouton général'),
         'groups_url'=>array('fr'=>'https://example.test/general'),
-        'primary_color'=>'#006757','payment_item_bg_color'=>'#006757','payment_item_text_color'=>'#ffffff','payment_icon_color'=>'#ffffff',
+        'primary_color'=>'#006757','tariff_title_color'=>'#800080','button_bg_color'=>'#800080','payment_item_bg_color'=>'#800080','payment_item_text_color'=>'#ffffff','payment_icon_color'=>'#ffffff',
     ),
     'tariffs'=>array(
         'columns'=>array('groups'=>array(array('id'=>'tariff_col_000001','visible'=>'1','label'=>array('fr'=>'Tarif')))),
         'individual'=>array(array('enabled'=>'1','label'=>array('fr'=>'Individuel à ne pas afficher'),'cells'=>array('price'=>array('value'=>'99 €')))),
         'groups'=>array(
-            array('id'=>'tariff_row_000001','enabled'=>'1','label'=>array('fr'=>'Senior'),'subtitle'=>array('fr'=>'Groupe senior'),'cells'=>array('tariff_col_000001'=>array('value'=>'9 €','old_value'=>''))),
+            array('id'=>'tariff_row_000001','enabled'=>'1','label'=>array('fr'=>'Senior'),'subtitle'=>array('fr'=>'Groupe senior'),'label_color'=>'#800080','price_color'=>'#800080','cells'=>array('tariff_col_000001'=>array('value'=>'9 €','old_value'=>''))),
             array('id'=>'tariff_row_000002','enabled'=>'0','label'=>array('fr'=>'Ligne masquée'),'cells'=>array('tariff_col_000001'=>array('value'=>'1 €','old_value'=>''))),
         ),
     ),
@@ -84,6 +84,8 @@ $GLOBALS['parcs_ht_test_group_display'] = array(
         array('enabled'=>'1','title'=>array('fr'=>'Conditions test'),'text'=>array('fr'=>'Texte entièrement configurable.')),
     ),
     'show_quote_button'=>'1','button_label'=>array('fr'=>'Demander maintenant'),'button_url'=>array('fr'=>'https://example.test/custom'),
+    'appearance'=>array('tariff_title_color'=>'#ff69b4','tariff_title_bg_color'=>'#ffffff','tariff_title_bg_transparent'=>'1','payment_title_color'=>'#ff69b4','payment_title_bg_color'=>'#ffffff','payment_title_bg_transparent'=>'1','payment_item_bg_color'=>'#ff69b4','payment_item_text_color'=>'#ffffff','payment_icon_color'=>'#ffffff','payment_border_color'=>'#ff69b4','payment_border_enabled'=>'1','panel_text_color'=>'#333333','panel_border_color'=>'#ff69b4','panel_border_enabled'=>'1','panel_bg_color'=>'#ffffff','panel_bg_transparent'=>'1','price_color'=>'#ff69b4','groups_note_text_color'=>'#333333','groups_note_border_color'=>'#ff69b4','button_bg_color'=>'#ff69b4','button_text_color'=>'#ffffff'),
+    'row_styles'=>array('tariff_row_000001'=>array('label_color'=>'#ff1493','subtitle_color'=>'','note_color'=>'','price_color'=>'#ff1493','row_bg_color'=>'#ffffff','row_bg_transparent'=>'1','row_border_color'=>'#ff69b4')),
 );
 
 $html = Parcs_HT_Group_Tariffs::render('fr');
@@ -95,6 +97,9 @@ group_runtime_assert(strpos($html, 'Individuel à ne pas afficher') === false &&
 group_runtime_assert(strpos($html, 'Comment régler ?') !== false && strpos($html, 'Carte test') !== false && strpos($html, 'Virement test') !== false, 'configured payment methods are rendered');
 group_runtime_assert(strpos($html, 'Conditions test') !== false && strpos($html, 'Texte entièrement configurable.') !== false, 'configured information block is rendered');
 group_runtime_assert(strpos($html, 'https://example.test/custom') !== false && strpos($html, 'Demander maintenant') !== false, 'configured quote button is rendered');
+group_runtime_assert(strpos($html, '--htp-tariff-title:#ff69b4;') !== false && strpos($html, '--htp-button-bg:#ff69b4;') !== false, 'group shortcode uses its own pink palette');
+group_runtime_assert(strpos($html, '--htp-tariff-title:#800080;') === false && strpos($html, '--htp-button-bg:#800080;') === false, 'classic tariff purple palette does not leak into group shortcode');
+group_runtime_assert(strpos($html, '--htp-row-label:#ff1493;') !== false && strpos($html, '--htp-row-label:#800080;') === false, 'row-specific colors are also independent between shortcodes');
 $payment_pos = strpos($html, 'parcs-ht-group-payment-strip');$prices_pos = strpos($html, 'parcs-ht-price-list');$info_pos = strpos($html, 'Conditions test');
 group_runtime_assert($payment_pos !== false && $prices_pos !== false && $payment_pos < $prices_pos && $info_pos > $prices_pos, 'visual order is payments then prices then information');
 
@@ -112,9 +117,14 @@ group_runtime_assert(strpos($html_minimal, 'parcs-ht-group-payment-strip') === f
 group_runtime_assert(strpos($html_minimal, 'Conditions test') === false, 'information section can be disabled');
 group_runtime_assert(strpos($html_minimal, 'Note générique de réservation.') !== false, 'generic booking note remains as fallback when custom information is disabled');
 
+$GLOBALS['parcs_ht_test_settings']['general']['tariff_title_color'] = '#00aa00';
+$GLOBALS['parcs_ht_test_settings']['general']['button_bg_color'] = '#00aa00';
+$GLOBALS['parcs_ht_test_settings']['tariffs']['groups'][0]['label_color'] = '#00aa00';
 $GLOBALS['parcs_ht_test_settings']['tariffs']['groups'][0]['cells']['tariff_col_000001']['value'] = '10 €';
 $html_updated = Parcs_HT_Group_Tariffs::render('fr');
 group_runtime_assert(strpos($html_updated, '10 €') !== false && strpos($html_updated, '9 €') === false, 'updated canonical group price is read directly');
+group_runtime_assert(strpos($html_updated, '--htp-tariff-title:#ff69b4;') !== false && strpos($html_updated, '--htp-tariff-title:#00aa00;') === false, 'changing classic tariff colors later does not change the group shortcode');
+group_runtime_assert(strpos($html_updated, '--htp-row-label:#ff1493;') !== false && strpos($html_updated, '--htp-row-label:#00aa00;') === false, 'changing canonical row colors later does not change the group shortcode row styling');
 
 $source = file_get_contents($root . '/includes/class-parcs-ht-group-tariffs.php');
 group_runtime_assert(strpos($source, 'Parcs_HT_Defaults::settings()') !== false, 'shortcode reads canonical tariff settings');

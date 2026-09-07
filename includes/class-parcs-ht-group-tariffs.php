@@ -85,7 +85,9 @@ final class Parcs_HT_Group_Tariffs {
         return true;
     }
 
-    private static function row_style($row) {
+    private static function row_style($row, $display) {
+        $row_id = sanitize_key((string)($row['id'] ?? ''));
+        $styles = isset($display['row_styles'][$row_id]) && is_array($display['row_styles'][$row_id]) ? $display['row_styles'][$row_id] : array();
         $style = '';
         $map = array(
             'label_color'=>'--htp-row-label',
@@ -95,11 +97,11 @@ final class Parcs_HT_Group_Tariffs {
             'row_border_color'=>'--htp-row-border',
         );
         foreach ($map as $key=>$var) {
-            if (!empty($row[$key]) && ($color = sanitize_hex_color($row[$key]))) $style .= $var . ':' . $color . ';';
+            if (!empty($styles[$key]) && ($color = sanitize_hex_color($styles[$key]))) $style .= $var . ':' . $color . ';';
         }
-        if (!empty($row['row_bg_transparent']) && (string)$row['row_bg_transparent'] === '1') {
+        if (!empty($styles['row_bg_transparent']) && (string)$styles['row_bg_transparent'] === '1') {
             $style .= '--htp-row-bg:transparent;';
-        } elseif (!empty($row['row_bg_color']) && ($color = sanitize_hex_color($row['row_bg_color']))) {
+        } elseif (!empty($styles['row_bg_color']) && ($color = sanitize_hex_color($styles['row_bg_color']))) {
             $style .= '--htp-row-bg:' . $color . ';';
         }
         return $style;
@@ -217,26 +219,38 @@ final class Parcs_HT_Group_Tariffs {
         }
         return $html === '' ? '' : '<div class="parcs-ht-quote-info-grid parcs-ht-group-info-grid">' . $html . '</div>';
     }
-    private static function style_variables($general) {
-        $general = is_array($general) ? $general : array();
+    private static function style_variables($appearance) {
+        $appearance = is_array($appearance) ? $appearance : array();
         $map = array(
-            'primary_color'=>'--htp-primary','secondary_color'=>'--htp-secondary','accent_color'=>'--htp-accent','highlight_color'=>'--htp-highlight',
-            'tab_bg_color'=>'--htp-tab-bg','tab_text_color'=>'--htp-tab-text','tab_active_bg_color'=>'--htp-tab-active-bg','tab_active_text_color'=>'--htp-tab-active-text',
-            'button_bg_color'=>'--htp-button-bg','button_text_color'=>'--htp-button-text','price_color'=>'--htp-price','groups_note_text_color'=>'--htp-groups-note-text','groups_note_border_color'=>'--htp-groups-note-border',
+            'tariff_title_color'=>'--htp-tariff-title',
             'payment_title_color'=>'--htp-payment-title','payment_border_color'=>'--htp-payment-border','payment_item_bg_color'=>'--htp-payment-item-bg','payment_item_text_color'=>'--htp-payment-item-text','payment_icon_color'=>'--htp-payment-icon',
+            'panel_text_color'=>'--htp-panel-text','panel_border_color'=>'--htp-panel-border','price_color'=>'--htp-price',
+            'groups_note_text_color'=>'--htp-groups-note-text','groups_note_border_color'=>'--htp-groups-note-border',
+            'button_bg_color'=>'--htp-button-bg','button_text_color'=>'--htp-button-text',
         );
         $style = '';
         foreach ($map as $key=>$variable) {
-            if (empty($general[$key])) continue;
-            $color = sanitize_hex_color((string)$general[$key]);
+            if (empty($appearance[$key])) continue;
+            $color = sanitize_hex_color((string)$appearance[$key]);
             if ($color) $style .= $variable . ':' . $color . ';';
         }
-        if (!empty($general['panel_bg_transparent']) && (string)$general['panel_bg_transparent'] === '1') {
+        if (!empty($appearance['tariff_title_bg_transparent']) && (string)$appearance['tariff_title_bg_transparent'] === '1') {
+            $style .= '--htp-tariff-title-bg:transparent;';
+        } elseif (!empty($appearance['tariff_title_bg_color']) && ($color = sanitize_hex_color((string)$appearance['tariff_title_bg_color']))) {
+            $style .= '--htp-tariff-title-bg:' . $color . ';';
+        }
+        if (!empty($appearance['payment_title_bg_transparent']) && (string)$appearance['payment_title_bg_transparent'] === '1') {
+            $style .= '--htp-payment-title-bg:transparent;';
+        } elseif (!empty($appearance['payment_title_bg_color']) && ($color = sanitize_hex_color((string)$appearance['payment_title_bg_color']))) {
+            $style .= '--htp-payment-title-bg:' . $color . ';';
+        }
+        if (!empty($appearance['panel_bg_transparent']) && (string)$appearance['panel_bg_transparent'] === '1') {
             $style .= '--htp-panel-bg:transparent;';
-        } elseif (!empty($general['panel_bg_color']) && ($color = sanitize_hex_color((string)$general['panel_bg_color']))) {
+        } elseif (!empty($appearance['panel_bg_color']) && ($color = sanitize_hex_color((string)$appearance['panel_bg_color']))) {
             $style .= '--htp-panel-bg:' . $color . ';';
         }
-        $style .= '--htp-payment-border-width:' . ((!empty($general['payment_border_enabled']) && (string)$general['payment_border_enabled'] === '1') ? '1px' : '0px') . ';';
+        $style .= '--htp-payment-border-width:' . ((!empty($appearance['payment_border_enabled']) && (string)$appearance['payment_border_enabled'] === '1') ? '1px' : '0px') . ';';
+        $style .= '--htp-panel-border-width:' . ((!empty($appearance['panel_border_enabled']) && (string)$appearance['panel_border_enabled'] === '1') ? '1px' : '0px') . ';';
         return $style;
     }
 
@@ -278,13 +292,13 @@ final class Parcs_HT_Group_Tariffs {
         self::$instance++;
         $id = 'parcs-ht-group-tariffs-' . self::$instance;
         $general = isset($settings['general']) && is_array($settings['general']) ? $settings['general'] : array();
-        $style = self::style_variables($general);
         $late_style = self::ensure_style();
         $year = trim((string)($general['year'] ?? ''));
         $titles = array('fr'=>'Tarifs groupes','en'=>'Group rates','de'=>'Gruppentarife');
         $title = $titles[$language] . ($year !== '' ? ' ' . $year : '');
         $show_head = count($columns) > 1;
         $display = self::display_settings($year);
+        $style = self::style_variables($display['appearance'] ?? array());
         $show_heading = (string)($display['show_heading'] ?? '1') === '1';
         $custom_title = self::translation($display['title'] ?? array(), $language, '');
         if ($custom_title !== '') $title = $custom_title;
@@ -321,7 +335,7 @@ final class Parcs_HT_Group_Tariffs {
                     <?php endif; ?>
                     <?php foreach ($visible_rows as $row) :
                         $is_special = isset($row['row_type']) && $row['row_type'] === 'special';
-                        $row_style = self::row_style($row);
+                        $row_style = self::row_style($row, $display);
                         $label_text = self::translation($row['label'] ?? array(), $language, '');
                         $subtitle = self::translation($row['subtitle'] ?? ($row['detail'] ?? array()), $language, '');
                         $note = self::translation($row['note'] ?? array(), $language, '');
