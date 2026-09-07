@@ -27,7 +27,8 @@ setting_assert((int)$GLOBALS['opts'][Parcs_HT_Group_Tariff_Settings::OPTION]['ve
 setting_assert($mds['show_payment_methods'] === '1' && count($mds['payment_methods']) === 5, 'existing MDS 1.13.6 payment content is preserved by in-memory migration');
 setting_assert($mds['show_info_blocks'] === '1' && count($mds['info_blocks']) === 2, 'existing MDS 1.13.6 information content is preserved by in-memory migration');
 Parcs_HT_Group_Tariff_Settings::ensure_store();
-setting_assert((int)$GLOBALS['opts'][Parcs_HT_Group_Tariff_Settings::OPTION]['version'] === 3, 'administration persists the migration to version 3');
+setting_assert((int)$GLOBALS['opts'][Parcs_HT_Group_Tariff_Settings::OPTION]['version'] === 4, 'administration persists the migration to version 4');
+setting_assert($mds['display_from'] === '', 'migration keeps the legacy January first behaviour until a switch date is configured');
 setting_assert($mds['appearance']['tariff_title_color'] === '#663399' && $mds['appearance']['button_bg_color'] === '#663399', 'migration snapshots the current classic tariff palette for the group shortcode');
 setting_assert($mds['row_styles']['tariff_row_000001']['label_color'] === '#224466', 'migration snapshots current group-row colors so the public appearance does not change');
 
