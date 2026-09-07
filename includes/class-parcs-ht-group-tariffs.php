@@ -36,6 +36,15 @@ final class Parcs_HT_Group_Tariffs {
         return Parcs_HT_Schedule::translation(is_array($value) ? $value : array(), $language, $fallback);
     }
 
+    private static function is_mds($settings) {
+        $site_type = isset($settings['site_type']) ? sanitize_key((string)$settings['site_type']) : '';
+        if ($site_type === '' && method_exists('Parcs_HT_Defaults', 'all_settings')) {
+            $all = Parcs_HT_Defaults::all_settings();
+            if (is_array($all)) $site_type = sanitize_key((string)($all['site_type'] ?? ''));
+        }
+        return $site_type === 'mds';
+    }
+
     private static function columns($tariffs) {
         $columns = isset($tariffs['columns']['groups']) && is_array($tariffs['columns']['groups'])
             ? $tariffs['columns']['groups'] : array();
@@ -132,12 +141,95 @@ final class Parcs_HT_Group_Tariffs {
         return 'Acheter';
     }
 
+    /**
+     * Moyens de paiement MDS pour les visites de groupes.
+     *
+     * Ce bloc est volontairement distinct des moyens de paiement individuels :
+     * les ANCV individuels ne doivent pas être déduits comme moyen de paiement groupe.
+     */
+    private static function mds_payment_items() {
+        return array(
+            array('icon'=>'card','label'=>array('fr'=>'Carte bancaire','en'=>'Bank card','de'=>'Bankkarte')),
+            array('icon'=>'cash','label'=>array('fr'=>'Espèces','en'=>'Cash','de'=>'Bargeld')),
+            array('icon'=>'cheque','label'=>array('fr'=>'Chèque','en'=>'Cheque','de'=>'Scheck')),
+            array('icon'=>'document','label'=>array('fr'=>'Bon de commande / voucher','en'=>'Purchase order / voucher','de'=>'Bestellschein / Voucher')),
+            array('icon'=>'chorus','label'=>array('fr'=>'Chorus Pro','en'=>'Chorus Pro','de'=>'Chorus Pro')),
+        );
+    }
+
+    private static function payment_icon_svg($icon) {
+        $common = 'viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" focusable="false" aria-hidden="true"';
+        switch ($icon) {
+            case 'cash':
+                return '<svg ' . $common . '><rect x="2.5" y="5.5" width="15.5" height="10.5" rx="1.8"/><circle cx="10.2" cy="10.8" r="2.2"/><circle cx="18" cy="16.7" r="3.3"/><path d="M16.7 16.7h2.6"/></svg>';
+            case 'cheque':
+                return '<svg ' . $common . '><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M5.5 9h7M5.5 12.5h4.5M14.5 14.2l1.7 1.7 3.1-3.4"/></svg>';
+            case 'document':
+                return '<svg ' . $common . '><path d="M6 2.8h8l4 4V21H6z"/><path d="M14 2.8V7h4M9 11h6M9 14.5h6M9 18h4"/></svg>';
+            case 'chorus':
+                return '<svg ' . $common . '><path d="M3 20.5h18M5 20.5V9.5h14v11M8 20.5v-7h3v7M14 20.5v-7h3v7M4 9.5 12 4l8 5.5"/></svg>';
+            case 'card':
+            default:
+                return '<svg ' . $common . '><rect x="2.5" y="4.8" width="19" height="14.4" rx="2.4"/><path d="M2.5 9.1h19"/><rect x="6" y="13" width="4.6" height="2.4" rx=".5" fill="currentColor" stroke="none"/><path d="M13.4 14.2h4.2"/></svg>';
+        }
+    }
+
+    private static function mds_payment_strip($language) {
+        $titles = array('fr'=>'Moyens de paiement','en'=>'Payment methods','de'=>'Zahlungsmöglichkeiten');
+        $items = self::mds_payment_items();
+        ob_start(); ?>
+        <div class="parcs-ht-payment-strip parcs-ht-group-payment-strip" aria-label="<?php echo esc_attr($titles[$language]); ?>">
+            <strong class="parcs-ht-payment-title"><?php echo esc_html($titles[$language]); ?></strong>
+            <div class="parcs-ht-payment-icons">
+                <?php foreach ($items as $item) :
+                    $label = self::translation($item['label'], $language, '');
+                    if ($label === '') continue;
+                ?>
+                    <span class="parcs-ht-payment-item">
+                        <span class="parcs-ht-payment-icon" aria-hidden="true"><?php echo wp_kses(self::payment_icon_svg($item['icon']), Parcs_HT_Defaults::svg_allowed_tags()); ?></span>
+                        <span><?php echo esc_html($label); ?></span>
+                    </span>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <?php return ob_get_clean();
+    }
+
+    private static function mds_information_blocks($language) {
+        $payment_titles = array(
+            'fr'=>'Paiement et facturation',
+            'en'=>'Payment and invoicing',
+            'de'=>'Zahlung und Rechnung',
+        );
+        $payment_texts = array(
+            'fr'=>'Paiement sur place : carte bancaire, espèces ou chèque. Pour un règlement différé, présentez le jour de la visite un devis signé, un bon de commande ou un voucher. Les structures publiques peuvent régler via Chorus Pro et doivent prévoir le numéro SIRET, l’adresse complète de facturation, un contact administratif et le code service. La facture est établie le jour de la visite selon le nombre réel de participants présents. Aucun paiement n’est demandé avant la visite et il n’est pas nécessaire de signaler un changement d’effectif.',
+            'en'=>'On-site payment: bank card, cash or cheque. For deferred payment, please present a signed quote, purchase order or voucher on the day of your visit. Public-sector organisations may pay via Chorus Pro and must provide their SIRET number, full billing address, administrative contact and service code. The invoice is issued on the day of the visit according to the actual number of participants present. No payment is requested before the visit and there is no need to report a change in group size.',
+            'de'=>'Zahlung vor Ort: Bankkarte, Bargeld oder Scheck. Für eine spätere Zahlung legen Sie am Besuchstag ein unterschriebenes Angebot, einen Bestellschein oder einen Voucher vor. Öffentliche Einrichtungen können über Chorus Pro zahlen und müssen ihre SIRET-Nummer, die vollständige Rechnungsadresse, einen Verwaltungskontakt und den Servicecode bereithalten. Die Rechnung wird am Besuchstag anhand der tatsächlich anwesenden Teilnehmerzahl erstellt. Vor dem Besuch ist keine Zahlung erforderlich; Änderungen der Gruppengröße müssen nicht gemeldet werden.',
+        );
+        $quote_titles = array(
+            'fr'=>'Devis et réservation',
+            'en'=>'Quote and booking',
+            'de'=>'Angebot und Reservierung',
+        );
+        $quote_texts = array(
+            'fr'=>'La réservation est obligatoire pour bénéficier des tarifs groupes. Le devis est généré automatiquement après la demande et envoyé par e-mail. Pour confirmer la réservation, renvoyez-le signé avec la mention « Bon pour accord ». Le devis imprimé doit être présenté à l’accueil le jour de la visite.',
+            'en'=>'Booking is required to benefit from group rates. The quote is generated automatically after your request and sent by email. To confirm the booking, return the signed quote with the wording “Bon pour accord”. The printed quote must be presented at reception on the day of the visit.',
+            'de'=>'Eine Reservierung ist erforderlich, um die Gruppentarife in Anspruch zu nehmen. Das Angebot wird nach der Anfrage automatisch erstellt und per E-Mail versandt. Zur Bestätigung der Reservierung senden Sie das unterschriebene Angebot mit dem Vermerk „Bon pour accord“ zurück. Das ausgedruckte Angebot muss am Besuchstag am Empfang vorgelegt werden.',
+        );
+
+        return '<div class="parcs-ht-quote-info-grid parcs-ht-group-info-grid">' .
+            '<article class="parcs-ht-quote-info"><div class="parcs-ht-quote-info-title" role="heading" aria-level="3">' . esc_html($payment_titles[$language]) . '</div><p>' . esc_html($payment_texts[$language]) . '</p></article>' .
+            '<article class="parcs-ht-quote-info"><div class="parcs-ht-quote-info-title" role="heading" aria-level="3">' . esc_html($quote_titles[$language]) . '</div><p>' . esc_html($quote_texts[$language]) . '</p></article>' .
+            '</div>';
+    }
+
     private static function style_variables($general) {
         $general = is_array($general) ? $general : array();
         $map = array(
             'primary_color'=>'--htp-primary','secondary_color'=>'--htp-secondary','accent_color'=>'--htp-accent','highlight_color'=>'--htp-highlight',
             'tab_bg_color'=>'--htp-tab-bg','tab_text_color'=>'--htp-tab-text','tab_active_bg_color'=>'--htp-tab-active-bg','tab_active_text_color'=>'--htp-tab-active-text',
             'button_bg_color'=>'--htp-button-bg','button_text_color'=>'--htp-button-text','price_color'=>'--htp-price','groups_note_text_color'=>'--htp-groups-note-text','groups_note_border_color'=>'--htp-groups-note-border',
+            'payment_title_color'=>'--htp-payment-title','payment_border_color'=>'--htp-payment-border','payment_item_bg_color'=>'--htp-payment-item-bg','payment_item_text_color'=>'--htp-payment-item-text','payment_icon_color'=>'--htp-payment-icon',
         );
         $style = '';
         foreach ($map as $key=>$variable) {
@@ -150,6 +242,7 @@ final class Parcs_HT_Group_Tariffs {
         } elseif (!empty($general['panel_bg_color']) && ($color = sanitize_hex_color((string)$general['panel_bg_color']))) {
             $style .= '--htp-panel-bg:' . $color . ';';
         }
+        $style .= '--htp-payment-border-width:' . ((!empty($general['payment_border_enabled']) && (string)$general['payment_border_enabled'] === '1') ? '1px' : '0px') . ';';
         return $style;
     }
 
@@ -197,6 +290,7 @@ final class Parcs_HT_Group_Tariffs {
         $titles = array('fr'=>'Tarifs groupes','en'=>'Group rates','de'=>'Gruppentarife');
         $title = $titles[$language] . ($year !== '' ? ' ' . $year : '');
         $show_head = count($columns) > 1;
+        $is_mds = self::is_mds($settings);
 
         $groups_url = isset($general['groups_url'][$language]) ? (string)$general['groups_url'][$language] : '';
         $groups_booking_note = self::translation($general['groups_booking_note'] ?? array(), $language, '');
@@ -212,6 +306,7 @@ final class Parcs_HT_Group_Tariffs {
             <header class="parcs-ht-heading parcs-ht-tariff-heading">
                 <div class="parcs-ht-title" role="heading" aria-level="2"><?php echo esc_html($title); ?></div>
             </header>
+            <?php if ($is_mds) echo self::mds_payment_strip($language); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- HTML interne entièrement échappé. ?>
             <div class="parcs-ht-tariff-panel">
                 <div class="parcs-ht-price-list" style="--htp-tariff-column-count:<?php echo (int)count($columns); ?>">
                     <?php if ($show_head) : ?>
@@ -257,7 +352,11 @@ final class Parcs_HT_Group_Tariffs {
                         </div>
                     <?php endforeach; ?>
                 </div>
-                <?php if ($groups_booking_note !== '') : ?><p class="parcs-ht-groups-booking-note"><?php echo nl2br(esc_html($groups_booking_note)); ?></p><?php endif; ?>
+                <?php if ($is_mds) : ?>
+                    <?php echo self::mds_information_blocks($language); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- HTML interne entièrement échappé. ?>
+                <?php elseif ($groups_booking_note !== '') : ?>
+                    <p class="parcs-ht-groups-booking-note"><?php echo nl2br(esc_html($groups_booking_note)); ?></p>
+                <?php endif; ?>
                 <?php if ($groups_url !== '') : ?><div class="parcs-ht-panel-actions"><a class="parcs-ht-button" href="<?php echo esc_url($groups_url); ?>"><?php echo esc_html($groups_button_label); ?></a></div><?php endif; ?>
             </div>
         </section>
