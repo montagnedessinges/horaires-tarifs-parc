@@ -91,6 +91,12 @@ final class Parcs_HT_Group_Tariff_Settings {
         );
     }
 
+    private static function clean_color($value) {
+        $value = (string)$value;
+        if (function_exists('sanitize_hex_color')) return sanitize_hex_color($value);
+        return preg_match('/^#[0-9a-fA-F]{6}$/', $value) ? strtolower($value) : null;
+    }
+
     private static function clean_appearance($value) {
         $value = is_array($value) ? $value : array();
         $defaults = self::appearance_defaults();
@@ -106,8 +112,8 @@ final class Parcs_HT_Group_Tariff_Settings {
                 $out[$key] = '';
                 continue;
             }
-            $color = sanitize_hex_color($raw);
-            $out[$key] = $color ?: (sanitize_hex_color((string)$fallback) ?: '');
+            $color = self::clean_color($raw);
+            $out[$key] = $color ?: (self::clean_color((string)$fallback) ?: '');
         }
         return $out;
     }
@@ -138,8 +144,8 @@ final class Parcs_HT_Group_Tariff_Settings {
                 $out[$key] = '';
                 continue;
             }
-            $color = sanitize_hex_color($raw);
-            $out[$key] = $color ?: (sanitize_hex_color((string)$fallback) ?: '');
+            $color = self::clean_color($raw);
+            $out[$key] = $color ?: (self::clean_color((string)$fallback) ?: '');
         }
         return $out;
     }
