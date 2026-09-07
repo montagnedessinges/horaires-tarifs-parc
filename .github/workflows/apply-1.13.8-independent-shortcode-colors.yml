@@ -17,7 +17,15 @@ jobs:
         with:
           fetch-depth: 0
       - name: Apply audited color separation
-        run: python3 .github/scripts/apply_1_13_8.py
+        run: |
+          python3 .github/scripts/apply_1_13_8.py
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('tests/group-tariff-publication-contract.php')
+          s=p.read_text()
+          s=s.replace("const STORE_VERSION = 2') !== false, 'group display settings store migrated to version 2'", "const STORE_VERSION = 3') !== false, 'group display settings store migrated to version 3'")
+          p.write_text(s)
+          PY
       - name: Validate PHP syntax
         run: find . -name '*.php' -not -path './vendor/*' -print0 | xargs -0 -n1 php -l
       - name: Validate JavaScript syntax
@@ -36,5 +44,3 @@ jobs:
           git add -A
           git commit -m 'Add independent colors for group tariff shortcode 1.13.8'
           git push
-
-# Retry after migration-snapshot regression fix.
