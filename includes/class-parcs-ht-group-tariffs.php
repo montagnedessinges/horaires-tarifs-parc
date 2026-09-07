@@ -5,8 +5,8 @@ if (!defined('ABSPATH')) { exit; }
 /**
  * Shortcode autonome d'affichage des tarifs groupes.
  *
- * Source unique des prix : la même grille tariffs.groups de la saison publique
- * que celle utilisée par [parc_tableau_tarifs]. Aucun tarif n'est dupliqué ici.
+ * Source unique des prix : tariffs.groups de la saison commerciale sélectionnée
+ * par les réglages groupes. La saison publique générale peut rester sur une autre année.
  */
 final class Parcs_HT_Group_Tariffs {
     private static $instance = 0;
@@ -25,11 +25,24 @@ final class Parcs_HT_Group_Tariffs {
     }
 
     private static function selected_settings() {
-        $settings = Parcs_HT_Defaults::settings();
-        if (class_exists('Parcs_HT_Tariff_Seasons')) {
-            $settings = Parcs_HT_Tariff_Seasons::select_season_tariffs($settings, true);
+        $year = class_exists('Parcs_HT_Group_Tariff_Settings') ? Parcs_HT_Group_Tariff_Settings::public_year() : '';
+        $settings = Parcs_HT_Defaults::settings($year);
+        if ($year !== '') {
+            $all = Parcs_HT_Defaults::all_settings();
+            if (isset($all['seasons'][$year]) && is_array($all['seasons'][$year])) {
+                $season = $all['seasons'][$year];
+                $settings['tariffs'] = isset($season['tariffs']) && is_array($season['tariffs']) ? $season['tariffs'] : array();
+                if (!isset($settings['general']) || !is_array($settings['general'])) $settings['general'] = array();
+                $settings['general']['year'] = $year;
+                $settings['active_season_year'] = $year;
+                return $settings;
+            }
         }
-        return is_array($settings) ? $settings : array();
+        if (!isset($settings['tariffs']) || !is_array($settings['tariffs'])) $settings['tariffs'] = array();
+        $settings['tariffs']['groups'] = array();
+        if (!isset($settings['tariffs']['columns']) || !is_array($settings['tariffs']['columns'])) $settings['tariffs']['columns'] = array();
+        $settings['tariffs']['columns']['groups'] = array();
+        return $settings;
     }
 
     private static function translation($value, $language, $fallback = '') {
