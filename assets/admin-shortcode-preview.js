@@ -1,146 +1,194 @@
 (function(){
   'use strict';
 
-  var STORAGE_KEY='parcs_ht_shortcode_preview_bg';
+  var config=window.ParcsHTShortcodePreview||{};
+  var rows=Array.isArray(config.rows)?config.rows:[];
+  var STORAGE_BASE='parcs_ht_shortcode_preview_base';
+  var STORAGE_LANG='parcs_ht_shortcode_preview_lang';
+  var STORAGE_BG='parcs_ht_shortcode_preview_bg';
+  var selectedBase='';
+  var selectedLang='fr';
+  var frame=null;
+  var code=null;
+  var nav=null;
+  var languageNav=null;
+  var refresh=null;
+  var status=null;
+  var colorInput=null;
 
-  function storedColor(){
-    try{
-      var value=sessionStorage.getItem(STORAGE_KEY)||'#ffffff';
-      return /^#[0-9a-f]{6}$/i.test(value)?value:'#ffffff';
-    }catch(e){return '#ffffff';}
+  function stored(key,fallback){
+    try{return sessionStorage.getItem(key)||fallback;}catch(e){return fallback;}
+  }
+  function save(key,value){try{sessionStorage.setItem(key,value);}catch(e){}}
+  function validColor(value){return /^#[0-9a-f]{6}$/i.test(String(value||''))?value:'#ffffff';}
+  function rowFor(base){return rows.filter(function(row){return String(row.base||'')===base;})[0]||rows[0]||null;}
+  function currentDate(){var input=document.querySelector('[data-htp-preview-date]');return input&&input.value?input.value:String(config.defaultDate||'');}
+  function currentTime(){var input=document.querySelector('[data-htp-preview-time]');return input&&input.value?input.value:String(config.defaultTime||'');}
+  function currentBackground(){return colorInput?validColor(colorInput.value):validColor(stored(STORAGE_BG,'#ffffff'));}
+
+  function ensureTimeControl(){
+    var controls=document.querySelector('.htp-preview-controls');
+    var dateInput=document.querySelector('[data-htp-preview-date]');
+    if(!controls||!dateInput)return;
+    if(!dateInput.value&&config.defaultDate)dateInput.value=config.defaultDate;
+    var timeInput=document.querySelector('[data-htp-preview-time]');
+    if(!timeInput){
+      var label=document.createElement('label');
+      label.className='htp-field htp-preview-time-field';
+      label.innerHTML='<span>Heure à tester</span><input type="time" data-htp-preview-time>';
+      timeInput=label.querySelector('input');
+      var button=controls.querySelector('[data-htp-preview-button]');
+      if(button)controls.insertBefore(label,button);else controls.appendChild(label);
+    }
+    if(!timeInput.value&&config.defaultTime)timeInput.value=config.defaultTime;
   }
 
-  function saveColor(value){
-    try{sessionStorage.setItem(STORAGE_KEY,value);}catch(e){}
+  function frameUrl(){
+    var row=rowFor(selectedBase);
+    if(!row)return 'about:blank';
+    var params=new URLSearchParams();
+    params.set('action',String(config.action||'parcs_ht_shortcode_preview_frame'));
+    params.set('_ajax_nonce',String(config.nonce||''));
+    params.set('base',String(row.base||''));
+    params.set('lang',selectedLang);
+    params.set('date',currentDate());
+    params.set('time',currentTime());
+    params.set('background',currentBackground());
+    if(config.season)params.set('season',String(config.season));
+    return String(config.ajaxUrl||window.ajaxurl||'')+'?'+params.toString();
   }
 
-  function moveContent(source,canvas){
-    while(source.firstChild)canvas.appendChild(source.firstChild);
-  }
-
-  function initGuidePreview(root){
-    if(!root||root.dataset.htpPreviewGuideReady==='1')return;
-    root.dataset.htpPreviewGuideReady='1';
-    var cycle='all',lang='all';
-    function apply(){
-      root.querySelectorAll('[data-guide-card]').forEach(function(card){
-        var cycleMatch=cycle==='all'||card.dataset.cycle===cycle;
-        var langMatch=lang==='all'||(' '+card.dataset.languages+' ').indexOf(' '+lang+' ')!==-1;
-        card.hidden=!(cycleMatch&&langMatch);
+  function updateChrome(){
+    var row=rowFor(selectedBase);
+    if(!row)return;
+    if(code)code.textContent=(row.shortcodes&&row.shortcodes[selectedLang])?row.shortcodes[selectedLang]:('['+row.base+'_'+selectedLang+']');
+    if(nav){
+      nav.querySelectorAll('[data-htp-preview-base]').forEach(function(button){
+        var active=button.getAttribute('data-htp-preview-base')===row.base;
+        button.classList.toggle('is-active',active);
+        button.setAttribute('aria-current',active?'true':'false');
       });
     }
-    function bind(selector,key){
-      root.querySelectorAll(selector+' button[data-guide-'+key+']').forEach(function(button){
-        button.addEventListener('click',function(){
-          root.querySelectorAll(selector+' button[data-guide-'+key+']').forEach(function(item){item.classList.toggle('is-active',item===button);});
-          if(key==='cycle')cycle=button.dataset.guideCycle;else lang=button.dataset.guideLanguage;
-          apply();
-        });
+    if(languageNav){
+      languageNav.querySelectorAll('[data-htp-preview-lang]').forEach(function(button){
+        var active=button.getAttribute('data-htp-preview-lang')===selectedLang;
+        button.classList.toggle('button-primary',active);
+        button.setAttribute('aria-selected',active?'true':'false');
       });
     }
-    bind('[data-guide-cycle-filters]','cycle');
-    bind('[data-guide-language-filters]','language');
-    root.querySelectorAll('[data-guide-info]').forEach(function(button){
-      button.addEventListener('click',function(event){
-        event.stopPropagation();
-        var pop=button.parentNode.querySelector('[data-guide-info-pop]');
-        if(!pop)return;
-        var open=!pop.hidden;
-        root.querySelectorAll('[data-guide-info-pop]').forEach(function(item){item.hidden=true;});
-        root.querySelectorAll('[data-guide-info]').forEach(function(item){item.setAttribute('aria-expanded','false');});
-        pop.hidden=open;button.setAttribute('aria-expanded',open?'false':'true');
-      });
+  }
+
+  function loadPreview(){
+    var row=rowFor(selectedBase);
+    if(!row||!frame)return;
+    updateChrome();
+    if(status)status.textContent='Chargement de l’aperçu…';
+    if(refresh){refresh.disabled=true;refresh.textContent='Mise à jour…';}
+    frame.style.backgroundColor=currentBackground();
+    frame.src=frameUrl();
+  }
+
+  function selectBase(base){
+    var row=rowFor(base);
+    if(!row)return;
+    selectedBase=String(row.base||'');
+    save(STORAGE_BASE,selectedBase);
+    loadPreview();
+  }
+
+  function selectLanguage(language){
+    if(['fr','en','de'].indexOf(language)===-1)return;
+    selectedLang=language;
+    save(STORAGE_LANG,language);
+    loadPreview();
+  }
+
+  function buildWorkbench(section){
+    var historyTitle=Array.prototype.find.call(section.querySelectorAll('h3'),function(el){return /Historique de sécurité/i.test(el.textContent||'');});
+    var block=document.createElement('div');
+    block.className='htp-real-shortcode-preview';
+    block.innerHTML='<div class="htp-real-shortcode-preview-head">'+
+      '<div><h3>Aperçu des shortcodes</h3><p>Choisissez un shortcode et une langue. Seul l’aperçu sélectionné est chargé.</p></div>'+
+      '<div class="htp-real-shortcode-preview-tools">'+
+        '<button type="button" class="button button-primary" data-htp-shortcode-preview-refresh>Mettre à jour l’aperçu</button>'+
+        '<label class="htp-real-shortcode-preview-bg"><span>Fond de l’aperçu</span><input type="color" data-htp-shortcode-preview-bg></label>'+
+      '</div></div>'+
+      '<div class="htp-shortcode-preview-workbench">'+
+        '<nav class="htp-shortcode-preview-nav" aria-label="Shortcodes à prévisualiser" data-htp-shortcode-preview-nav></nav>'+
+        '<section class="htp-shortcode-preview-viewer">'+
+          '<div class="htp-shortcode-preview-viewer-head"><div><strong data-htp-shortcode-preview-label></strong><br><code data-htp-preview-code></code></div><div class="htp-shortcode-preview-languages" role="tablist" aria-label="Langue de l’aperçu" data-htp-preview-languages></div></div>'+
+          '<div class="htp-shortcode-preview-status" data-htp-preview-status aria-live="polite"></div>'+
+          '<iframe class="htp-real-shortcode-preview-frame" title="Aperçu du shortcode" data-htp-preview-frame></iframe>'+
+        '</section></div>';
+    if(historyTitle)section.insertBefore(block,historyTitle);else section.appendChild(block);
+
+    nav=block.querySelector('[data-htp-shortcode-preview-nav]');
+    languageNav=block.querySelector('[data-htp-preview-languages]');
+    frame=block.querySelector('[data-htp-preview-frame]');
+    code=block.querySelector('[data-htp-preview-code]');
+    refresh=block.querySelector('[data-htp-shortcode-preview-refresh]');
+    status=block.querySelector('[data-htp-preview-status]');
+    colorInput=block.querySelector('[data-htp-shortcode-preview-bg]');
+    colorInput.value=validColor(stored(STORAGE_BG,'#ffffff'));
+
+    rows.forEach(function(row){
+      var button=document.createElement('button');
+      button.type='button';
+      button.className='htp-shortcode-preview-nav-button';
+      button.textContent=String(row.label||row.base||'Shortcode');
+      button.setAttribute('data-htp-preview-base',String(row.base||''));
+      button.addEventListener('click',function(){selectBase(String(row.base||''));});
+      nav.appendChild(button);
     });
-  }
-
-  function initGroupTariffPreview(root){
-    if(!root||root.dataset.htpPreviewGroupTariffReady==='1')return;
-    root.dataset.htpPreviewGroupTariffReady='1';
-    root.querySelectorAll('[data-htp-group-year-tab]').forEach(function(button){
-      button.addEventListener('click',function(){
-        var year=button.getAttribute('data-htp-group-year-tab');
-        root.querySelectorAll('[data-htp-group-year-tab]').forEach(function(item){item.setAttribute('aria-selected',item===button?'true':'false');});
-        root.querySelectorAll('[data-htp-group-year-panel]').forEach(function(panel){panel.hidden=panel.getAttribute('data-htp-group-year-panel')!==year;});
-      });
-    });
-  }
-
-  function initCanvas(canvas){
-    canvas.querySelectorAll('[data-htp-guides]').forEach(initGuidePreview);
-    canvas.querySelectorAll('[data-htp-group-tariffs]').forEach(initGroupTariffPreview);
-  }
-
-  function previewCard(sources,color){
-    var first=sources[0];
-    var card=document.createElement('section');
-    card.className='htp-shortcode-preview-item';
-    var label=first.getAttribute('data-label')||'Shortcode';
-    card.innerHTML='<div class="htp-shortcode-preview-item-head"><div><h4></h4><code data-htp-preview-code></code></div><div class="htp-shortcode-preview-languages" role="tablist" aria-label="Langue de l’aperçu"></div></div><div data-htp-preview-canvases></div>';
-    card.querySelector('h4').textContent=label;
-    var languageNav=card.querySelector('.htp-shortcode-preview-languages');
-    var canvases=card.querySelector('[data-htp-preview-canvases]');
-    var code=card.querySelector('[data-htp-preview-code]');
-
-    function activate(language){
-      card.querySelectorAll('[data-htp-preview-lang-button]').forEach(function(button){
-        var active=button.getAttribute('data-htp-preview-lang-button')===language;
-        button.classList.toggle('button-primary',active);button.setAttribute('aria-selected',active?'true':'false');
-      });
-      card.querySelectorAll('[data-htp-preview-language-canvas]').forEach(function(canvas){canvas.hidden=canvas.getAttribute('data-htp-preview-language-canvas')!==language;});
-      var activeSource=sources.filter(function(source){return source.getAttribute('data-lang')===language;})[0]||first;
-      code.textContent=activeSource.getAttribute('data-shortcode')||'';
-    }
 
     ['fr','en','de'].forEach(function(language){
-      var source=sources.filter(function(item){return item.getAttribute('data-lang')===language;})[0];
-      if(!source)return;
-      var button=document.createElement('button');button.type='button';button.className='button button-small';button.textContent=language.toUpperCase();button.setAttribute('data-htp-preview-lang-button',language);button.setAttribute('role','tab');button.addEventListener('click',function(){activate(language);});languageNav.appendChild(button);
-      var canvas=document.createElement('div');canvas.className='htp-real-shortcode-preview-canvas';canvas.setAttribute('data-htp-shortcode-preview-canvas','');canvas.setAttribute('data-htp-preview-language-canvas',language);canvas.style.backgroundColor=color;moveContent(source,canvas);initCanvas(canvas);canvases.appendChild(canvas);
+      var button=document.createElement('button');
+      button.type='button';
+      button.className='button button-small';
+      button.textContent=language.toUpperCase();
+      button.setAttribute('role','tab');
+      button.setAttribute('data-htp-preview-lang',language);
+      button.addEventListener('click',function(){selectLanguage(language);});
+      languageNav.appendChild(button);
     });
-    activate('fr');
-    return card;
+
+    refresh.addEventListener('click',loadPreview);
+    colorInput.addEventListener('change',function(){save(STORAGE_BG,currentBackground());loadPreview();});
+    frame.addEventListener('load',function(){
+      if(status)status.textContent='';
+      if(refresh){refresh.disabled=false;refresh.textContent='Mettre à jour l’aperçu';}
+    });
   }
 
   function init(){
     var section=document.getElementById('htp-preview');
-    var sourcesRoot=document.getElementById('parcs-ht-real-shortcode-preview-sources');
-    if(!section||!sourcesRoot||section.dataset.htpRealShortcodePreview==='1')return;
-    section.dataset.htpRealShortcodePreview='1';
+    if(!section||!rows.length||section.dataset.htpLazyShortcodePreview==='1')return;
+    section.dataset.htpLazyShortcodePreview='1';
+    ensureTimeControl();
+    buildWorkbench(section);
 
-    var color=storedColor();
-    var block=document.createElement('div');
-    block.className='htp-real-shortcode-preview';
-    block.innerHTML='<div class="htp-real-shortcode-preview-head">'+
-      '<div><h3>Aperçus réels des shortcodes</h3><p>Tous les shortcodes du registre sont testables ici en FR, EN et DE. Après un enregistrement, cliquez sur « Mettre à jour les aperçus » pour recharger les vraies données.</p></div>'+
-      '<div class="htp-real-shortcode-preview-tools">'+
-        '<button type="button" class="button button-primary" data-htp-shortcode-preview-refresh>Mettre à jour les aperçus</button>'+
-        '<label class="htp-real-shortcode-preview-bg"><span>Fond des aperçus</span><input type="color" value="'+color+'" data-htp-shortcode-preview-bg></label>'+
-      '</div>'+
-      '</div><div class="htp-shortcode-preview-list" data-htp-shortcode-preview-list></div>';
+    var storedBase=stored(STORAGE_BASE,'');
+    selectedBase=rowFor(storedBase)?storedBase:String((rows[0]||{}).base||'');
+    selectedLang=stored(STORAGE_LANG,'fr');
+    if(['fr','en','de'].indexOf(selectedLang)===-1)selectedLang='fr';
 
-    var historyTitle=Array.prototype.find.call(section.querySelectorAll('h3'),function(el){return /Historique de sécurité/i.test(el.textContent||'');});
-    if(historyTitle)section.insertBefore(block,historyTitle);else section.appendChild(block);
+    var row=rowFor(selectedBase);
+    var label=section.querySelector('[data-htp-shortcode-preview-label]');
+    if(label&&row)label.textContent=String(row.label||'');
+    loadPreview();
 
-    var byBase={};
-    Array.prototype.slice.call(sourcesRoot.querySelectorAll('[data-htp-shortcode-preview-source]')).forEach(function(source){
-      var base=source.getAttribute('data-base')||source.getAttribute('data-shortcode')||'shortcode';
-      if(!byBase[base])byBase[base]=[];
-      byBase[base].push(source);
+    document.addEventListener('click',function(event){
+      if(event.target.closest('[data-htp-preview-button]'))setTimeout(loadPreview,0);
     });
-    var list=block.querySelector('[data-htp-shortcode-preview-list]');
-    Object.keys(byBase).forEach(function(base){list.appendChild(previewCard(byBase[base],color));});
-    sourcesRoot.remove();
-
-    var picker=block.querySelector('[data-htp-shortcode-preview-bg]');
-    picker.addEventListener('input',function(){
-      var value=picker.value;
-      block.querySelectorAll('[data-htp-shortcode-preview-canvas]').forEach(function(canvas){canvas.style.backgroundColor=value;});
-      saveColor(value);
-    });
-
-    var refresh=block.querySelector('[data-htp-shortcode-preview-refresh]');
-    refresh.addEventListener('click',function(){refresh.disabled=true;refresh.textContent='Mise à jour…';window.location.reload();});
   }
+
+  window.addEventListener('message',function(event){
+    if(event.origin!==window.location.origin||!frame||event.source!==frame.contentWindow)return;
+    var data=event.data||{};
+    if(data.type!=='parcs-ht-preview-size')return;
+    var height=Math.max(280,Math.min(2400,Number(data.height)||0));
+    if(height)frame.style.height=height+'px';
+  });
 
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 }());
