@@ -1,9 +1,0 @@
-Gestion du parc 1.15.4
-
-Couleurs dédiées au Calendrier de l’Avent :
-- palette configurable par campagne ;
-- six réglages : principale, secondaire, cases ouvertes, case du jour, cases verrouillées, indice & grand jeu ;
-- aucune couleur imposée par défaut : l’affichage existant reste inchangé tant qu’une couleur n’est pas personnalisée ;
-- teintes de départ proposées depuis la charte graphique 2026 ;
-- stockage séparé des contenus et données de campagne ;
-- réinitialisation possible vers les couleurs héritées.
