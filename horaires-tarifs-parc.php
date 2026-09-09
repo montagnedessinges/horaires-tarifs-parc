@@ -88,7 +88,7 @@ add_action('plugins_loaded', static function () {
     Parcs_HT_Advent::init();
     if (is_admin()) {
         require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin.php';
-        require_once PARCS_HT_DIR . 'includes/class-parcs-ht-advent-admin.php';
+        require_once PARCS_HT_DIR . 'includes/class-parcs-ht-advent-admin-v2.php';
         Parcs_HT_Admin::init();
         Parcs_HT_Admin_Groups::init();
         Parcs_HT_Admin_Shortcode_Preview::init();
