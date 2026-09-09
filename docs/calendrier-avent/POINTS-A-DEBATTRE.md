@@ -21,14 +21,15 @@ Options déjà envisagées :
 
 ## 2. Heure d’ouverture des jours
 
-Structure validée :
+Décision validée : le fonctionnement standard doit rester simple.
 
-- `heure_ouverture_globale` au niveau CAMPAGNE ;
-- `heure_ouverture` facultative au niveau CONTENUS.
+- `date_publication` + `heure_publication` constituent la date/heure principale du contenu ;
+- par défaut, cette même date/heure ouvre la case ou le teasing sur le site ;
+- elle sert aussi de repère pour la publication manuelle sur les réseaux sociaux ;
+- le plugin ne publie rien automatiquement sur Facebook ou Instagram ;
+- les horaires distincts par réseau ou l’override d’ouverture ne sont que des options avancées et facultatives, à masquer dans l’interface standard tant qu’elles ne sont pas utilisées.
 
-À finaliser :
-
-- faut-il que `date_publication` + `heure_publication` sociale puissent automatiquement servir d’heure d’ouverture par défaut, ou garder les deux notions totalement séparées ?
+Aucun débat fonctionnel restant sur le principe général. Les détails d’interface avancée pourront être décidés pendant le développement.
 
 ## 3. Fermeture du grand jeu
 
@@ -51,13 +52,24 @@ Principe validé : le mot correct déverrouille le formulaire final côté serve
 
 ## 5. Résultats quotidiens
 
-Principe validé : bloc RÉSULTATS distinct de CONTENUS.
+Principes validés :
+
+- bloc RÉSULTATS distinct de CONTENUS ;
+- gagnants Facebook et Instagram séparés ;
+- `explication_reponse_fr` facultatif, utilisé principalement pour expliquer pourquoi la réponse est correcte dans le commentaire de résultat ;
+- génération automatique du commentaire résultat Facebook ;
+- génération automatique du commentaire résultat Instagram ;
+- génération automatique d’un texte court pour Story ;
+- aperçu + bouton `Copier` pour chaque sortie ;
+- publication toujours manuelle par l’équipe du parc ;
+- relance automatique adaptée au planning : nouvelle question déjà en ligne, prochain rendez-vous à venir ou clôture si dernier jour.
 
 À finaliser :
 
 - gagnants saisis uniquement dans WordPress ou également importables ;
 - affichage ou non des gagnants sur le site archive ;
-- durée de conservation des données opérationnelles.
+- durée de conservation des données opérationnelles ;
+- formulation exacte des modèles de résultat et de Story, tout en conservant des overrides manuels.
 
 ## 6. Teasings
 
@@ -121,16 +133,24 @@ Base proposée :
 
 ## 10. Générateur de publications sociales
 
-Validé : génération structurée + aperçu + bouton Copier le texte + override manuel.
+Décisions validées :
+
+- l’extension ne publie jamais automatiquement vers Facebook ou Instagram ;
+- elle prépare les textes dans l’administration pour copie manuelle ;
+- génération structurée du post avant publication + aperçu + bouton `Copier le texte` + override manuel ;
+- après tirage, génération séparée du commentaire résultat Facebook, du commentaire résultat Instagram et d’un texte Story ;
+- `explication_reponse_fr` vient juste après la bonne réponse lorsqu’il est renseigné ;
+- le texte résultat peut ensuite mentionner les gagnants, remercier le partenaire, rappeler les conditions utiles puis relancer vers la suite du calendrier ;
+- si la prochaine question est déjà ouverte, le générateur invite à participer immédiatement ; sinon il annonce le prochain rendez-vous ; après le dernier jour, il utilise une clôture adaptée.
 
 À finaliser :
 
-- modèle Facebook et Instagram identiques ou séparés ;
-- longueur cible ;
+- modèle Facebook et Instagram identiques ou légèrement adaptés ;
+- longueur cible exacte ;
 - emplacement des liens ;
 - hashtags globaux vs hashtags du jour ;
-- ordre partenaire / lot / intro / question / règles ;
-- génération automatique d’un texte de résultat séparé.
+- ordre final partenaire / lot / intro / question / règles pour le post initial ;
+- style exact de la Story résultat.
 
 ## 11. Import
 
