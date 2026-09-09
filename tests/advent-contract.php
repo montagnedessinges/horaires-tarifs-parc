@@ -9,6 +9,8 @@ $core_admin = file_get_contents($root . '/includes/class-parcs-ht-admin.php');
 $registry = file_get_contents($root . '/includes/class-parcs-ht-shortcode-registry.php');
 $preview = file_get_contents($root . '/includes/class-parcs-ht-admin-shortcode-preview.php');
 $frontend_js = file_get_contents($root . '/assets/advent.js');
+$admin_js = file_get_contents($root . '/assets/advent-admin.js');
+$admin_css = file_get_contents($root . '/assets/advent-admin.css');
 $uninstall = file_get_contents($root . '/uninstall.php');
 
 function advent_check($condition, $message) {
@@ -19,7 +21,7 @@ function advent_check($condition, $message) {
     echo '[OK] ' . $message . PHP_EOL;
 }
 
-advent_check(strpos($main, 'Version: 1.15.1') !== false && strpos($main, "PARCS_HT_VERSION', '1.15.1") !== false, 'admin architecture cleanup uses version 1.15.1');
+advent_check(strpos($main, 'Version: 1.15.2') !== false && strpos($main, "PARCS_HT_VERSION', '1.15.2") !== false, 'Advent admin UX uses version 1.15.2');
 advent_check(strpos($main, 'class-parcs-ht-advent.php') !== false && strpos($main, 'class-parcs-ht-advent-admin.php') !== false, 'Advent public and canonical admin modules are bootstrapped');
 advent_check(!file_exists($root . '/includes/class-parcs-ht-advent-admin-v2.php'), 'obsolete Advent v2 admin filename is removed');
 advent_check(strpos($admin, 'add_menu_page(') !== false && strpos($admin, 'add_submenu_page(') === false, 'Advent is a first-class WordPress admin menu');
@@ -37,6 +39,12 @@ advent_check(strpos($registry, "'parc_calendrier_avent'") !== false && strpos($r
 advent_check(substr_count($registry, "'kind'=>'advent'") >= 2, 'Advent shortcodes use the dedicated preview renderer');
 advent_check(strpos($preview, 'Parcs_HT_Advent::set_preview_datetime') !== false, 'shared preview date and time are forwarded to the server Advent renderer');
 advent_check(strpos($core_admin, "Parcs_HT_Shortcode_Registry::public_rows()") !== false && strpos($registry, "'parc_calendrier_avent'") !== false && strpos($registry, "'parc_reglement_avent'") !== false, 'central Shortcodes tab exposes both Advent blocks natively');
+
+advent_check(strpos($admin_js, "querySelector('.htp-advent-admin')") !== false && strpos($admin_js, 'fetch(absolute') !== false, 'Advent admin navigation updates in place instead of forcing full page reloads');
+advent_check(strpos($admin_js, "window.history.pushState") !== false && strpos($admin_js, "window.addEventListener('popstate'") !== false, 'Advent in-page navigation preserves browser history');
+advent_check(strpos($admin_js, "$(document).on('click','.htp-advent-admin a[href]'" ) !== false, 'tabs and item links share the in-page navigation router');
+advent_check(strpos($admin_css, '.htp-advent-day-grid,') !== false && strpos($admin_css, '.htp-advent-day-card,') !== false, 'actual calendar markup is styled as a responsive grid of cards');
+advent_check(strpos($admin_css, 'grid-template-columns: repeat(6') !== false && strpos($admin_css, 'grid-template-columns: repeat(2') !== false, 'calendar grid has desktop and mobile layouts');
 
 $runtime = $advent . "\n" . $frontend_js;
 foreach (array('KINTZHEIM','ROCAMADOUR','Kintzheim','Rocamadour') as $forbidden) {

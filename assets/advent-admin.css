@@ -8,6 +8,25 @@
   box-sizing: border-box;
 }
 
+.htp-advent-admin.is-loading {
+  opacity: .68;
+  pointer-events: none;
+}
+
+.htp-advent-admin.is-loading::after {
+  content: 'Chargement…';
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 100000;
+  padding: 8px 12px;
+  border: 1px solid #c3c4c7;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,.12);
+  font-weight: 600;
+}
+
 .htp-advent-card {
   margin: 16px 0;
   padding: 18px;
@@ -42,7 +61,14 @@
 }
 
 .htp-advent-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
   margin-top: 18px;
+}
+
+.htp-advent-tabs .nav-tab {
+  cursor: pointer;
 }
 
 .htp-advent-grid-fields {
@@ -101,44 +127,59 @@
   object-fit: contain;
 }
 
+.htp-advent-day-grid,
 .htp-advent-day-grid-admin {
   display: grid;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(6, minmax(120px, 1fr));
+  gap: 10px;
+  margin-top: 14px;
 }
 
+.htp-advent-day-card,
 .htp-advent-day-admin {
   display: flex;
-  min-height: 105px;
+  min-height: 108px;
   flex-direction: column;
-  gap: 3px;
-  padding: 9px;
+  gap: 6px;
+  justify-content: space-between;
+  padding: 12px;
   border: 1px solid #c3c4c7;
-  border-radius: 7px;
+  border-radius: 8px;
   color: #1d2327;
   text-decoration: none;
   background: #fff;
+  box-shadow: 0 1px 2px rgba(0,0,0,.04);
 }
 
+.htp-advent-day-card:hover,
+.htp-advent-day-card:focus,
 .htp-advent-day-admin:hover,
 .htp-advent-day-admin:focus {
   border-color: #2271b1;
   color: #135e96;
-}
-
-.htp-advent-day-admin.is-selected {
-  border-width: 2px;
-  border-color: #2271b1;
   box-shadow: 0 0 0 1px #2271b1;
 }
 
-.htp-advent-day-admin strong {
-  font-size: 20px;
+.htp-advent-day-card.is-selected,
+.htp-advent-day-admin.is-selected {
+  border-color: #2271b1;
+  box-shadow: 0 0 0 2px #2271b1;
 }
 
+.htp-advent-day-card strong,
+.htp-advent-day-admin strong {
+  display: block;
+  font-size: 20px;
+  line-height: 1.15;
+}
+
+.htp-advent-day-card span,
 .htp-advent-day-admin small,
 .htp-advent-day-admin span {
-  line-height: 1.25;
+  display: block;
+  color: #646970;
+  font-size: 12px;
+  line-height: 1.35;
 }
 
 .htp-advent-clue-admin {
@@ -167,6 +208,15 @@
   border-radius: 6px;
   color: #1d2327;
   text-decoration: none;
+  background: #fff;
+}
+
+.htp-advent-list a:hover,
+.htp-advent-list a:focus,
+.htp-advent-results-list a:hover,
+.htp-advent-results-list a:focus {
+  border-color: #2271b1;
+  color: #135e96;
 }
 
 .htp-advent-results-list a.is-selected {
@@ -227,8 +277,9 @@
 }
 
 @media (max-width: 1100px) {
+  .htp-advent-day-grid,
   .htp-advent-day-grid-admin {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(120px, 1fr));
   }
   .htp-advent-grid-fields {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -236,8 +287,9 @@
 }
 
 @media (max-width: 782px) {
+  .htp-advent-day-grid,
   .htp-advent-day-grid-admin {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .htp-advent-grid-fields,
   .htp-advent-copy-grid {
