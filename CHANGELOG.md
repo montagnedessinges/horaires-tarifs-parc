@@ -1,5 +1,16 @@
 # Historique des versions
 
+## 1.15.1
+- Refonte structurelle de l’accès au Calendrier de l’Avent dans l’administration : le module dispose désormais de son propre menu WordPress de premier niveau et d’un accès natif depuis la navigation de « Horaires du parc ».
+- Suppression de l’injection JavaScript qui ajoutait après coup les shortcodes Avent à la table d’administration. La page Shortcodes est désormais alimentée directement par le registre central, source unique de vérité.
+- Renommage du contrôleur admin Avent vers le fichier canonique `class-parcs-ht-advent-admin.php` ; l’ancien nom technique `-v2` est supprimé.
+- Conservation du moteur Avent `schema_version = 3`, des données existantes, des shortcodes publics, de la sécurité serveur et de l’isolation MDS/FDS sans réinitialisation de campagne.
+- Renforcement du test de contrat pour bloquer toute régression vers un sous-menu seul ou une surcouche DOM JavaScript.
+
+## 1.15.0
+- Premier prototype fonctionnel du Calendrier de l’Avent selon le cadrage 0.7 / `schema_version = 3` : campagnes, 24 journées, teasings sociaux, partenaires, résultats, grand jeu, règlement dynamique et import CSV de test.
+- Ajout des shortcodes `[parc_calendrier_avent]` et `[parc_reglement_avent]` avec variantes FR / EN / DE et aperçu date + heure.
+- Validation serveur des ouvertures, résultats, indices et mot mystère ; le formulaire final n’est rendu qu’après autorisation serveur.
 ## 1.13.8
 - Séparation complète de l’apparence entre `[parc_tableau_tarifs]` et `[parc_tarifs_groupes]` : les deux shortcodes continuent de lire les mêmes données tarifaires, mais leurs couleurs sont désormais indépendantes.
 - Ajout dans Groupes → Tarifs d’un bloc « Apparence du shortcode Tarifs groupes » reprenant le même modèle de couleurs utile au visuel tarifaire : titre, moyens de paiement, panneau, prix, message groupes et bouton de devis.

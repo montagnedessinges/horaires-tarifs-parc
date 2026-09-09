@@ -23,13 +23,14 @@ final class Parcs_HT_Advent_Admin {
     }
 
     public static function menu() {
-        add_submenu_page(
-            Parcs_HT_Admin::PAGE,
+        add_menu_page(
             'Calendrier de l’Avent',
             'Calendrier de l’Avent',
             'manage_options',
             self::PAGE,
-            array(__CLASS__, 'page')
+            array(__CLASS__, 'page'),
+            'dashicons-calendar-alt',
+            32
         );
     }
 
@@ -40,9 +41,7 @@ final class Parcs_HT_Advent_Admin {
             wp_enqueue_style('parcs-ht-advent-admin', PARCS_HT_URL . 'assets/advent-admin.css', array(), PARCS_HT_VERSION);
             wp_enqueue_script('parcs-ht-advent-admin', PARCS_HT_URL . 'assets/advent-admin.js', array('jquery'), PARCS_HT_VERSION, true);
         }
-        if ($hook === 'toplevel_page_parcs-horaires-tarifs') {
-            wp_enqueue_script('parcs-ht-advent-shortcodes-admin', PARCS_HT_URL . 'assets/advent-shortcodes-admin.js', array(), PARCS_HT_VERSION, true);
-        }
+
     }
 
     private static function require_admin() {
@@ -106,8 +105,8 @@ final class Parcs_HT_Advent_Admin {
         $view = self::current_view();
         ?>
         <div class="wrap htp-advent-admin">
-            <h1>Calendrier de l’Avent</h1>
-            <p class="description">Prototype schéma <?php echo esc_html((string)Parcs_HT_Advent::SCHEMA_VERSION); ?>. Les données restent isolées par installation et campagne.</p>
+            <h1>Calendrier de l’Avent <a class="page-title-action" href="<?php echo esc_url(add_query_arg(array('page'=>Parcs_HT_Admin::PAGE), admin_url('admin.php'))); ?>">Horaires du parc</a></h1>
+            <p class="description">Schéma <?php echo esc_html((string)Parcs_HT_Advent::SCHEMA_VERSION); ?> · campagnes, contenus, partenaires et résultats restent isolés par installation.</p>
             <?php self::notices(); ?>
             <?php if ($park === '') : ?>
                 <div class="notice notice-error"><p>Le type de parc de cette installation doit être configuré sur <code>mds</code> ou <code>fds</code> avant d’utiliser le module.</p></div>

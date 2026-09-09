@@ -4,10 +4,10 @@ Ce dossier est le point d’entrée canonique pour toute conversation ChatGPT qu
 
 ## État réel du plugin
 
-- Version publiée actuelle au moment de ce cadrage : **1.14.0**.
-- La version 1.14.0 ne contient **pas** encore le module Calendrier de l’Avent.
-- Il n’existe actuellement ni menu d’administration Avent, ni shortcode `[parc_calendrier_avent]` ou `[parc_reglement_avent]` dans la version de production.
-- Ne jamais considérer le module comme livré tant qu’une future version contenant réellement le code n’est pas publiée dans les Releases GitHub avec son ZIP de production.
+- La version **1.15.0** a introduit le premier prototype fonctionnel du Calendrier de l’Avent selon le cadrage 0.7 / `schema_version = 3`.
+- L’audit du 9 septembre 2026 a identifié un défaut d’architecture de navigation dans cette première release : le module existait mais son accès administrateur était insuffisamment visible, et la table Shortcodes utilisait une injection JavaScript dédiée.
+- La correction structurelle **1.15.1** remplace ces mécanismes par une navigation WordPress native et une table Shortcodes alimentée directement par le registre central. Voir `AUDIT-ADMIN-1.15.0.md`.
+- Une version n’est considérée comme livrée que lorsqu’elle est publiée dans GitHub Releases avec son ZIP de production vérifié.
 
 ## État du cadrage fonctionnel
 
