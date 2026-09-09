@@ -1,5 +1,13 @@
 # Historique des versions
 
+## 1.15.2
+- Les onglets du Calendrier de l’Avent se chargent désormais dans la même interface sans rechargement complet de la page WordPress ; le serveur continue à ne rendre qu’une vue à la fois.
+- Les clics sur un jour, un teasing, un partenaire ou un résultat utilisent le même moteur de navigation interne, avec conservation de l’historique précédent/suivant du navigateur et repli vers la navigation WordPress normale si JavaScript échoue.
+- Le sélecteur de campagne utilise également cette navigation interne ; aucun éditeur des 24 jours ni aucune donnée sensible n’est préchargé dans le navigateur.
+- Correction de l’incohérence entre le HTML et la feuille de style du calendrier d’administration : les 24 jours s’affichent désormais en vraie grille responsive de cartes au lieu d’une longue ligne de liens.
+- Aucun contenu annuel, partenaire, date, lot ou donnée spécifique MDS/FDS n’est ajouté en dur.
+- Ajout de tests de non-régression dédiés à la navigation interne et à la grille du calendrier.
+
 ## 1.15.1
 - Refonte structurelle de l’accès au Calendrier de l’Avent dans l’administration : le module dispose désormais de son propre menu WordPress de premier niveau et d’un accès natif depuis la navigation de « Horaires du parc ».
 - Suppression de l’injection JavaScript qui ajoutait après coup les shortcodes Avent à la table d’administration. La page Shortcodes est désormais alimentée directement par le registre central, source unique de vérité.
