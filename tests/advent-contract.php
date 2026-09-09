@@ -19,7 +19,7 @@ function advent_check($condition, $message) {
     echo '[OK] ' . $message . PHP_EOL;
 }
 
-advent_check(strpos($main, "Version: 1.15.0") !== false && strpos($main, "PARCS_HT_VERSION', '1.15.0") !== false, 'prototype uses version 1.15.0');
+advent_check(strpos($main, 'Version: 1.15.0') !== false && strpos($main, "PARCS_HT_VERSION', '1.15.0") !== false, 'prototype uses version 1.15.0');
 advent_check(strpos($main, 'class-parcs-ht-advent.php') !== false && strpos($main, 'class-parcs-ht-advent-admin-v2.php') !== false, 'Advent public and admin modules are bootstrapped');
 advent_check(!file_exists($root . '/includes/class-parcs-ht-advent-admin.php'), 'obsolete Advent admin implementation is removed');
 advent_check(strpos($advent, "const OPTION = 'parcs_ht_advent'") !== false && strpos($advent, 'const SCHEMA_VERSION = 3') !== false, 'Advent has a dedicated schema 3 store');
@@ -59,7 +59,7 @@ advent_check(strpos($advent, 'do_shortcode($shortcode)') !== false && strpos($ad
 
 advent_check(strpos($admin, 'Analyser sans écrire') !== false && strpos($admin, 'original_hash') !== false, 'import performs a dry run before writing');
 advent_check(strpos($admin, "'schema_version'") !== false && strpos($admin, "'parc_code'") !== false && strpos($admin, "'campagne_id'") !== false, 'import validates schema, park and campaign identifiers');
-advent_check(strpos($admin, "!empty($before['visuel_url'])") !== false && strpos($admin, "!empty($before['logo_url'])") !== false, 'smart reimport preserves manually assigned media when incoming media is empty');
+advent_check(strpos($admin, '!empty($before[\'visuel_url\'])') !== false && strpos($admin, '!empty($before[\'logo_url\'])') !== false, 'smart reimport preserves manually assigned media when incoming media is empty');
 advent_check(strpos($admin, 'count($seen) !== 24') !== false, 'smart import enforces exactly 24 daily entries');
 advent_check(strpos($admin, 'Publier le résultat') !== false && strpos($admin, 'Enregistrer sans publier') !== false, 'result publication is an explicit separate admin action');
 advent_check(strpos($admin, 'Aperçu Facebook') !== false && strpos($admin, 'Aperçu Instagram') !== false && strpos($admin, 'Copier le texte') !== false, 'admin provides generated social previews with copy actions');
