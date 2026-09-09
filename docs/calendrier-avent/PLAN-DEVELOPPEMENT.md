@@ -68,9 +68,20 @@ Le module Avent se branche ensuite sur le moteur d’aperçu amélioré.
 - rendu public par shortcode ;
 - modale/panneau jour ;
 - sécurité serveur des réponses/indices/mot ;
-- génération de textes sociaux ;
+- génération de textes sociaux avant publication ;
+- génération après tirage des commentaires résultat Facebook/Instagram et du texte Story ;
+- boutons de copie dans l’administration ;
+- publication sociale entièrement manuelle, sans connexion de publication automatique à Meta ;
+- `explication_reponse_fr` facultatif inséré dans le commentaire résultat lorsqu’il est renseigné ;
+- relance de fin de commentaire calculée selon l’ouverture de la prochaine question ou la fin de campagne ;
 - admin compacte en grille ;
 - mode archive.
+
+### Planning à privilégier
+
+L’interface standard doit utiliser une date/heure principale par contenu. Cette date/heure pilote par défaut l’ouverture sur le site et sert de repère pour la publication sociale manuelle.
+
+Les overrides d’heure d’ouverture ou de planning spécifique Facebook/Instagram restent des options avancées facultatives et ne doivent pas alourdir l’usage courant.
 
 ## Étape 3 — import Excel / Google Sheets
 
@@ -91,6 +102,8 @@ Fonctions attendues :
 
 L’import ne doit pas être conçu comme une seconde structure de données : les champs importés doivent alimenter exactement les mêmes champs WordPress que l’édition manuelle.
 
+Avant de coder cette étape, resynchroniser les feuilles Google Sheets `IMPORT plugin - référentiel` avec la version GitHub courante de `REFERENTIEL-IMPORT.md`.
+
 ## Étape 4 — contrôles avant release Avent
 
 Avant publication :
@@ -107,7 +120,13 @@ Avant publication :
 - tests validation serveur du mot ;
 - tests archive/révélation ;
 - tests aperçu admin avec date/heure simulées ;
-- tests mobile/accessibilité de la modale ou du panneau.
+- tests mobile/accessibilité de la modale ou du panneau ;
+- tests du générateur de post avant publication ;
+- tests du commentaire résultat avec et sans `explication_reponse_fr` ;
+- tests gagnants Facebook/Instagram différents ;
+- tests du texte Story ;
+- tests de relance vers une question déjà ouverte, une question future et la clôture du dernier jour ;
+- test garantissant qu’aucune action ne publie automatiquement sur Facebook ou Instagram.
 
 ## Règle de publication
 
