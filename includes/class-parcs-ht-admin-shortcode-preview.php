@@ -9,7 +9,7 @@ if (!defined('ABSPATH')) {
  *
  * Les aperçus ne sont plus tous calculés au chargement de la page. Un seul
  * shortcode et une seule langue sont rendus à la demande dans une iframe
- * d’administration isolée, ce qui évite de charger les 36 rendus inutiles.
+ * d’administration isolée.
  */
 final class Parcs_HT_Admin_Shortcode_Preview {
     const SCREEN = 'toplevel_page_parcs-horaires-tarifs';
@@ -143,9 +143,17 @@ final class Parcs_HT_Admin_Shortcode_Preview {
         if (!preg_match('/^20\d{2}$/', $season)) $season = '';
         $settings = Parcs_HT_Defaults::settings($season);
         $timezone = isset($settings['timezone']) ? (string)$settings['timezone'] : 'Europe/Paris';
-        $preview_ms = self::preview_timestamp_ms(self::requested_string('date'), self::requested_string('time'), $timezone);
+        $preview_date = self::requested_string('date');
+        $preview_time = self::requested_string('time');
+        $preview_ms = self::preview_timestamp_ms($preview_date, $preview_time, $timezone);
         $background = self::requested_string('background');
         if (!preg_match('/^#[0-9a-f]{6}$/i', $background)) $background = '#ffffff';
+
+        if (class_exists('Parcs_HT_Advent') && ($definitions[$base]['kind'] ?? '') === 'advent') {
+            $advent_campaign = Parcs_HT_Advent::current_campaign(true);
+            $advent_timezone = is_array($advent_campaign) && !empty($advent_campaign['timezone']) ? (string)$advent_campaign['timezone'] : $timezone;
+            Parcs_HT_Advent::set_preview_datetime($preview_date, $preview_time, $advent_timezone);
+        }
 
         $payload = array(
             'settings' => Parcs_HT_Schedule::public_settings($settings),
