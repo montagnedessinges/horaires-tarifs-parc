@@ -10,6 +10,7 @@
   var selectedLang='fr';
   var frame=null;
   var code=null;
+  var label=null;
   var nav=null;
   var languageNav=null;
   var refresh=null;
@@ -21,7 +22,8 @@
   }
   function save(key,value){try{sessionStorage.setItem(key,value);}catch(e){}}
   function validColor(value){return /^#[0-9a-f]{6}$/i.test(String(value||''))?value:'#ffffff';}
-  function rowFor(base){return rows.filter(function(row){return String(row.base||'')===base;})[0]||rows[0]||null;}
+  function findRow(base){return rows.filter(function(row){return String(row.base||'')===base;})[0]||null;}
+  function rowFor(base){return findRow(base)||rows[0]||null;}
   function currentDate(){var input=document.querySelector('[data-htp-preview-date]');return input&&input.value?input.value:String(config.defaultDate||'');}
   function currentTime(){var input=document.querySelector('[data-htp-preview-time]');return input&&input.value?input.value:String(config.defaultTime||'');}
   function currentBackground(){return colorInput?validColor(colorInput.value):validColor(stored(STORAGE_BG,'#ffffff'));}
@@ -33,12 +35,12 @@
     if(!dateInput.value&&config.defaultDate)dateInput.value=config.defaultDate;
     var timeInput=document.querySelector('[data-htp-preview-time]');
     if(!timeInput){
-      var label=document.createElement('label');
-      label.className='htp-field htp-preview-time-field';
-      label.innerHTML='<span>Heure à tester</span><input type="time" data-htp-preview-time>';
-      timeInput=label.querySelector('input');
+      var timeLabel=document.createElement('label');
+      timeLabel.className='htp-field htp-preview-time-field';
+      timeLabel.innerHTML='<span>Heure à tester</span><input type="time" data-htp-preview-time>';
+      timeInput=timeLabel.querySelector('input');
       var button=controls.querySelector('[data-htp-preview-button]');
-      if(button)controls.insertBefore(label,button);else controls.appendChild(label);
+      if(button)controls.insertBefore(timeLabel,button);else controls.appendChild(timeLabel);
     }
     if(!timeInput.value&&config.defaultTime)timeInput.value=config.defaultTime;
   }
@@ -61,6 +63,7 @@
   function updateChrome(){
     var row=rowFor(selectedBase);
     if(!row)return;
+    if(label)label.textContent=String(row.label||row.base||'Shortcode');
     if(code)code.textContent=(row.shortcodes&&row.shortcodes[selectedLang])?row.shortcodes[selectedLang]:('['+row.base+'_'+selectedLang+']');
     if(nav){
       nav.querySelectorAll('[data-htp-preview-base]').forEach(function(button){
@@ -81,6 +84,7 @@
   function loadPreview(){
     var row=rowFor(selectedBase);
     if(!row||!frame)return;
+    selectedBase=String(row.base||'');
     updateChrome();
     if(status)status.textContent='Chargement de l’aperçu…';
     if(refresh){refresh.disabled=true;refresh.textContent='Mise à jour…';}
@@ -89,7 +93,7 @@
   }
 
   function selectBase(base){
-    var row=rowFor(base);
+    var row=findRow(base);
     if(!row)return;
     selectedBase=String(row.base||'');
     save(STORAGE_BASE,selectedBase);
@@ -126,6 +130,7 @@
     languageNav=block.querySelector('[data-htp-preview-languages]');
     frame=block.querySelector('[data-htp-preview-frame]');
     code=block.querySelector('[data-htp-preview-code]');
+    label=block.querySelector('[data-htp-shortcode-preview-label]');
     refresh=block.querySelector('[data-htp-shortcode-preview-refresh]');
     status=block.querySelector('[data-htp-preview-status]');
     colorInput=block.querySelector('[data-htp-shortcode-preview-bg]');
@@ -168,13 +173,10 @@
     buildWorkbench(section);
 
     var storedBase=stored(STORAGE_BASE,'');
-    selectedBase=rowFor(storedBase)?storedBase:String((rows[0]||{}).base||'');
+    var initialRow=findRow(storedBase)||rows[0];
+    selectedBase=String((initialRow||{}).base||'');
     selectedLang=stored(STORAGE_LANG,'fr');
     if(['fr','en','de'].indexOf(selectedLang)===-1)selectedLang='fr';
-
-    var row=rowFor(selectedBase);
-    var label=section.querySelector('[data-htp-shortcode-preview-label]');
-    if(label&&row)label.textContent=String(row.label||'');
     loadPreview();
 
     document.addEventListener('click',function(event){
