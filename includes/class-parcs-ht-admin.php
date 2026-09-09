@@ -109,6 +109,7 @@ final class Parcs_HT_Admin {
             <nav class="htp-section-nav nav-tab-wrapper" role="tablist" aria-label="Sections de l’extension" data-htp-admin-tabs>
                 <button type="button" class="nav-tab nav-tab-active htp-admin-tab" role="tab" aria-selected="true" data-htp-admin-tab="htp-general">Parc & apparence</button>
                 <button type="button" class="nav-tab htp-admin-tab" role="tab" aria-selected="false" data-htp-admin-tab="htp-regular">Horaires & calendrier</button>
+                <a class="nav-tab htp-advent-admin-link" href="<?php echo esc_url(add_query_arg(array('page'=>Parcs_HT_Advent_Admin::PAGE), admin_url('admin.php'))); ?>">Calendrier de l’Avent</a>
                 <button type="button" class="nav-tab htp-admin-tab" role="tab" aria-selected="false" data-htp-admin-tab="htp-holidays">Périodes & événements</button>
                 <button type="button" class="nav-tab htp-admin-tab" role="tab" aria-selected="false" data-htp-admin-tab="htp-domain">Accès limité</button>
                 <button type="button" class="nav-tab htp-admin-tab" role="tab" aria-selected="false" data-htp-admin-tab="htp-exceptions">Exceptions</button>
@@ -1003,20 +1004,7 @@ final class Parcs_HT_Admin {
 
 
     private static function shortcodes_section() {
-        $shortcodes = array(
-            array('label'=>'Page complète','auto'=>'[parc_horaires_tarifs]','fr'=>'[parc_horaires_tarifs_fr]','en'=>'[parc_horaires_tarifs_en]','de'=>'[parc_horaires_tarifs_de]'),
-            array('label'=>'Horaire du jour','auto'=>'[parc_horaires_aujourdhui]','fr'=>'[parc_horaires_aujourdhui_fr]','en'=>'[parc_horaires_aujourdhui_en]','de'=>'[parc_horaires_aujourdhui_de]'),
-            array('label'=>'Calendrier interactif','auto'=>'[parc_calendrier]','fr'=>'[parc_calendrier_fr]','en'=>'[parc_calendrier_en]','de'=>'[parc_calendrier_de]'),
-            array('label'=>'Tableau des tarifs','auto'=>'[parc_tableau_tarifs]','fr'=>'[parc_tableau_tarifs_fr]','en'=>'[parc_tableau_tarifs_en]','de'=>'[parc_tableau_tarifs_de]'),
-            array('label'=>'Tarifs groupes uniquement','auto'=>'[parc_tarifs_groupes]','fr'=>'[parc_tarifs_groupes_fr]','en'=>'[parc_tarifs_groupes_en]','de'=>'[parc_tarifs_groupes_de]'),
-            array('label'=>'Alerte de fermeture','auto'=>'[parc_fermeture_exceptionnelle]','fr'=>'[parc_fermeture_exceptionnelle_fr]','en'=>'[parc_fermeture_exceptionnelle_en]','de'=>'[parc_fermeture_exceptionnelle_de]'),
-            array('label'=>'Texte horaire dynamique pour l’en-tête','auto'=>'[parc_horaire]','fr'=>'[parc_horaire_fr]','en'=>'[parc_horaire_en]','de'=>'[parc_horaire_de]'),
-            array('label'=>'Statut OUVERT / FERMÉ pour l’en-tête','auto'=>'[parc_statut]','fr'=>'[parc_statut_fr]','en'=>'[parc_statut_en]','de'=>'[parc_statut_de]'),
-            array('label'=>'Horaire d’accueil','auto'=>'[parc_horaire_accueil]','fr'=>'[parc_horaire_accueil_fr]','en'=>'[parc_horaire_accueil_en]','de'=>'[parc_horaire_accueil_de]'),
-            array('label'=>'Devis groupe autour du formulaire Contact Form 7','auto'=>'[parc_devis_groupe]','fr'=>'[parc_devis_groupe_fr]','en'=>'[parc_devis_groupe_en]','de'=>'[parc_devis_groupe_de]'),
-            array('label'=>'Alias compatible du module Devis groupe','auto'=>'[parc_devis]','fr'=>'[parc_devis_fr]','en'=>'[parc_devis_en]','de'=>'[parc_devis_de]'),
-            array('label'=>'Guides pédagogiques','auto'=>'[parc_guides_pedagogiques]','fr'=>'[parc_guides_pedagogiques_fr]','en'=>'[parc_guides_pedagogiques_en]','de'=>'[parc_guides_pedagogiques_de]'),
-        );
+        $shortcodes = class_exists('Parcs_HT_Shortcode_Registry') ? Parcs_HT_Shortcode_Registry::public_rows() : array();
         ?>
         <section id="htp-shortcodes" class="htp-card">
             <h2>Shortcodes</h2>
@@ -1024,13 +1012,15 @@ final class Parcs_HT_Admin {
             <table class="widefat striped">
                 <thead><tr><th>Module</th><th>Automatique</th><th>FR</th><th>EN</th><th>DE</th></tr></thead>
                 <tbody>
-                    <?php foreach ($shortcodes as $row) : ?>
+                    <?php foreach ($shortcodes as $row) :
+                        $codes = isset($row['shortcodes']) && is_array($row['shortcodes']) ? $row['shortcodes'] : array();
+                        ?>
                         <tr>
-                            <th><?php echo esc_html($row['label']); ?></th>
-                            <td><code><?php echo esc_html($row['auto']); ?></code></td>
-                            <td><code><?php echo esc_html($row['fr']); ?></code></td>
-                            <td><code><?php echo esc_html($row['en']); ?></code></td>
-                            <td><code><?php echo esc_html($row['de']); ?></code></td>
+                            <th><?php echo esc_html((string)($row['label'] ?? '')); ?></th>
+                            <td><code><?php echo esc_html((string)($codes['auto'] ?? '')); ?></code></td>
+                            <td><code><?php echo esc_html((string)($codes['fr'] ?? '')); ?></code></td>
+                            <td><code><?php echo esc_html((string)($codes['en'] ?? '')); ?></code></td>
+                            <td><code><?php echo esc_html((string)($codes['de'] ?? '')); ?></code></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
