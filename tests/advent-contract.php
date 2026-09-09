@@ -57,6 +57,22 @@ advent_check(strpos($advent, 'hash_equals($expected, $provided)') !== false, 'my
 advent_check(strpos($advent, 'rate_limit_reached') !== false && strpos($advent, 'authorization_token') !== false, 'final game uses rate limiting and signed authorization');
 advent_check(strpos($advent, 'do_shortcode($shortcode)') !== false && strpos($advent, 'render_final_form') !== false, 'final form shortcode is rendered only through the authorized server path');
 
+foreach (array(
+    'save_campaign'=>'parcs_ht_advent_save_campaign_',
+    'save_content'=>'parcs_ht_advent_save_content_',
+    'save_partner'=>'parcs_ht_advent_save_partner_',
+    'save_result'=>'parcs_ht_advent_save_result_',
+    'csv_template'=>'parcs_ht_advent_csv_template_',
+    'import_csv'=>'parcs_ht_advent_import_csv_',
+    'apply_import'=>'parcs_ht_advent_apply_import_',
+) as $method => $nonce_prefix) {
+    $start = strpos($admin, 'public static function ' . $method . '()');
+    $next = $start !== false ? strpos($admin, 'public static function ', $start + 20) : false;
+    $block = $start !== false ? substr($admin, $start, $next === false ? null : $next - $start) : '';
+    advent_check($block !== '' && strpos($block, "check_admin_referer('" . $nonce_prefix) !== false, 'admin write verifies nonce: ' . $method);
+}
+advent_check(strpos($admin, "check_admin_referer('parcs_ht_advent_create_campaign')") !== false, 'campaign creation verifies nonce');
+
 advent_check(strpos($admin, 'Analyser sans écrire') !== false && strpos($admin, 'original_hash') !== false, 'import performs a dry run before writing');
 advent_check(strpos($admin, "'schema_version'") !== false && strpos($admin, "'parc_code'") !== false && strpos($admin, "'campagne_id'") !== false, 'import validates schema, park and campaign identifiers');
 advent_check(strpos($admin, '!empty($before[\'visuel_url\'])') !== false && strpos($admin, '!empty($before[\'logo_url\'])') !== false, 'smart reimport preserves manually assigned media when incoming media is empty');
