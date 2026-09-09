@@ -76,17 +76,6 @@ add_action('wp_footer', static function () {
     wp_enqueue_script('parcs-ht-status-sync', PARCS_HT_URL . 'assets/status-sync.js', array('parcs-ht-display-state','parcs-ht-slot-last-entry-frontend'), PARCS_HT_VERSION, true);
 }, 2);
 
-add_action('admin_menu', static function () {
-    global $menu;
-    foreach ((array) $menu as $index => $item) {
-        if (isset($item[2]) && $item[2] === 'parcs-horaires-tarifs') {
-            $menu[$index][0] = PARCS_HT_DISPLAY_NAME;
-            $menu[$index][3] = PARCS_HT_DISPLAY_NAME;
-            break;
-        }
-    }
-}, 99);
-
 add_action('admin_enqueue_scripts', static function ($hook) {
     if ($hook !== 'toplevel_page_parcs-horaires-tarifs' || !wp_script_is('parcs-ht-tariff-seasons-admin', 'enqueued')) return;
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Sélection d’aperçu en lecture seule ; aucun enregistrement n’est effectué depuis ce paramètre.
@@ -105,6 +94,16 @@ add_action('plugins_loaded', static function () {
         Parcs_HT_Admin_Groups::init();
         Parcs_HT_Admin_Shortcode_Preview::init();
         Parcs_HT_Advent_Admin::init();
+        add_action('admin_menu', static function () {
+            global $menu;
+            foreach ((array) $menu as $index => $item) {
+                if (isset($item[2]) && $item[2] === Parcs_HT_Admin::PAGE) {
+                    $menu[$index][0] = PARCS_HT_DISPLAY_NAME;
+                    $menu[$index][3] = PARCS_HT_DISPLAY_NAME;
+                    break;
+                }
+            }
+        }, 99);
         Parcs_HT_Defaults::maybe_upgrade();
         if (get_option('parcs_ht_tariff_seasons_migrated_193', '0') !== '1') {
             $all = get_option(Parcs_HT_Defaults::OPTION, array());
