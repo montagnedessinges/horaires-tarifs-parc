@@ -9,7 +9,8 @@ $core_admin = file_get_contents($root . '/includes/class-parcs-ht-admin.php');
 $registry = file_get_contents($root . '/includes/class-parcs-ht-shortcode-registry.php');
 $preview = file_get_contents($root . '/includes/class-parcs-ht-admin-shortcode-preview.php');
 $frontend_js = file_get_contents($root . '/assets/advent.js');
-$admin_js = file_get_contents($root . '/assets/advent-admin.js');
+$advent_admin_js = file_get_contents($root . '/assets/advent-admin.js');
+$core_admin_js = file_get_contents($root . '/assets/admin.js');
 $admin_css = file_get_contents($root . '/assets/advent-admin.css');
 $uninstall = file_get_contents($root . '/uninstall.php');
 
@@ -21,11 +22,14 @@ function advent_check($condition, $message) {
     echo '[OK] ' . $message . PHP_EOL;
 }
 
-advent_check(strpos($main, 'Version: 1.15.2') !== false && strpos($main, "PARCS_HT_VERSION', '1.15.2") !== false, 'Advent admin UX uses version 1.15.2');
+advent_check(strpos($main, 'Version: 1.15.3') !== false && strpos($main, "PARCS_HT_VERSION', '1.15.3") !== false, 'integrated Advent admin uses version 1.15.3');
 advent_check(strpos($main, 'class-parcs-ht-advent.php') !== false && strpos($main, 'class-parcs-ht-advent-admin.php') !== false, 'Advent public and canonical admin modules are bootstrapped');
 advent_check(!file_exists($root . '/includes/class-parcs-ht-advent-admin-v2.php'), 'obsolete Advent v2 admin filename is removed');
-advent_check(strpos($admin, 'add_menu_page(') !== false && strpos($admin, 'add_submenu_page(') === false, 'Advent is a first-class WordPress admin menu');
-advent_check(strpos($core_admin, 'Parcs_HT_Advent_Admin::PAGE') !== false && strpos($core_admin, 'Calendrier de l’Avent') !== false, 'main park admin links natively to the Advent workspace');
+advent_check(strpos($admin, 'add_menu_page(') === false && strpos($admin, 'add_submenu_page(') === false, 'Advent no longer creates a separate WordPress menu');
+advent_check(strpos($core_admin, 'data-htp-admin-tab="htp-advent"') !== false && strpos($core_admin, 'Calendrier de l’Avent</button>') !== false, 'Advent is a native main Horaires du parc tab');
+advent_check(strpos($core_admin, 'Parcs_HT_Advent_Admin::render_workspace()') !== false && strpos($admin, 'public static function render_workspace()') !== false, 'main admin renders the Advent workspace directly');
+advent_check(strpos($core_admin, 'data-htp-main-settings-form') !== false && strpos($core_admin, 'data-htp-season-manager') !== false, 'main settings and season manager can be hidden cleanly while Advent is active');
+advent_check(strpos($core_admin, "isset(\$_GET['advent_fragment'])") !== false && strpos($core_admin, 'Parcs_HT_Advent_Admin::render_workspace();') !== false, 'Advent supports a lightweight server fragment for inner navigation');
 advent_check(strpos($core_admin, 'Parcs_HT_Shortcode_Registry::public_rows()') !== false, 'central Shortcodes tab is rendered from the registry');
 advent_check(!file_exists($root . '/assets/advent-shortcodes-admin.js'), 'obsolete Advent shortcode DOM injection is removed');
 advent_check(strpos($advent, "const OPTION = 'parcs_ht_advent'") !== false && strpos($advent, 'const SCHEMA_VERSION = 3') !== false, 'Advent has a dedicated schema 3 store');
@@ -40,11 +44,14 @@ advent_check(substr_count($registry, "'kind'=>'advent'") >= 2, 'Advent shortcode
 advent_check(strpos($preview, 'Parcs_HT_Advent::set_preview_datetime') !== false, 'shared preview date and time are forwarded to the server Advent renderer');
 advent_check(strpos($core_admin, "Parcs_HT_Shortcode_Registry::public_rows()") !== false && strpos($registry, "'parc_calendrier_avent'") !== false && strpos($registry, "'parc_reglement_avent'") !== false, 'central Shortcodes tab exposes both Advent blocks natively');
 
-advent_check(strpos($admin_js, "querySelector('.htp-advent-admin')") !== false && strpos($admin_js, 'fetch(absolute') !== false, 'Advent admin navigation updates in place instead of forcing full page reloads');
-advent_check(strpos($admin_js, "window.history.pushState") !== false && strpos($admin_js, "window.addEventListener('popstate'") !== false, 'Advent in-page navigation preserves browser history');
-advent_check(strpos($admin_js, "$(document).on('click','.htp-advent-admin a[href]'" ) !== false, 'tabs and item links share the in-page navigation router');
+advent_check(strpos($core_admin_js, "'htp-advent'") !== false && strpos($core_admin_js, "id === 'htp-advent'") !== false, 'core tab engine manages Advent like the other main tabs');
+advent_check(strpos($core_admin_js, "querySelector('[data-htp-main-settings-form]')") !== false && strpos($core_admin_js, "querySelector('[data-htp-season-manager]')") !== false, 'core tab engine switches the main forms cleanly for Advent');
+advent_check(strpos($advent_admin_js, "parsed.searchParams.get('page')==='parcs-horaires-tarifs'") !== false && strpos($advent_admin_js, "parsed.searchParams.get('tab')==='htp-advent'") !== false, 'Advent inner router stays inside Horaires du parc');
+advent_check(strpos($advent_admin_js, "searchParams.set('advent_fragment','1')") !== false && strpos($advent_admin_js, "querySelector('[data-htp-advent-workspace]')") !== false, 'inner Advent navigation refreshes only the workspace');
+advent_check(strpos($advent_admin_js, 'window.history.pushState') !== false && strpos($advent_admin_js, "window.addEventListener('popstate'") !== false, 'Advent in-page navigation preserves browser history');
 advent_check(strpos($admin_css, '.htp-advent-day-grid,') !== false && strpos($admin_css, '.htp-advent-day-card,') !== false, 'actual calendar markup is styled as a responsive grid of cards');
 advent_check(strpos($admin_css, 'grid-template-columns: repeat(6') !== false && strpos($admin_css, 'grid-template-columns: repeat(2') !== false, 'calendar grid has desktop and mobile layouts');
+advent_check(strpos($admin_css, 'max-width: none') !== false && strpos($admin_css, 'width: 100%') !== false, 'Advent workspace uses the full useful width of the main admin tab');
 
 $runtime = $advent . "\n" . $frontend_js;
 foreach (array('KINTZHEIM','ROCAMADOUR','Kintzheim','Rocamadour') as $forbidden) {
