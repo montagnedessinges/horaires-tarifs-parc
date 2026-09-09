@@ -4,13 +4,12 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-/** Administration compacte du Calendrier de l’Avent. */
+/** Administration compacte du Calendrier de l’Avent, intégrée à l’espace Horaires du parc. */
 final class Parcs_HT_Advent_Admin {
-    const PAGE = 'parcs-ht-advent';
+    const TAB = 'htp-advent';
     const IMPORT_TRANSIENT_PREFIX = 'parcs_ht_advent_import_';
 
     public static function init() {
-        add_action('admin_menu', array(__CLASS__, 'menu'));
         add_action('admin_enqueue_scripts', array(__CLASS__, 'assets'));
         add_action('admin_post_parcs_ht_advent_create_campaign', array(__CLASS__, 'create_campaign'));
         add_action('admin_post_parcs_ht_advent_save_campaign', array(__CLASS__, 'save_campaign'));
@@ -22,26 +21,13 @@ final class Parcs_HT_Advent_Admin {
         add_action('admin_post_parcs_ht_advent_csv_template', array(__CLASS__, 'csv_template'));
     }
 
-    public static function menu() {
-        add_menu_page(
-            'Calendrier de l’Avent',
-            'Calendrier de l’Avent',
-            'manage_options',
-            self::PAGE,
-            array(__CLASS__, 'page'),
-            'dashicons-calendar-alt',
-            32
-        );
-    }
-
     public static function assets($hook) {
         $page = isset($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Lecture du slug uniquement pour limiter les assets.
-        if ($page === self::PAGE) {
+        if ($page === Parcs_HT_Admin::PAGE) {
             wp_enqueue_media();
-            wp_enqueue_style('parcs-ht-advent-admin', PARCS_HT_URL . 'assets/advent-admin.css', array(), PARCS_HT_VERSION);
-            wp_enqueue_script('parcs-ht-advent-admin', PARCS_HT_URL . 'assets/advent-admin.js', array('jquery'), PARCS_HT_VERSION, true);
+            wp_enqueue_style('parcs-ht-advent-admin', PARCS_HT_URL . 'assets/advent-admin.css', array('parcs-ht-admin'), PARCS_HT_VERSION);
+            wp_enqueue_script('parcs-ht-advent-admin', PARCS_HT_URL . 'assets/advent-admin.js', array('jquery','parcs-ht-admin'), PARCS_HT_VERSION, true);
         }
-
     }
 
     private static function require_admin() {
@@ -55,12 +41,12 @@ final class Parcs_HT_Advent_Admin {
     }
 
     private static function current_view() {
-        $view = isset($_GET['view']) ? sanitize_key(wp_unslash($_GET['view'])) : 'campaign'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Sélection d’onglet en lecture seule.
+        $view = isset($_GET['advent_view']) ? sanitize_key(wp_unslash($_GET['advent_view'])) : 'campaign'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Sélection d’onglet en lecture seule.
         return in_array($view, array('campaign','teasers','calendar','grand','partners','results','import'), true) ? $view : 'campaign';
     }
 
     private static function admin_url($campaign_id = '', $view = 'campaign', $extra = array()) {
-        $args = array('page'=>self::PAGE, 'view'=>$view);
+        $args = array('page'=>Parcs_HT_Admin::PAGE, 'tab'=>self::TAB, 'advent_view'=>$view);
         if ($campaign_id !== '') $args['campaign'] = $campaign_id;
         if (is_array($extra)) $args = array_merge($args, $extra);
         return add_query_arg($args, admin_url('admin.php'));
@@ -92,7 +78,8 @@ final class Parcs_HT_Advent_Admin {
         return '';
     }
 
-    public static function page() {
+    /** Rend uniquement l’espace Avent ; la page parente reste Horaires du parc. */
+    public static function render_workspace() {
         self::require_admin();
         $park = Parcs_HT_Advent::installation_park_code();
         $campaigns = self::campaigns_for_installation();
@@ -101,9 +88,13 @@ final class Parcs_HT_Advent_Admin {
         $campaign = isset($campaigns[$campaign_id]) ? $campaigns[$campaign_id] : null;
         $view = self::current_view();
         ?>
-        <div class="wrap htp-advent-admin">
-            <h1>Calendrier de l’Avent <a class="page-title-action" href="<?php echo esc_url(add_query_arg(array('page'=>Parcs_HT_Admin::PAGE), admin_url('admin.php'))); ?>">Horaires du parc</a></h1>
-            <p class="description">Schéma <?php echo esc_html((string)Parcs_HT_Advent::SCHEMA_VERSION); ?> · campagnes, contenus, partenaires et résultats restent isolés par installation.</p>
+        <section id="htp-advent" class="htp-card htp-advent-admin" data-htp-advent-workspace>
+            <div class="htp-advent-workspace-head">
+                <div>
+                    <h2>Calendrier de l’Avent</h2>
+                    <p class="description">Schéma <?php echo esc_html((string)Parcs_HT_Advent::SCHEMA_VERSION); ?> · campagnes, contenus, partenaires et résultats restent isolés par installation.</p>
+                </div>
+            </div>
             <?php self::notices(); ?>
             <?php if ($park === '') : ?>
                 <div class="notice notice-error"><p>Le type de parc de cette installation doit être configuré sur <code>mds</code> ou <code>fds</code> avant d’utiliser le module.</p></div>
@@ -111,6 +102,7 @@ final class Parcs_HT_Advent_Admin {
                 <?php self::campaign_switcher($park, $campaigns, $campaign_id, $view); ?>
                 <?php if (is_array($campaign)) : ?>
                     <?php self::navigation($campaign_id, $view); ?>
+                    <div class="htp-advent-view" data-htp-advent-view>
                     <?php
                     if ($view === 'campaign') self::campaign_view($campaign);
                     elseif ($view === 'teasers') self::teasers_view($campaign);
@@ -120,11 +112,12 @@ final class Parcs_HT_Advent_Admin {
                     elseif ($view === 'results') self::results_view($campaign);
                     else self::import_view($campaign);
                     ?>
+                    </div>
                 <?php else : ?>
                     <section class="htp-advent-card"><p>Aucune campagne n’existe encore. Créez une campagne brouillon pour initialiser les 24 journées.</p></section>
                 <?php endif; ?>
             <?php endif; ?>
-        </div>
+        </section>
         <?php
     }
 
@@ -173,7 +166,7 @@ final class Parcs_HT_Advent_Admin {
         $tabs = array('campaign'=>'Campagne','teasers'=>'Teasings sociaux','calendar'=>'Calendrier','grand'=>'Grand jeu','partners'=>'Partenaires','results'=>'Résultats','import'=>'Import / export');
         echo '<nav class="nav-tab-wrapper htp-advent-tabs" aria-label="Sections du Calendrier de l’Avent">';
         foreach ($tabs as $view => $label) {
-            echo '<a class="nav-tab' . ($view === $active ? ' nav-tab-active' : '') . '" href="' . esc_url(self::admin_url($campaign_id, $view)) . '">' . esc_html($label) . '</a>';
+            echo '<a class="nav-tab' . ($view === $active ? ' nav-tab-active' : '') . '" href="' . esc_url(self::admin_url($campaign_id, $view)) . '" data-advent-nav>' . esc_html($label) . '</a>';
         }
         echo '</nav>';
     }
