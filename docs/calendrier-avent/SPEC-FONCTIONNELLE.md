@@ -10,6 +10,8 @@ Shortcode générique prévu :
 
 Le même moteur doit servir MDS et FDS avec des données de campagne séparées.
 
+Le module n’a pas vocation à publier automatiquement sur Facebook ou Instagram. Il prépare les contenus dans l’administration WordPress afin qu’ils soient relus, copiés puis publiés manuellement par l’équipe du parc.
+
 ## Rendu public avant le calendrier
 
 Avant `date_ouverture_calendrier` :
@@ -85,6 +87,8 @@ Pas de réponse libre pour les jeux quotidiens.
 
 Les bonnes réponses doivent être validées côté serveur. Le navigateur ne reçoit pas la valeur canonique de la réponse avant la date de révélation.
 
+`explication_reponse_fr` est facultatif. Son rôle principal est d’expliquer, dans le commentaire de résultat et éventuellement dans l’archive, pourquoi la réponse est correcte ou d’apporter une précision utile sur le comportement observé, les Magots, une activité ou un élément du parc. Si ce champ est vide, le commentaire de résultat reste court et passe directement de la bonne réponse aux gagnants.
+
 ## Mode archive
 
 Après Noël et selon les dates configurées :
@@ -127,6 +131,19 @@ Prévoir un tableau de bord compact avec vues/onglets :
 
 Prévoir une action de création/initialisation qui crée la structure des 24 jours d’une campagne vide, tout en permettant qu’un import complète immédiatement les données.
 
+## Horaires et planning
+
+Le fonctionnement courant doit rester simple : une date et une heure principales pour chaque contenu.
+
+Par défaut :
+
+- `date_publication` + `heure_publication` servent de référence de planning ;
+- cette même date/heure pilote l’ouverture du contenu sur le site ;
+- elle sert aussi de repère pour la publication manuelle sur les réseaux sociaux ;
+- l’extension ne déclenche aucune publication automatique.
+
+Des horaires spécifiques par réseau ou un horaire d’ouverture distinct peuvent rester possibles uniquement comme options avancées et facultatives. Ils ne doivent pas alourdir l’interface standard ni être exigés pour préparer une journée normale.
+
 ## Aperçu admin
 
 Le module Avent doit utiliser le moteur d’aperçu commun du plugin.
@@ -148,7 +165,7 @@ Exemples :
 
 La simulation admin ne modifie jamais la date réelle du site public.
 
-## Réseaux sociaux
+## Réseaux sociaux — préparation avant publication
 
 L’extension doit générer automatiquement des descriptions Facebook et Instagram à partir des données structurées.
 
@@ -169,10 +186,43 @@ Le texte doit rester court, naturel et adapté aux réseaux sociaux.
 
 Dans l’administration :
 
-- zone d’aperçu du texte généré ;
+- zone d’aperçu du texte généré avant publication ;
 - bouton `Copier le texte` ;
-- idéalement un bouton/aperçu par réseau si Facebook et Instagram divergent ;
-- `texte_post_override_fr` reste disponible pour remplacer totalement le générateur sur un contenu particulier.
+- possibilité de prévisualiser/copier séparément Facebook et Instagram si leurs textes divergent ;
+- `texte_post_override_fr` reste disponible pour remplacer totalement le générateur sur un contenu particulier ;
+- aucune publication automatique vers Meta n’est prévue : l’équipe copie le texte puis le publie manuellement.
+
+## Réseaux sociaux — résultat après tirage
+
+Une fois la bonne réponse et les gagnants renseignés, l’administration doit également générer les textes de résultat prêts à copier-coller.
+
+Sorties attendues :
+
+- commentaire de résultat Facebook ;
+- commentaire de résultat Instagram ;
+- texte court de Story résultat ;
+- bouton `Copier` pour chaque sortie ;
+- aperçu éditable avant copie ;
+- possibilité d’un override manuel exceptionnel.
+
+Le commentaire de résultat doit pouvoir être composé automatiquement, selon les données disponibles, dans cet ordre logique :
+
+1. bonne réponse ;
+2. `explication_reponse_fr` si elle est renseignée ;
+3. gagnant(s) du réseau concerné ;
+4. remerciement au partenaire du jour ;
+5. rappel éventuel des conditions liées au partenaire ;
+6. relance vers la suite du calendrier.
+
+La relance doit s’adapter automatiquement au planning :
+
+- si la nouvelle question est déjà ouverte, proposer une formulation du type « La nouvelle question du jour est déjà en ligne, vous pouvez participer dès maintenant ! » ;
+- si elle n’est pas encore ouverte, proposer une formulation du type « Rendez-vous demain à [heure] pour la prochaine question ! » ;
+- pour le dernier résultat, ne pas annoncer une prochaine question inexistante ; utiliser un texte de clôture adapté à la campagne.
+
+Le texte Story doit être plus court. Il peut reprendre la bonne réponse, le ou les gagnants, le partenaire et une courte invitation à poursuivre le calendrier. S’il y a un gagnant Facebook et un gagnant Instagram différents, le générateur doit pouvoir les distinguer clairement.
+
+La publication du commentaire et de la Story reste entièrement manuelle.
 
 ## Langues
 
