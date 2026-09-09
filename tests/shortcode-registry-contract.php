@@ -31,7 +31,8 @@ shortcode_registry_check(strpos($admin, 'Parcs_HT_Shortcode_Registry::public_row
 shortcode_registry_check(strpos($main, 'class-parcs-ht-feature-hub.php') === false && strpos($main, 'Parcs_HT_Feature_Hub::init()') === false, 'legacy Shortcodes overlay is no longer loaded');
 shortcode_registry_check(!file_exists($root . '/includes/class-parcs-ht-feature-hub.php'), 'legacy Shortcodes overlay file is removed');
 shortcode_registry_check(strpos($preview, 'Parcs_HT_Shortcode_Registry::public_rows()') !== false && strpos($preview, 'Parcs_HT_Shortcode_Registry::render_preview') !== false, 'Aperçu remains generated from the runtime registry and real renderers');
-shortcode_registry_check(strpos($preview_js, "['fr','en','de']") !== false && strpos($preview_js, 'data-htp-preview-lang-button') !== false, 'each preview can still switch between FR EN DE');
+shortcode_registry_check(strpos($preview_js, "['fr','en','de']") !== false && strpos($preview_js, 'data-htp-preview-lang') !== false, 'selected preview can switch between FR EN DE');
+shortcode_registry_check(strpos($preview_js, 'frame.src=frameUrl()') !== false, 'Aperçu loads only the selected shortcode and language on demand');
 shortcode_registry_check(strpos($bootstrap, 'Parcs_HT_Shortcode_Registry::definitions()') !== false, 'runtime bootstrap still derives from the central registry');
 
 echo "Static Shortcodes page contract: OK\n";
