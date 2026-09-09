@@ -14,6 +14,8 @@ Lire intégralement :
 
 Le référentiel d’import courant est **0.7** avec `schema_version = 3`.
 
+Les feuilles `IMPORT plugin - référentiel` des deux fichiers Google Sheets 2026 — Montagne des Singes et Forêt des Singes — ont été resynchronisées sur ce cadrage le **9 septembre 2026**. Ne pas créer de nouveau fichier ou de nouvelle feuille de référence en parallèle.
+
 ## Règles à ne pas réinventer
 
 - Le shortcode principal est `[parc_calendrier_avent]`.
