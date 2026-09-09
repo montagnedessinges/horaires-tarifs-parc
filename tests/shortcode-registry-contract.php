@@ -26,7 +26,7 @@ foreach ($required as $shortcode) {
 shortcode_registry_check(strpos($registry, "return '[' . $base . ($language !== '' ? '_' . $language : '') . ']';") !== false, 'registry builds automatic and forced-language shortcode variants');
 shortcode_registry_check(strpos($admin, '<th>Automatique</th>') !== false, 'Shortcodes page has the automatic-language column');
 shortcode_registry_check(strpos($admin, 'Parcs_HT_Shortcode_Registry::public_rows()') !== false, 'Shortcodes page reads the central runtime registry directly');
-shortcode_registry_check(strpos($admin, "$codes['auto']") !== false && strpos($admin, "$codes['fr']") !== false && strpos($admin, "$codes['en']") !== false && strpos($admin, "$codes['de']") !== false, 'Shortcodes page renders automatic FR EN DE values from registry rows');
+shortcode_registry_check(strpos($admin, "\$codes['auto']") !== false && strpos($admin, "\$codes['fr']") !== false && strpos($admin, "\$codes['en']") !== false && strpos($admin, "\$codes['de']") !== false, 'Shortcodes page renders automatic FR EN DE values from registry rows');
 shortcode_registry_check(!file_exists($root . '/assets/advent-shortcodes-admin.js'), 'no Advent-specific DOM overlay is needed for the Shortcodes page');
 shortcode_registry_check(strpos($main, 'class-parcs-ht-feature-hub.php') === false && strpos($main, 'Parcs_HT_Feature_Hub::init()') === false, 'legacy Shortcodes overlay is no longer loaded');
 shortcode_registry_check(!file_exists($root . '/includes/class-parcs-ht-feature-hub.php'), 'legacy Shortcodes overlay file is removed');
