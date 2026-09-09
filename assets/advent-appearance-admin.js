@@ -110,8 +110,8 @@
       .then(function(payload){
         if(!payload||!payload.success)throw new Error(payload&&payload.data&&payload.data.message?payload.data.message:'Enregistrement impossible.');
         campaigns[campaignId]=payload.data.settings||{};
-        setMessage(card,payload.data.message||'Couleurs enregistrées.',false);
         renderCard(card,campaignId);
+        setMessage(card,payload.data.message||'Couleurs enregistrées.',false);
       })
       .catch(function(error){setMessage(card,error&&error.message?error.message:'Enregistrement impossible.',true);})
       .finally(function(){setBusy(card,false);});
