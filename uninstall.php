@@ -30,6 +30,7 @@ foreach (array(
     'parcs_ht_pedagogical_guide_stats_meta',
     'parcs_ht_pedagogical_guide_stats_db_version',
     'parcs_ht_advent',
+    'parcs_ht_advent_appearance',
 ) as $option) {
     delete_option($option);
 }
