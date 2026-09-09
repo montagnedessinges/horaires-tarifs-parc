@@ -62,14 +62,14 @@ advent_check(strpos($advent, 'rate_limit_reached') !== false && strpos($advent, 
 advent_check(strpos($advent, 'do_shortcode($shortcode)') !== false && strpos($advent, 'render_final_form') !== false, 'final form shortcode is rendered only through the authorized server path');
 
 foreach (array(
-    'save_campaign'=>'parcs_ht_advent_save_campaign_',
-    'save_content'=>'parcs_ht_advent_save_content_',
-    'save_partner'=>'parcs_ht_advent_save_partner_',
-    'save_result'=>'parcs_ht_advent_save_result_',
-    'csv_template'=>'parcs_ht_advent_csv_template_',
-    'import_csv'=>'parcs_ht_advent_import_csv_',
-    'apply_import'=>'parcs_ht_advent_apply_import_',
-) as $method => $nonce_prefix) {
+    'save_campaign'=>'parcs_ht_advent_save_campaign',
+    'save_content'=>'parcs_ht_advent_save_content',
+    'save_partner'=>'parcs_ht_advent_save_partner',
+    'save_result'=>'parcs_ht_advent_save_result',
+    'csv_template'=>'parcs_ht_advent_csv_template',
+    'import_csv'=>'parcs_ht_advent_import_csv',
+    'apply_import'=>'parcs_ht_advent_apply_import',
+) as $method => $nonce_action) {
     $start = strpos($admin, 'public static function ' . $method . '()');
     $next = $start !== false ? strpos($admin, 'public static function ', $start + 20) : false;
     if ($start === false) {
@@ -79,9 +79,13 @@ foreach (array(
     } else {
         $block = substr($admin, $start, $next - $start);
     }
-    advent_check($block !== '' && strpos($block, "check_admin_referer('" . $nonce_prefix) !== false, 'admin write verifies nonce: ' . $method);
+    $nonce_position = strpos($block, "check_admin_referer('" . $nonce_action . "')");
+    $post_position = strpos($block, "\$_POST['campaign_id']");
+    advent_check($block !== '' && $nonce_position !== false, 'admin write verifies nonce: ' . $method);
+    advent_check($post_position === false || $nonce_position < $post_position, 'nonce is verified before campaign POST data is read: ' . $method);
 }
 advent_check(strpos($admin, "check_admin_referer('parcs_ht_advent_create_campaign')") !== false, 'campaign creation verifies nonce');
+advent_check(strpos($admin, "wp_nonce_field(\$action);") !== false, 'shared Advent forms use action-scoped nonces without pre-reading campaign input');
 
 advent_check(strpos($admin, 'Analyser sans écrire') !== false && strpos($admin, 'original_hash') !== false, 'import performs a dry run before writing');
 advent_check(strpos($admin, "'schema_version'") !== false && strpos($admin, "'parc_code'") !== false && strpos($admin, "'campagne_id'") !== false, 'import validates schema, park and campaign identifiers');
