@@ -91,7 +91,7 @@ jobs:
           PLUGIN_ROOT=/tmp/htp-production-test php tests/pedagogical-guides-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/pedagogical-guide-stats-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/advent-contract.php
-          grep -q 'Plugin Name: Horaires et tarifs du parc' /tmp/htp-production-test/horaires-tarifs-parc.php
+          grep -q 'Plugin Name: Gestion du parc' /tmp/htp-production-test/horaires-tarifs-parc.php
           if find /tmp/htp-production-test -type f \( -name '*.map' -o -name '*.ts' -o -name '*.tsx' -o -name '*.jsx' -o -name '*.scss' -o -name '*.sass' -o -name '*.less' \) | grep -q .; then
             echo 'Development source file found after production cleanup.' >&2
             exit 1
@@ -169,6 +169,7 @@ jobs:
           unzip -p horaires-tarifs-parc.zip horaires-tarifs-parc/horaires-tarifs-parc.php > /tmp/horaires-tarifs-parc.php
           PACKAGE_VERSION=$(php -r '$s=file_get_contents("/tmp/horaires-tarifs-parc.php"); preg_match("/Version:\\s*([0-9.]+)/",$s,$m); echo $m[1] ?? "";')
           test "$PACKAGE_VERSION" = "${{ steps.version.outputs.version }}"
+          grep -q 'Plugin Name: Gestion du parc' /tmp/horaires-tarifs-parc.php
           find build/horaires-tarifs-parc -type f -name '*.php' -print0 | xargs -0 -n1 php -l
           find build/horaires-tarifs-parc/assets -type f -name '*.js' -print0 | xargs -0 -n1 node --check
           if grep -RniE --include='*.php' --include='*.js' --include='*.css' 'ChatGPT|OpenAI|GitHub Copilot|generated[[:space:]-]+by[[:space:]]+(AI|artificial intelligence)|généré[[:space:]]+par[[:space:]]+(une[[:space:]]+)?IA|sourceMappingURL|TODO|FIXME|HACK|console\.log[[:space:]]*\(|debugger[[:space:]]*;' build/horaires-tarifs-parc; then
@@ -183,7 +184,7 @@ jobs:
         shell: bash
         run: |
           gh release create "${{ steps.version.outputs.tag }}" horaires-tarifs-parc.zip horaires-tarifs-parc.zip.sha256 \
-            --title "Horaires & Tarifs Parc ${{ steps.version.outputs.version }}" \
+            --title "Gestion du parc ${{ steps.version.outputs.version }}" \
             --notes-file <(sed -n '/^## ${{ steps.version.outputs.version }}$/,/^## /p' CHANGELOG.md | sed '$d')
       - name: Preserve existing release unchanged
         if: steps.existing.outputs.exists == 'true'
