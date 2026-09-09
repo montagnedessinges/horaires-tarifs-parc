@@ -1,5 +1,12 @@
 # Historique des versions
 
+## 1.15.3
+- Le Calendrier de l’Avent est désormais intégré directement dans « Horaires du parc » comme un véritable onglet principal de l’extension ; le menu WordPress séparé est supprimé.
+- L’entrée dans l’Avent ne change plus de page WordPress : le moteur d’onglets principal affiche l’espace Avent dans la même administration et masque proprement les réglages de saison qui ne le concernent pas.
+- Les sous-sections Campagne, Teasings sociaux, Calendrier, Grand jeu, Partenaires, Résultats et Import / export restent chargées à la demande dans ce même onglet grâce à un fragment serveur dédié.
+- La grille responsive des 24 jours introduite en 1.15.2 est conservée et l’espace Avent utilise désormais toute la largeur utile de l’administration.
+- Les campagnes et données existantes sont conservées sans migration ni réinitialisation ; aucun contenu, partenaire, lot ou date MDS/FDS n’est ajouté en dur.
+
 ## 1.15.2
 - Les onglets du Calendrier de l’Avent se chargent désormais dans la même interface sans rechargement complet de la page WordPress ; le serveur continue à ne rendre qu’une vue à la fois.
 - Les clics sur un jour, un teasing, un partenaire ou un résultat utilisent le même moteur de navigation interne, avec conservation de l’historique précédent/suivant du navigateur et repli vers la navigation WordPress normale si JavaScript échoue.

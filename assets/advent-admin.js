@@ -28,14 +28,16 @@
   function sameAdventPage(url){
     try{
       var parsed=new URL(url,window.location.href);
-      return parsed.origin===window.location.origin&&parsed.searchParams.get('page')==='parcs-ht-advent';
+      return parsed.origin===window.location.origin&&
+        parsed.searchParams.get('page')==='parcs-horaires-tarifs'&&
+        parsed.searchParams.get('tab')==='htp-advent';
     }catch(error){
       return false;
     }
   }
 
   function setBusy(busy){
-    var root=document.querySelector('.htp-advent-admin');
+    var root=document.querySelector('[data-htp-advent-workspace]');
     if(!root)return;
     root.classList.toggle('is-loading',!!busy);
     if(busy)root.setAttribute('aria-busy','true');
@@ -45,17 +47,15 @@
   function replaceAdmin(html,url,pushHistory){
     var parser=new DOMParser();
     var doc=parser.parseFromString(html,'text/html');
-    var incoming=doc.querySelector('.htp-advent-admin');
-    var current=document.querySelector('.htp-advent-admin');
+    var incoming=doc.querySelector('[data-htp-advent-workspace]');
+    var current=document.querySelector('[data-htp-advent-workspace]');
     if(!incoming||!current)throw new Error('Interface Calendrier de l\'Avent introuvable.');
-    current.innerHTML=incoming.innerHTML;
-    current.className=incoming.className;
-    current.removeAttribute('aria-busy');
+    current.replaceWith(incoming);
     hydrateView();
     if(pushHistory&&window.history&&window.history.pushState){
       window.history.pushState({advent:true},'',url);
     }
-    window.scrollTo({top:Math.max(0,current.getBoundingClientRect().top+window.scrollY-40),behavior:'smooth'});
+    window.scrollTo({top:Math.max(0,incoming.getBoundingClientRect().top+window.scrollY-40),behavior:'smooth'});
   }
 
   function loadAdventPage(url,pushHistory){
@@ -71,7 +71,9 @@
     if(navigationRequest&&navigationRequest.abort)navigationRequest.abort();
     navigationRequest=new AbortController();
     setBusy(true);
-    fetch(absolute,{
+    var requestUrl=new URL(absolute);
+    requestUrl.searchParams.set('advent_fragment','1');
+    fetch(requestUrl.toString(),{
       credentials:'same-origin',
       headers:{'X-Requested-With':'XMLHttpRequest'},
       signal:navigationRequest.signal
@@ -143,10 +145,9 @@
     }
   });
 
-  $(document).on('click','.htp-advent-admin a[href]',function(event){
+  $(document).on('click','[data-htp-advent-workspace] a[href]',function(event){
     if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
-    var link=this;
-    var href=link.href||'';
+    var href=this.href||'';
     if(!sameAdventPage(href))return;
     event.preventDefault();
     loadAdventPage(href,true);
@@ -164,7 +165,7 @@
     }
   });
 
-  $(document).on('submit','.htp-advent-admin form',function(){
+  $(document).on('submit','[data-htp-advent-workspace] form',function(){
     pageCache={};
   });
 
