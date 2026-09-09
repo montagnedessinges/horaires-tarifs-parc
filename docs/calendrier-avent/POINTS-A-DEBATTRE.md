@@ -1,179 +1,150 @@
-# Points à débattre avant développement du Calendrier de l’Avent
+# Points restant à débattre — Calendrier de l’Avent
 
-Ce fichier sert de zone de débat fonctionnel. Le chat spécialisé Calendrier de l’Avent peut proposer des modifications ici avant que le chat de développement touche au code.
+Ce fichier ne contient plus les règles déjà figées dans `SPEC-FONCTIONNELLE.md` et `REFERENTIEL-IMPORT.md`.
+
+Le cadrage fonctionnel de l’affichage public est désormais suffisamment stable pour commencer le développement.
+
+## Décisions désormais figées
+
+Sont considérés comme validés et ne doivent plus être réinventés pendant le développement :
+
+- `[parc_calendrier_avent]` rend uniquement un bloc, jamais une page WordPress complète ;
+- `[parc_reglement_avent]` rend uniquement le règlement dynamique de la campagne active ;
+- aucune URL MDS/FDS n’est codée en dur ;
+- page calendrier et page règlement ont des URL configurables ;
+- avant le 1er décembre : un seul visuel teasing public + grille fermée ;
+- les multiples teasings servent principalement aux publications sociales ;
+- arrivée sur la page : aucune case ouverte automatiquement ;
+- le jour courant est seulement mis en avant et devient cliquable à son heure d’ouverture ;
+- clic volontaire sur une case ouverte pour afficher son détail ;
+- visuel 4:5 central, agrandissable, pouvant faire partie de la question ;
+- jours futurs verrouillés, jours passés consultables ;
+- jour J : question/lot/partenaire/visuel sans réponse ni gagnants ;
+- résultat révélable au plus tôt à J+1 à l’heure prévue ;
+- résultat saisi à l’avance mais non publié reste invisible ;
+- si l’heure de révélation est passée sans résultat publié : texte `tirage non effectué` configurable ;
+- les gagnants Facebook et Instagram sont ensuite visibles dans l’archive ;
+- une case `indice du mot mystère` ouvre les champs lettre + position ;
+- l’indice réel reste serveur le jour J ;
+- le rappel du grand jeu est automatiquement ajouté au texte social d’un jour avec indice ;
+- l’indice lettre + numéro est révélé avec le résultat du jour ;
+- toutes les publications quotidiennes générées renvoient vers la page centrale du calendrier ;
+- `Comment participer ?` ouvre une explication courte intégrée au bloc ;
+- un bouton séparé ouvre la page du règlement complet ;
+- tous les textes publics ont des valeurs par défaut mais restent modifiables ;
+- jour 24 : jeu quotidien + grand jeu final distinct ;
+- mot mystère validé côté serveur ;
+- formulaire final rendu seulement après mot correct ;
+- shortcode du formulaire final non exposé avant autorisation ;
+- aucune publication automatique vers Facebook/Instagram ;
+- génération admin des posts, commentaires résultat et Stories à copier manuellement.
 
 ## 1. Langues du site
 
 Décision actuelle :
 
-- réseaux sociaux principalement en français ;
-- site techniquement compatible FR / EN / DE ;
 - français obligatoire ;
-- traductions EN/DE facultatives via `TRADUCTIONS`.
+- EN/DE facultatifs ;
+- réseaux sociaux principalement en français.
 
-À finaliser : comportement exact si une traduction manque.
+Reste à finaliser avant release : comportement exact si une traduction manque.
 
-Options déjà envisagées :
+Options :
 
-- afficher le français avec une courte mention indiquant que le concours se déroule en français sur les réseaux ;
+- fallback français avec courte notice ;
 - masquer le contenu non traduit ;
-- exiger toutes les traductions avant publication.
+- exiger la traduction avant publication.
 
-## 2. Heure d’ouverture des jours
+Ce point n’empêche pas le développement du moteur FR et de l’architecture multilingue.
 
-Décision validée : le fonctionnement standard doit rester simple.
+## 2. Dates exactes de la campagne 2026
 
-- `date_publication` + `heure_publication` constituent la date/heure principale du contenu ;
-- par défaut, cette même date/heure ouvre la case ou le teasing sur le site ;
-- elle sert aussi de repère pour la publication manuelle sur les réseaux sociaux ;
-- le plugin ne publie rien automatiquement sur Facebook ou Instagram ;
-- les horaires distincts par réseau ou l’override d’ouverture ne sont que des options avancées et facultatives, à masquer dans l’interface standard tant qu’elles ne sont pas utilisées.
+Les dates/heures doivent toutes être configurables.
 
-Aucun débat fonctionnel restant sur le principe général. Les détails d’interface avancée pourront être décidés pendant le développement.
+À renseigner plus tard dans les données réelles :
 
-## 3. Fermeture du grand jeu
+- heure définitive d’ouverture quotidienne ;
+- date/heure de fermeture du grand jeu ;
+- date de révélation du mot mystère complet ;
+- date/heure de révélation du résultat du jour 24.
 
-La fermeture doit être configurable et peut être postérieure au 28 décembre.
+Aucune de ces valeurs ne doit être codée en dur.
 
-À finaliser pour chaque campagne : date/heure réelles. Ne jamais coder une date fixe dans l’extension.
+## 3. Formulaire final / RGPD
 
-## 4. Formulaire final
+Le mécanisme technique est figé : validation serveur du mot puis rendu du shortcode de formulaire.
 
-Principe validé : le mot correct déverrouille le formulaire final côté serveur.
+Reste à décider pour le vrai formulaire :
 
-À finaliser :
-
-- champs obligatoires du formulaire final ;
+- champs obligatoires ;
 - téléphone facultatif ou obligatoire ;
 - adresse nécessaire ou non ;
-- newsletter facultative ;
-- politique de doublons (une participation par e-mail ou plusieurs) ;
-- texte RGPD exact.
+- newsletter éventuelle ;
+- politique de doublons ;
+- texte RGPD exact ;
+- durée de conservation des données.
 
-## 5. Résultats quotidiens
+Ces choix peuvent être finalisés après le premier prototype.
 
-Principes validés :
+## 4. Apparence fine de la grille
 
-- bloc RÉSULTATS distinct de CONTENUS ;
-- gagnants Facebook et Instagram séparés ;
-- `explication_reponse_fr` facultatif, utilisé principalement pour expliquer pourquoi la réponse est correcte dans le commentaire de résultat ;
-- génération automatique du commentaire résultat Facebook ;
-- génération automatique du commentaire résultat Instagram ;
-- génération automatique d’un texte court pour Story ;
-- aperçu + bouton `Copier` pour chaque sortie ;
-- publication toujours manuelle par l’équipe du parc ;
-- relance automatique adaptée au planning : nouvelle question déjà en ligne, prochain rendez-vous à venir ou clôture si dernier jour.
+La mécanique est figée, mais le style peut être ajusté après aperçu :
 
-À finaliser :
+- nombre exact de colonnes selon largeur ;
+- couleurs des états fermé/ouvert/aujourd’hui ;
+- animation éventuelle ;
+- taille exacte des numéros ;
+- détail inline ou panneau animé, tant que l’utilisateur reste dans le même bloc et qu’aucun jour ne s’ouvre automatiquement.
 
-- gagnants saisis uniquement dans WordPress ou également importables ;
-- affichage ou non des gagnants sur le site archive ;
-- durée de conservation des données opérationnelles ;
-- formulation exacte des modèles de résultat et de Story, tout en conservant des overrides manuels.
+Le premier prototype doit privilégier mobile, lisibilité et simplicité.
 
-## 6. Teasings
+## 5. Interface admin fine
 
-Nombre libre et piloté par les données.
+Principe figé : grille 24 jours, éditeur d’un seul jour à la fois, vues séparées Campagne / Teasings sociaux / Calendrier / Grand jeu / Partenaires / Résultats / Import.
 
-À finaliser :
+Reste ajustable après test :
 
-- certains teasings doivent-ils rester visibles une fois le calendrier ouvert ?
-- peut-on avoir des teasings/rappels pendant la période du 1er au 24 ?
-- affichage site : un teasing actif à la fois ou plusieurs contenus passés consultables ?
+- panneau latéral, modale admin ou écran dédié ;
+- badges/couleurs ;
+- actions rapides ;
+- ergonomie exacte du bouton `Publier le résultat`.
 
-## 7. Visuels
+## 6. Modèles de textes sociaux
 
-Principes validés :
+La logique est figée : générateur + aperçu + copie manuelle + overrides.
 
-- URL externe ou média WordPress ;
-- remplacement manuel possible ;
-- réimport vide = conservation du média manuel ;
-- placeholder au bon ratio dans l’admin si image manquante.
+Reste à affiner avec les vrais contenus 2026 :
 
-À finaliser :
+- formulation exacte Facebook ;
+- formulation exacte Instagram ;
+- longueur cible ;
+- hashtags ;
+- style de Story résultat ;
+- textes par défaut du rappel grand jeu et du lien vers la page calendrier.
 
-- visuel d’attente public autorisé ou publication bloquée si image absente ;
-- politique exacte pour les URL externes ;
-- besoin ou non d’une protection plus stricte des médias futurs que la simple non-exposition de leur URL par le module.
+Tous ces textes sont modifiables sans changer le code.
 
-## 8. Apparence de la grille publique
+## 7. Import
 
-Principes : 24 cases, mobile prioritaire, jours futurs verrouillés.
+Référentiel courant : `REFERENTIEL-IMPORT.md`, cadrage **0.7**, `schema_version = 3`.
 
-À débattre :
+Reste à choisir techniquement :
 
-- nombre de colonnes desktop/tablette/mobile ;
-- style des cases verrouillées ;
-- présence d’une miniature sur la case ou seulement du numéro ;
-- animation d’ouverture ;
-- modale centrale ou panneau latéral sur desktop ;
-- comportement mobile exact.
-
-## 9. Administration
-
-Principe validé : pas de 24 formulaires à la suite.
-
-Base proposée :
-
-- Campagne ;
-- Teasings ;
-- Calendrier en grille ;
-- Grand jeu ;
-- Partenaires ;
-- Résultats ;
-- Import/export.
-
-À débattre :
-
-- panneau latéral vs modale vs écran dédié pour éditer un jour ;
-- badges/couleurs de statut ;
-- actions rapides depuis chaque case ;
-- duplication d’un jour ;
-- réorganisation éventuelle des teasings.
-
-## 10. Générateur de publications sociales
-
-Décisions validées :
-
-- l’extension ne publie jamais automatiquement vers Facebook ou Instagram ;
-- elle prépare les textes dans l’administration pour copie manuelle ;
-- génération structurée du post avant publication + aperçu + bouton `Copier le texte` + override manuel ;
-- après tirage, génération séparée du commentaire résultat Facebook, du commentaire résultat Instagram et d’un texte Story ;
-- `explication_reponse_fr` vient juste après la bonne réponse lorsqu’il est renseigné ;
-- le texte résultat peut ensuite mentionner les gagnants, remercier le partenaire, rappeler les conditions utiles puis relancer vers la suite du calendrier ;
-- si la prochaine question est déjà ouverte, le générateur invite à participer immédiatement ; sinon il annonce le prochain rendez-vous ; après le dernier jour, il utilise une clôture adaptée.
-
-À finaliser :
-
-- modèle Facebook et Instagram identiques ou légèrement adaptés ;
-- longueur cible exacte ;
-- emplacement des liens ;
-- hashtags globaux vs hashtags du jour ;
-- ordre final partenaire / lot / intro / question / règles pour le post initial ;
-- style exact de la Story résultat.
-
-## 11. Import
-
-Orientation : `.xlsx` principal, CSV éventuellement en complément.
-
-À finaliser :
-
-- bibliothèque PHP retenue et impact sur le poids du plugin ;
-- prise en charge de plusieurs feuilles physiques ou d’un fichier plat ;
-- export inverse de la campagne WordPress vers XLSX ;
-- gestion des traductions dans une feuille séparée ;
+- bibliothèque XLSX ;
+- prise en charge exacte du CSV en production ;
+- export inverse vers XLSX ;
 - niveau de tolérance aux colonnes inconnues.
 
-## 12. Aperçu commun du plugin
+Un CSV de démonstration pourra être utilisé dès qu’une première version de l’import existe pour tester visuellement le rendu.
 
-Avant l’Avent, une mise à jour dédiée de l’onglet Aperçu est recommandée.
+## 8. Visuels futurs et confidentialité
 
-Décision validée :
+Règle figée : le module ne doit pas exposer l’URL d’un visuel futur dans ses payloads publics avant ouverture.
 
-- garder `Date à tester` ;
-- ajouter/tenir compte de `Heure à tester` ;
-- afficher le vrai rendu du shortcode à cette date/heure ;
-- ne pas ouvrir automatiquement l’éditeur du jour ;
-- charger un seul shortcode à la fois et une langue à la fois pour éviter le pré-rendu complet actuel.
+Reste à évaluer si une protection supplémentaire des médias WordPress futurs est souhaitée. Une image déjà publique dans la médiathèque ne peut pas être considérée comme absolument secrète simplement parce que le shortcode ne l’affiche pas encore.
 
-Le module Avent devra simplement se brancher sur ce moteur commun.
+## Feu vert fonctionnel
+
+Les points restants ci-dessus ne bloquent pas le démarrage du développement du module.
+
+Le chat de développement doit prendre `README.md`, `SPEC-FONCTIONNELLE.md`, `REFERENTIEL-IMPORT.md`, `PLAN-DEVELOPPEMENT.md` et `HANDOFF-DEVELOPPEMENT.md` comme sources canoniques et ne pas revenir aux anciennes décisions remplacées.
