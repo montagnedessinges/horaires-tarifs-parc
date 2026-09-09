@@ -1,6 +1,17 @@
 .parcs-ht-advent,
 .parcs-ht-advent-rules {
-  --htp-advent-accent: var(--htp-primary, currentColor);
+  --htp-advent-primary: currentColor;
+  --htp-advent-secondary: currentColor;
+  --htp-advent-open-day: currentColor;
+  --htp-advent-today: currentColor;
+  --htp-advent-locked: currentColor;
+  --htp-advent-special: currentColor;
+  --htp-advent-primary-bg: transparent;
+  --htp-advent-secondary-bg: transparent;
+  --htp-advent-open-day-bg: transparent;
+  --htp-advent-today-bg: transparent;
+  --htp-advent-locked-bg: transparent;
+  --htp-advent-special-bg: transparent;
   box-sizing: border-box;
   color: inherit;
   font: inherit;
@@ -21,7 +32,7 @@
   font-size: clamp(1.45rem, 3vw, 2rem);
   font-weight: 700;
   line-height: 1.15;
-  color: inherit;
+  color: var(--htp-advent-primary, currentColor);
 }
 
 .parcs-ht-advent-intro,
@@ -65,7 +76,16 @@
 }
 
 .parcs-ht-advent-primary {
+  border-color: var(--htp-advent-primary, currentColor);
+  color: var(--htp-advent-primary, currentColor);
+  background: var(--htp-advent-primary-bg, transparent);
   font-weight: 700;
+}
+
+.parcs-ht-advent-secondary {
+  border-color: var(--htp-advent-secondary, currentColor);
+  color: var(--htp-advent-secondary, currentColor);
+  background: var(--htp-advent-secondary-bg, transparent);
 }
 
 .parcs-ht-advent-primary:focus-visible,
@@ -75,16 +95,21 @@
 .parcs-ht-advent-lightbox-close:focus-visible,
 .parcs-ht-advent-link:focus-visible,
 .parcs-ht-advent-social-links a:focus-visible {
-  outline: 3px solid currentColor;
+  outline: 3px solid var(--htp-advent-primary, currentColor);
   outline-offset: 3px;
 }
 
 .parcs-ht-advent-participation-panel {
   margin-top: .75rem;
   padding: 1rem;
-  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+  border: 1px solid color-mix(in srgb, var(--htp-advent-secondary, currentColor) 22%, transparent);
   border-radius: .75rem;
-  background: transparent;
+  background: var(--htp-advent-secondary-bg, transparent);
+}
+
+.parcs-ht-advent-link,
+.parcs-ht-advent-social-links a {
+  color: var(--htp-advent-primary, currentColor);
 }
 
 .parcs-ht-advent-grid {
@@ -105,6 +130,11 @@
   transition: transform .16s ease, box-shadow .16s ease, opacity .16s ease;
 }
 
+.parcs-ht-advent-day.is-open {
+  border-color: color-mix(in srgb, var(--htp-advent-open-day, currentColor) 22%, transparent);
+  background: var(--htp-advent-open-day-bg, transparent);
+}
+
 .parcs-ht-advent-day.is-open:hover,
 .parcs-ht-advent-day.is-open:focus-visible {
   transform: translateY(-2px);
@@ -112,18 +142,23 @@
 }
 
 .parcs-ht-advent-day.is-locked {
+  border-color: color-mix(in srgb, var(--htp-advent-locked, currentColor) 22%, transparent);
+  background: var(--htp-advent-locked-bg, transparent);
   cursor: not-allowed;
   opacity: .48;
 }
 
 .parcs-ht-advent-day.is-today {
   border-width: 2px;
-  box-shadow: inset 0 0 0 2px color-mix(in srgb, currentColor 14%, transparent);
+  border-color: var(--htp-advent-today, currentColor);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--htp-advent-today, currentColor) 14%, transparent);
+  background: var(--htp-advent-today-bg, transparent);
 }
 
 .parcs-ht-advent-day.is-selected {
   border-width: 2px;
-  box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 12%, transparent);
+  border-color: var(--htp-advent-primary, currentColor);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--htp-advent-primary, currentColor) 12%, transparent);
 }
 
 .parcs-ht-advent-day-number {
@@ -148,8 +183,9 @@
 .parcs-ht-advent-error {
   margin: 0;
   padding: 1rem;
-  border: 1px dashed color-mix(in srgb, currentColor 30%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--htp-advent-secondary, currentColor) 30%, transparent);
   border-radius: .75rem;
+  background: var(--htp-advent-secondary-bg, transparent);
 }
 
 .parcs-ht-advent-teaser,
@@ -195,10 +231,11 @@
 
 .parcs-ht-advent-day-heading h3 {
   margin: .2rem 0 0;
-  color: inherit;
+  color: var(--htp-advent-primary, currentColor);
 }
 
 .parcs-ht-advent-day-kicker {
+  color: var(--htp-advent-secondary, currentColor);
   font-weight: 700;
 }
 
@@ -219,6 +256,12 @@
   margin: 0 0 1rem;
 }
 
+.parcs-ht-advent-prize strong,
+.parcs-ht-advent-question strong,
+.parcs-ht-advent-partner > strong {
+  color: var(--htp-advent-secondary, currentColor);
+}
+
 .parcs-ht-advent-choices {
   padding-left: 1.3rem;
 }
@@ -230,8 +273,9 @@
 .parcs-ht-advent-clue-marker,
 .parcs-ht-advent-clue-reveal {
   padding: .75rem;
-  border: 1px dashed currentColor;
+  border: 1px dashed var(--htp-advent-special, currentColor);
   border-radius: .7rem;
+  background: var(--htp-advent-special-bg, transparent);
 }
 
 .parcs-ht-advent-social-links {
@@ -242,19 +286,20 @@
 
 .parcs-ht-advent-result {
   padding-top: 1rem;
-  border-top: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--htp-advent-secondary, currentColor) 20%, transparent);
 }
 
 .parcs-ht-advent-result h4 {
   margin: 0 0 .65rem;
-  color: inherit;
+  color: var(--htp-advent-primary, currentColor);
 }
 
 .parcs-ht-advent-final {
   margin-top: 1.25rem;
   padding: 1rem;
-  border: 1px solid currentColor;
+  border: 1px solid var(--htp-advent-special, currentColor);
   border-radius: .85rem;
+  background: var(--htp-advent-special-bg, transparent);
 }
 
 .parcs-ht-advent-final form {
@@ -267,7 +312,7 @@
 .parcs-ht-advent-final input[type="text"] {
   min-width: min(100%, 16rem);
   padding: .65rem .75rem;
-  border: 1px solid color-mix(in srgb, currentColor 38%, transparent);
+  border: 1px solid color-mix(in srgb, var(--htp-advent-special, currentColor) 38%, transparent);
   border-radius: .55rem;
   font: inherit;
   color: inherit;

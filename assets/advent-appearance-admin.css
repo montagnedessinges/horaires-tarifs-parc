@@ -1,0 +1,105 @@
+.htp-advent-appearance-card {
+  margin-top: 16px;
+}
+
+.htp-advent-appearance-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.htp-advent-appearance-head h2 {
+  margin: 0 0 4px;
+}
+
+.htp-advent-color-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.htp-advent-color-setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, currentColor 16%, transparent);
+  border-radius: 10px;
+  background: transparent;
+}
+
+.htp-advent-color-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.htp-advent-color-copy span {
+  color: inherit;
+  opacity: .72;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.htp-advent-color-control {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  justify-items: start;
+  gap: 6px 8px;
+  flex: 0 0 auto;
+}
+
+.htp-advent-color-control > span {
+  font-size: 12px;
+}
+
+.htp-advent-color-control input[type="color"] {
+  grid-column: 1 / -1;
+  width: 72px;
+  min-height: 38px;
+  padding: 2px;
+  border-radius: 7px;
+}
+
+.htp-advent-color-control input[type="color"]:disabled {
+  opacity: .38;
+}
+
+.htp-advent-appearance-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.htp-advent-appearance-message {
+  margin-left: 4px;
+  font-weight: 600;
+}
+
+.htp-advent-appearance-message.is-error {
+  color: #b32d2e;
+}
+
+.htp-advent-appearance-card.is-saving {
+  opacity: .72;
+}
+
+@media (max-width: 900px) {
+  .htp-advent-color-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .htp-advent-color-setting {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

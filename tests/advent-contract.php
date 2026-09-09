@@ -3,6 +3,8 @@
 $root = getenv('PLUGIN_ROOT') ?: dirname(__DIR__);
 $main = file_get_contents($root . '/horaires-tarifs-parc.php');
 $advent = file_get_contents($root . '/includes/class-parcs-ht-advent.php');
+$appearance_path = $root . '/includes/class-parcs-ht-advent-appearance.php';
+$appearance = file_get_contents($appearance_path);
 $admin_path = $root . '/includes/class-parcs-ht-advent-admin.php';
 $admin = file_get_contents($admin_path);
 $core_admin = file_get_contents($root . '/includes/class-parcs-ht-admin.php');
@@ -10,6 +12,9 @@ $registry = file_get_contents($root . '/includes/class-parcs-ht-shortcode-regist
 $preview = file_get_contents($root . '/includes/class-parcs-ht-admin-shortcode-preview.php');
 $frontend_js = file_get_contents($root . '/assets/advent.js');
 $advent_admin_js = file_get_contents($root . '/assets/advent-admin.js');
+$appearance_admin_js = file_get_contents($root . '/assets/advent-appearance-admin.js');
+$appearance_admin_css = file_get_contents($root . '/assets/advent-appearance-admin.css');
+$public_css = file_get_contents($root . '/assets/advent.css');
 $core_admin_js = file_get_contents($root . '/assets/admin.js');
 $admin_css = file_get_contents($root . '/assets/advent-admin.css');
 $uninstall = file_get_contents($root . '/uninstall.php');
@@ -22,8 +27,9 @@ function advent_check($condition, $message) {
     echo '[OK] ' . $message . PHP_EOL;
 }
 
-advent_check(strpos($main, 'Version: 1.15.3') !== false && strpos($main, "PARCS_HT_VERSION', '1.15.3") !== false, 'integrated Advent admin uses version 1.15.3');
+advent_check(strpos($main, 'Version: 1.15.4') !== false && strpos($main, "PARCS_HT_VERSION', '1.15.4") !== false, 'Advent appearance uses version 1.15.4');
 advent_check(strpos($main, 'class-parcs-ht-advent.php') !== false && strpos($main, 'class-parcs-ht-advent-admin.php') !== false, 'Advent public and canonical admin modules are bootstrapped');
+advent_check(strpos($main, 'class-parcs-ht-advent-appearance.php') !== false && strpos($main, 'Parcs_HT_Advent_Appearance::init()') !== false, 'dedicated Advent appearance module is bootstrapped');
 advent_check(!file_exists($root . '/includes/class-parcs-ht-advent-admin-v2.php'), 'obsolete Advent v2 admin filename is removed');
 advent_check(strpos($admin, 'add_menu_page(') === false && strpos($admin, 'add_submenu_page(') === false, 'Advent no longer creates a separate WordPress menu');
 advent_check(strpos($core_admin, 'data-htp-admin-tab="htp-advent"') !== false && strpos($core_admin, 'Calendrier de l’Avent</button>') !== false, 'Advent is a native main Horaires du parc tab');
@@ -52,6 +58,21 @@ advent_check(strpos($advent_admin_js, 'window.history.pushState') !== false && s
 advent_check(strpos($admin_css, '.htp-advent-day-grid,') !== false && strpos($admin_css, '.htp-advent-day-card,') !== false, 'actual calendar markup is styled as a responsive grid of cards');
 advent_check(strpos($admin_css, 'grid-template-columns: repeat(6') !== false && strpos($admin_css, 'grid-template-columns: repeat(2') !== false, 'calendar grid has desktop and mobile layouts');
 advent_check(strpos($admin_css, 'max-width: none') !== false && strpos($admin_css, 'width: 100%') !== false, 'Advent workspace uses the full useful width of the main admin tab');
+
+advent_check(strpos($appearance, "const OPTION = 'parcs_ht_advent_appearance'") !== false && strpos($appearance, 'const SCHEMA_VERSION = 1') !== false, 'Advent appearance uses a dedicated lightweight store');
+foreach (array('primary','secondary','open_day','today','locked','special') as $color_key) {
+    advent_check(strpos($appearance, "'" . $color_key . "' => ''") !== false, 'appearance keeps inherited display by default: ' . $color_key);
+}
+advent_check(strpos($appearance, 'sanitize_hex_color') !== false, 'custom Advent colors are sanitized as hexadecimal colors');
+advent_check(strpos($appearance, 'Parcs_HT_Advent::campaign($campaign_id, true)') !== false, 'appearance save is restricted to a campaign from the current installation');
+advent_check(strpos($appearance, "check_ajax_referer(self::NONCE_ACTION, 'nonce')") !== false && strpos($appearance, "current_user_can('manage_options')") !== false, 'appearance save requires administrator capability and nonce');
+advent_check(strpos($appearance, "wp_add_inline_style('parcs-ht-advent'") !== false && strpos($appearance, 'data-campaign-id') !== false, 'palette is scoped to the public campaign without changing campaign data');
+foreach (array('--htp-advent-primary','--htp-advent-secondary','--htp-advent-open-day','--htp-advent-today','--htp-advent-locked','--htp-advent-special') as $variable) {
+    advent_check(strpos($public_css, $variable) !== false, 'public Advent stylesheet exposes variable: ' . $variable);
+}
+advent_check(strpos($appearance_admin_js, 'Couleurs du Calendrier de l’Avent') !== false && strpos($appearance_admin_js, "currentView()!=='campaign'") !== false, 'color controls stay inside the Advent campaign workspace');
+advent_check(strpos($appearance_admin_js, 'data-advent-appearance-save') !== false && strpos($appearance_admin_js, "mode==='reset'") !== false, 'admin can save or return to inherited Advent colors');
+advent_check(strpos($appearance_admin_css, 'background: transparent') !== false, 'appearance settings keep the admin card background neutral');
 
 $runtime = $advent . "\n" . $frontend_js;
 foreach (array('KINTZHEIM','ROCAMADOUR','Kintzheim','Rocamadour') as $forbidden) {
@@ -108,6 +129,6 @@ advent_check(strpos($admin, '!empty($before[\'visuel_url\'])') !== false && strp
 advent_check(strpos($admin, 'count($seen) !== 24') !== false, 'smart import enforces exactly 24 daily entries');
 advent_check(strpos($admin, 'Publier le résultat') !== false && strpos($admin, 'Enregistrer sans publier') !== false, 'result publication is an explicit separate admin action');
 advent_check(strpos($admin, 'Aperçu Facebook') !== false && strpos($admin, 'Aperçu Instagram') !== false && strpos($admin, 'Copier le texte') !== false, 'admin provides generated social previews with copy actions');
-advent_check(strpos($uninstall, "'parcs_ht_advent'") !== false, 'Advent data follows the plugin uninstall data-deletion preference');
+advent_check(strpos($uninstall, "'parcs_ht_advent'") !== false && strpos($uninstall, "'parcs_ht_advent_appearance'") !== false, 'Advent data and appearance follow the plugin uninstall data-deletion preference');
 
 echo "Advent prototype contract: OK\n";
