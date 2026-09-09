@@ -89,6 +89,46 @@ final class Parcs_HT_Admin_Shortcode_Preview {
             . '}';
     }
 
+    private static function frame_assets($payload, $preview_ms, $background) {
+        wp_enqueue_style(
+            'parcs-ht-preview-frontend',
+            PARCS_HT_URL . 'assets/frontend.css',
+            array(),
+            PARCS_HT_VERSION
+        );
+        wp_enqueue_style(
+            'parcs-ht-preview-guides',
+            PARCS_HT_URL . 'assets/pedagogical-guides.css',
+            array(),
+            PARCS_HT_VERSION
+        );
+        wp_add_inline_style(
+            'parcs-ht-preview-frontend',
+            'html,body{margin:0;padding:0;background:' . esc_attr($background) . '}body{padding:24px;box-sizing:border-box}.htp-preview-frame-empty{margin:0;color:#646970;font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}'
+        );
+        $guide_css = self::guide_inline_css();
+        if ($guide_css !== '') wp_add_inline_style('parcs-ht-preview-guides', $guide_css);
+
+        wp_enqueue_script(
+            'parcs-ht-preview-frontend',
+            PARCS_HT_URL . 'assets/frontend.js',
+            array(),
+            PARCS_HT_VERSION,
+            true
+        );
+
+        $before = 'window.ParcsHTPData=' . wp_json_encode($payload) . ';';
+        if ($preview_ms !== null) {
+            $before .= '(function(){var RealDate=Date,fixed=' . (int)$preview_ms . ';class PreviewDate extends RealDate{constructor(){var a=Array.prototype.slice.call(arguments);if(!a.length){super(fixed);}else{super(...a);}}static now(){return fixed;}}PreviewDate.UTC=RealDate.UTC;PreviewDate.parse=RealDate.parse;window.Date=PreviewDate;}());';
+        }
+        wp_add_inline_script('parcs-ht-preview-frontend', $before, 'before');
+        wp_add_inline_script(
+            'parcs-ht-preview-frontend',
+            "(function(){function send(){try{parent.postMessage({type:'parcs-ht-preview-size',height:Math.max(document.documentElement.scrollHeight,document.body.scrollHeight)},location.origin);}catch(e){}}window.addEventListener('load',send);document.addEventListener('click',function(){setTimeout(send,30);});if(window.ResizeObserver){new ResizeObserver(send).observe(document.body);}setTimeout(send,100);setTimeout(send,500);}());",
+            'after'
+        );
+    }
+
     public static function frame() {
         if (!current_user_can('manage_options')) wp_die('Accès refusé.', '', array('response' => 403));
         check_ajax_referer(self::NONCE_ACTION);
@@ -112,6 +152,7 @@ final class Parcs_HT_Admin_Shortcode_Preview {
             'dictionary' => Parcs_HT_Schedule::dictionaries(),
         );
         $html = Parcs_HT_Shortcode_Registry::render_preview($base, $language);
+        self::frame_assets($payload, $preview_ms, $background);
 
         nocache_headers();
         header('Content-Type: text/html; charset=' . get_option('blog_charset'));
@@ -121,15 +162,11 @@ final class Parcs_HT_Admin_Shortcode_Preview {
 <head>
 <meta charset="<?php bloginfo('charset'); ?>">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="<?php echo esc_url(PARCS_HT_URL . 'assets/frontend.css?ver=' . rawurlencode(PARCS_HT_VERSION)); ?>">
-<link rel="stylesheet" href="<?php echo esc_url(PARCS_HT_URL . 'assets/pedagogical-guides.css?ver=' . rawurlencode(PARCS_HT_VERSION)); ?>">
-<style>html,body{margin:0;padding:0;background:<?php echo esc_html($background); ?>}body{padding:24px;box-sizing:border-box}.htp-preview-frame-empty{margin:0;color:#646970;font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}<?php echo self::guide_inline_css(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Valeurs de couleurs échappées dans guide_inline_css(). ?></style>
-<script>window.ParcsHTPData=<?php echo wp_json_encode($payload); ?>;<?php if ($preview_ms !== null) : ?>(function(){var RealDate=Date,fixed=<?php echo (int)$preview_ms; ?>;class PreviewDate extends RealDate{constructor(){var a=Array.prototype.slice.call(arguments);if(!a.length){super(fixed);}else{super(...a);}}static now(){return fixed;}}PreviewDate.UTC=RealDate.UTC;PreviewDate.parse=RealDate.parse;window.Date=PreviewDate;}());<?php endif; ?></script>
+<?php wp_print_styles(); ?>
 </head>
 <body>
 <?php if (trim((string)$html) === '') : ?><p class="htp-preview-frame-empty">Aucun rendu avec les données actuellement enregistrées.</p><?php else : echo $html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- HTML produit par les moteurs publics internes. ?><?php endif; ?>
-<script src="<?php echo esc_url(PARCS_HT_URL . 'assets/frontend.js?ver=' . rawurlencode(PARCS_HT_VERSION)); ?>"></script>
-<script>(function(){function send(){try{parent.postMessage({type:'parcs-ht-preview-size',height:Math.max(document.documentElement.scrollHeight,document.body.scrollHeight)},location.origin);}catch(e){}}window.addEventListener('load',send);document.addEventListener('click',function(){setTimeout(send,30);});if(window.ResizeObserver){new ResizeObserver(send).observe(document.body);}setTimeout(send,100);setTimeout(send,500);}());</script>
+<?php wp_print_footer_scripts(); ?>
 </body>
 </html>
         <?php
