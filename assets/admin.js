@@ -100,7 +100,7 @@
   }
 
   var adminTabIds = [
-    'htp-general','htp-regular','htp-holidays','htp-domain','htp-exceptions',
+    'htp-general','htp-regular','htp-advent','htp-holidays','htp-domain','htp-exceptions',
     'htp-alerts','htp-tariffs','htp-quote','htp-preview','htp-updates','htp-shortcodes'
   ];
 
@@ -112,6 +112,8 @@
     var panels = adminTabIds.map(function (id) { return document.getElementById(id); }).filter(Boolean);
     var activeInput = document.querySelector('[data-htp-active-tab-input]');
     var seasonInput = document.querySelector('input[name="season_year"]');
+    var mainSettingsForm = document.querySelector('[data-htp-main-settings-form]');
+    var seasonManager = document.querySelector('[data-htp-season-manager]');
     var storageKey = 'parcsHTAdminTab:' + (seasonInput ? seasonInput.value : 'default');
 
     panels.forEach(function (panel) {
@@ -139,6 +141,10 @@
       panels.forEach(function (panel) {
         panel.hidden = panel.id !== id;
       });
+
+      var adventActive = id === 'htp-advent';
+      if (mainSettingsForm) mainSettingsForm.hidden = adventActive;
+      if (seasonManager) seasonManager.hidden = adventActive;
 
       if (activeInput) activeInput.value = id;
       try { window.localStorage.setItem(storageKey, id); } catch (error) {}
