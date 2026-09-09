@@ -14,19 +14,21 @@ function shortcode_preview_contract($condition, $message) {
 foreach (array('page','today','calendar','tariffs','alert','header_hour','header_status','home_opening','quote_page','group_tariffs','guides') as $module) {
     shortcode_preview_contract(strpos($registry, "'module'=>'" . $module . "'") !== false, 'Registry includes preview module ' . $module);
 }
-shortcode_preview_contract(strpos($php, 'Parcs_HT_Shortcode_Registry::public_rows()') !== false, 'Preview enumerates the central shortcode registry');
-shortcode_preview_contract(strpos($php, 'Parcs_HT_Shortcode_Registry::render_preview') !== false, 'Previews use each public renderer through the registry');
-shortcode_preview_contract(strpos($php, "assets/pedagogical-guides.css") !== false && strpos($php, "'parcs-ht-pedagogical-guides'") !== false, 'Guide preview loads the real public guide stylesheet');
-shortcode_preview_contract(strpos($php, 'Parcs_HT_Guide_Appearance::settings()') !== false && strpos($php, '--htp-guide-mobile-image-height') === false, 'Guide preview applies saved colors without overriding the fixed public image format');
-shortcode_preview_contract(strpos($js, 'data-htp-shortcode-preview-source') !== false, 'Admin UI consumes each generated shortcode source');
-shortcode_preview_contract(strpos($js, 'initGuidePreview') !== false && strpos($js, "[data-guide-cycle-filters]") !== false && strpos($js, "[data-guide-language-filters]") !== false, 'Guide preview restores the real filter interactions after moving shortcode markup');
-shortcode_preview_contract(strpos($js, 'initGroupTariffPreview') !== false && strpos($js, 'data-htp-group-year-tab') !== false, 'Group tariff preview restores year switching after script stripping');
-shortcode_preview_contract(strpos($js, "['fr','en','de']") !== false && strpos($js, 'data-htp-preview-lang-button') !== false, 'Every preview offers FR EN DE switching');
-shortcode_preview_contract(strpos($js, 'Fond des aperçus') !== false && strpos($js, 'sessionStorage') !== false, 'One browser-only background color controls the previews');
-shortcode_preview_contract(strpos($js, 'Mettre à jour les aperçus') !== false && strpos($js, 'data-htp-shortcode-preview-refresh') !== false, 'Admin preview exposes one explicit refresh button');
-shortcode_preview_contract(strpos($js, 'window.location.reload()') !== false, 'Refresh button regenerates PHP shortcode previews through a page reload');
-shortcode_preview_contract(strpos($js, 'fetch(') === false && strpos($js, 'XMLHttpRequest') === false && strpos($js, 'jQuery.ajax') === false, 'Preview UI adds no background network requests');
-shortcode_preview_contract(strpos($css, '.htp-shortcode-preview-list') !== false && strpos($css, '.htp-real-shortcode-preview-canvas') !== false, 'Individual previews have dedicated admin layout styles');
-shortcode_preview_contract(strpos($css, '.htp-real-shortcode-preview-tools') !== false, 'Refresh and background controls share a dedicated responsive toolbar');
+shortcode_preview_contract(strpos($php, 'Parcs_HT_Shortcode_Registry::public_rows()') !== false, 'Preview navigation is built from the central shortcode registry');
+shortcode_preview_contract(strpos($php, "add_action('wp_ajax_' . self::ACTION") !== false, 'Preview exposes one authenticated on-demand frame endpoint');
+shortcode_preview_contract(strpos($php, 'current_user_can(\'manage_options\')') !== false && strpos($php, 'check_ajax_referer(self::NONCE_ACTION)') !== false, 'Preview endpoint requires administrator capability and nonce');
+shortcode_preview_contract(strpos($php, 'Parcs_HT_Shortcode_Registry::render_preview($base, $language)') !== false, 'Requested preview uses the real renderer through the registry');
+shortcode_preview_contract(strpos($php, "assets/frontend.css") !== false && strpos($php, "assets/frontend.js") !== false, 'Isolated preview frame loads the real public frontend assets');
+shortcode_preview_contract(strpos($php, "assets/pedagogical-guides.css") !== false, 'Guide preview frame loads the real public guide stylesheet');
+shortcode_preview_contract(strpos($php, 'preview_timestamp_ms') !== false && strpos($php, 'class PreviewDate extends RealDate') !== false, 'Preview frame can simulate the requested site date and time');
+shortcode_preview_contract(strpos($php, 'admin_footer') === false && strpos($php, 'render_source') === false, 'Page load no longer renders every shortcode preview in advance');
+shortcode_preview_contract(strpos($js, 'data-htp-shortcode-preview-nav') !== false && strpos($js, 'data-htp-preview-base') !== false, 'Admin UI provides compact shortcode navigation');
+shortcode_preview_contract(strpos($js, "['fr','en','de']") !== false && strpos($js, 'data-htp-preview-lang') !== false, 'Selected preview offers FR EN DE switching');
+shortcode_preview_contract(strpos($js, 'data-htp-preview-time') !== false && strpos($js, 'Heure à tester') !== false, 'Existing date simulation is extended with a global time control');
+shortcode_preview_contract(strpos($js, 'frame.src=frameUrl()') !== false, 'Only the selected shortcode/language preview frame is requested');
+shortcode_preview_contract(strpos($js, 'Mettre à jour l’aperçu') !== false && strpos($js, 'window.location.reload()') === false, 'Refresh reloads only the selected preview without reloading the admin page');
+shortcode_preview_contract(strpos($js, "event.target.closest('[data-htp-preview-button]')") !== false, 'Global date/time test button also refreshes the selected shortcode preview');
+shortcode_preview_contract(strpos($css, '.htp-shortcode-preview-workbench') !== false && strpos($css, '.htp-shortcode-preview-nav') !== false, 'Preview uses a compact navigation plus viewer layout');
+shortcode_preview_contract(strpos($css, '.htp-real-shortcode-preview-frame') !== false, 'Selected preview has a dedicated responsive frame');
 
 echo "Admin shortcode previews contract: OK\n";
