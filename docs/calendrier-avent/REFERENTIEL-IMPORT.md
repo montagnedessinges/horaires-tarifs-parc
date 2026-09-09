@@ -1,7 +1,7 @@
 # Référentiel d’import — Calendrier de l’Avent
 
-Version de cadrage : **0.6**  
-`schema_version = 2`
+Version de cadrage : **0.7**  
+`schema_version = 3`
 
 Ce document décrit le contrat canonique entre :
 
@@ -29,6 +29,21 @@ Champs principaux :
 - `date_ouverture_calendrier`
 - `date_fin_calendrier`
 - `heure_ouverture_globale`
+- `page_calendrier_url`
+- `page_reglement_url`
+- `titre_bloc_calendrier_fr`
+- `texte_intro_calendrier_fr`
+- `libelle_comment_participer_fr`
+- `texte_comment_participer_fr`
+- `libelle_reglement_complet_fr`
+- `reglement_complet_fr`
+- `texte_tirage_non_effectue_fr`
+- `teasing_site_visuel_source` — `aucun`, `url`, `wordpress`
+- `teasing_site_visuel_url`
+- `teasing_site_visuel_alt_fr`
+- `reglement_quotidien_fr`
+- `texte_rappel_grand_jeu_fr`
+- `texte_lien_calendrier_social_fr`
 - `grand_jeu_date_ouverture`
 - `grand_jeu_heure_ouverture`
 - `grand_jeu_date_fermeture`
@@ -37,19 +52,32 @@ Champs principaux :
 - `mot_mystere`
 - `grand_jeu_lot_fr`
 - `grand_jeu_pictogramme_url`
+- `grand_jeu_texte_saisie_fr`
+- `grand_jeu_texte_erreur_fr`
+- `grand_jeu_texte_succes_fr`
+- `grand_jeu_formulaire_shortcode`
 - `instagram_parc`
 - `facebook_slug`
 - `facebook_url_override`
 - `hashtags_defaut`
-- `reglement_url`
-- `reglement_quotidien_fr`
-- `texte_grand_jeu_fr`
+
+### Règles CAMPAGNE
+
+`page_calendrier_url` et `page_reglement_url` sont configurables et propres à chaque installation. Aucune URL MDS/FDS ne doit être codée en dur.
+
+`reglement_complet_fr` alimente le shortcode `[parc_reglement_avent]` de la campagne active.
+
+Le site utilise un seul visuel teasing public avant le premier jour. Les teasings sociaux restent des contenus séparés et n’imposent pas plusieurs teasings publics sur la page calendrier.
+
+Tous les textes publics ont des valeurs par défaut dans le plugin mais restent éditables. Les libellés/microcopies non importés doivent eux aussi rester modifiables depuis WordPress.
 
 ### Sécurité CAMPAGNE
 
-`mot_mystere` est une donnée serveur sensible. Elle ne doit jamais être intégrée dans le HTML, le JavaScript, un `data-*`, un JSON public ou une donnée localisée côté navigateur avant la date de révélation autorisée.
+`mot_mystere` et `grand_jeu_formulaire_shortcode` sont des données serveur sensibles tant que le visiteur n’est pas autorisé.
 
-Le mot saisi par le visiteur doit être validé côté serveur.
+Ils ne doivent pas être intégrés prématurément dans : HTML, JavaScript, `data-*`, JSON public, `wp_localize_script`, champs cachés ou commentaires publics.
+
+Le mot saisi est validé côté serveur. Le shortcode du formulaire final n’est exécuté qu’après validation correcte et autorisation serveur.
 
 ## PARTENAIRES
 
@@ -68,11 +96,11 @@ Champs :
 - `logo_source` — `aucun`, `url`, `wordpress`
 - `logo_url`
 
-Un réimport avec `logo_url` vide ne doit pas supprimer un logo choisi manuellement dans WordPress.
+Un réimport avec `logo_url` vide ne supprime pas un logo choisi manuellement dans WordPress.
 
 ## CONTENUS
 
-Une même structure couvre les teasings et les 24 journées.
+Une même structure couvre les teasings sociaux et les 24 journées.
 
 Champs de structure et planning :
 
@@ -81,34 +109,36 @@ Champs de structure et planning :
 - `jour_numero` — obligatoire pour `JOUR`, 1 à 24 exactement une fois
 - `date_publication`
 - `heure_publication`
-- `heure_ouverture` — facultative et avancée ; vide = même heure que `heure_publication`, elle-même pouvant reprendre `CAMPAGNE.heure_ouverture_globale`
+- `heure_ouverture` — override facultatif/avancé
 - `facebook_actif`
-- `facebook_date_publication` — facultative et avancée
-- `facebook_heure_publication` — facultative et avancée
+- `facebook_date_publication` — override facultatif/avancé
+- `facebook_heure_publication` — override facultatif/avancé
 - `instagram_actif`
-- `instagram_date_publication` — facultative et avancée
-- `instagram_heure_publication` — facultative et avancée
+- `instagram_date_publication` — override facultatif/avancé
+- `instagram_heure_publication` — override facultatif/avancé
 - `phase`
 - `titre_fr`
 
-### Règle de planning simplifié
+### Planning simplifié
 
-Pour le fonctionnement normal, une seule date/heure doit suffire :
+Pour le fonctionnement normal :
 
-- `date_publication` + `heure_publication` servent de date/heure principale du contenu ;
-- elles pilotent par défaut l’ouverture de la case ou du teasing sur le site ;
-- elles servent aussi de repère pour la publication manuelle sur les réseaux ;
+- `date_publication` + `heure_publication` servent de date/heure principale ;
+- elles pilotent par défaut l’ouverture de la case ;
+- elles servent de repère à la publication sociale manuelle ;
 - le plugin ne publie rien automatiquement.
 
-Les champs `heure_ouverture`, `facebook_date_publication`, `facebook_heure_publication`, `instagram_date_publication` et `instagram_heure_publication` ne sont que des overrides avancés. Ils doivent pouvoir rester vides et ne pas alourdir l’interface standard.
+Les overrides avancés peuvent rester vides.
 
-Champs éditoriaux :
+Les teasings `TEASING` servent principalement au planning/générateur social avant le lancement. Le rendu public avant le 1er décembre utilise le visuel teasing unique défini dans CAMPAGNE.
 
-- `intro_partenaire_fr` — 1 à 2 phrases maximum, courte mise en avant du partenaire
-- `intro_question_fr` — courte introduction du thème
+### Champs éditoriaux JOUR
+
+- `intro_partenaire_fr`
+- `intro_question_fr`
 - `partenaire_id`
 - `lot_fr`
-- `format_jeu` — uniquement `QCM`, `VRAI_FAUX`, `CHOIX_MULTIPLE`
+- `format_jeu` — `QCM`, `VRAI_FAUX`, `CHOIX_MULTIPLE`
 - `question_fr`
 - `reponse_a_fr`
 - `reponse_b_fr`
@@ -118,40 +148,43 @@ Champs éditoriaux :
 - `bonne_reponse_texte_fr`
 - `explication_reponse_fr`
 
-### Règle des jeux
-
 Pas de réponse libre pour les jeux quotidiens.
 
-- QCM : une bonne réponse.
-- Vrai/Faux : réponse fermée.
-- Choix multiple : plusieurs réponses possibles.
+`explication_reponse_fr` est facultatif. Il sert au commentaire de résultat et à l’archive pour expliquer pourquoi la réponse est correcte ou apporter une précision utile.
 
-`explication_reponse_fr` est facultatif. Il sert principalement à compléter le commentaire de résultat après l’annonce de la bonne réponse : expliquer pourquoi elle est correcte ou apporter une précision utile sur un comportement, les Magots, une activité ou un élément du parc. S’il est vide, le texte de résultat reste plus court.
+### Indice du mot mystère
+
+Champs :
+
+- `indice_actif` — `oui` ou `non`
+- `indice_lettre`
+- `indice_position`
+- `afficher_rappel_grand_jeu` — `oui`, `non`, `auto`
+- `rappel_grand_jeu_override_fr`
+
+Règles :
+
+- l’admin présente `indice_actif` comme une case à cocher ;
+- si cochée, afficher les champs lettre + position ;
+- la loupe peut être publique le jour J ;
+- la lettre et la position restent serveur pendant le jeu ;
+- le texte social généré ajoute automatiquement `texte_rappel_grand_jeu_fr`, sauf override explicite ;
+- `rappel_grand_jeu_override_fr` permet un texte spécifique pour une journée ;
+- ni la lettre ni le numéro ne doivent apparaître dans le texte social avant révélation ;
+- l’indice est révélé avec le résultat du jour, donc au plus tôt à J+1 et uniquement si le résultat est publié.
+
+La date/heure de révélation de l’indice est donc dérivée du résultat quotidien ; il n’est plus nécessaire d’avoir un champ annuel séparé `date_revelation_indice` pour chaque contenu.
 
 ### Données sensibles CONTENUS
 
-Sont sensibles :
+Sont sensibles avant révélation :
 
 - `bonne_reponse_code`
 - `bonne_reponse_texte_fr`
 - `indice_lettre`
 - `indice_position`
 
-Ces données doivent rester côté serveur avant leur révélation prévue.
-
-Le navigateur ne doit jamais être la source de vérité pour valider une réponse.
-
-### Grand jeu et indices
-
-Champs :
-
-- `indice_actif` — `oui`, `non`, `presentation`, `final`
-- `indice_lettre`
-- `indice_position`
-- `date_revelation_indice`
-- `afficher_rappel_grand_jeu`
-
-La présence d’une loupe peut être publique, mais la lettre et la position réelles ne doivent pas être transmises au client avant révélation.
+Le navigateur ne doit jamais être la source de vérité.
 
 ### Visuels
 
@@ -163,10 +196,13 @@ Champs :
 
 Règles :
 
-- une URL externe peut préremplir un visuel ;
-- le visuel peut ensuite être remplacé par la médiathèque WordPress ;
-- un réimport avec visuel vide conserve le média manuel déjà choisi ;
-- sans visuel, l’aperçu admin garde un placeholder propre au format prévu, notamment 4:5, afin de ne pas casser la mise en page.
+- format public prioritaire 4:5 vertical ;
+- le visuel est central et peut être nécessaire pour répondre ;
+- possibilité de l’agrandir côté public ;
+- URL externe ou média WordPress ;
+- réimport vide = conservation du média manuel ;
+- placeholder 4:5 dans l’admin si absent ;
+- `visuel_alt_fr` ne doit jamais révéler réponse ou indice.
 
 ### Réseaux sociaux — texte avant publication
 
@@ -177,15 +213,17 @@ Champs :
 - `instagram_post_url`
 - `statut`
 
-`texte_post_override_fr` reste facultatif. S’il est renseigné, il remplace le texte généré automatiquement.
+Sans override, le générateur compose le texte à partir des données structurées.
 
-Sinon le plugin doit pouvoir composer le texte depuis les champs structurés : partenaire, lot, `intro_partenaire_fr`, `intro_question_fr`, question, réponses, rappel du jeu, grand jeu éventuel, hashtags et liens.
+Pour une journée avec indice, il ajoute automatiquement le rappel du grand jeu.
 
-Le texte est ensuite copié depuis l’administration et publié manuellement par l’équipe du parc.
+Pour toutes les publications quotidiennes générées, il ajoute l’URL `page_calendrier_url` avec le texte `texte_lien_calendrier_social_fr` afin de renvoyer vers la page centrale, l’explication et le règlement.
+
+Le texte est copié puis publié manuellement par l’équipe.
 
 ## RÉSULTATS
 
-Les gagnants ne doivent pas être stockés dans le bloc principal CONTENUS.
+Les gagnants restent séparés du bloc CONTENUS.
 
 Champs :
 
@@ -197,73 +235,91 @@ Champs :
 - `gagnant_instagram`
 - `texte_resultat_override_fr`
 - `story_resultat_override_fr`
-- `statut_resultat`
+- `statut_resultat` — `brouillon`, `pret`, `publie`
 
-`texte_resultat_override_fr` remplace exceptionnellement le commentaire de résultat généré automatiquement.
+### Règle de révélation J+1
 
-`story_resultat_override_fr` remplace exceptionnellement le texte Story généré automatiquement.
+Par défaut, le résultat d’un jour devient révélable à la date/heure d’ouverture du jour suivant.
 
-### Génération automatique des résultats
+Exemple : jour 1 ouvert le 1er décembre à 9 h → résultat du jour 1 révélable le 2 décembre à 9 h.
 
-Une fois la bonne réponse et les gagnants renseignés, le plugin doit pouvoir générer depuis l’administration :
+Même si le résultat est saisi avant, il reste caché avant cette date/heure.
 
-- un commentaire résultat Facebook ;
-- un commentaire résultat Instagram ;
-- un texte court de Story résultat ;
-- un bouton `Copier` pour chaque sortie.
+Après cette date/heure :
 
-Le commentaire résultat est composé, lorsque les données existent, à partir de :
+- si `statut_resultat != publie`, le public voit le texte configurable `texte_tirage_non_effectue_fr` ;
+- si `statut_resultat = publie`, afficher bonne réponse, explication éventuelle, gagnants et indice éventuel.
 
-1. `bonne_reponse_texte_fr` ;
-2. `explication_reponse_fr` ;
-3. gagnant(s) du réseau concerné ;
-4. partenaire du jour ;
-5. rappel éventuel des conditions partenaire ;
-6. relance vers la suite du calendrier.
+La saisie seule des gagnants ne publie donc rien. L’admin doit disposer d’une action explicite `Publier le résultat`.
 
-La relance doit être dynamique :
+Le dernier jour peut avoir une date/heure de révélation spécifique puisqu’il n’existe pas de jour 25.
 
-- si le contenu suivant est déjà ouvert, inviter à participer dès maintenant ;
-- sinon annoncer le prochain rendez-vous à partir de sa date/heure ;
-- après le dernier jour, utiliser une clôture adaptée et ne jamais annoncer une question inexistante.
+### Génération automatique des résultats sociaux
 
-La Story est une version courte pouvant reprendre bonne réponse, gagnant(s), partenaire et invitation à poursuivre le calendrier.
+Une fois les données renseignées, l’admin génère :
 
-Aucune de ces sorties n’est publiée automatiquement par le plugin.
+- commentaire résultat Facebook ;
+- commentaire résultat Instagram ;
+- Story résultat ;
+- bouton `Copier` pour chaque sortie.
 
-Avant la date/heure de révélation, le serveur ne doit pas envoyer la solution ou les données de résultat au navigateur.
+Ordre logique :
+
+1. bonne réponse ;
+2. `explication_reponse_fr` si présente ;
+3. gagnant du réseau ;
+4. partenaire ;
+5. conditions utiles ;
+6. relance dynamique vers la suite du calendrier ou clôture finale.
+
+Aucune publication automatique.
+
+## GRAND JEU FINAL
+
+Le 24 décembre conserve :
+
+- le jeu quotidien normal ;
+- la finale du mot mystère, séparée.
+
+Le visiteur saisit le mot dans le bloc final lorsque la date/heure d’ouverture est atteinte.
+
+Mot faux : le formulaire n’est pas rendu.
+
+Mot correct : le serveur crée une autorisation temporaire puis exécute/rend `grand_jeu_formulaire_shortcode`.
+
+Le formulaire ne doit jamais être préchargé et masqué avec CSS/JS.
+
+Prévoir une limitation raisonnable des tentatives pour réduire le brute force.
+
+## RÈGLEMENT DYNAMIQUE
+
+Le shortcode `[parc_reglement_avent]` affiche `reglement_complet_fr` de la campagne active.
+
+La page WordPress qui contient ce shortcode est créée manuellement par le site. Le plugin ne crée pas la page et n’impose pas son URL.
+
+L’URL utilisée par le bouton public est `page_reglement_url`.
 
 ## TRADUCTIONS
 
-Le français est la source principale actuelle. Les traductions sont stockées sans multiplier toutes les colonnes du tableau principal.
-
-Champs :
+Le français est la source principale. Les traductions restent dans un bloc séparé :
 
 - `reference_id`
 - `champ`
 - `langue` — `en` ou `de`
 - `texte`
 
-Exemples de champs traduisibles :
-
-- `titre_fr`
-- `intro_partenaire_fr`
-- `intro_question_fr`
-- `lot_fr`
-- `question_fr`
-- `explication_reponse_fr`
-- `description_fr`
+Exemples de champs traduisibles : titre du bloc, introduction, explication `Comment participer ?`, règlement, lots, questions, réponses, explications, textes de finale.
 
 ## RÉIMPORT INTELLIGENT
 
-Le mode par défaut doit fonctionner par identifiant stable :
+Identifiants stables :
 
 - `campagne_id`
 - `partenaire_id`
 - `contenu_id`
 - `resultat_id`
 
-Avant écriture, afficher obligatoirement un rapport :
+Avant écriture, rapport obligatoire :
 
 - créations ;
 - modifications ;
@@ -271,30 +327,39 @@ Avant écriture, afficher obligatoirement un rapport :
 - avertissements ;
 - erreurs.
 
-Aucune écriture silencieuse dès la sélection du fichier.
+Éléments absents du nouvel import : conserver par défaut.
 
-Éléments absents du nouvel import : conserver par défaut. Leur suppression doit nécessiter une confirmation explicite.
+Visuels manuels : conserver si aucune nouvelle image n’est fournie.
 
-Les visuels WordPress manuels doivent être conservés si le nouvel import ne fournit pas de valeur de remplacement.
-
-Un mode « remplacement complet » peut exister, mais doit demander une confirmation explicite. La suppression des médias doit être une option séparée et décochée par défaut.
+Remplacement complet : uniquement après confirmation explicite.
 
 ## Séparation MDS / FDS
 
-`parc_code` est obligatoire et ne peut valoir que :
+`parc_code` obligatoire : `mds` ou `fds`.
 
-- `mds`
-- `fds`
+Refuser l’import si le `parc_code` ne correspond pas à l’installation.
 
-L’import doit être refusé si le `parc_code` du fichier ne correspond pas à l’installation WordPress concernée.
+Aucune campagne MDS ne doit apparaître sur FDS, et inversement.
 
-Aucune campagne MDS ne doit pouvoir apparaître sur FDS, et inversement.
+## Format de fichier
 
-## Format de fichier envisagé
+- `.xlsx` principal ;
+- CSV accepté pour les tests et éventuellement en complément si les textes multilignes restent fiables ;
+- modèle officiel téléchargeable depuis WordPress ;
+- `schema_version` obligatoire ;
+- aide contextuelle par champ ;
+- possibilité future de copier les instructions correspondant au schéma courant.
 
-- principal : `.xlsx`
-- CSV : optionnel si cela reste fiable pour les textes multilignes
-- un modèle officiel doit être téléchargeable depuis WordPress
-- le modèle doit intégrer `schema_version`
-- une aide `?` doit documenter chaque colonne
-- un bouton futur « Copier les instructions pour une IA » doit permettre de générer une consigne complète correspondant au schéma courant
+## RENDU PUBLIC — règles non négociables pour le développement
+
+- `[parc_calendrier_avent]` rend uniquement un bloc, jamais une page complète ;
+- arrivée sur la page = grille visible, aucune case ouverte automatiquement ;
+- avant le premier jour = grille fermée + visuel teasing unique ;
+- case ouverte = clic volontaire du visiteur ;
+- visuel 4:5 central dans le détail ;
+- jour J = question sans réponse/gagnants ;
+- J+1 = résultat possible selon horaire + statut publié ;
+- gagnants et indice restent ensuite visibles en archive ;
+- `Comment participer ?` ouvre une explication courte dans le bloc ;
+- bouton vers le règlement complet via URL configurable ;
+- finale : mot validé côté serveur avant rendu du shortcode de formulaire.
