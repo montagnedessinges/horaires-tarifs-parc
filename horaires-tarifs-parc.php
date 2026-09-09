@@ -1,7 +1,7 @@
 <?php
 /**
- * Plugin Name: Horaires et tarifs du parc
- * Description: Horaires, calendrier interactif, exceptions, alertes et tarifs multilingues pour les parcs.
+ * Plugin Name: Gestion du parc
+ * Description: Gestion centralisée des horaires, calendriers, tarifs, événements, devis et outils du parc.
  * Version: 1.15.3
  * Update URI: https://github.com/montagnedessinges/horaires-tarifs-parc
  * Requires at least: 6.0
@@ -16,6 +16,7 @@ define('PARCS_HT_VERSION', '1.15.3');
 define('PARCS_HT_FILE', __FILE__);
 define('PARCS_HT_DIR', plugin_dir_path(__FILE__));
 define('PARCS_HT_URL', plugin_dir_url(__FILE__));
+define('PARCS_HT_DISPLAY_NAME', 'Gestion du parc');
 
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-defaults.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-schedule.php';
@@ -74,6 +75,17 @@ add_action('wp_footer', static function () {
     wp_enqueue_script('parcs-ht-display-state', PARCS_HT_URL . 'assets/display-state.js', array('parcs-ht-frontend'), PARCS_HT_VERSION, true);
     wp_enqueue_script('parcs-ht-status-sync', PARCS_HT_URL . 'assets/status-sync.js', array('parcs-ht-display-state','parcs-ht-slot-last-entry-frontend'), PARCS_HT_VERSION, true);
 }, 2);
+
+add_action('admin_menu', static function () {
+    global $menu;
+    foreach ((array) $menu as $index => $item) {
+        if (isset($item[2]) && $item[2] === 'parcs-horaires-tarifs') {
+            $menu[$index][0] = PARCS_HT_DISPLAY_NAME;
+            $menu[$index][3] = PARCS_HT_DISPLAY_NAME;
+            break;
+        }
+    }
+}, 99);
 
 add_action('admin_enqueue_scripts', static function ($hook) {
     if ($hook !== 'toplevel_page_parcs-horaires-tarifs' || !wp_script_is('parcs-ht-tariff-seasons-admin', 'enqueued')) return;
