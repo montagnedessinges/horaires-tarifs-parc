@@ -114,18 +114,34 @@ final class Parcs_HT_Advent_Appearance {
         );
     }
 
+    private static function css_background_variable_map() {
+        return array(
+            'primary' => array('--htp-advent-primary-bg', '8%'),
+            'secondary' => array('--htp-advent-secondary-bg', '5%'),
+            'open_day' => array('--htp-advent-open-day-bg', '12%'),
+            'today' => array('--htp-advent-today-bg', '10%'),
+            'locked' => array('--htp-advent-locked-bg', '7%'),
+            'special' => array('--htp-advent-special-bg', '8%'),
+        );
+    }
+
     public static function frontend_styles() {
         if (!wp_style_is('parcs-ht-advent', 'registered')) {
             return;
         }
         $store = self::store();
         $rules = array();
+        $backgrounds = self::css_background_variable_map();
         foreach ($store['campaigns'] as $campaign_id => $palette) {
             $declarations = array();
             foreach (self::css_variable_map() as $key => $variable) {
                 $color = isset($palette[$key]) ? self::sanitize_color($palette[$key]) : '';
-                if ($color !== '') {
-                    $declarations[] = $variable . ':' . $color;
+                if ($color === '') {
+                    continue;
+                }
+                $declarations[] = $variable . ':' . $color;
+                if (isset($backgrounds[$key])) {
+                    $declarations[] = $backgrounds[$key][0] . ':color-mix(in srgb,' . $color . ' ' . $backgrounds[$key][1] . ',transparent)';
                 }
             }
             if (!$declarations) {
@@ -168,13 +184,14 @@ final class Parcs_HT_Advent_Appearance {
             PARCS_HT_VERSION,
             true
         );
+        $store = self::store();
         wp_add_inline_script(
             'parcs-ht-advent-appearance-admin',
             'window.ParcsHTAdventAppearance=' . wp_json_encode(array(
                 'ajaxUrl' => admin_url('admin-ajax.php'),
                 'action' => self::AJAX_ACTION,
                 'nonce' => wp_create_nonce(self::NONCE_ACTION),
-                'campaigns' => self::store()['campaigns'],
+                'campaigns' => $store['campaigns'],
                 'pickerDefaults' => self::picker_defaults(),
             )) . ';',
             'before'
