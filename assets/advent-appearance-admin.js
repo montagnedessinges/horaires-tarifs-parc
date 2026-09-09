@@ -91,12 +91,13 @@
 
   function requestSave(card,campaignId,mode){
     if(!config.ajaxUrl||!config.action||!config.nonce)return;
+    var resetMode=mode==='reset';
     var body=new FormData();
     body.append('action',config.action);
     body.append('nonce',config.nonce);
     body.append('campaign_id',campaignId);
-    body.append('mode',mode||'save');
-    if(mode!=='reset'){
+    body.append('mode',resetMode?'reset':'save');
+    if(!resetMode){
       fields.forEach(function(field){
         var enabled=card.querySelector('[data-advent-color-enabled="'+field.key+'"]');
         var picker=card.querySelector('[data-advent-color-picker="'+field.key+'"]');
