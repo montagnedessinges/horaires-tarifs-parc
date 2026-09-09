@@ -20,6 +20,8 @@ La même extension doit gérer les deux installations, avec des campagnes et don
 
 Aucune donnée annuelle ou propre à un parc ne doit être codée en dur : année, mot mystère, dates, partenaires, lots, nombre de teasings, textes, visuels, horaires ou gagnants doivent venir des données de campagne.
 
+Le module doit surtout simplifier le travail de préparation et de publication : il génère dans l’administration les textes prêts à copier pour les publications, puis après tirage les commentaires de résultat et les textes Story. La publication sur Facebook et Instagram reste manuelle.
+
 ## Documents de ce dossier
 
 - `REFERENTIEL-IMPORT.md` : contrat des noms de champs et règles d’import/réimport.
@@ -34,9 +36,9 @@ Deux Google Sheets 2026 servent actuellement à préparer les campagnes :
 - `Calendrier de l’Avent 2026 – Montagne des Singes – Suivi`
 - `Calendrier de l’Avent 2026 – Forêt des Singes – Suivi`
 
-Dans chacun, la feuille `IMPORT plugin - référentiel` constitue le brouillon opérationnel du schéma d’import. Version de cadrage au 9 septembre 2026 : **BROUILLON 0.5**, `schema_version = 2`.
+Dans chacun, la feuille `IMPORT plugin - référentiel` constitue le brouillon opérationnel du schéma d’import. Le référentiel GitHub a été enrichi le 9 septembre 2026 après le cadrage 0.5 des feuilles, notamment pour préciser le workflow de génération des résultats et la gestion simplifiée des horaires. Les feuilles devront être resynchronisées avec `REFERENTIEL-IMPORT.md` avant le développement de l’import.
 
-Le référentiel GitHub et les feuilles Google Sheets doivent rester synchronisés. En cas de modification fonctionnelle validée dans un autre chat, mettre à jour ce dossier avant le développement.
+Le référentiel GitHub et les feuilles Google Sheets doivent rester synchronisés avant développement. En cas de modification fonctionnelle validée dans un autre chat, mettre à jour ce dossier puis reporter les nouveaux champs/règles dans les feuilles d’import concernées.
 
 ## Règle pour le chat spécialisé Calendrier de l’Avent
 
@@ -63,12 +65,17 @@ Le développement du plugin reste une étape séparée, déclenchée expliciteme
 - réponses, indices et mot mystère considérés comme données sensibles côté serveur ;
 - shortcode générique futur : `[parc_calendrier_avent]` ;
 - affichage public piloté par date et heure ;
+- par défaut, une seule date/heure principale sert à l’ouverture du contenu sur le site et de repère pour la publication sociale manuelle ;
 - jours futurs verrouillés, jours passés consultables ;
 - finale du mot mystère séparée du jeu quotidien du dernier jour ;
 - lot quotidien du dernier jour distinct du grand lot du mot mystère ;
 - validation du mot mystère côté serveur avant déblocage du formulaire final ;
 - génération de textes Facebook / Instagram depuis les champs structurés ;
+- aucune publication automatique sur les réseaux ;
 - `texte_post_override_fr` conserve la priorité lorsqu’un texte manuel est souhaité ;
+- après tirage, génération de commentaires résultat Facebook/Instagram et d’un texte Story avec boutons de copie ;
+- `explication_reponse_fr` est facultatif et sert principalement à expliquer pourquoi la réponse est correcte dans le commentaire de résultat ;
+- la relance de fin de commentaire s’adapte automatiquement à la disponibilité de la prochaine question ou à la fin du calendrier ;
 - interface admin compacte avec grille 24 jours cliquable et teasings dans une vue dédiée ;
 - l’Aperçu du plugin doit simuler le vrai rendu à une date + heure données, sans modifier le temps réel public.
 
