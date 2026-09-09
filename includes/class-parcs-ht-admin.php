@@ -50,6 +50,11 @@ final class Parcs_HT_Admin {
         if (!current_user_can('manage_options')) {
             return;
         }
+        $advent_fragment = isset($_GET['advent_fragment']) && sanitize_text_field(wp_unslash($_GET['advent_fragment'])) === '1'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Fragment d’administration en lecture seule.
+        if ($advent_fragment && class_exists('Parcs_HT_Advent_Admin')) {
+            Parcs_HT_Advent_Admin::render_workspace();
+            return;
+        }
         $requested_year = isset($_GET['season']) ? sanitize_text_field(wp_unslash($_GET['season'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Sélection d’aperçu en lecture seule ; aucun enregistrement.
         $settings = Parcs_HT_Defaults::settings($requested_year);
         $warnings = self::warnings($settings);
@@ -86,7 +91,7 @@ final class Parcs_HT_Admin {
                 <div class="notice notice-error"><p><strong>Erreurs techniques récentes :</strong></p><ul><?php foreach (array_slice($runtime_errors, 0, 5) as $error) : ?><li><?php echo esc_html((string)($error['message'] ?? 'Erreur inconnue')); ?><?php if (!empty($error['time'])) echo ' — '.esc_html(wp_date('d/m/Y H:i', (int)$error['time'])); ?></li><?php endforeach; ?></ul><p>Les détails sont aussi disponibles dans <a href="<?php echo esc_url(admin_url('site-health.php')); ?>">Santé du site</a>.</p></div>
             <?php endif; ?>
 
-            <section class="htp-card htp-season-manager">
+            <section class="htp-card htp-season-manager" data-htp-season-manager>
                 <h2>Saisons</h2>
                 <p>Une année n’apparaît sur le site que si vous l’avez créée et publiée.</p>
                 <div class="htp-season-tabs">
@@ -109,7 +114,7 @@ final class Parcs_HT_Admin {
             <nav class="htp-section-nav nav-tab-wrapper" role="tablist" aria-label="Sections de l’extension" data-htp-admin-tabs>
                 <button type="button" class="nav-tab nav-tab-active htp-admin-tab" role="tab" aria-selected="true" data-htp-admin-tab="htp-general">Parc & apparence</button>
                 <button type="button" class="nav-tab htp-admin-tab" role="tab" aria-selected="false" data-htp-admin-tab="htp-regular">Horaires & calendrier</button>
-                <a class="nav-tab htp-advent-admin-link" href="<?php echo esc_url(add_query_arg(array('page'=>Parcs_HT_Advent_Admin::PAGE), admin_url('admin.php'))); ?>">Calendrier de l’Avent</a>
+                <button type="button" class="nav-tab htp-admin-tab" role="tab" aria-selected="false" data-htp-admin-tab="htp-advent">Calendrier de l’Avent</button>
                 <button type="button" class="nav-tab htp-admin-tab" role="tab" aria-selected="false" data-htp-admin-tab="htp-holidays">Périodes & événements</button>
                 <button type="button" class="nav-tab htp-admin-tab" role="tab" aria-selected="false" data-htp-admin-tab="htp-domain">Accès limité</button>
                 <button type="button" class="nav-tab htp-admin-tab" role="tab" aria-selected="false" data-htp-admin-tab="htp-exceptions">Exceptions</button>
@@ -121,7 +126,7 @@ final class Parcs_HT_Admin {
                 <button type="button" class="nav-tab htp-admin-tab" role="tab" aria-selected="false" data-htp-admin-tab="htp-shortcodes">Shortcodes</button>
             </nav>
 
-            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" data-htp-main-settings-form>
                 <input type="hidden" name="action" value="parcs_ht_save">
                 <input type="hidden" name="season_year" value="<?php echo esc_attr($active_year); ?>">
                 <input type="hidden" name="htp_active_tab" value="htp-general" data-htp-active-tab-input>
@@ -141,6 +146,7 @@ final class Parcs_HT_Admin {
 
                 <div class="htp-sticky-save"><?php submit_button('Enregistrer cet onglet', 'primary', 'htp_save_active', false); ?> <?php submit_button('Enregistrer tous les réglages', 'secondary', 'htp_save_all', false); ?></div>
             </form>
+            <?php if (class_exists('Parcs_HT_Advent_Admin')) Parcs_HT_Advent_Admin::render_workspace(); ?>
         </div>
         <?php
     }
@@ -739,7 +745,7 @@ final class Parcs_HT_Admin {
                 <?php
                 $cf7_shortcode = isset($q['form_shortcode']) ? trim((string)$q['form_shortcode']) : '';
                 $cf7_active = shortcode_exists('contact-form-7');
-                $cf7_format_ok = $cf7_shortcode !== '' && preg_match('/^\\[contact-form-7(?:\\s+[^\\]]*)?\\s*\\/?\\]$/i', $cf7_shortcode);
+                $cf7_format_ok = $cf7_shortcode !== '' && preg_match('/^\[contact-form-7(?:\s+[^\]]*)?\s*\/?\]$/i', $cf7_shortcode);
                 $cf7_render_ok = null;
                 if ($cf7_active && $cf7_format_ok) {
                     $cf7_test_html = function_exists('apply_shortcodes') ? apply_shortcodes($cf7_shortcode) : do_shortcode($cf7_shortcode);
@@ -1332,8 +1338,6 @@ final class Parcs_HT_Admin {
             'tariffs' => array('group_order'=>array(),'columns'=>array('individual'=>array(),'reduced'=>array(),'groups'=>array()),'individual'=>array(),'reduced'=>array(),'groups'=>array(),'notes'=>array(),'payment_methods'=>array(),'payment_icons'=>array(),'payment_styles'=>array(),'print'=>array()),
         );
         $g = isset($raw['general']) && is_array($raw['general']) ? $raw['general'] : array();
-        // Les réglages généraux sont volontairement répartis dans les sections où ils sont utilisés.
-        // Si PHP tronque un grand formulaire, toute clé absente conserve sa valeur enregistrée au lieu d'être réinitialisée.
         if (isset($current['general']) && is_array($current['general'])) {
             $g = array_replace_recursive($current['general'], $g);
         }
@@ -1374,8 +1378,6 @@ final class Parcs_HT_Admin {
             $days = self::resolve_weekdays_for_save($row, isset($current['regular_periods'][$idx]['weekdays']) ? $current['regular_periods'][$idx]['weekdays'] : array(), array('1','2','3','4','5','6','7'));
             $clean['regular_periods'][] = array('enabled'=>self::bool($row,'enabled'),'label'=>self::text($row,'label'),'start'=>self::date($row,'start'),'end'=>self::date($row,'end'),'weekdays'=>$days,'open'=>self::time($row,'open'),'close'=>self::time($row,'close'),'open2'=>self::time($row,'open2'),'close2'=>self::time($row,'close2'),'last_entry_minutes'=>self::optional_number($row,'last_entry_minutes',0,1440),'color'=>self::color($row,'color','#9AAA8B'));
         }
-        // Les périodes visibles et les vacances scolaires restent deux notions distinctes.
-        // Les périodes de type « vacances scolaires » alimentent uniquement le référentiel interne des vacances, utilisé par les règles d’accès.
         foreach (isset($raw['special_periods']) ? $raw['special_periods'] : array() as $row) {
             if (!is_array($row)) continue;
             $kind = isset($row['kind']) && in_array((string)$row['kind'], array('event','school_holiday','other'), true) ? (string)$row['kind'] : 'event';
@@ -1417,7 +1419,6 @@ final class Parcs_HT_Admin {
                 );
             }
         }
-        // Si une ancienne version est enregistrée sans nouveau champ, conserver les vacances historiques.
         if (empty($clean['special_periods'])) {
             foreach (isset($raw['school_holidays']) ? $raw['school_holidays'] : array() as $row) {
                 if (!is_array($row)) continue;
@@ -1465,7 +1466,6 @@ final class Parcs_HT_Admin {
                     'label'=>self::sanitize_translations(isset($column['label']) ? $column['label'] : array()),
                 );
             }
-            // Compatibilité : si un ancien formulaire est envoyé sans colonne, conserver une colonne tarif.
             if (empty($clean['tariffs']['columns'][$group])) {
                 $clean['tariffs']['columns'][$group][] = array('id'=>'price','label'=>array('fr'=>'Tarif','en'=>'Price','de'=>'Preis'));
             }
@@ -1542,7 +1542,6 @@ final class Parcs_HT_Admin {
                 'bg_color'=>self::color($row,'bg_color','#006757'),'bg_transparent'=>self::bool($row,'bg_transparent'),'icon_color'=>self::color($row,'icon_color','#ffffff'),'text_color'=>self::color($row,'text_color','#ffffff'),'border_color'=>self::color($row,'border_color','#006757'),'border_enabled'=>self::bool($row,'border_enabled')
             );
         }
-        // Champs historiques conservés pour compatibilité avec les anciennes versions.
         $clean['tariffs']['payment_icons'] = array();
         $clean['tariffs']['payment_styles'] = array();
 
@@ -1618,8 +1617,6 @@ final class Parcs_HT_Admin {
         $value = preg_replace('/[\r\n\t]+/', ' ', $value);
         $value = trim($value);
 
-        // Liste blanche : uniquement Contact Form 7.
-        // Accepte les variantes standards et le slash final éventuel.
         if (!preg_match('/^\[contact-form-7(?:\s+[^\]]*)?\s*\/?\]$/i', $value)) {
             return '';
         }
@@ -1735,8 +1732,6 @@ final class Parcs_HT_Admin {
     private static function sanitize_svg($svg) {
         $svg = trim((string)$svg);
         if ($svg === '') return '';
-        // Un SVG personnalisé est du contenu actif : on autorise uniquement les
-        // primitives graphiques nécessaires et aucun script, lien, style ou événement.
         $allowed = Parcs_HT_Defaults::svg_allowed_tags();
         $clean = wp_kses($svg, $allowed);
         return stripos($clean, '<svg') !== false ? $clean : '';
@@ -1759,21 +1754,15 @@ final class Parcs_HT_Admin {
         $default_days = self::normalize_weekdays($default_days);
         $touched = isset($row['weekdays_touched']) && (string)$row['weekdays_touched'] === '1';
 
-        // Tant que l'utilisateur n'a pas modifié les jours dans cette ligne,
-        // une autre sauvegarde ne doit jamais les effacer.
         if (!$touched && !empty($current_days)) {
             return $current_days;
         }
 
-        // Nouvelle ligne : utiliser la valeur transmise par le champ compact,
-        // ou les jours par défaut si rien n'a encore été envoyé.
         if (!$touched && empty($current_days)) {
             $posted = self::weekdays_clean($row);
             return !empty($posted) ? $posted : $default_days;
         }
 
-        // L'utilisateur a réellement touché au sélecteur : accepter son choix,
-        // y compris volontairement aucun jour.
         return self::weekdays_clean($row);
     }
 
