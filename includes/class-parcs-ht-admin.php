@@ -108,7 +108,8 @@ final class Parcs_HT_Admin {
 
             <nav class="htp-section-nav nav-tab-wrapper" role="tablist" aria-label="Sections de l’extension" data-htp-admin-tabs>
                 <button type="button" class="nav-tab nav-tab-active htp-admin-tab" role="tab" aria-selected="true" data-htp-admin-tab="htp-general">Parc & apparence</button>
-                <button type="button" class="nav-tab htp-admin-tab" role="tab" aria-selected="false" data-htp-admin-tab="htp-regular">Horaires & calendrier</button>                <a class="nav-tab htp-advent-admin-link" href="<?php echo esc_url(add_query_arg(array('page'=>Parcs_HT_Advent_Admin::PAGE), admin_url('admin.php'))); ?>">Calendrier de l’Avent</a>
+                <button type="button" class="nav-tab htp-admin-tab" role="tab" aria-selected="false" data-htp-admin-tab="htp-regular">Horaires & calendrier</button>
+                <a class="nav-tab htp-advent-admin-link" href="<?php echo esc_url(add_query_arg(array('page'=>Parcs_HT_Advent_Admin::PAGE), admin_url('admin.php'))); ?>">Calendrier de l’Avent</a>
                 <button type="button" class="nav-tab htp-admin-tab" role="tab" aria-selected="false" data-htp-admin-tab="htp-holidays">Périodes & événements</button>
                 <button type="button" class="nav-tab htp-admin-tab" role="tab" aria-selected="false" data-htp-admin-tab="htp-domain">Accès limité</button>
                 <button type="button" class="nav-tab htp-admin-tab" role="tab" aria-selected="false" data-htp-admin-tab="htp-exceptions">Exceptions</button>
@@ -1029,7 +1030,8 @@ final class Parcs_HT_Admin {
         <?php
     }
 
-    private static function updates_section($settings) {        $has_token = class_exists('Parcs_HT_Updater') && Parcs_HT_Updater::has_token();
+    private static function updates_section($settings) {
+        $has_token = class_exists('Parcs_HT_Updater') && Parcs_HT_Updater::has_token();
         $source = class_exists('Parcs_HT_Updater') ? Parcs_HT_Updater::token_source() : 'none';
         $auto_update = class_exists('Parcs_HT_Updater') && Parcs_HT_Updater::auto_update_enabled();
         $latest_version = '';
