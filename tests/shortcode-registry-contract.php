@@ -23,7 +23,7 @@ foreach ($required as $shortcode) {
     shortcode_registry_check(strpos($registry, "'" . $shortcode . "'") !== false, 'runtime registry contains ' . $shortcode);
 }
 
-shortcode_registry_check(strpos($registry, "return '[' . $base . ($language !== '' ? '_' . $language : '') . ']';") !== false, 'registry builds automatic and forced-language shortcode variants');
+shortcode_registry_check(strpos($registry, "return '[' . \$base . (\$language !== '' ? '_' . \$language : '') . ']';") !== false, 'registry builds automatic and forced-language shortcode variants');
 shortcode_registry_check(strpos($admin, '<th>Automatique</th>') !== false, 'Shortcodes page has the automatic-language column');
 shortcode_registry_check(strpos($admin, 'Parcs_HT_Shortcode_Registry::public_rows()') !== false, 'Shortcodes page reads the central runtime registry directly');
 shortcode_registry_check(strpos($admin, "\$codes['auto']") !== false && strpos($admin, "\$codes['fr']") !== false && strpos($admin, "\$codes['en']") !== false && strpos($admin, "\$codes['de']") !== false, 'Shortcodes page renders automatic FR EN DE values from registry rows');
