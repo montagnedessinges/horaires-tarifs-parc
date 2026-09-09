@@ -6,6 +6,12 @@
   --htp-advent-today: currentColor;
   --htp-advent-locked: currentColor;
   --htp-advent-special: currentColor;
+  --htp-advent-primary-bg: transparent;
+  --htp-advent-secondary-bg: transparent;
+  --htp-advent-open-day-bg: transparent;
+  --htp-advent-today-bg: transparent;
+  --htp-advent-locked-bg: transparent;
+  --htp-advent-special-bg: transparent;
   box-sizing: border-box;
   color: inherit;
   font: inherit;
@@ -72,14 +78,14 @@
 .parcs-ht-advent-primary {
   border-color: var(--htp-advent-primary, currentColor);
   color: var(--htp-advent-primary, currentColor);
-  background: color-mix(in srgb, var(--htp-advent-primary, currentColor) 8%, transparent);
+  background: var(--htp-advent-primary-bg, transparent);
   font-weight: 700;
 }
 
 .parcs-ht-advent-secondary {
   border-color: var(--htp-advent-secondary, currentColor);
   color: var(--htp-advent-secondary, currentColor);
-  background: color-mix(in srgb, var(--htp-advent-secondary, currentColor) 6%, transparent);
+  background: var(--htp-advent-secondary-bg, transparent);
 }
 
 .parcs-ht-advent-primary:focus-visible,
@@ -96,9 +102,9 @@
 .parcs-ht-advent-participation-panel {
   margin-top: .75rem;
   padding: 1rem;
-  border: 1px solid color-mix(in srgb, var(--htp-advent-secondary, currentColor) 26%, transparent);
+  border: 1px solid color-mix(in srgb, var(--htp-advent-secondary, currentColor) 22%, transparent);
   border-radius: .75rem;
-  background: color-mix(in srgb, var(--htp-advent-secondary, currentColor) 4%, transparent);
+  background: var(--htp-advent-secondary-bg, transparent);
 }
 
 .parcs-ht-advent-link,
@@ -121,40 +127,38 @@
   color: inherit;
   background: transparent;
   cursor: pointer;
-  transition: transform .16s ease, box-shadow .16s ease, opacity .16s ease, background-color .16s ease, border-color .16s ease;
+  transition: transform .16s ease, box-shadow .16s ease, opacity .16s ease;
 }
 
 .parcs-ht-advent-day.is-open {
-  border-color: color-mix(in srgb, var(--htp-advent-open-day, currentColor) 72%, transparent);
-  background: color-mix(in srgb, var(--htp-advent-open-day, currentColor) 12%, transparent);
+  border-color: color-mix(in srgb, var(--htp-advent-open-day, currentColor) 22%, transparent);
+  background: var(--htp-advent-open-day-bg, transparent);
 }
 
 .parcs-ht-advent-day.is-open:hover,
 .parcs-ht-advent-day.is-open:focus-visible {
   transform: translateY(-2px);
-  border-color: var(--htp-advent-open-day, currentColor);
   box-shadow: 0 .45rem 1rem rgba(0,0,0,.10);
-  background: color-mix(in srgb, var(--htp-advent-open-day, currentColor) 18%, transparent);
 }
 
 .parcs-ht-advent-day.is-locked {
-  border-color: color-mix(in srgb, var(--htp-advent-locked, currentColor) 54%, transparent);
-  background: color-mix(in srgb, var(--htp-advent-locked, currentColor) 8%, transparent);
+  border-color: color-mix(in srgb, var(--htp-advent-locked, currentColor) 22%, transparent);
+  background: var(--htp-advent-locked-bg, transparent);
   cursor: not-allowed;
-  opacity: .52;
+  opacity: .48;
 }
 
 .parcs-ht-advent-day.is-today {
   border-width: 2px;
   border-color: var(--htp-advent-today, currentColor);
-  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--htp-advent-today, currentColor) 18%, transparent);
-  background: color-mix(in srgb, var(--htp-advent-today, currentColor) 10%, transparent);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--htp-advent-today, currentColor) 14%, transparent);
+  background: var(--htp-advent-today-bg, transparent);
 }
 
 .parcs-ht-advent-day.is-selected {
   border-width: 2px;
   border-color: var(--htp-advent-primary, currentColor);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--htp-advent-primary, currentColor) 16%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--htp-advent-primary, currentColor) 12%, transparent);
 }
 
 .parcs-ht-advent-day-number {
@@ -179,9 +183,9 @@
 .parcs-ht-advent-error {
   margin: 0;
   padding: 1rem;
-  border: 1px dashed color-mix(in srgb, var(--htp-advent-secondary, currentColor) 34%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--htp-advent-secondary, currentColor) 30%, transparent);
   border-radius: .75rem;
-  background: color-mix(in srgb, var(--htp-advent-secondary, currentColor) 3%, transparent);
+  background: var(--htp-advent-secondary-bg, transparent);
 }
 
 .parcs-ht-advent-teaser,
@@ -271,7 +275,7 @@
   padding: .75rem;
   border: 1px dashed var(--htp-advent-special, currentColor);
   border-radius: .7rem;
-  background: color-mix(in srgb, var(--htp-advent-special, currentColor) 8%, transparent);
+  background: var(--htp-advent-special-bg, transparent);
 }
 
 .parcs-ht-advent-social-links {
@@ -282,7 +286,7 @@
 
 .parcs-ht-advent-result {
   padding-top: 1rem;
-  border-top: 1px solid color-mix(in srgb, var(--htp-advent-secondary, currentColor) 26%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--htp-advent-secondary, currentColor) 20%, transparent);
 }
 
 .parcs-ht-advent-result h4 {
@@ -295,7 +299,7 @@
   padding: 1rem;
   border: 1px solid var(--htp-advent-special, currentColor);
   border-radius: .85rem;
-  background: color-mix(in srgb, var(--htp-advent-special, currentColor) 7%, transparent);
+  background: var(--htp-advent-special-bg, transparent);
 }
 
 .parcs-ht-advent-final form {
@@ -308,7 +312,7 @@
 .parcs-ht-advent-final input[type="text"] {
   min-width: min(100%, 16rem);
   padding: .65rem .75rem;
-  border: 1px solid color-mix(in srgb, var(--htp-advent-special, currentColor) 46%, transparent);
+  border: 1px solid color-mix(in srgb, var(--htp-advent-special, currentColor) 38%, transparent);
   border-radius: .55rem;
   font: inherit;
   color: inherit;
