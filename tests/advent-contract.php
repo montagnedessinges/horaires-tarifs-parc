@@ -68,7 +68,13 @@ foreach (array(
 ) as $method => $nonce_prefix) {
     $start = strpos($admin, 'public static function ' . $method . '()');
     $next = $start !== false ? strpos($admin, 'public static function ', $start + 20) : false;
-    $block = $start !== false ? substr($admin, $start, $next === false ? null : $next - $start) : '';
+    if ($start === false) {
+        $block = '';
+    } elseif ($next === false) {
+        $block = substr($admin, $start);
+    } else {
+        $block = substr($admin, $start, $next - $start);
+    }
     advent_check($block !== '' && strpos($block, "check_admin_referer('" . $nonce_prefix) !== false, 'admin write verifies nonce: ' . $method);
 }
 advent_check(strpos($admin, "check_admin_referer('parcs_ht_advent_create_campaign')") !== false, 'campaign creation verifies nonce');
