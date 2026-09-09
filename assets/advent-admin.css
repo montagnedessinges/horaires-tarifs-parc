@@ -1,0 +1,252 @@
+.htp-advent-admin {
+  max-width: 1320px;
+}
+
+.htp-advent-admin *,
+.htp-advent-admin *::before,
+.htp-advent-admin *::after {
+  box-sizing: border-box;
+}
+
+.htp-advent-card {
+  margin: 16px 0;
+  padding: 18px;
+  border: 1px solid #dcdcde;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.htp-advent-card > :first-child {
+  margin-top: 0;
+}
+
+.htp-advent-card > :last-child {
+  margin-bottom: 0;
+}
+
+.htp-advent-campaign-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.htp-advent-campaign-switcher label,
+.htp-advent-inline-form label,
+.htp-advent-import-form label {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  margin: 0 8px;
+}
+
+.htp-advent-tabs {
+  margin-top: 18px;
+}
+
+.htp-advent-grid-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.htp-advent-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.htp-advent-field > span,
+.htp-advent-copy-box > label {
+  font-weight: 600;
+}
+
+.htp-advent-field input,
+.htp-advent-field select,
+.htp-advent-field textarea {
+  width: 100%;
+  max-width: none;
+}
+
+.htp-advent-field-wide {
+  grid-column: 1 / -1;
+}
+
+.htp-advent-media-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.htp-advent-media-preview {
+  display: grid;
+  place-items: center;
+  width: min(100%, 320px);
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border: 1px dashed #a7aaad;
+  border-radius: 8px;
+  background: #f6f7f7;
+  color: #646970;
+}
+
+.htp-advent-media-preview img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.htp-advent-day-grid-admin {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.htp-advent-day-admin {
+  display: flex;
+  min-height: 105px;
+  flex-direction: column;
+  gap: 3px;
+  padding: 9px;
+  border: 1px solid #c3c4c7;
+  border-radius: 7px;
+  color: #1d2327;
+  text-decoration: none;
+  background: #fff;
+}
+
+.htp-advent-day-admin:hover,
+.htp-advent-day-admin:focus {
+  border-color: #2271b1;
+  color: #135e96;
+}
+
+.htp-advent-day-admin.is-selected {
+  border-width: 2px;
+  border-color: #2271b1;
+  box-shadow: 0 0 0 1px #2271b1;
+}
+
+.htp-advent-day-admin strong {
+  font-size: 20px;
+}
+
+.htp-advent-day-admin small,
+.htp-advent-day-admin span {
+  line-height: 1.25;
+}
+
+.htp-advent-clue-admin {
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid #dcdcde;
+  border-radius: 7px;
+  background: #f6f7f7;
+}
+
+.htp-advent-list,
+.htp-advent-results-list {
+  display: grid;
+  gap: 7px;
+  margin: 12px 0;
+}
+
+.htp-advent-list a,
+.htp-advent-results-list a {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 11px;
+  border: 1px solid #dcdcde;
+  border-radius: 6px;
+  color: #1d2327;
+  text-decoration: none;
+}
+
+.htp-advent-results-list a.is-selected {
+  border-color: #2271b1;
+  box-shadow: 0 0 0 1px #2271b1;
+}
+
+.htp-advent-copy-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.htp-advent-copy-box {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.htp-advent-copy-box textarea {
+  width: 100%;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.htp-advent-copy-box .button {
+  align-self: flex-start;
+}
+
+.htp-advent-published-badge {
+  display: inline-block;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #edfaef;
+  color: #006b1b;
+  font-weight: 600;
+}
+
+.htp-advent-report-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.htp-advent-report-counts span {
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: #f0f0f1;
+}
+
+.htp-advent-import-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #dcdcde;
+}
+
+@media (max-width: 1100px) {
+  .htp-advent-day-grid-admin {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+  .htp-advent-grid-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 782px) {
+  .htp-advent-day-grid-admin {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .htp-advent-grid-fields,
+  .htp-advent-copy-grid {
+    grid-template-columns: 1fr;
+  }
+  .htp-advent-field-wide {
+    grid-column: auto;
+  }
+  .htp-advent-media-row {
+    grid-template-columns: 1fr;
+  }
+}
