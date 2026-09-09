@@ -50,10 +50,7 @@ final class Parcs_HT_Advent_Admin {
         }
     }
 
-    private static function campaign_id_from_request($source = 'get') {
-        if ($source === 'post') {
-            return isset($_POST['campaign_id']) ? sanitize_key(wp_unslash($_POST['campaign_id'])) : '';
-        }
+    private static function campaign_id_from_request() {
         return isset($_GET['campaign']) ? sanitize_key(wp_unslash($_GET['campaign'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Sélection de campagne en lecture seule.
     }
 
@@ -186,7 +183,7 @@ final class Parcs_HT_Advent_Admin {
         echo '<input type="hidden" name="action" value="' . esc_attr($action) . '">';
         echo '<input type="hidden" name="campaign_id" value="' . esc_attr($campaign_id) . '">';
         echo '<input type="hidden" name="return_view" value="' . esc_attr($view) . '">';
-        wp_nonce_field($action . '_' . $campaign_id);
+        wp_nonce_field($action);
     }
 
     private static function input($name, $value, $label, $type = 'text', $attrs = '') {
@@ -428,14 +425,14 @@ final class Parcs_HT_Advent_Admin {
         $report = $token !== '' ? get_transient(self::import_transient_key($token)) : false;
         ?>
         <section class="htp-advent-card"><h2>Import / export — prototype CSV</h2><p>Le CSV utilise exactement les noms de champs du schéma 3. L’analyse n’écrit rien : elle produit d’abord un rapport créations / modifications / inchangés / avertissements / erreurs.</p>
-            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="htp-advent-inline-form"><input type="hidden" name="action" value="parcs_ht_advent_csv_template"><input type="hidden" name="campaign_id" value="<?php echo esc_attr($campaign['campagne_id']); ?>"><?php wp_nonce_field('parcs_ht_advent_csv_template_' . $campaign['campagne_id']); ?><button class="button" type="submit">Télécharger le modèle CSV</button></form>
-            <form method="post" enctype="multipart/form-data" action="<?php echo esc_url(admin_url('admin-post.php')); ?>"><input type="hidden" name="action" value="parcs_ht_advent_import_csv"><input type="hidden" name="campaign_id" value="<?php echo esc_attr($campaign['campagne_id']); ?>"><?php wp_nonce_field('parcs_ht_advent_import_csv_' . $campaign['campagne_id']); ?><p><input type="file" name="advent_csv" accept=".csv,text/csv" required> <button class="button button-primary" type="submit">Analyser sans écrire</button></p></form>
+            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="htp-advent-inline-form"><input type="hidden" name="action" value="parcs_ht_advent_csv_template"><input type="hidden" name="campaign_id" value="<?php echo esc_attr($campaign['campagne_id']); ?>"><?php wp_nonce_field('parcs_ht_advent_csv_template'); ?><button class="button" type="submit">Télécharger le modèle CSV</button></form>
+            <form method="post" enctype="multipart/form-data" action="<?php echo esc_url(admin_url('admin-post.php')); ?>"><input type="hidden" name="action" value="parcs_ht_advent_import_csv"><input type="hidden" name="campaign_id" value="<?php echo esc_attr($campaign['campagne_id']); ?>"><?php wp_nonce_field('parcs_ht_advent_import_csv'); ?><p><input type="file" name="advent_csv" accept=".csv,text/csv" required> <button class="button button-primary" type="submit">Analyser sans écrire</button></p></form>
             <details><summary>Format attendu / aide IA</summary><p>Le fichier doit utiliser <code>schema_version = 3</code>, le <code>parc_code</code> de cette installation et le même <code>campagne_id</code>. Les identifiants stables pilotent les mises à jour. Un visuel vide conserve le visuel déjà choisi dans WordPress.</p><textarea readonly rows="5">Crée un CSV UTF-8 séparé par des points-virgules conforme au référentiel Calendrier de l’Avent schema_version 3. Utilise exactement les colonnes du modèle officiel et conserve les identifiants stables campagne_id, partenaire_id, contenu_id et resultat_id.</textarea></details>
         <?php if (is_array($report)) : $counts = $report['counts']; ?>
             <div class="htp-advent-import-report"><h3>Aperçu avant validation</h3><p><strong><?php echo esc_html((string)$counts['create']); ?></strong> créations · <strong><?php echo esc_html((string)$counts['modify']); ?></strong> modifications · <strong><?php echo esc_html((string)$counts['same']); ?></strong> inchangés</p>
                 <?php if ($report['warnings']) : ?><h4>Avertissements</h4><ul><?php foreach ($report['warnings'] as $message) echo '<li>' . esc_html($message) . '</li>'; ?></ul><?php endif; ?>
                 <?php if ($report['errors']) : ?><h4>Erreurs</h4><ul><?php foreach ($report['errors'] as $message) echo '<li>' . esc_html($message) . '</li>'; ?></ul><?php else : ?>
-                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>"><input type="hidden" name="action" value="parcs_ht_advent_apply_import"><input type="hidden" name="campaign_id" value="<?php echo esc_attr($campaign['campagne_id']); ?>"><input type="hidden" name="import_token" value="<?php echo esc_attr($token); ?>"><?php wp_nonce_field('parcs_ht_advent_apply_import_' . $campaign['campagne_id']); ?><button class="button button-primary" type="submit">Appliquer la mise à jour intelligente</button></form>
+                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>"><input type="hidden" name="action" value="parcs_ht_advent_apply_import"><input type="hidden" name="campaign_id" value="<?php echo esc_attr($campaign['campagne_id']); ?>"><input type="hidden" name="import_token" value="<?php echo esc_attr($token); ?>"><?php wp_nonce_field('parcs_ht_advent_apply_import'); ?><button class="button button-primary" type="submit">Appliquer la mise à jour intelligente</button></form>
                 <?php endif; ?>
             </div>
         <?php endif; ?></section>
@@ -460,8 +457,8 @@ final class Parcs_HT_Advent_Admin {
 
     public static function save_campaign() {
         self::require_admin();
-        $campaign_id = self::campaign_id_from_request('post');
-        check_admin_referer('parcs_ht_advent_save_campaign_' . $campaign_id);
+        check_admin_referer('parcs_ht_advent_save_campaign');
+        $campaign_id = isset($_POST['campaign_id']) ? sanitize_key(wp_unslash($_POST['campaign_id'])) : '';
         $current = Parcs_HT_Advent::campaign($campaign_id, true);
         if (!$current) wp_die('Campagne introuvable.');
         $raw = isset($_POST['campaign']) && is_array($_POST['campaign']) ? wp_unslash($_POST['campaign']) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Tableau imbriqué nettoyé par sanitize_campaign().
@@ -477,8 +474,8 @@ final class Parcs_HT_Advent_Admin {
 
     public static function save_content() {
         self::require_admin();
-        $campaign_id = self::campaign_id_from_request('post');
-        check_admin_referer('parcs_ht_advent_save_content_' . $campaign_id);
+        check_admin_referer('parcs_ht_advent_save_content');
+        $campaign_id = isset($_POST['campaign_id']) ? sanitize_key(wp_unslash($_POST['campaign_id'])) : '';
         $campaign = Parcs_HT_Advent::campaign($campaign_id, true);
         if (!$campaign) wp_die('Campagne introuvable.');
         $raw = isset($_POST['content']) && is_array($_POST['content']) ? wp_unslash($_POST['content']) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Tableau imbriqué nettoyé par sanitize_content().
@@ -513,8 +510,8 @@ final class Parcs_HT_Advent_Admin {
 
     public static function save_partner() {
         self::require_admin();
-        $campaign_id = self::campaign_id_from_request('post');
-        check_admin_referer('parcs_ht_advent_save_partner_' . $campaign_id);
+        check_admin_referer('parcs_ht_advent_save_partner');
+        $campaign_id = isset($_POST['campaign_id']) ? sanitize_key(wp_unslash($_POST['campaign_id'])) : '';
         $campaign = Parcs_HT_Advent::campaign($campaign_id, true);
         if (!$campaign) wp_die('Campagne introuvable.');
         $raw = isset($_POST['partner']) && is_array($_POST['partner']) ? wp_unslash($_POST['partner']) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Tableau imbriqué nettoyé par sanitize_partner().
@@ -530,8 +527,8 @@ final class Parcs_HT_Advent_Admin {
 
     public static function save_result() {
         self::require_admin();
-        $campaign_id = self::campaign_id_from_request('post');
-        check_admin_referer('parcs_ht_advent_save_result_' . $campaign_id);
+        check_admin_referer('parcs_ht_advent_save_result');
+        $campaign_id = isset($_POST['campaign_id']) ? sanitize_key(wp_unslash($_POST['campaign_id'])) : '';
         $campaign = Parcs_HT_Advent::campaign($campaign_id, true);
         if (!$campaign) wp_die('Campagne introuvable.');
         $raw = isset($_POST['result']) && is_array($_POST['result']) ? wp_unslash($_POST['result']) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Tableau imbriqué nettoyé par sanitize_result().
@@ -554,8 +551,8 @@ final class Parcs_HT_Advent_Admin {
 
     public static function csv_template() {
         self::require_admin();
-        $campaign_id = self::campaign_id_from_request('post');
-        check_admin_referer('parcs_ht_advent_csv_template_' . $campaign_id);
+        check_admin_referer('parcs_ht_advent_csv_template');
+        $campaign_id = isset($_POST['campaign_id']) ? sanitize_key(wp_unslash($_POST['campaign_id'])) : '';
         if (!Parcs_HT_Advent::campaign($campaign_id, true)) wp_die('Campagne introuvable.');
         nocache_headers();
         header('Content-Type: text/csv; charset=UTF-8');
@@ -574,8 +571,8 @@ final class Parcs_HT_Advent_Admin {
 
     public static function import_csv() {
         self::require_admin();
-        $campaign_id = self::campaign_id_from_request('post');
-        check_admin_referer('parcs_ht_advent_import_csv_' . $campaign_id);
+        check_admin_referer('parcs_ht_advent_import_csv');
+        $campaign_id = isset($_POST['campaign_id']) ? sanitize_key(wp_unslash($_POST['campaign_id'])) : '';
         $current = Parcs_HT_Advent::campaign($campaign_id, true);
         if (!$current) wp_die('Campagne introuvable.');
         $file = isset($_FILES['advent_csv']) && is_array($_FILES['advent_csv']) ? $_FILES['advent_csv'] : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Chaque métadonnée utile est nettoyée séparément ci-dessous.
@@ -717,8 +714,8 @@ final class Parcs_HT_Advent_Admin {
 
     public static function apply_import() {
         self::require_admin();
-        $campaign_id = self::campaign_id_from_request('post');
-        check_admin_referer('parcs_ht_advent_apply_import_' . $campaign_id);
+        check_admin_referer('parcs_ht_advent_apply_import');
+        $campaign_id = isset($_POST['campaign_id']) ? sanitize_key(wp_unslash($_POST['campaign_id'])) : '';
         $token = isset($_POST['import_token']) ? sanitize_key(wp_unslash($_POST['import_token'])) : '';
         $key = self::import_transient_key($token);
         $report = get_transient($key);
