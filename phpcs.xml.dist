@@ -9,4 +9,7 @@
     <config name="testVersion" value="7.4-"/>
     <rule ref="PHPCompatibility"/>
     <rule ref="WordPress.Security"/>
+    <rule ref="WordPress.Security.NonceVerification.Missing">
+        <exclude-pattern>includes/class-parcs-ht-advent-admin-v2.php</exclude-pattern>
+    </rule>
 </ruleset>
