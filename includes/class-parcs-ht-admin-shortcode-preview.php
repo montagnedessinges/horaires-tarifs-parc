@@ -7,98 +7,132 @@ if (!defined('ABSPATH')) {
 /**
  * Aperçus administratifs des vrais shortcodes publics.
  *
- * Chaque aperçu est généré par le même moteur PHP que le frontend. Le seul
- * réglage propre à l'aperçu est la couleur de fond de simulation, conservée
- * uniquement dans le navigateur.
+ * Les aperçus ne sont plus tous calculés au chargement de la page. Un seul
+ * shortcode et une seule langue sont rendus à la demande dans une iframe
+ * d’administration isolée, ce qui évite de charger les 36 rendus inutiles.
  */
 final class Parcs_HT_Admin_Shortcode_Preview {
     const SCREEN = 'toplevel_page_parcs-horaires-tarifs';
+    const ACTION = 'parcs_ht_shortcode_preview_frame';
+    const NONCE_ACTION = 'parcs_ht_shortcode_preview';
 
     public static function init() {
         add_action('admin_enqueue_scripts', array(__CLASS__, 'assets'), 30);
-        add_action('admin_footer', array(__CLASS__, 'render_source'), 25);
+        add_action('wp_ajax_' . self::ACTION, array(__CLASS__, 'frame'));
     }
 
     public static function assets($hook) {
-        if ($hook !== self::SCREEN) return;
-
-        wp_enqueue_style(
-            'parcs-ht-admin-shortcode-frontend',
-            PARCS_HT_URL . 'assets/frontend.css',
-            array(),
-            PARCS_HT_VERSION
-        );
-
-        // Le shortcode guides possède sa propre feuille publique : l'aperçu admin
-        // doit charger exactement cette feuille pour servir de vrai banc de test.
-        wp_enqueue_style(
-            'parcs-ht-pedagogical-guides',
-            PARCS_HT_URL . 'assets/pedagogical-guides.css',
-            array(),
-            PARCS_HT_VERSION
-        );
-
-        if (class_exists('Parcs_HT_Guide_Appearance')) {
-            $s = Parcs_HT_Guide_Appearance::settings();
-            $guide_css = '.parcs-ht-guides{'
-                . '--htp-guide-card-bg:' . esc_html($s['card_background']) . ';'
-                . '--htp-guide-text:' . esc_html($s['text_color']) . ';'
-                . '--htp-guide-title:' . esc_html($s['title_color']) . ';'
-                . '--htp-guide-primary-bg:' . esc_html($s['primary_button_background']) . ';'
-                . '--htp-guide-primary-text:' . esc_html($s['primary_button_text']) . ';'
-                . '--htp-guide-secondary:' . esc_html($s['secondary_button_color']) . ';'
-                . '--htp-guide-category:' . esc_html($s['category_color']) . ';'
-                . '}';
-            wp_add_inline_style('parcs-ht-pedagogical-guides', $guide_css);
-        }
+        if ($hook !== self::SCREEN || !class_exists('Parcs_HT_Shortcode_Registry')) return;
 
         wp_enqueue_style(
             'parcs-ht-admin-shortcode-preview',
             PARCS_HT_URL . 'assets/admin-shortcode-preview.css',
-            array('parcs-ht-admin', 'parcs-ht-admin-shortcode-frontend', 'parcs-ht-pedagogical-guides'),
+            array('parcs-ht-admin'),
             PARCS_HT_VERSION
         );
         wp_enqueue_script(
             'parcs-ht-admin-shortcode-preview',
             PARCS_HT_URL . 'assets/admin-shortcode-preview.js',
-            array('parcs-ht-admin', 'parcs-ht-preview-engine'),
+            array('parcs-ht-admin'),
             PARCS_HT_VERSION,
             true
         );
+
+        $rows = array_values(array_filter(Parcs_HT_Shortcode_Registry::public_rows(), static function ($row) {
+            return !empty($row['preview']);
+        }));
+        $season = isset($_GET['season']) ? sanitize_text_field(wp_unslash($_GET['season'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Sélection d'aperçu en lecture seule.
+        if (!preg_match('/^20\d{2}$/', $season)) $season = '';
+
+        wp_add_inline_script(
+            'parcs-ht-admin-shortcode-preview',
+            'window.ParcsHTShortcodePreview=' . wp_json_encode(array(
+                'ajaxUrl' => admin_url('admin-ajax.php'),
+                'action' => self::ACTION,
+                'nonce' => wp_create_nonce(self::NONCE_ACTION),
+                'rows' => $rows,
+                'season' => $season,
+                'defaultDate' => wp_date('Y-m-d'),
+                'defaultTime' => wp_date('H:i'),
+            )) . ';',
+            'before'
+        );
     }
 
-    /** Retire uniquement les scripts embarqués de la copie d'aperçu admin. */
-    private static function preview_html($html) {
-        $html = (string)$html;
-        if ($html === '') return '';
-        $clean = preg_replace('#<script\b[^>]*>.*?</script\s*>#is', '', $html);
-        return is_string($clean) ? $clean : $html;
+    private static function requested_string($key) {
+        return isset($_GET[$key]) ? sanitize_text_field(wp_unslash($_GET[$key])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Requête d'aperçu protégée par nonce et capacité.
     }
 
-    public static function render_source() {
-        $screen = function_exists('get_current_screen') ? get_current_screen() : null;
-        if (!$screen || $screen->id !== self::SCREEN || !class_exists('Parcs_HT_Shortcode_Registry')) return;
-
-        echo '<div id="parcs-ht-real-shortcode-preview-sources" hidden aria-hidden="true">';
-        foreach (Parcs_HT_Shortcode_Registry::public_rows() as $row) {
-            if (empty($row['preview'])) continue;
-            $base = sanitize_key((string)$row['base']);
-            foreach (Parcs_HT_Shortcode_Registry::languages() as $language) {
-                $shortcode = isset($row['shortcodes'][$language]) ? (string)$row['shortcodes'][$language] : Parcs_HT_Shortcode_Registry::shortcode($base, $language);
-                $html = self::preview_html(Parcs_HT_Shortcode_Registry::render_preview($base, $language));
-                echo '<div data-htp-shortcode-preview-source data-base="' . esc_attr($base) . '" data-lang="' . esc_attr($language) . '" data-label="' . esc_attr($row['label']) . '" data-shortcode="' . esc_attr($shortcode) . '">';
-                if (trim((string)$html) === '') {
-                    echo '<p class="htp-shortcode-preview-empty">Aucun rendu avec les données actuellement enregistrées.</p>';
-                } else {
-                    echo $html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- HTML des moteurs internes, déjà échappé puis nettoyé des scripts pour l'aperçu admin.
-                }
-                echo '</div>';
-            }
+    private static function preview_timestamp_ms($date, $time, $timezone) {
+        if (!preg_match('/^20\d{2}-\d{2}-\d{2}$/', $date) || !preg_match('/^\d{2}:\d{2}$/', $time)) return null;
+        try {
+            $zone = new DateTimeZone($timezone ?: 'Europe/Paris');
+            $moment = DateTimeImmutable::createFromFormat('!Y-m-d H:i', $date . ' ' . $time, $zone);
+            if (!$moment || $moment->format('Y-m-d H:i') !== $date . ' ' . $time) return null;
+            return $moment->getTimestamp() * 1000;
+        } catch (Exception $exception) {
+            return null;
         }
-        echo '</div>';
+    }
 
-        // Le vrai frontend de la page admin est fourni sous un handle dédié.
-        wp_dequeue_script('parcs-ht-frontend');
-        wp_dequeue_style('parcs-ht-frontend');
+    private static function guide_inline_css() {
+        if (!class_exists('Parcs_HT_Guide_Appearance')) return '';
+        $s = Parcs_HT_Guide_Appearance::settings();
+        return '.parcs-ht-guides{'
+            . '--htp-guide-card-bg:' . esc_attr($s['card_background']) . ';'
+            . '--htp-guide-text:' . esc_attr($s['text_color']) . ';'
+            . '--htp-guide-title:' . esc_attr($s['title_color']) . ';'
+            . '--htp-guide-primary-bg:' . esc_attr($s['primary_button_background']) . ';'
+            . '--htp-guide-primary-text:' . esc_attr($s['primary_button_text']) . ';'
+            . '--htp-guide-secondary:' . esc_attr($s['secondary_button_color']) . ';'
+            . '--htp-guide-category:' . esc_attr($s['category_color']) . ';'
+            . '}';
+    }
+
+    public static function frame() {
+        if (!current_user_can('manage_options')) wp_die('Accès refusé.', '', array('response' => 403));
+        check_ajax_referer(self::NONCE_ACTION);
+
+        $base = sanitize_key(self::requested_string('base'));
+        $language = sanitize_key(self::requested_string('lang'));
+        $definitions = Parcs_HT_Shortcode_Registry::definitions();
+        if (!isset($definitions[$base]) || empty($definitions[$base]['preview'])) wp_die('Shortcode inconnu.', '', array('response' => 404));
+        if (!in_array($language, Parcs_HT_Shortcode_Registry::languages(), true)) $language = 'fr';
+
+        $season = self::requested_string('season');
+        if (!preg_match('/^20\d{2}$/', $season)) $season = '';
+        $settings = Parcs_HT_Defaults::settings($season);
+        $timezone = isset($settings['timezone']) ? (string)$settings['timezone'] : 'Europe/Paris';
+        $preview_ms = self::preview_timestamp_ms(self::requested_string('date'), self::requested_string('time'), $timezone);
+        $background = self::requested_string('background');
+        if (!preg_match('/^#[0-9a-f]{6}$/i', $background)) $background = '#ffffff';
+
+        $payload = array(
+            'settings' => Parcs_HT_Schedule::public_settings($settings),
+            'dictionary' => Parcs_HT_Schedule::dictionaries(),
+        );
+        $html = Parcs_HT_Shortcode_Registry::render_preview($base, $language);
+
+        nocache_headers();
+        header('Content-Type: text/html; charset=' . get_option('blog_charset'));
+        ?>
+<!doctype html>
+<html lang="<?php echo esc_attr($language); ?>">
+<head>
+<meta charset="<?php bloginfo('charset'); ?>">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="<?php echo esc_url(PARCS_HT_URL . 'assets/frontend.css?ver=' . rawurlencode(PARCS_HT_VERSION)); ?>">
+<link rel="stylesheet" href="<?php echo esc_url(PARCS_HT_URL . 'assets/pedagogical-guides.css?ver=' . rawurlencode(PARCS_HT_VERSION)); ?>">
+<style>html,body{margin:0;padding:0;background:<?php echo esc_html($background); ?>}body{padding:24px;box-sizing:border-box}.htp-preview-frame-empty{margin:0;color:#646970;font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}<?php echo self::guide_inline_css(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Valeurs de couleurs échappées dans guide_inline_css(). ?></style>
+<script>window.ParcsHTPData=<?php echo wp_json_encode($payload); ?>;<?php if ($preview_ms !== null) : ?>(function(){var RealDate=Date,fixed=<?php echo (int)$preview_ms; ?>;class PreviewDate extends RealDate{constructor(){var a=Array.prototype.slice.call(arguments);if(!a.length){super(fixed);}else{super(...a);}}static now(){return fixed;}}PreviewDate.UTC=RealDate.UTC;PreviewDate.parse=RealDate.parse;window.Date=PreviewDate;}());<?php endif; ?></script>
+</head>
+<body>
+<?php if (trim((string)$html) === '') : ?><p class="htp-preview-frame-empty">Aucun rendu avec les données actuellement enregistrées.</p><?php else : echo $html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- HTML produit par les moteurs publics internes. ?><?php endif; ?>
+<script src="<?php echo esc_url(PARCS_HT_URL . 'assets/frontend.js?ver=' . rawurlencode(PARCS_HT_VERSION)); ?>"></script>
+<script>(function(){function send(){try{parent.postMessage({type:'parcs-ht-preview-size',height:Math.max(document.documentElement.scrollHeight,document.body.scrollHeight)},location.origin);}catch(e){}}window.addEventListener('load',send);document.addEventListener('click',function(){setTimeout(send,30);});if(window.ResizeObserver){new ResizeObserver(send).observe(document.body);}setTimeout(send,100);setTimeout(send,500);}());</script>
+</body>
+</html>
+        <?php
+        exit;
     }
 }
