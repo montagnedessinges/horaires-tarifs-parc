@@ -1,0 +1,350 @@
+.parcs-ht-advent,
+.parcs-ht-advent-rules {
+  --htp-advent-accent: var(--htp-primary, currentColor);
+  box-sizing: border-box;
+  color: inherit;
+  font: inherit;
+}
+
+.parcs-ht-advent *,
+.parcs-ht-advent *::before,
+.parcs-ht-advent *::after,
+.parcs-ht-advent-rules *,
+.parcs-ht-advent-rules *::before,
+.parcs-ht-advent-rules *::after {
+  box-sizing: border-box;
+}
+
+.parcs-ht-advent-title {
+  margin: 0 0 .55em;
+  font: inherit;
+  font-size: clamp(1.45rem, 3vw, 2rem);
+  font-weight: 700;
+  line-height: 1.15;
+  color: inherit;
+}
+
+.parcs-ht-advent-intro,
+.parcs-ht-advent-participation,
+.parcs-ht-advent-detail {
+  margin-top: 1rem;
+}
+
+.parcs-ht-advent-intro > :first-child,
+.parcs-ht-advent-participation-panel > :first-child,
+.parcs-ht-advent-day-copy > :first-child,
+.parcs-ht-advent-result > :first-child,
+.parcs-ht-advent-rules > :first-child {
+  margin-top: 0;
+}
+
+.parcs-ht-advent-intro > :last-child,
+.parcs-ht-advent-participation-panel > :last-child,
+.parcs-ht-advent-day-copy > :last-child,
+.parcs-ht-advent-result > :last-child,
+.parcs-ht-advent-rules > :last-child {
+  margin-bottom: 0;
+}
+
+.parcs-ht-advent-primary,
+.parcs-ht-advent-secondary,
+.parcs-ht-advent-day,
+.parcs-ht-advent-visual-button,
+.parcs-ht-advent-lightbox-close {
+  font: inherit;
+}
+
+.parcs-ht-advent-primary,
+.parcs-ht-advent-secondary {
+  border: 1px solid currentColor;
+  border-radius: .6rem;
+  padding: .65rem 1rem;
+  cursor: pointer;
+  color: inherit;
+  background: transparent;
+}
+
+.parcs-ht-advent-primary {
+  font-weight: 700;
+}
+
+.parcs-ht-advent-primary:focus-visible,
+.parcs-ht-advent-secondary:focus-visible,
+.parcs-ht-advent-day:focus-visible,
+.parcs-ht-advent-visual-button:focus-visible,
+.parcs-ht-advent-lightbox-close:focus-visible,
+.parcs-ht-advent-link:focus-visible,
+.parcs-ht-advent-social-links a:focus-visible {
+  outline: 3px solid currentColor;
+  outline-offset: 3px;
+}
+
+.parcs-ht-advent-participation-panel {
+  margin-top: .75rem;
+  padding: 1rem;
+  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+  border-radius: .75rem;
+  background: transparent;
+}
+
+.parcs-ht-advent-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: .65rem;
+  margin-top: 1.25rem;
+}
+
+.parcs-ht-advent-day {
+  position: relative;
+  min-height: 4.7rem;
+  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+  border-radius: .85rem;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  transition: transform .16s ease, box-shadow .16s ease, opacity .16s ease;
+}
+
+.parcs-ht-advent-day.is-open:hover,
+.parcs-ht-advent-day.is-open:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 .45rem 1rem rgba(0,0,0,.10);
+}
+
+.parcs-ht-advent-day.is-locked {
+  cursor: not-allowed;
+  opacity: .48;
+}
+
+.parcs-ht-advent-day.is-today {
+  border-width: 2px;
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, currentColor 14%, transparent);
+}
+
+.parcs-ht-advent-day.is-selected {
+  border-width: 2px;
+  box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.parcs-ht-advent-day-number {
+  display: block;
+  font-size: 1.45rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.parcs-ht-advent-lock {
+  display: block;
+  margin-top: .35rem;
+  font-size: .8rem;
+}
+
+.parcs-ht-advent-detail {
+  min-height: 5rem;
+  scroll-margin-top: 2rem;
+}
+
+.parcs-ht-advent-placeholder,
+.parcs-ht-advent-error {
+  margin: 0;
+  padding: 1rem;
+  border: 1px dashed color-mix(in srgb, currentColor 30%, transparent);
+  border-radius: .75rem;
+}
+
+.parcs-ht-advent-teaser,
+.parcs-ht-advent-visual {
+  width: min(100%, 680px);
+  margin: 0 auto 1.25rem;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: 1rem;
+  background: color-mix(in srgb, currentColor 5%, transparent);
+}
+
+.parcs-ht-advent-teaser img,
+.parcs-ht-advent-visual img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.parcs-ht-advent-visual-button {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  cursor: zoom-in;
+}
+
+.parcs-ht-advent-day-detail {
+  display: grid;
+  grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr);
+  gap: clamp(1rem, 4vw, 2.25rem);
+  align-items: start;
+  padding-top: .5rem;
+}
+
+.parcs-ht-advent-day-heading {
+  grid-column: 1 / -1;
+}
+
+.parcs-ht-advent-day-heading h3 {
+  margin: .2rem 0 0;
+  color: inherit;
+}
+
+.parcs-ht-advent-day-kicker {
+  font-weight: 700;
+}
+
+.parcs-ht-advent-day-detail .parcs-ht-advent-visual {
+  width: 100%;
+  margin: 0;
+}
+
+.parcs-ht-advent-partner,
+.parcs-ht-advent-prize,
+.parcs-ht-advent-question-intro,
+.parcs-ht-advent-question,
+.parcs-ht-advent-choices,
+.parcs-ht-advent-clue-marker,
+.parcs-ht-advent-social-links,
+.parcs-ht-advent-result,
+.parcs-ht-advent-final {
+  margin: 0 0 1rem;
+}
+
+.parcs-ht-advent-choices {
+  padding-left: 1.3rem;
+}
+
+.parcs-ht-advent-choices li + li {
+  margin-top: .35rem;
+}
+
+.parcs-ht-advent-clue-marker,
+.parcs-ht-advent-clue-reveal {
+  padding: .75rem;
+  border: 1px dashed currentColor;
+  border-radius: .7rem;
+}
+
+.parcs-ht-advent-social-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
+}
+
+.parcs-ht-advent-result {
+  padding-top: 1rem;
+  border-top: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+}
+
+.parcs-ht-advent-result h4 {
+  margin: 0 0 .65rem;
+  color: inherit;
+}
+
+.parcs-ht-advent-final {
+  margin-top: 1.25rem;
+  padding: 1rem;
+  border: 1px solid currentColor;
+  border-radius: .85rem;
+}
+
+.parcs-ht-advent-final form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .65rem;
+  align-items: end;
+}
+
+.parcs-ht-advent-final input[type="text"] {
+  min-width: min(100%, 16rem);
+  padding: .65rem .75rem;
+  border: 1px solid color-mix(in srgb, currentColor 38%, transparent);
+  border-radius: .55rem;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+}
+
+.parcs-ht-advent-lightbox {
+  position: fixed;
+  z-index: 999999;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(0,0,0,.86);
+}
+
+.parcs-ht-advent-lightbox-inner {
+  width: min(94vw, 880px);
+  height: min(90vh, 1100px);
+  display: grid;
+  place-items: center;
+}
+
+.parcs-ht-advent-lightbox-inner img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.parcs-ht-advent-lightbox-close {
+  position: absolute;
+  top: .75rem;
+  right: .75rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid #fff;
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(0,0,0,.65);
+  cursor: pointer;
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.parcs-ht-advent.is-loading [data-advent-detail] {
+  opacity: .65;
+}
+
+@media (max-width: 820px) {
+  .parcs-ht-advent-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .parcs-ht-advent-day-detail {
+    grid-template-columns: 1fr;
+  }
+  .parcs-ht-advent-day-heading {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 520px) {
+  .parcs-ht-advent-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .5rem;
+  }
+  .parcs-ht-advent-day {
+    min-height: 4rem;
+  }
+  .parcs-ht-advent-teaser,
+  .parcs-ht-advent-visual {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .parcs-ht-advent-day {
+    transition: none;
+  }
+}
