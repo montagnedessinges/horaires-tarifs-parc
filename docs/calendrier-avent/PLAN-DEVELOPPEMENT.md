@@ -1,141 +1,221 @@
 # Plan de développement — Aperçu puis Calendrier de l’Avent
 
-Ce document fixe l’ordre recommandé avant développement.
+Ce document fixe l’ordre recommandé pour démarrer le développement après le cadrage fonctionnel du 9 septembre 2026.
 
 ## Étape 0 — état actuel
 
-Version publiée : **1.14.0**.
+Version publiée au moment du cadrage : **1.14.0**.
 
-Constat confirmé : la 1.14.0 ne contient pas encore le module Calendrier de l’Avent.
+La 1.14.0 ne contient pas encore le module Calendrier de l’Avent.
 
-L’onglet Aperçu actuel génère côté serveur les aperçus de tous les shortcodes et de toutes les langues avant que le JavaScript ne les organise. Cette architecture fonctionne, mais charge inutilement des aperçus que l’administrateur ne consulte pas.
+La documentation `docs/calendrier-avent/` décrit le comportement à développer. Elle n’est pas une preuve d’implémentation.
 
-## Étape 1 — mise à jour dédiée de l’onglet Aperçu
+Référentiel d’import courant : cadrage **0.7**, `schema_version = 3`.
 
-À réaliser avant le module Avent.
+## Étape 1 — préparer/fiabiliser le moteur d’aperçu commun
+
+À réaliser avant ou au tout début du module Avent.
 
 Objectifs :
 
-1. conserver le contrôle global `Date à tester` ;
+1. conserver `Date à tester` ;
 2. ajouter/fiabiliser `Heure à tester` ;
-3. remplacer la longue liste verticale d’aperçus par une navigation compacte par shortcode ;
-4. charger/rendre un seul shortcode à la fois ;
-5. proposer FR / EN / DE dans l’aperçu sélectionné ;
-6. ne calculer/charger que la langue demandée lorsqu’on la sélectionne ;
-7. permettre `Mettre à jour l’aperçu` sans recalculer inutilement tous les autres shortcodes ;
-8. conserver le même moteur de rendu que le frontend public ;
-9. garder les tests actuels des shortcodes et ajouter des tests de non-régression du chargement à la demande.
+3. charger/rendre un seul shortcode à la fois ;
+4. conserver FR / EN / DE ;
+5. ne calculer que la langue demandée ;
+6. permettre `Mettre à jour l’aperçu` sans recalcul global ;
+7. utiliser exactement le même moteur de rendu que le frontend public ;
+8. garder les tests existants et ajouter les scénarios Avent.
 
-### Interface recommandée
+L’aperçu Avent est indispensable car il doit permettre de simuler décembre alors que le développement et les tests sont réalisés plusieurs mois avant.
 
-- sélecteur Date à tester ;
-- sélecteur Heure à tester ;
-- navigation verticale/compacte des shortcodes ;
-- sélecteur FR / EN / DE ;
-- zone d’aperçu unique ;
-- bouton Mettre à jour l’aperçu ;
-- contrôle du fond d’aperçu si toujours utile.
+## Étape 2 — socle du module Calendrier de l’Avent
 
-### Performance
+Créer le stockage et l’administration pour :
 
-Ne pas pré-rendre les 12+ shortcodes × 3 langues à chaque affichage de l’onglet.
-
-Préférer un chargement à la demande via une action admin/AJAX sécurisée qui reçoit :
-
-- base du shortcode ;
-- langue ;
-- date simulée ;
-- heure simulée ;
-- saison/brouillon concerné si nécessaire.
-
-Le serveur doit vérifier capacité et nonce avant de rendre l’aperçu.
-
-## Étape 2 — développement du module Calendrier de l’Avent
-
-Le module Avent se branche ensuite sur le moteur d’aperçu amélioré.
-
-Éléments principaux :
-
-- stockage des campagnes séparé du calendrier horaires/tarifs ;
-- campagne par parc et année ;
-- teasings ;
-- 24 jours ;
+- campagnes séparées par parc/année ;
+- 24 journées ;
+- teasings sociaux ;
 - partenaires ;
 - résultats ;
-- traductions ;
 - grand jeu ;
-- import/réimport intelligent ;
-- rendu public par shortcode ;
-- modale/panneau jour ;
-- sécurité serveur des réponses/indices/mot ;
-- génération de textes sociaux avant publication ;
-- génération après tirage des commentaires résultat Facebook/Instagram et du texte Story ;
-- boutons de copie dans l’administration ;
-- publication sociale entièrement manuelle, sans connexion de publication automatique à Meta ;
-- `explication_reponse_fr` facultatif inséré dans le commentaire résultat lorsqu’il est renseigné ;
-- relance de fin de commentaire calculée selon l’ouverture de la prochaine question ou la fin de campagne ;
-- admin compacte en grille ;
-- mode archive.
+- règlement dynamique ;
+- traductions ;
+- textes publics configurables ;
+- import/réimport.
 
-### Planning à privilégier
+Aucune donnée annuelle ou propre à MDS/FDS ne doit être codée en dur.
 
-L’interface standard doit utiliser une date/heure principale par contenu. Cette date/heure pilote par défaut l’ouverture sur le site et sert de repère pour la publication sociale manuelle.
+## Étape 3 — shortcodes publics
 
-Les overrides d’heure d’ouverture ou de planning spécifique Facebook/Instagram restent des options avancées facultatives et ne doivent pas alourdir l’usage courant.
+### `[parc_calendrier_avent]`
 
-## Étape 3 — import Excel / Google Sheets
+Le shortcode ne crée qu’un bloc à l’endroit où il est inséré.
 
-Le développement du parseur doit suivre le contrat de `REFERENTIEL-IMPORT.md`.
+À implémenter :
+
+- titre interne configurable ;
+- courte introduction configurable ;
+- bouton `Comment participer ?` ;
+- panneau d’explication courte ;
+- bouton vers l’URL configurable du règlement complet ;
+- grille 24 cases ;
+- un seul visuel teasing public avant ouverture ;
+- jours futurs verrouillés ;
+- jour courant mis en avant mais jamais ouvert automatiquement ;
+- clic volontaire sur un jour ouvert ;
+- détail du jour dans le même bloc ;
+- visuel 4:5 central et agrandissable ;
+- partenaire, lot, question, réponses ;
+- rendu des résultats à J+1 ;
+- gagnants et indices visibles dans l’archive après publication du résultat ;
+- jour 24 avec jeu quotidien + finale distincte ;
+- mode archive après Noël.
+
+### `[parc_reglement_avent]`
+
+Le shortcode affiche uniquement le règlement complet de la campagne active.
+
+Il ne crée pas de page, ne fixe aucune URL et n’impose pas de H1/global CSS.
+
+## Étape 4 — logique des résultats J+1
+
+À implémenter précisément :
+
+- le jeu du jour ne montre jamais sa réponse le jour J ;
+- la révélation est par défaut calée sur l’ouverture du jour suivant ;
+- les données saisies à l’avance restent serveur ;
+- si l’heure de révélation est atteinte sans résultat publié, afficher le texte configurable `tirage non effectué` ;
+- la saisie des gagnants ne suffit pas à publier ;
+- action explicite `Publier le résultat` ;
+- une fois publié : bonne réponse + explication éventuelle + gagnant Facebook + gagnant Instagram + indice éventuel ;
+- ces éléments restent visibles en archive.
+
+Prévoir une règle spécifique/configurable pour le résultat du jour 24.
+
+## Étape 5 — mot mystère et finale sécurisée
+
+À implémenter :
+
+- case à cocher `Ce jour contient un indice du mot mystère` ;
+- champs lettre + position uniquement visibles dans l’admin lorsque cochée ;
+- loupe visible côté public si applicable ;
+- lettre + position secrètes le jour J ;
+- révélation de la lettre + position avec le résultat à J+1 ;
+- champ de saisie du mot final le 24 à la date/heure configurée ;
+- validation serveur ;
+- limitation raisonnable des tentatives ;
+- mot correct → autorisation temporaire signée ;
+- seulement après autorisation : exécuter/rendre `grand_jeu_formulaire_shortcode` ;
+- ne jamais précharger le formulaire avec CSS/JS caché ;
+- ne jamais exposer mot ou shortcode du formulaire dans un payload public avant autorisation.
+
+## Étape 6 — générateurs sociaux
+
+### Avant publication
+
+Générer Facebook/Instagram depuis les données structurées avec :
+
+- partenaire ;
+- lot ;
+- introductions ;
+- question ;
+- réponses ;
+- règles ;
+- rappel automatique du mot mystère si jour avec indice ;
+- URL de la page centrale du calendrier sur toutes les publications quotidiennes ;
+- hashtags.
+
+Tous les textes par défaut restent modifiables.
+
+Prévoir aperçu + copie manuelle + override.
+
+Aucune connexion de publication automatique à Meta.
+
+### Après tirage
+
+Générer :
+
+- commentaire résultat Facebook ;
+- commentaire résultat Instagram ;
+- Story résultat ;
+- boutons `Copier`.
+
+Utiliser la bonne réponse, l’explication éventuelle, le gagnant du réseau, le partenaire et la relance adaptée au planning.
+
+## Étape 7 — import Excel / CSV de test
+
+Le parseur suit strictement `REFERENTIEL-IMPORT.md` : cadrage **0.7**, `schema_version = 3`.
 
 Fonctions attendues :
 
-- téléchargement d’un modèle officiel ;
-- import `.xlsx` principal ;
-- CSV facultatif si fiable ;
-- lecture `schema_version` ;
+- modèle officiel ;
+- `.xlsx` principal ;
+- CSV accepté au minimum pour une campagne de démonstration/test si fiable ;
+- contrôle `schema_version` ;
 - contrôle `parc_code` ;
 - diff avant écriture ;
 - mise à jour intelligente par IDs ;
-- option explicite de remplacement complet ;
 - conservation des médias manuels ;
-- validation complète avant persistance.
+- validation complète avant persistance ;
+- remplacement complet uniquement après confirmation.
 
-L’import ne doit pas être conçu comme une seconde structure de données : les champs importés doivent alimenter exactement les mêmes champs WordPress que l’édition manuelle.
+L’import alimente exactement les mêmes champs que l’édition manuelle WordPress.
 
-Avant de coder cette étape, resynchroniser les feuilles Google Sheets `IMPORT plugin - référentiel` avec la version GitHub courante de `REFERENTIEL-IMPORT.md`.
+Après la première version de l’import, préparer une campagne fictive complète de test afin que l’équipe puisse juger le rendu et corriger l’UX avant les vraies données 2026.
 
-## Étape 4 — contrôles avant release Avent
+## Étape 8 — scénarios d’aperçu obligatoires
+
+Tester au minimum :
+
+- 30 novembre : grille fermée + teasing public ;
+- 1er décembre avant ouverture : aucune case accessible ;
+- 1er décembre après ouverture : case 1 accessible, pas ouverte automatiquement ;
+- clic jour 1 : visuel 4:5 + partenaire + lot + question ;
+- 2 décembre après ouverture : cases 1 et 2 accessibles ;
+- jour 1 sans tirage publié : texte `tirage non effectué` ;
+- jour 1 avec résultat publié : réponse + gagnants ;
+- jour avec indice : lettre/position invisibles le jour J ;
+- même jour à J+1 après résultat publié : indice visible ;
+- 24 décembre avant finale : formulaire absent ;
+- mot faux : formulaire absent ;
+- mot correct : formulaire rendu côté serveur ;
+- après fermeture : formulaire final fermé ;
+- archive : anciens jours, gagnants et indices révélés consultables.
+
+## Étape 9 — tests avant release
 
 Avant publication :
 
 - PHP 7.4 / 8.1 / 8.2 / 8.3 ;
 - WordPress Plugin Check ;
-- tests de sécurité des payloads publics ;
-- tests date/heure ;
-- tests jours verrouillés/passés ;
-- tests MDS/FDS sans fuite croisée ;
-- tests import/réimport ;
-- tests conservation des visuels ;
-- tests réponse QCM / vrai-faux / choix multiples ;
-- tests validation serveur du mot ;
-- tests archive/révélation ;
-- tests aperçu admin avec date/heure simulées ;
-- tests mobile/accessibilité de la modale ou du panneau ;
-- tests du générateur de post avant publication ;
-- tests du commentaire résultat avec et sans `explication_reponse_fr` ;
-- tests gagnants Facebook/Instagram différents ;
-- tests du texte Story ;
-- tests de relance vers une question déjà ouverte, une question future et la clôture du dernier jour ;
-- test garantissant qu’aucune action ne publie automatiquement sur Facebook ou Instagram.
+- sécurité des payloads publics ;
+- date/heure et fuseau ;
+- MDS/FDS sans fuite croisée ;
+- responsive/mobile ;
+- accessibilité clavier et agrandissement du visuel ;
+- import/réimport ;
+- conservation des visuels ;
+- QCM / vrai-faux / choix multiples ;
+- J+1 et `Publier le résultat` ;
+- gagnants Facebook/Instagram différents ;
+- indices ;
+- brute-force/rate limit du mot ;
+- formulaire final non exposé prématurément ;
+- règlement dynamique ;
+- générateurs sociaux ;
+- absence totale de publication automatique Meta.
 
 ## Règle de publication
 
-Une documentation ou un commit de préparation n’est pas une mise à jour du plugin.
-
-Lorsqu’une vraie mise à jour fonctionnelle est lancée, elle n’est considérée terminée que lorsque :
+La mise à jour n’est considérée comme installable que lorsque :
 
 1. les tests sont verts ;
 2. la nouvelle version est publiée dans GitHub Releases ;
 3. le ZIP de production est présent et vérifié.
 
-Ne pas annoncer la mise à jour comme installable avant ces trois points.
+## Feu vert
+
+Le cadrage fonctionnel est suffisamment avancé pour commencer le développement.
+
+Le chat de développement doit relire **tout** `docs/calendrier-avent/` avant de coder, en particulier `HANDOFF-DEVELOPPEMENT.md`, et ne doit pas réintroduire les anciennes décisions : plusieurs teasings publics ou ouverture automatique du jour courant sont désormais abandonnées.
