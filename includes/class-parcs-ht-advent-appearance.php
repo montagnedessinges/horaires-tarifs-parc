@@ -213,7 +213,7 @@ final class Parcs_HT_Advent_Appearance {
         if ($mode === 'reset') {
             $palette = self::empty_palette();
         } else {
-            $raw = isset($_POST['colors']) && is_array($_POST['colors']) ? wp_unslash($_POST['colors']) : array();
+            $raw = isset($_POST['colors']) && is_array($_POST['colors']) ? map_deep(wp_unslash($_POST['colors']), 'sanitize_text_field') : array();
             $palette = self::sanitize_palette($raw);
         }
 
