@@ -1,3 +1,12 @@
+## 1.15.6
+
+- Clarifie le détail d’une journée du calendrier : la date reste en premier, suivie d’un titre « Horaires du parc », des horaires et de la dernière entrée.
+- Distingue visuellement l’accès temporairement limité dans un bloc teinté sans le présenter comme une fermeture du parc.
+- Rend modifiables le titre des horaires du parc, la couleur du bloc d’accès et les deux phrases automatiques de la règle d’accès.
+- Les heures restent entièrement issues des champs existants (interruption, reprise, dernière entrée) et ne sont jamais figées dans le rendu.
+- Conserve sans modification les textes complémentaires et l’infobulle déjà configurés sur la règle d’accès.
+- Migration non destructive : les données existantes sont conservées ; seuls les nouveaux champs absents reçoivent des valeurs initiales modifiables.
+
 # Historique des versions
 
 ## 1.15.3
