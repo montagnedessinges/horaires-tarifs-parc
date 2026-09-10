@@ -36,6 +36,11 @@ Les feuilles `IMPORT plugin - référentiel` des deux fichiers Google Sheets 202
 - Le générateur social ajoute automatiquement le rappel du mot mystère pour les jours avec indice.
 - Toutes les publications quotidiennes générées renvoient vers `page_calendrier_url`.
 - `Comment participer ?` ouvre une explication courte dans le bloc ; le règlement complet est sur la page `page_reglement_url`.
+- **Prochaine mise à jour à intégrer : le contenu `Comment participer ?` doit être présenté en deux colonnes distinctes sur écran large : `Jeu quotidien` et `Mystère de Noël`. Sur mobile, les deux blocs s’empilent verticalement.**
+- **Colonne `Jeu quotidien` : expliquer que la participation se fait sur Facebook ou Instagram, rappeler la bonne réponse en commentaire, la mention d’une personne avec qui venir et l’abonnement au parc ainsi qu’au partenaire du jour lorsqu’il y en a un. Ajouter des boutons `Participer sur Facebook` et `Participer sur Instagram`.**
+- **Les boutons sociaux doivent pointer en priorité vers les URL de la publication du jour si elles sont renseignées ; sinon vers les comptes officiels du parc configurés dans la campagne.**
+- **Colonne `Mystère de Noël` : expliquer la mécanique des indices lettre + chiffre, le chiffre donnant l’ordre de la lettre dans le mot, la conservation des indices puis la saisie du mot le 24 décembre pour accéder au formulaire du grand lot.**
+- **Sous les deux colonnes : un bouton commun `Consulter le règlement complet`.**
 - Tous les textes publics/socials ont des valeurs par défaut mais restent modifiables.
 - Le 24 comporte le jeu quotidien normal ET la finale du mot mystère.
 - Le mot final est validé exclusivement côté serveur.
