@@ -27,7 +27,7 @@ function advent_check($condition, $message) {
     echo '[OK] ' . $message . PHP_EOL;
 }
 
-advent_check(strpos($main, 'Version: 1.15.4') !== false && strpos($main, "PARCS_HT_VERSION', '1.15.4") !== false, 'Advent appearance uses version 1.15.4');
+advent_check(strpos($main, 'Version: 1.15.5') !== false && strpos($main, "PARCS_HT_VERSION', '1.15.5") !== false, 'Advent preview color fix uses version 1.15.5');
 advent_check(strpos($main, 'class-parcs-ht-advent.php') !== false && strpos($main, 'class-parcs-ht-advent-admin.php') !== false, 'Advent public and canonical admin modules are bootstrapped');
 advent_check(strpos($main, 'class-parcs-ht-advent-appearance.php') !== false && strpos($main, 'Parcs_HT_Advent_Appearance::init()') !== false, 'dedicated Advent appearance module is bootstrapped');
 advent_check(!file_exists($root . '/includes/class-parcs-ht-advent-admin-v2.php'), 'obsolete Advent v2 admin filename is removed');
@@ -48,6 +48,9 @@ foreach (array('intro_partenaire_fr','intro_question_fr','bonne_reponse_code','b
 advent_check(strpos($registry, "'parc_calendrier_avent'") !== false && strpos($registry, "'parc_reglement_avent'") !== false, 'both Advent shortcodes are in the central registry');
 advent_check(substr_count($registry, "'kind'=>'advent'") >= 2, 'Advent shortcodes use the dedicated preview renderer');
 advent_check(strpos($preview, 'Parcs_HT_Advent::set_preview_datetime') !== false, 'shared preview date and time are forwarded to the server Advent renderer');
+advent_check(strpos($preview, 'private static function advent_preview_assets()') !== false, 'Advent preview has a dedicated asset bridge');
+advent_check(strpos($preview, "wp_enqueue_style('parcs-ht-advent')") !== false && strpos($preview, 'Parcs_HT_Advent_Appearance::frontend_styles()') !== false, 'saved Advent palette is explicitly injected into the isolated shortcode preview');
+advent_check(strpos($preview, '$html = Parcs_HT_Shortcode_Registry::render_preview($base, $language);') !== false && strpos($preview, 'if ($is_advent) self::advent_preview_assets();') !== false, 'Advent appearance is applied after the real shortcode renderer has selected its campaign');
 advent_check(strpos($core_admin, "Parcs_HT_Shortcode_Registry::public_rows()") !== false && strpos($registry, "'parc_calendrier_avent'") !== false && strpos($registry, "'parc_reglement_avent'") !== false, 'central Shortcodes tab exposes both Advent blocks natively');
 
 advent_check(strpos($core_admin_js, "'htp-advent'") !== false && strpos($core_admin_js, "id === 'htp-advent'") !== false, 'core tab engine manages Advent like the other main tabs');
