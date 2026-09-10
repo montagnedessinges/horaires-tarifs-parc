@@ -79,6 +79,45 @@ Priorité de destination recommandée :
 
 Le lien partenaire s’ouvre dans un nouvel onglet afin de conserver la page Calendrier de l’Avent ouverte. Le nom peut être accompagné d’un bouton ou pictogramme discret `Voir le partenaire`, notamment sur mobile.
 
+## Pop-ups Calendrier de l’Avent — prochaine mise à jour
+
+Réutiliser **le moteur de pop-up déjà présent dans l’extension**. Ne pas créer un second système de pop-up spécifique au Calendrier de l’Avent.
+
+Le pop-up Avent est **facultatif** et ne doit pas apparaître automatiquement tous les jours par défaut.
+
+### Usages prévus
+
+- avant le 1er décembre : possibilité d’activer un pop-up teasing général pour annoncer le Calendrier de l’Avent ;
+- du 1er au 24 décembre : possibilité d’activer un pop-up uniquement sur les journées choisies ;
+- usages typiques : partenaire ou lot exceptionnel, journée comportant un indice du `Mystère de Noël`, information spéciale ;
+- le 24 décembre : possibilité d’utiliser un pop-up spécifique pour annoncer l’ouverture de la finale du `Mystère de Noël` et proposer un bouton vers le calendrier/la finale.
+
+### Administration
+
+Dans l’éditeur d’une journée, prévoir une option simple :
+
+`Activer un pop-up pour cette journée`
+
+Les réglages détaillés du pop-up restent **masqués tant que cette option n’est pas cochée**, conformément au fonctionnement général déjà validé pour les pop-ups de l’extension.
+
+Une fois activé, le jour doit pouvoir définir au minimum :
+
+- titre du pop-up ;
+- texte du pop-up ;
+- visuel éventuel ;
+- libellé du bouton éventuel ;
+- destination du bouton ;
+- date/heure d’ouverture si différente du jour ;
+- règle d’affichage/fréquence compatible avec le moteur existant, notamment éviter de réafficher agressivement le même pop-up à chaque action si le moteur permet un affichage limité.
+
+Tous les textes du pop-up doivent disposer de valeurs par défaut utiles mais rester modifiables.
+
+### Principe UX
+
+Le calendrier et sa grille restent l’expérience principale. Le pop-up sert uniquement de mise en avant ponctuelle et ne doit jamais devenir obligatoire pour consulter ou participer au jeu quotidien.
+
+Cette fonctionnalité **nécessite une nouvelle mise à jour/version de l’extension** et doit être intégrée en réutilisant l’architecture de pop-up existante.
+
 ## Première cible de développement
 
 Produire un premier prototype installable permettant déjà de tester :
