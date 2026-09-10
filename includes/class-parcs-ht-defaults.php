@@ -8,7 +8,7 @@ final class Parcs_HT_Defaults {
     const OPTION = 'parcs_ht_settings';
     const BACKUP_OPTION = 'parcs_ht_settings_backup_pre_1_1_0';
     const POPUP_FLAG_OPTION = 'parcs_ht_has_popup_source';
-    const SCHEMA_VERSION = 26;
+    const SCHEMA_VERSION = 27;
 
     public static function svg_allowed_tags() {
         return array(
@@ -108,6 +108,7 @@ final class Parcs_HT_Defaults {
             $saved = self::upgrade_v160_structures($saved, $version);
             $saved = self::upgrade_v171_structures($saved, $version);
             $saved = self::upgrade_v172_structures($saved, $version);
+            $saved = self::upgrade_v156_structures($saved, $version);
             $saved['schema_version'] = self::SCHEMA_VERSION;
             update_option(self::OPTION, $saved, false);
             return;
@@ -830,6 +831,53 @@ final class Parcs_HT_Defaults {
         return $settings;
     }
 
+
+    private static function upgrade_v156_structures($settings, $from_version) {
+        unset($from_version);
+        if (!is_array($settings)) return $settings;
+        if (!isset($settings['general']) || !is_array($settings['general'])) $settings['general'] = array();
+        if (!isset($settings['general']['calendar_hours_title']) || !is_array($settings['general']['calendar_hours_title'])) {
+            $settings['general']['calendar_hours_title'] = array(
+                'fr' => 'Horaires du parc',
+                'en' => 'Park opening hours',
+                'de' => 'Öffnungszeiten des Parks',
+            );
+        }
+        $site_type = sanitize_key((string)($settings['site_type'] ?? ''));
+        $highlight = sanitize_hex_color((string)($settings['general']['highlight_color'] ?? '')) ?: '#e7c55b';
+        if (isset($settings['seasons']) && is_array($settings['seasons'])) {
+            foreach ($settings['seasons'] as &$season) {
+                if (!is_array($season) || !isset($season['domain_rules']) || !is_array($season['domain_rules'])) continue;
+                foreach ($season['domain_rules'] as &$rule) {
+                    if (!is_array($rule)) continue;
+                    if (empty($rule['color']) || !sanitize_hex_color((string)$rule['color'])) $rule['color'] = $highlight;
+                    if (!isset($rule['access_message']) || !is_array($rule['access_message'])) {
+                        $rule['access_message'] = $site_type === 'mds'
+                            ? array(
+                                'fr' => 'Le Domaine des Singes n’est pas accessible de {pause_start} à {resume}.',
+                                'en' => 'The monkey area is not accessible from {pause_start} to {resume}.',
+                                'de' => 'Der Affenbereich ist von {pause_start} bis {resume} nicht zugänglich.',
+                            )
+                            : array(
+                                'fr' => 'Cette zone n’est pas accessible de {pause_start} à {resume}.',
+                                'en' => 'This area is not accessible from {pause_start} to {resume}.',
+                                'de' => 'Dieser Bereich ist von {pause_start} bis {resume} nicht zugänglich.',
+                            );
+                    }
+                    if (!isset($rule['details_message']) || !is_array($rule['details_message'])) {
+                        $rule['details_message'] = array(
+                            'fr' => 'Dernière entrée : {last_entry} · Reprise des visites : {resume}',
+                            'en' => 'Last admission: {last_entry} · Visits resume: {resume}',
+                            'de' => 'Letzter Einlass: {last_entry} · Besuche wieder ab: {resume}',
+                        );
+                    }
+                }
+                unset($rule);
+            }
+            unset($season);
+        }
+        return $settings;
+    }
 
     private static function upgrade_v172_structures($settings, $from_version) {
         if (!is_array($settings)) return $settings;

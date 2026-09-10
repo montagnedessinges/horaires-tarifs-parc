@@ -346,6 +346,8 @@
     var heading=document.createElement('h3');heading.textContent=dateLabel(date,language);box.appendChild(heading);
     var hours=document.createElement('p');hours.className='parcs-ht-day-hours';
     if(status.open)hours.textContent=dayRanges(status,language);else hours.textContent=(status.exceptional&&(!status.exception||String(status.exception.show_public_marker)!=='0'))?d.exceptionalClosure:d.closed;
+    var parkHoursTitle=translated((settings.general||{}).calendar_hours_title,language)||(language==='en'?'Park opening hours':language==='de'?'Öffnungszeiten des Parks':'Horaires du parc');
+    var parkTitle=document.createElement('p');parkTitle.className='parcs-ht-park-hours-title';parkTitle.textContent=parkHoursTitle;box.appendChild(parkTitle);
     box.appendChild(hours);
     if(status.open){var last=document.createElement('p');last.className='parcs-ht-day-last';last.textContent=text(d.lastEntry,{time:timeLabel(lastEntryTime(status),language)});box.appendChild(last);}
     if(status.exceptional && (!status.exception || String(status.exception.show_public_marker)!=='0')){var context=translated(status.exception.context,language),title=translated(status.exception.title,language),message=translated(status.exception.message,language),note=document.createElement('div');note.className='parcs-ht-exception-note';var parts=[];if(context)parts.push(context);if(title)parts.push(title);if(message)parts.push(message);note.textContent=parts.join(' — ');if(note.textContent)box.appendChild(note);}
@@ -355,6 +357,8 @@
       if(rule){
         var domain=document.createElement('div');
         domain.className='parcs-ht-domain-note';
+        var domainColor=String(rule.color||(settings.general||{}).highlight_color||'#e7c55b');
+        domain.style.setProperty('--htp-domain-color',domainColor);
         var title=translated(rule.public_title,language)||'';
         var titleRow=document.createElement('div');
         titleRow.className='parcs-ht-domain-title-row';
@@ -363,11 +367,11 @@
         if(tooltip)titleRow.appendChild(tooltip);
         if(titleRow.childNodes.length)domain.appendChild(titleRow);
         if(String(rule.auto_details)!=='0'){
-          var lines=[];
-          if(rule.last_entry)lines.push((language==='en'?'Last admission: ':language==='de'?'Letzter Einlass: ':'Dernière entrée : ')+timeLabel(rule.last_entry,language));
-          if(rule.pause_start&&rule.resume)lines.push((language==='en'?'Pause: ':language==='de'?'Pause: ':'Interruption : ')+timeLabel(rule.pause_start,language)+'–'+timeLabel(rule.resume,language));
-          if(rule.resume)lines.push((language==='en'?'Visits resume: ':language==='de'?'Besuche wieder ab: ':'Reprise des visites : ')+timeLabel(rule.resume,language));
-          lines.forEach(function(line){var p=document.createElement('p');p.textContent=line;domain.appendChild(p);});
+          var values={pause_start:timeLabel(rule.pause_start,language),resume:timeLabel(rule.resume,language),last_entry:timeLabel(rule.last_entry,language)};
+          var accessTemplate=translated(rule.access_message,language)||(language==='en'?'This area is not accessible from {pause_start} to {resume}.':language==='de'?'Dieser Bereich ist von {pause_start} bis {resume} nicht zugänglich.':'Cette zone n’est pas accessible de {pause_start} à {resume}.');
+          var detailsTemplate=translated(rule.details_message,language)||(language==='en'?'Last admission: {last_entry} · Visits resume: {resume}':language==='de'?'Letzter Einlass: {last_entry} · Besuche wieder ab: {resume}':'Dernière entrée : {last_entry} · Reprise des visites : {resume}');
+          if(rule.pause_start&&rule.resume){var accessLine=document.createElement('p');accessLine.className='parcs-ht-domain-access';accessLine.textContent=text(accessTemplate,values);domain.appendChild(accessLine);}
+          if(rule.last_entry||rule.resume){var detailsLine=document.createElement('p');detailsLine.className='parcs-ht-domain-times';detailsLine.textContent=text(detailsTemplate,values);domain.appendChild(detailsLine);}
         }
         var info=translated(rule.info,language);
         if(info){var ip=document.createElement('p');ip.className='parcs-ht-domain-extra';ip.textContent=info;domain.appendChild(ip);}

@@ -309,7 +309,7 @@ final class Parcs_HT_Schedule {
         $general = isset($all['general']) && is_array($all['general']) ? $all['general'] : array();
         $public_general = array();
         foreach (array(
-            'last_entry_minutes', 'accent_color', 'event_legend_label',
+            'last_entry_minutes', 'accent_color', 'calendar_hours_title', 'event_legend_label',
             'show_public_holidays', 'holiday_message', 'holiday_border_color',
             'holiday_border_width'
         ) as $key) {

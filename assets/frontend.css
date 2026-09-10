@@ -691,3 +691,13 @@
 .parcs-ht-schedule-export-button .parcs-ht-pdf-mark{font-size:9px;font-weight:800;letter-spacing:.04em}
 @media(max-width:600px){.parcs-ht-schedule-export{justify-content:center}.parcs-ht-schedule-export-button{font-size:11px}}
 .parcs-ht-modal-open{overflow:hidden}
+
+/* 1.15.6 — hiérarchie horaires du parc / accès limité */
+.parcs-ht-park-hours-title{margin:10px 0 4px!important;color:inherit!important;font-size:.86em!important;font-weight:850!important;letter-spacing:.04em;text-transform:uppercase;opacity:.72}
+.parcs-ht-domain-note{margin:12px 0 0!important;padding:11px 13px!important;border-top:0!important;border-left:4px solid var(--htp-domain-color,var(--htp-highlight,#e7c55b))!important;border-radius:9px;background:color-mix(in srgb,var(--htp-domain-color,var(--htp-highlight,#e7c55b)) 12%,transparent)!important;opacity:1!important}
+.parcs-ht-domain-note .parcs-ht-domain-title-row{display:flex;align-items:center;gap:7px;margin:0 0 5px;color:inherit}
+.parcs-ht-domain-note .parcs-ht-domain-title-row strong{display:inline;margin:0;font-size:1.03em!important}
+.parcs-ht-domain-note .parcs-ht-domain-access{display:block;margin:0!important;font-weight:650}
+.parcs-ht-domain-note .parcs-ht-domain-times{display:block;margin:3px 0 0!important;font-weight:800}
+.parcs-ht-domain-note .parcs-ht-domain-extra{display:block;margin:6px 0 0!important;opacity:.88}
+@media(max-width:720px){.parcs-ht-park-hours-title{margin-top:6px!important;font-size:10px!important}.parcs-ht-domain-note{margin-top:7px!important;padding:8px 9px!important}.parcs-ht-domain-note .parcs-ht-domain-times{margin-top:2px!important}}
