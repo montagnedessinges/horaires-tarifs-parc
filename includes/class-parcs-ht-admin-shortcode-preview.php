@@ -129,6 +129,15 @@ final class Parcs_HT_Admin_Shortcode_Preview {
         );
     }
 
+    private static function advent_preview_assets() {
+        if (!class_exists('Parcs_HT_Advent')) return;
+        Parcs_HT_Advent::register_assets();
+        wp_enqueue_style('parcs-ht-advent');
+        if (class_exists('Parcs_HT_Advent_Appearance')) {
+            Parcs_HT_Advent_Appearance::frontend_styles();
+        }
+    }
+
     public static function frame() {
         if (!current_user_can('manage_options')) wp_die('Accès refusé.', '', array('response' => 403));
         check_ajax_referer(self::NONCE_ACTION);
@@ -149,7 +158,8 @@ final class Parcs_HT_Admin_Shortcode_Preview {
         $background = self::requested_string('background');
         if (!preg_match('/^#[0-9a-f]{6}$/i', $background)) $background = '#ffffff';
 
-        if (class_exists('Parcs_HT_Advent') && ($definitions[$base]['kind'] ?? '') === 'advent') {
+        $is_advent = class_exists('Parcs_HT_Advent') && ($definitions[$base]['kind'] ?? '') === 'advent';
+        if ($is_advent) {
             $advent_campaign = Parcs_HT_Advent::current_campaign(true);
             $advent_timezone = is_array($advent_campaign) && !empty($advent_campaign['timezone']) ? (string)$advent_campaign['timezone'] : $timezone;
             Parcs_HT_Advent::set_preview_datetime($preview_date, $preview_time, $advent_timezone);
@@ -160,6 +170,7 @@ final class Parcs_HT_Admin_Shortcode_Preview {
             'dictionary' => Parcs_HT_Schedule::dictionaries(),
         );
         $html = Parcs_HT_Shortcode_Registry::render_preview($base, $language);
+        if ($is_advent) self::advent_preview_assets();
         self::frame_assets($payload, $preview_ms, $background);
 
         nocache_headers();
