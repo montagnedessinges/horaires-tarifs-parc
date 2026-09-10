@@ -347,7 +347,7 @@
     var hours=document.createElement('p');hours.className='parcs-ht-day-hours';
     if(status.open)hours.textContent=dayRanges(status,language);else hours.textContent=(status.exceptional&&(!status.exception||String(status.exception.show_public_marker)!=='0'))?d.exceptionalClosure:d.closed;
     var parkHoursTitle=translated((settings.general||{}).calendar_hours_title,language)||(language==='en'?'Park opening hours':language==='de'?'Öffnungszeiten des Parks':'Horaires du parc');
-    var parkTitle=document.createElement('p');parkTitle.className='parcs-ht-park-hours-title';parkTitle.textContent=parkHoursTitle;box.insertBefore(parkTitle,hours);
+    var parkTitle=document.createElement('p');parkTitle.className='parcs-ht-park-hours-title';parkTitle.textContent=parkHoursTitle;box.appendChild(parkTitle);
     box.appendChild(hours);
     if(status.open){var last=document.createElement('p');last.className='parcs-ht-day-last';last.textContent=text(d.lastEntry,{time:timeLabel(lastEntryTime(status),language)});box.appendChild(last);}
     if(status.exceptional && (!status.exception || String(status.exception.show_public_marker)!=='0')){var context=translated(status.exception.context,language),title=translated(status.exception.title,language),message=translated(status.exception.message,language),note=document.createElement('div');note.className='parcs-ht-exception-note';var parts=[];if(context)parts.push(context);if(title)parts.push(title);if(message)parts.push(message);note.textContent=parts.join(' — ');if(note.textContent)box.appendChild(note);}
