@@ -49,6 +49,36 @@ Les feuilles `IMPORT plugin - référentiel` des deux fichiers Google Sheets 202
 - Prévoir une autorisation temporaire signée après mot correct et une limitation raisonnable des tentatives.
 - Le plugin ne publie jamais automatiquement sur Facebook ou Instagram.
 
+## Habillage visuel validé pour la prochaine mise à jour
+
+Le prototype actuel est jugé globalement propre : ne pas refaire entièrement la structure ni déplacer le visuel 4:5. L’objectif de la prochaine mise à jour est surtout de **l’habiller avec davantage de couleur**, sans surcharger la page.
+
+À intégrer :
+
+- conserver la disposition actuelle visuel 4:5 à gauche / contenu à droite sur écran large ;
+- conserver la grille simple des 24 jours ;
+- utiliser des couleurs d’accent pour mieux distinguer `Partenaire`, `Lot du jour`, `Question du jour`, `Résultat` et `Mystère de Noël` ;
+- prévoir des états de couleur clairement distincts pour les cases : fermée, ouverte, jour courant, résultat disponible et éventuellement jour avec indice ;
+- rendre le bloc `Mystère de Noël` plus identifiable visuellement avec un fond ou accent léger ;
+- rendre le bloc `Résultat` plus identifiable sans modifier profondément la mise en page ;
+- distinguer visuellement les gagnants Facebook et Instagram avec des badges ou repères simples ;
+- afficher l’indice révélé dans un encadré identifiable comme `Indice du Mystère de Noël` ;
+- conserver des fonds majoritairement transparents ou légers et hériter autant que possible des couleurs du thème, conformément aux règles générales du plugin ;
+- éviter les gros contours noirs qui donnent un effet technique/focus ; privilégier une mise en avant plus douce et cohérente avec le thème du site ;
+- ne pas imposer une palette figée commune aux deux parcs : les couleurs doivent pouvoir s’adapter au thème ou être configurables.
+
+### Partenaires cliquables
+
+Le partenaire affiché dans le détail d’un jour doit être cliquable lorsqu’un lien est disponible.
+
+Priorité de destination recommandée :
+
+1. Instagram du partenaire si renseigné ;
+2. sinon Facebook du partenaire si renseigné ;
+3. sinon site web du partenaire si renseigné.
+
+Le lien partenaire s’ouvre dans un nouvel onglet afin de conserver la page Calendrier de l’Avent ouverte. Le nom peut être accompagné d’un bouton ou pictogramme discret `Voir le partenaire`, notamment sur mobile.
+
 ## Première cible de développement
 
 Produire un premier prototype installable permettant déjà de tester :
