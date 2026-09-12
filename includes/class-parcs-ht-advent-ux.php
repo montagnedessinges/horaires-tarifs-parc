@@ -21,6 +21,7 @@ final class Parcs_HT_Advent_UX {
         add_action('admin_post_parcs_ht_advent_save_content', array(__CLASS__, 'capture_popup_before_content_save'), 5);
         add_action('admin_enqueue_scripts', array(__CLASS__, 'admin_assets'), 60);
         add_action('wp_footer', array(__CLASS__, 'frontend_assets'), 5);
+        add_action('wp_print_footer_scripts', array(__CLASS__, 'preview_assets'), 1);
 
         if (!is_admin() && self::has_any_enabled_popup()) {
             if (!class_exists('Parcs_HT_Alerts')) {
@@ -228,9 +229,11 @@ final class Parcs_HT_Advent_UX {
     private static function public_payload() {
         $store = Parcs_HT_Advent::store();
         $park = Parcs_HT_Advent::installation_park_code();
+        $can_preview = current_user_can('manage_options');
         $payload = array('campaigns'=>array());
         foreach ((array)($store['campaigns'] ?? array()) as $campaign_id => $campaign) {
             if (!is_array($campaign) || (string)($campaign['parc_code'] ?? '') !== $park) continue;
+            if (!$can_preview && (string)($campaign['statut_campagne'] ?? '') !== 'active') continue;
             $row = array(
                 'participateText' => (string)($campaign['texte_comment_participer_fr'] ?? ''),
                 'dailyText' => (string)($campaign['reglement_quotidien_fr'] ?? ''),
@@ -262,8 +265,8 @@ final class Parcs_HT_Advent_UX {
         return $payload;
     }
 
-    public static function frontend_assets() {
-        if (is_admin() || !wp_script_is('parcs-ht-advent', 'enqueued')) return;
+    private static function enqueue_frontend_assets() {
+        if (!wp_script_is('parcs-ht-advent', 'enqueued')) return;
         wp_enqueue_script(
             'parcs-ht-advent-ux',
             PARCS_HT_URL . 'assets/advent-ux.js',
@@ -276,6 +279,17 @@ final class Parcs_HT_Advent_UX {
             'window.ParcsHTAdventUX=' . wp_json_encode(self::public_payload()) . ';',
             'before'
         );
+    }
+
+    public static function frontend_assets() {
+        if (is_admin()) return;
+        self::enqueue_frontend_assets();
+    }
+
+    /** Charge aussi l’enrichissement dans l’iframe d’aperçu administrateur. */
+    public static function preview_assets() {
+        if (!is_admin()) return;
+        self::enqueue_frontend_assets();
     }
 
     public static function admin_assets($hook) {
