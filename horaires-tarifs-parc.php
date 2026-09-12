@@ -123,7 +123,10 @@ add_action('plugins_loaded', static function () {
             update_option('parcs_ht_tariff_seasons_migrated_193', '1', false);
         }
     } else {
-        if (Parcs_HT_Defaults::has_popup_source_fast()) { require_once PARCS_HT_DIR . 'includes/class-parcs-ht-alerts.php'; Parcs_HT_Alerts::init(); }
+        if (Parcs_HT_Defaults::has_popup_source_fast()) {
+            require_once PARCS_HT_DIR . 'includes/class-parcs-ht-alerts.php';
+            if (!has_action('wp_footer', array('Parcs_HT_Alerts', 'render_auto_popup'))) Parcs_HT_Alerts::init();
+        }
     }
     Parcs_HT_Group_Tariffs::init();
     Parcs_HT_Guide_Stats::init();
