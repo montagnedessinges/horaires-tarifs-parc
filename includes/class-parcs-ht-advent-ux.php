@@ -153,8 +153,10 @@ final class Parcs_HT_Advent_UX {
         $store = self::store();
         if (!$store['campaigns']) return $saved;
         $advent = Parcs_HT_Advent::store();
-        $park = Parcs_HT_Advent::installation_park_code();
-        if ($park === '') return $saved;
+        // Important : ce filtre s’exécute pendant la lecture de parcs_ht_settings.
+        // Le code parc est donc lu directement dans la valeur filtrée pour ne pas rappeler get_option() récursivement.
+        $park = sanitize_key((string)($saved['site_type'] ?? ''));
+        if (!in_array($park, array('mds','fds'), true)) return $saved;
         if (!isset($saved['alerts']) || !is_array($saved['alerts'])) $saved['alerts'] = array();
 
         foreach ((array)($advent['campaigns'] ?? array()) as $campaign_id => $campaign) {
