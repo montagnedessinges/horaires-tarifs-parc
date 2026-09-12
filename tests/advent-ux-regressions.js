@@ -90,8 +90,9 @@ function createDom(language, introText) {
 
     const day2 = calendar.querySelector('[data-content-id="jour-02"]');
     day2.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
-    assert(facebook.href === 'https://facebook.com/parc/', 'Facebook button falls back to park account for selected day without exact post');
-    assert(instagram.href === 'https://instagram.com/post-jour-2/', 'Instagram button follows exact selected-day post when available');
+    assert(calendar.dataset.adventUxContentId === 'jour-02', 'selected day is recorded before social links are refreshed; actual=' + String(calendar.dataset.adventUxContentId || ''));
+    assert(facebook.href === 'https://facebook.com/parc/', 'Facebook button falls back to park account for selected day without exact post; actual=' + facebook.href);
+    assert(instagram.href === 'https://instagram.com/post-jour-2/', 'Instagram button follows exact selected-day post when available; actual=' + instagram.href);
 }());
 
 (function testGermanDoesNotReceiveFrenchOverrides() {
