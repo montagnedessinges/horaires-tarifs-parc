@@ -19,13 +19,13 @@ function advent_ux_check($condition, $message) {
 advent_ux_check(strpos($main, 'class-parcs-ht-advent-ux.php') !== false && strpos($main, 'Parcs_HT_Advent_UX::init()') !== false, 'Advent UX module is bootstrapped');
 advent_ux_check(strpos($ux, "const OPTION = 'parcs_ht_advent_ux'") !== false && strpos($ux, 'const SCHEMA_VERSION = 1') !== false, 'Advent UX uses a dedicated lightweight store');
 advent_ux_check(strpos($ux, "add_filter('option_' . Parcs_HT_Defaults::OPTION") !== false, 'daily Advent popups are injected into the existing alert settings');
-advent_ux_check(strpos($ux, "Parcs_HT_Alerts::init()") !== false && strpos($ux, "class-parcs-ht-alerts.php") !== false, 'Advent popups reuse the existing popup engine');
-advent_ux_check(strpos($ux, "admin_post_parcs_ht_advent_save_content") !== false && strpos($ux, 'capture_popup_before_content_save') !== false, 'popup settings are captured from the canonical day editor');
-advent_ux_check(strpos($ux, "wp_verify_nonce($nonce, 'parcs_ht_advent_save_content')") !== false && strpos($ux, "current_user_can('manage_options')") !== false, 'popup settings keep the canonical admin security boundary');
+advent_ux_check(strpos($ux, 'Parcs_HT_Alerts::init()') !== false && strpos($ux, 'class-parcs-ht-alerts.php') !== false, 'Advent popups reuse the existing popup engine');
+advent_ux_check(strpos($ux, 'admin_post_parcs_ht_advent_save_content') !== false && strpos($ux, 'capture_popup_before_content_save') !== false, 'popup settings are captured from the canonical day editor');
+advent_ux_check(strpos($ux, "wp_verify_nonce(\$nonce, 'parcs_ht_advent_save_content')") !== false && strpos($ux, "current_user_can('manage_options')") !== false, 'popup settings keep the canonical admin security boundary');
 advent_ux_check(strpos($ux, "'enabled' => '0'") !== false && strpos($ux, "'show_button' => '1'") !== false, 'daily popup remains opt-in');
-advent_ux_check(strpos($ux, "if ($start === '') $start = self::content_open_datetime") !== false, 'popup start can inherit the day opening time');
-advent_ux_check(strpos($ux, "$end = $date . 'T23:59'") !== false, 'popup end defaults to the end of the same day');
-advent_ux_check(strpos($ux, "partner_url") !== false && strpos($ux, "instagram_url_override") !== false && strpos($ux, "facebook_url_override") !== false && strpos($ux, "site_url") !== false, 'partner destination follows Instagram then Facebook then website data');
+advent_ux_check(strpos($ux, "if (\$start === '') \$start = self::content_open_datetime") !== false, 'popup start can inherit the day opening time');
+advent_ux_check(strpos($ux, "\$end = \$date . 'T23:59'") !== false, 'popup end defaults to the end of the same day');
+advent_ux_check(strpos($ux, 'partner_url') !== false && strpos($ux, 'instagram_url_override') !== false && strpos($ux, 'facebook_url_override') !== false && strpos($ux, 'site_url') !== false, 'partner destination follows Instagram then Facebook then website data');
 
 advent_ux_check(strpos($frontend, 'Jeu quotidien') !== false && strpos($frontend, 'Mystère de Noël') !== false, 'participation panel exposes the two validated columns');
 advent_ux_check(strpos($frontend, 'Participer sur Facebook') !== false && strpos($frontend, 'Participer sur Instagram') !== false, 'participation panel exposes both social actions');
