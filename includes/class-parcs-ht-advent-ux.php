@@ -130,18 +130,18 @@ final class Parcs_HT_Advent_UX {
         $type = sanitize_key((string)($content['type_contenu'] ?? ''));
         if ($campaign_id === '' || $content_id === '' || $type !== 'jour') return;
         if (!Parcs_HT_Advent::campaign($campaign_id, true)) return;
+        if (!isset($_POST['advent_popup']) || !is_array($_POST['advent_popup'])) return;
 
-        $popup = array();
-        if (isset($_POST['advent_popup']) && is_array($_POST['advent_popup'])) {
-            $popup['enabled'] = isset($_POST['advent_popup']['enabled']) ? sanitize_text_field(wp_unslash($_POST['advent_popup']['enabled'])) : '0';
-            $popup['title_fr'] = isset($_POST['advent_popup']['title_fr']) ? sanitize_text_field(wp_unslash($_POST['advent_popup']['title_fr'])) : '';
-            $popup['message_fr'] = isset($_POST['advent_popup']['message_fr']) ? sanitize_textarea_field(wp_unslash($_POST['advent_popup']['message_fr'])) : '';
-            $popup['start'] = isset($_POST['advent_popup']['start']) ? sanitize_text_field(wp_unslash($_POST['advent_popup']['start'])) : '';
-            $popup['end'] = isset($_POST['advent_popup']['end']) ? sanitize_text_field(wp_unslash($_POST['advent_popup']['end'])) : '';
-            $popup['show_button'] = isset($_POST['advent_popup']['show_button']) ? sanitize_text_field(wp_unslash($_POST['advent_popup']['show_button'])) : '0';
-            $popup['button_label_fr'] = isset($_POST['advent_popup']['button_label_fr']) ? sanitize_text_field(wp_unslash($_POST['advent_popup']['button_label_fr'])) : '';
-            $popup['button_url'] = isset($_POST['advent_popup']['button_url']) ? esc_url_raw(wp_unslash($_POST['advent_popup']['button_url'])) : '';
-        }
+        $popup = array(
+            'enabled' => isset($_POST['advent_popup']['enabled']) ? sanitize_text_field(wp_unslash($_POST['advent_popup']['enabled'])) : '0',
+            'title_fr' => isset($_POST['advent_popup']['title_fr']) ? sanitize_text_field(wp_unslash($_POST['advent_popup']['title_fr'])) : '',
+            'message_fr' => isset($_POST['advent_popup']['message_fr']) ? sanitize_textarea_field(wp_unslash($_POST['advent_popup']['message_fr'])) : '',
+            'start' => isset($_POST['advent_popup']['start']) ? sanitize_text_field(wp_unslash($_POST['advent_popup']['start'])) : '',
+            'end' => isset($_POST['advent_popup']['end']) ? sanitize_text_field(wp_unslash($_POST['advent_popup']['end'])) : '',
+            'show_button' => isset($_POST['advent_popup']['show_button']) ? sanitize_text_field(wp_unslash($_POST['advent_popup']['show_button'])) : '0',
+            'button_label_fr' => isset($_POST['advent_popup']['button_label_fr']) ? sanitize_text_field(wp_unslash($_POST['advent_popup']['button_label_fr'])) : '',
+            'button_url' => isset($_POST['advent_popup']['button_url']) ? esc_url_raw(wp_unslash($_POST['advent_popup']['button_url'])) : '',
+        );
         self::save_popup($campaign_id, $content_id, $popup);
     }
 
