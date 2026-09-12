@@ -88,10 +88,12 @@
         if (facebook) {
             facebook.hidden = !urls.facebook;
             if (urls.facebook) facebook.href = urls.facebook;
+            else facebook.removeAttribute('href');
         }
         if (instagram) {
             instagram.hidden = !urls.instagram;
             if (urls.instagram) instagram.href = urls.instagram;
+            else instagram.removeAttribute('href');
         }
     }
 
@@ -202,6 +204,22 @@
         }
     }
 
+    function selectDay(root, campaign, button) {
+        if (!button || button.disabled) return;
+        root.dataset.adventUxContentId = String(button.getAttribute('data-content-id') || '');
+        updateSocialButtons(root, campaign);
+    }
+
+    function bindDayButtons(root, campaign) {
+        root.querySelectorAll('[data-advent-day]').forEach(function (button) {
+            if (button.dataset.adventUxBound === '1') return;
+            button.dataset.adventUxBound = '1';
+            button.addEventListener('click', function () {
+                selectDay(root, campaign, button);
+            }, true);
+        });
+    }
+
     function enhanceRoot(root) {
         if (!root || root.dataset.adventUxRoot === '1') return;
         var campaignId = String(root.getAttribute('data-campaign-id') || '');
@@ -210,18 +228,13 @@
         root.dataset.adventUxRoot = '1';
 
         enhanceParticipation(root, campaign);
-
-        root.addEventListener('click', function (event) {
-            var button = event.target.closest('[data-advent-day]');
-            if (!button || button.disabled) return;
-            root.dataset.adventUxContentId = String(button.getAttribute('data-content-id') || '');
-            updateSocialButtons(root, campaign);
-        }, true);
+        bindDayButtons(root, campaign);
 
         var detail = root.querySelector('[data-advent-detail]');
         if (detail) {
             var observer = new MutationObserver(function () {
                 enhancePartner(root, campaign);
+                bindDayButtons(root, campaign);
             });
             observer.observe(detail, {childList:true, subtree:true});
             enhancePartner(root, campaign);
