@@ -81,18 +81,18 @@ function createDom(language, introText) {
 
     const facebook = document.querySelector('[data-advent-ux-facebook]');
     const instagram = document.querySelector('[data-advent-ux-instagram]');
-    assert(facebook.href === 'https://facebook.com/post-jour-1', 'Facebook button prefers exact current-day post');
-    assert(instagram.href === 'https://instagram.com/parc/', 'Instagram button falls back to park account when day URL is empty');
+    assert(facebook.getAttribute('href') === 'https://facebook.com/post-jour-1', 'Facebook button prefers exact current-day post');
+    assert(instagram.getAttribute('href') === 'https://instagram.com/parc/', 'Instagram button falls back to park account when day URL is empty');
 
     const partner = document.querySelector('.parcs-ht-advent-partner-link');
-    assert(partner && partner.href === 'https://instagram.com/partenaire-test/', 'partner name becomes clickable with configured destination');
+    assert(partner && partner.getAttribute('href') === 'https://instagram.com/partenaire-test/', 'partner name becomes clickable with configured destination');
     assert(partner.target === '_blank', 'partner link opens in a new tab');
 
     const day2 = calendar.querySelector('[data-content-id="jour-02"]');
     day2.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
-    assert(calendar.dataset.adventUxContentId === 'jour-02', 'selected day is recorded before social links are refreshed; actual=' + String(calendar.dataset.adventUxContentId || ''));
-    assert(facebook.href === 'https://facebook.com/parc/', 'Facebook button falls back to park account for selected day without exact post; actual=' + facebook.href);
-    assert(instagram.href === 'https://instagram.com/post-jour-2/', 'Instagram button follows exact selected-day post when available; actual=' + instagram.href);
+    assert(calendar.dataset.adventUxContentId === 'jour-02', 'selected day is recorded before social links are refreshed');
+    assert(facebook.getAttribute('href') === 'https://facebook.com/parc', 'Facebook button falls back to park account for selected day without exact post');
+    assert(instagram.getAttribute('href') === 'https://instagram.com/post-jour-2/', 'Instagram button follows exact selected-day post when available');
 }());
 
 (function testGermanDoesNotReceiveFrenchOverrides() {
