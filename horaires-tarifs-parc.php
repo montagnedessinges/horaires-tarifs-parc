@@ -42,6 +42,7 @@ require_once PARCS_HT_DIR . 'includes/class-parcs-ht-save-integrity.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin-shortcode-preview.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-advent.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-advent-appearance.php';
+require_once PARCS_HT_DIR . 'includes/class-parcs-ht-advent-ux.php';
 Parcs_HT_HTTP_SSL::init();
 Parcs_HT_Tariff_Seasons::init();
 Parcs_HT_Season_Status::init();
@@ -89,6 +90,7 @@ add_action('plugins_loaded', static function () {
     Parcs_HT_Bootstrap::init();
     Parcs_HT_Advent::init();
     Parcs_HT_Advent_Appearance::init();
+    Parcs_HT_Advent_UX::init();
     if (is_admin()) {
         require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin.php';
         require_once PARCS_HT_DIR . 'includes/class-parcs-ht-advent-admin.php';
