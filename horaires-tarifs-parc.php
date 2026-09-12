@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Gestion du parc
  * Description: Gestion centralisée des horaires, calendriers, tarifs, événements, devis et outils du parc.
- * Version: 1.15.6
+ * Version: 1.15.7
  * Update URI: https://github.com/montagnedessinges/horaires-tarifs-parc
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -12,7 +12,7 @@
 
 if (!defined('ABSPATH')) { exit; }
 
-define('PARCS_HT_VERSION', '1.15.6');
+define('PARCS_HT_VERSION', '1.15.7');
 define('PARCS_HT_FILE', __FILE__);
 define('PARCS_HT_DIR', plugin_dir_path(__FILE__));
 define('PARCS_HT_URL', plugin_dir_url(__FILE__));
@@ -42,6 +42,7 @@ require_once PARCS_HT_DIR . 'includes/class-parcs-ht-save-integrity.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin-shortcode-preview.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-advent.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-advent-appearance.php';
+require_once PARCS_HT_DIR . 'includes/class-parcs-ht-advent-ux.php';
 Parcs_HT_HTTP_SSL::init();
 Parcs_HT_Tariff_Seasons::init();
 Parcs_HT_Season_Status::init();
@@ -89,6 +90,7 @@ add_action('plugins_loaded', static function () {
     Parcs_HT_Bootstrap::init();
     Parcs_HT_Advent::init();
     Parcs_HT_Advent_Appearance::init();
+    Parcs_HT_Advent_UX::init();
     if (is_admin()) {
         require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin.php';
         require_once PARCS_HT_DIR . 'includes/class-parcs-ht-advent-admin.php';
@@ -121,7 +123,10 @@ add_action('plugins_loaded', static function () {
             update_option('parcs_ht_tariff_seasons_migrated_193', '1', false);
         }
     } else {
-        if (Parcs_HT_Defaults::has_popup_source_fast()) { require_once PARCS_HT_DIR . 'includes/class-parcs-ht-alerts.php'; Parcs_HT_Alerts::init(); }
+        if (Parcs_HT_Defaults::has_popup_source_fast()) {
+            require_once PARCS_HT_DIR . 'includes/class-parcs-ht-alerts.php';
+            if (!has_action('wp_footer', array('Parcs_HT_Alerts', 'render_auto_popup'))) Parcs_HT_Alerts::init();
+        }
     }
     Parcs_HT_Group_Tariffs::init();
     Parcs_HT_Guide_Stats::init();
