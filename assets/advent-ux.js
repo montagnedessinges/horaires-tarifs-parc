@@ -10,6 +10,8 @@
         style.id = 'parcs-ht-advent-ux-css';
         style.textContent = [
             '.parcs-ht-advent-participation-intro{margin:0 0 14px}',
+            '.parcs-ht-advent-participation-intro>:first-child{margin-top:0}',
+            '.parcs-ht-advent-participation-intro>:last-child{margin-bottom:0}',
             '.parcs-ht-advent-participation-layout{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:14px}',
             '.parcs-ht-advent-participation-card{min-width:0;padding:16px;border:1px solid color-mix(in srgb,var(--htp-advent-secondary,currentColor) 22%,transparent);border-radius:12px;background:var(--htp-advent-secondary-bg,transparent)}',
             '.parcs-ht-advent-participation-card.is-mystery{border-color:color-mix(in srgb,var(--htp-advent-special,currentColor) 28%,transparent);background:var(--htp-advent-special-bg,transparent)}',
@@ -93,6 +95,17 @@
         }
     }
 
+    function translatedIntroNodes(panel, rulesLink) {
+        var rulesContainer = rulesLink ? rulesLink.closest('p') : null;
+        var nodes = [];
+        Array.prototype.slice.call(panel.childNodes).forEach(function (node) {
+            if (rulesContainer && node === rulesContainer) return;
+            if (node.nodeType === 3 && !String(node.textContent || '').trim()) return;
+            nodes.push(node.cloneNode(true));
+        });
+        return nodes;
+    }
+
     function enhanceParticipation(root, campaign) {
         var panel = root.querySelector('[data-advent-participation-panel]');
         if (!panel || panel.dataset.adventUxReady === '1') return;
@@ -103,17 +116,20 @@
         var existingRules = panel.querySelector('a.parcs-ht-advent-link');
         var rulesLabel = existingRules ? existingRules.textContent.trim() : (campaign.rulesLabel || '');
         var rulesUrl = existingRules ? existingRules.getAttribute('href') : (campaign.rulesUrl || '');
+        var introNodes = translatedIntroNodes(panel, existingRules);
 
         panel.innerHTML = '';
 
-        if (campaign.participateText) {
-            panel.appendChild(element('p', 'parcs-ht-advent-participation-intro', campaign.participateText));
+        if (introNodes.length) {
+            var intro = element('div', 'parcs-ht-advent-participation-intro');
+            introNodes.forEach(function (node) { intro.appendChild(node); });
+            panel.appendChild(intro);
         }
 
         var layout = element('div', 'parcs-ht-advent-participation-layout');
         var daily = element('section', 'parcs-ht-advent-participation-card');
         daily.appendChild(element('h3', '', text.daily));
-        daily.appendChild(element('p', '', campaign.dailyText || text.dailyFallback));
+        daily.appendChild(element('p', '', lang === 'fr' && campaign.dailyText ? campaign.dailyText : text.dailyFallback));
         var list = element('ul');
         [text.answer, text.mention, text.follow].forEach(function (item) {
             list.appendChild(element('li', '', item));
@@ -135,7 +151,7 @@
 
         var mystery = element('section', 'parcs-ht-advent-participation-card is-mystery');
         mystery.appendChild(element('h3', '', text.mystery));
-        mystery.appendChild(element('p', '', campaign.mysteryText || text.mysteryFallback));
+        mystery.appendChild(element('p', '', lang === 'fr' && campaign.mysteryText ? campaign.mysteryText : text.mysteryFallback));
         mystery.appendChild(element('p', '', text.final));
 
         layout.appendChild(daily);
