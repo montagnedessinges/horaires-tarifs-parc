@@ -64,6 +64,7 @@ jobs:
           php tests/pedagogical-guides-contract.php
           php tests/pedagogical-guide-stats-contract.php
           php tests/advent-contract.php
+          php tests/advent-ux-contract.php
           php tests/pdf-layout.php /tmp/htp-schedule-test.pdf
       - name: Check JavaScript and parity tests
         run: |
@@ -91,6 +92,7 @@ jobs:
           PLUGIN_ROOT=/tmp/htp-production-test php tests/pedagogical-guides-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/pedagogical-guide-stats-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/advent-contract.php
+          PLUGIN_ROOT=/tmp/htp-production-test php tests/advent-ux-contract.php
           grep -q 'Plugin Name: Gestion du parc' /tmp/htp-production-test/horaires-tarifs-parc.php
           if find /tmp/htp-production-test -type f \( -name '*.map' -o -name '*.ts' -o -name '*.tsx' -o -name '*.jsx' -o -name '*.scss' -o -name '*.sass' -o -name '*.less' \) | grep -q .; then
             echo 'Development source file found after production cleanup.' >&2
