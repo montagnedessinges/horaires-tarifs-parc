@@ -21,6 +21,25 @@ function season(){
     var payload=window.ParcsHTPData||{},settings=payload.settings||{};
     return String(settings.activeSeasonYear||(settings.general||{}).year||'');
 }
+function quoteType(value){
+    var normalized=String(value||'').toLowerCase();
+    if(normalized.normalize)normalized=normalized.normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    if(normalized.indexOf('handicap')!==-1||normalized.indexOf('disab')!==-1||normalized.indexOf('behinder')!==-1)return 'disability_group';
+    return normalized?'standard_group':'unknown';
+}
+function numberValue(form,name){
+    var field=form?form.querySelector('[name="'+name+'"]'):null;
+    var value=field?Number(String(field.value||'').replace(',','.')):0;
+    return isFinite(value)&&value>0?value:0;
+}
+function groupSize(form,type){
+    var total=type==='disability_group'?numberValue(form,'nbrpersohandicape')+numberValue(form,'nbraccompa'):numberValue(form,'nbrenfants')+numberValue(form,'nbradultes');
+    if(total<=0)return 'unknown';
+    if(total<=20)return '1_20';
+    if(total<=50)return '21_50';
+    if(total<=100)return '51_100';
+    return '101_plus';
+}
 function apply(){
     document.querySelectorAll('.parcs-ht-calendar[data-htp-lang]').forEach(function(calendar){
         var language=calendar.getAttribute('data-htp-lang')||'fr';
@@ -65,12 +84,16 @@ function apply(){
         var accessDate=root.querySelector('.parcs-ht-quote-access-date');
         var form=root.querySelector('.wpcf7 form,form.wpcf7-form');
         var visit=form?form.querySelector('[name="visite"]'):null;
+        var group=form?form.querySelector('[name="groupedevis"]'):null;
+        var type=quoteType(group?group.value:'');
+        var size=form?groupSize(form,type):'unknown';
         var date=(visit&&visit.value)||(accessDate&&accessDate.value)||'';
-        meta(root,{module:'group_quote',content_language:language});
-        if(accessDate)meta(accessDate,{event:'quote_date_selected',module:'group_quote',visit_year:date.slice(0,4),visit_month:date.slice(0,7),content_language:language});
+        var common={module:'group_quote',quote_type:type,group_size:size,visit_year:date.slice(0,4),visit_month:date.slice(0,7),content_language:language};
+        meta(root,common);
+        if(accessDate)meta(accessDate,Object.assign({event:'quote_date_selected'},common));
         var formWrap=root.querySelector('.parcs-ht-quote-form');
-        if(formWrap)meta(formWrap,{view_event:'quote_form_open',module:'group_quote',visit_year:date.slice(0,4),visit_month:date.slice(0,7),content_language:language});
-        if(form)meta(form,{success_event:'generate_lead',module:'group_quote',source:'quote_form',visit_year:date.slice(0,4),visit_month:date.slice(0,7),content_language:language});
+        if(formWrap)meta(formWrap,Object.assign({view_event:'quote_form_open'},common));
+        if(form)meta(form,Object.assign({success_event:'generate_lead',source:'quote_form'},common));
     });
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply);else apply();
