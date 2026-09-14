@@ -21,9 +21,9 @@ Cette couche ne contacte aucun service Analytics et n'envoie aucune donnée. Ell
 | `ticket_cta_click` | Tarifs | `source`, `season_year`, `content_language` |
 | `special_offer_click` | Tarifs | `content_type`, `source`, `season_year`, `content_language` |
 | `quote_cta_click` | Tarifs groupes | `source`, `season_year`, `content_language` |
-| `quote_date_selected` | Devis | `visit_year`, `visit_month`, `content_language` |
-| `quote_form_open` | Devis | `visit_year`, `visit_month`, `content_language` |
-| `generate_lead` | Devis CF7 | `visit_year`, `visit_month`, `content_language`, `source` |
+| `quote_date_selected` | Devis | `quote_type`, `group_size`, `visit_year`, `visit_month`, `content_language` |
+| `quote_form_open` | Devis | `quote_type`, `group_size`, `visit_year`, `visit_month`, `content_language` |
+| `generate_lead` | Devis CF7 | `quote_type`, `group_size`, `visit_year`, `visit_month`, `content_language`, `source` |
 | `guide_view` / `guide_download` | Guides | `guide_id`, `cycle`, `season_year`, `language` via les attributs `data-guide-*` existants |
 | `advent_day_open` | Avent | `campaign_id`, `content_id`, `day_number`, `content_language` |
 | `advent_social_click` | Avent | `platform`, `campaign_id`, `content_id`, `content_language` |
@@ -71,14 +71,15 @@ Le succès du formulaire doit être déclenché sur l'événement DOM `wpcf7mail
 
 Les champs personnels ne doivent jamais être transmis à GA4.
 
-Les seules informations métier envisagées sont :
+Les informations métier exposées sont :
 
-- type de groupe ;
-- mois / année de visite ;
-- tranche d'effectif ;
-- langue.
+- `quote_type` : `standard_group`, `disability_group` ou `unknown` ;
+- `group_size` : `1_20`, `21_50`, `51_100`, `101_plus` ou `unknown` ;
+- `visit_year` ;
+- `visit_month` ;
+- `content_language`.
 
-La présente version expose déjà `visit_year`, `visit_month`, la langue et la source au niveau du formulaire. L'ajout futur de `quote_type` et `group_size` devra rester basé sur une liste blanche stricte et des tranches d'effectif.
+La tranche d'effectif est calculée uniquement à partir des champs numériques du formulaire nécessaires au devis. Aucun effectif exact n'est exposé dans les métadonnées Analytics.
 
 ## Calendrier de l'Avent
 
@@ -122,6 +123,8 @@ Ces sélecteurs suffisent pour GTM sans ajouter de JavaScript supplémentaire au
 - `has_event`
 - `tariff_section`
 - `document_type`
+- `quote_type`
+- `group_size`
 - `visit_year`
 - `visit_month`
 - `school_cycle`
