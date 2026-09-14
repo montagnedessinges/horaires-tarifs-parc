@@ -3,6 +3,15 @@
 
   var config=window.ParcsHTAdvent||{};
 
+  function meta(node,values){
+    if(!node||!node.setAttribute)return;
+    Object.keys(values||{}).forEach(function(key){
+      var value=values[key];
+      if(value===undefined||value===null||value==='')return;
+      node.setAttribute('data-ga-'+key.replace(/_/g,'-'),String(value));
+    });
+  }
+
   function appendPreview(form){
     if(!config.previewNonce)return;
     form.append('preview_nonce',String(config.previewNonce));
@@ -75,7 +84,33 @@
     close.focus();
   }
 
+  function tagDetail(root){
+    var campaign=root.getAttribute('data-campaign-id')||'';
+    var language=root.getAttribute('data-language')||'fr';
+    var selected=root.querySelector('[data-advent-day].is-selected');
+    var contentId=selected?selected.getAttribute('data-content-id')||'':'';
+
+    root.querySelectorAll('.parcs-ht-advent-social-links a').forEach(function(link){
+      var label=String(link.textContent||'').toLowerCase();
+      meta(link,{event:'advent_social_click',module:'advent',platform:label.indexOf('instagram')!==-1?'instagram':(label.indexOf('facebook')!==-1?'facebook':'social'),campaign_id:campaign,content_id:contentId,content_language:language});
+    });
+    root.querySelectorAll('[data-advent-word-form]').forEach(function(form){
+      meta(form,{submit_event:'advent_word_attempt',module:'advent',campaign_id:campaign,content_language:language});
+    });
+    root.querySelectorAll('.parcs-ht-advent-final.is-authorized').forEach(function(success){
+      meta(success,{view_event:'advent_word_result',module:'advent',result:'success',campaign_id:campaign,content_language:language});
+    });
+    root.querySelectorAll('[data-advent-word-message]').forEach(function(message){
+      if(!String(message.textContent||'').trim())return;
+      meta(message,{view_event:'advent_word_result',module:'advent',result:'failure',campaign_id:campaign,content_language:language});
+    });
+    root.querySelectorAll('.parcs-ht-advent-final-form .wpcf7 form,.parcs-ht-advent-final-form form.wpcf7-form').forEach(function(form){
+      meta(form,{success_event:'advent_entry_submit',module:'advent',campaign_id:campaign,content_language:language});
+    });
+  }
+
   function bindDetail(root){
+    tagDetail(root);
     root.querySelectorAll('[data-advent-expand-image]').forEach(function(button){
       if(button.dataset.adventBound==='1')return;
       button.dataset.adventBound='1';
@@ -108,6 +143,7 @@
         }).catch(function(error){
           if(message)message.textContent=error.message;
           if(submit)submit.disabled=false;
+          tagDetail(root);
         });
       });
     });
@@ -116,7 +152,11 @@
   function bindDays(root){
     var detail=root.querySelector('[data-advent-detail]');
     if(!detail)return;
+    var campaign=root.getAttribute('data-campaign-id')||'';
+    var language=root.getAttribute('data-language')||'fr';
     root.querySelectorAll('[data-advent-day]').forEach(function(button){
+      var match=String(button.textContent||'').match(/\d{1,2}/);
+      meta(button,{event:'advent_day_open',module:'advent',campaign_id:campaign,content_id:button.getAttribute('data-content-id')||'',day_number:match?Number(match[0]):'',content_language:language});
       if(button.dataset.adventBound==='1')return;
       button.dataset.adventBound='1';
       button.addEventListener('click',function(){
@@ -153,6 +193,7 @@
   function initRoot(root){
     if(root.dataset.adventInitialized==='1')return;
     root.dataset.adventInitialized='1';
+    meta(root,{module:'advent',campaign_id:root.getAttribute('data-campaign-id')||'',content_language:root.getAttribute('data-language')||'fr'});
     bindParticipation(root);
     bindDays(root);
     bindDetail(root);
