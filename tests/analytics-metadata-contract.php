@@ -21,6 +21,12 @@ $required_core = array(
     "event:'quote_date_selected'",
     "view_event:'quote_form_open'",
     "success_event:'generate_lead'",
+    "quote_type:type",
+    "group_size:size",
+    "return '1_20'",
+    "return '21_50'",
+    "return '51_100'",
+    "return '101_plus'",
 );
 foreach ($required_core as $marker) {
     if (strpos($core, $marker) === false) {
