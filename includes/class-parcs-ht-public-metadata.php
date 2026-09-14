@@ -8,7 +8,7 @@ final class Parcs_HT_Public_Metadata {
     }
 
     public static function enqueue() {
-        if (is_admin()) return;
+        if (is_admin() || !is_singular()) return;
         wp_enqueue_script('parcs-ht-public-meta', PARCS_HT_URL . 'assets/interaction-events.js', array(), PARCS_HT_VERSION, true);
         wp_enqueue_script('parcs-ht-form-meta', PARCS_HT_URL . 'assets/interaction-forms.js', array('parcs-ht-public-meta'), PARCS_HT_VERSION, true);
     }
