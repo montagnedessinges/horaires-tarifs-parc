@@ -1,3 +1,12 @@
+## 1.15.12
+
+- Restaure les montants visiteurs des anciennes colonnes sans écraser les cellules existantes.
+- Sur place en premier ; En ligne uniquement si des prix existent (2026 : Sur place seul).
+- Quatre commandes annuelles visibles et indépendantes pour calendrier, visiteurs, devis groupes et groupes publics.
+- Devis 2027 autorisé indépendamment du brouillon de la saison ; sauvegardes partielles préservées.
+- Navigation visiteurs entre années en mémoire, sans requête ni rechargement, avec clavier et instances isolées.
+- Tests de comportement PHP/DOM bloquants ajoutés à la CI.
+
 ## 1.15.9
 
 - Harmonise le nom de l’extension affiché par le système de mise à jour privé avec le nom WordPress « Gestion du parc ».

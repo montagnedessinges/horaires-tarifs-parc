@@ -21,7 +21,7 @@ final class Parcs_HT_Public_Seasons {
 
     public static function init() {
         add_filter('option_' . Parcs_HT_Defaults::OPTION, array(__CLASS__, 'filter_main_option'), 5, 1);
-        add_filter('option_' . Parcs_HT_Group_Tariff_Settings::OPTION, array(__CLASS__, 'filter_group_option'), 5, 1);
+
         add_filter('pre_update_option_' . Parcs_HT_Defaults::OPTION, array(__CLASS__, 'save_display_until'), 96, 3);
         add_action('admin_enqueue_scripts', array(__CLASS__, 'admin_assets'), 96);
         add_filter('pre_do_shortcode_tag', array(__CLASS__, 'prepare_year_scope'), 6, 4);

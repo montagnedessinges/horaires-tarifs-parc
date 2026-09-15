@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.15.11
+Stable tag: 1.15.12
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes et outils du parc.
 
@@ -20,7 +20,7 @@ Une sauvegarde du site et de la base de données reste recommandée avant toute 
 
 == Changelog ==
 
-= 1.15.11 =
+= 1.15.12 =
 * Stabilisation du sélecteur annuel des tarifs visiteurs : les années affichées sont contrôlées explicitement et ne remplacent plus silencieusement l’année courante.
 * Les boutons d’année des tarifs fonctionnent comme des onglets sans rechargement complet de la page, tout en conservant un lien de secours accessible.
 * Le titre public reste « Tarifs » sans année ; les moyens de paiement restent communs au-dessus des années.

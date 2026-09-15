@@ -150,8 +150,41 @@ final class Parcs_HT_Shortcodes {
             '</section>';
     }
 
-    private static function tariffs($id, $language, $style, $settings) {
-        if (class_exists('Parcs_HT_Tariff_Seasons')) $settings = Parcs_HT_Tariff_Seasons::select_season_tariffs($settings, true);
+    private static function tariffs($id, $language, $style, $settings, $selected_year = null) {
+        if ($selected_year === null && class_exists('Parcs_HT_Display_Policy')) {
+            $years = array_values(array_unique(array_merge(Parcs_HT_Display_Policy::retail_years(), Parcs_HT_Group_Tariff_Settings::public_years())));
+            sort($years, SORT_NUMERIC);
+            if (!$years) return '';
+            $requested = Parcs_HT_Public_Seasons::requested_year();
+            $selected = in_array($requested, $years, true) ? $requested : (in_array(wp_date('Y'), $years, true) ? wp_date('Y') : (string)end($years));
+            $html = '<div class="parcs-ht-tariff-years" data-htp-tariff-years>';
+            if (count($years) > 1) {
+                $html .= '<div class="parcs-ht-retail-year-tabs" role="tablist" aria-label="' . esc_attr(array('fr'=>'Année des tarifs','en'=>'Rate year','de'=>'Tarifjahr')[$language]) . '">';
+                foreach ($years as $year) {
+                    $active = $year === $selected;
+                    $html .= '<button type="button" role="tab" id="' . esc_attr($id . '-year-tab-' . $year) . '" aria-controls="' . esc_attr($id . '-year-' . $year) . '" aria-selected="' . ($active ? 'true' : 'false') . '" tabindex="' . ($active ? '0' : '-1') . '" class="parcs-ht-retail-year-tab' . ($active ? ' is-active' : '') . '" data-htp-retail-year="' . esc_attr($year) . '">' . esc_html($year) . '</button>';
+                }
+                $html .= '</div>';
+            }
+            foreach ($years as $year) {
+                $html .= '<div id="' . esc_attr($id . '-year-' . $year) . '" data-htp-year-panel="' . esc_attr($year) . '"' . (count($years) > 1 ? ' role="tabpanel" aria-labelledby="' . esc_attr($id . '-year-tab-' . $year) . '"' : '') . ($year !== $selected ? ' hidden' : '') . '>' . self::tariffs($id . '-' . $year, $language, $style, $settings, $year) . '</div>';
+            }
+            wp_enqueue_script('parcs-ht-stability-11511');
+            return $html . '</div>';
+        }
+        if ($selected_year !== null) {
+            $season = Parcs_HT_Display_Policy::raw_season($selected_year);
+            $settings['tariffs'] = Parcs_HT_Display_Policy::normalize_tariffs($season['tariffs'] ?? array());
+            $settings['general']['year'] = $selected_year;
+            if (!in_array($selected_year, Parcs_HT_Display_Policy::retail_years(), true)) {
+                $settings['tariffs']['individual'] = array();
+                $settings['tariffs']['reduced'] = array();
+            }
+            if (!in_array($selected_year, Parcs_HT_Group_Tariff_Settings::public_years(), true)) $settings['tariffs']['groups'] = array();
+        } elseif (class_exists('Parcs_HT_Tariff_Seasons')) {
+            $settings = Parcs_HT_Tariff_Seasons::select_season_tariffs($settings, true);
+        }
+
         $dictionaries = Parcs_HT_Schedule::dictionaries();
         $d = $dictionaries[$language];
         $tariffs = $settings['tariffs'];
@@ -160,10 +193,14 @@ final class Parcs_HT_Shortcodes {
         $groups = array();
         foreach ($order as $key) if (isset($labels[$key]) && !isset($groups[$key])) $groups[$key] = $labels[$key];
         foreach ($labels as $key=>$label) if (!isset($groups[$key])) $groups[$key] = $label;
+        foreach ($groups as $key => $unused) {
+            $visible = array_filter((array)($tariffs[$key] ?? array()), static function ($row) { return is_array($row) && (string)($row['enabled'] ?? '0') === '1' && self::tariff_row_is_visible($row); });
+            if (!$visible) unset($groups[$key]);
+        }
         ob_start();
         ?>
         <section id="<?php echo esc_attr($id); ?>" class="parcs-ht-tariffs" data-htp-component="tariffs" data-htp-lang="<?php echo esc_attr($language); ?>" style="<?php echo esc_attr($style); ?>">
-            <header class="parcs-ht-heading parcs-ht-tariff-heading"><p class="parcs-ht-kicker"><?php echo esc_html($d['prices']); ?></p><div class="parcs-ht-title" role="heading" aria-level="2"><?php echo esc_html($d['prices'] . (!empty($settings['general']['year']) ? ' ' . $settings['general']['year'] : '')); ?></div></header>
+            <header class="parcs-ht-heading parcs-ht-tariff-heading"><p class="parcs-ht-kicker"><?php echo esc_html($d['prices']); ?></p><div class="parcs-ht-title" role="heading" aria-level="2"><?php echo esc_html($d['prices']); ?></div></header>
             <?php echo self::payment_strip($tariffs, $language, $d); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Attributs, textes et SVG échappés dans payment_strip. ?>
             <div class="parcs-ht-tariff-tabs" role="tablist" aria-label="<?php echo esc_attr($d['prices']); ?>">
                 <?php $first = true; foreach ($groups as $key => $label) : ?>
@@ -213,9 +250,10 @@ final class Parcs_HT_Shortcodes {
                                         $old_value = isset($cell['old_value']) ? (string)$cell['old_value'] : '';
                                         $col_label = Parcs_HT_Schedule::translation($column['label'], $language, '');
                                     ?>
-                                        <div class="parcs-ht-price-cell"<?php echo !$show_head && $col_label ? ' aria-label="' . esc_attr($col_label) . '"' : ''; ?>>
+                                        <div class="parcs-ht-price-cell" data-htp-channel="<?php echo esc_attr($col_id); ?>"<?php echo !$show_head && $col_label ? ' aria-label="' . esc_attr($col_label) . '"' : ''; ?>>
+                                            <small class="parcs-ht-price-channel-label"><?php echo esc_html($col_label); ?></small>
                                             <?php if ($is_special && $old_value !== '') : ?><del><?php echo esc_html($old_value); ?></del><?php endif; ?>
-                                            <b><?php echo esc_html($value); ?></b>
+                                            <b><?php echo esc_html($value !== '' ? $value : '—'); ?></b>
                                         </div>
                                     <?php endforeach; ?>
                                 </div>
@@ -239,7 +277,7 @@ final class Parcs_HT_Shortcodes {
             <div class="parcs-ht-actions">
                 <?php $tickets_url = isset($settings['general']['tickets_url'][$language]) ? $settings['general']['tickets_url'][$language] : ''; if ($tickets_url) : ?><a class="parcs-ht-button is-primary" href="<?php echo esc_url($tickets_url); ?>"><?php echo esc_html($d['tickets']); ?></a><?php endif; ?>
             </div>
-            <?php echo wp_kses_post(self::tariff_export_actions($tariffs, $language)); ?>
+            <?php echo wp_kses_post(self::tariff_export_actions($tariffs, $language, $settings['general']['year'] ?? '')); ?>
         </section>
         <?php
         return ob_get_clean();
@@ -399,13 +437,14 @@ final class Parcs_HT_Shortcodes {
         return $accordion ? '<div class="parcs-ht-quote-accordions">'.implode('', $items).'</div>' : '<div class="parcs-ht-quote-info-grid">'.implode('', $items).'</div>';
     }
 
-    private static function tariff_export_actions($tariffs, $language) {
+    private static function tariff_export_actions($tariffs, $language, $year = '') {
         $print = isset($tariffs['print']) && is_array($tariffs['print']) ? $tariffs['print'] : array();
         if ((string)($print['pdf_enabled'] ?? '1') !== '1') return '';
 
         $pdf_url = add_query_arg(
             array(
                 'action'   => 'parcs_ht_tariffs_pdf',
+                'htp_year' => $year,
                 'lang'     => $language,
                 'rev'      => max(1, (int)get_option('parcs_ht_export_revision', 1)),
             ),

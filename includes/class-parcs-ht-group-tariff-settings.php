@@ -441,7 +441,26 @@ final class Parcs_HT_Group_Tariff_Settings {
         $all = self::raw_all_settings();
         $season = isset($all['seasons'][$year]) && is_array($all['seasons'][$year]) ? $all['seasons'][$year] : null;
         if (!$season || !self::has_grid($year)) return false;
+        if (array_key_exists('group_tariffs_visible', $season)) return (string)$season['group_tariffs_visible'] === '1';
         return (string)(self::settings($year)['published'] ?? '0') === '1';
+    }
+
+    public static function quote_enabled($year) {
+        $year = (string)$year;
+        $all = self::raw_all_settings();
+        $season = $all['seasons'][$year] ?? array();
+        if (!is_array($season) || !self::has_grid($year)) return false;
+        if (array_key_exists('group_quotes_enabled', $season)) return (string)$season['group_quotes_enabled'] === '1';
+        return (string)(self::settings($year)['published'] ?? '0') === '1';
+    }
+
+    public static function public_years($today = '') {
+        $today = self::today($today);
+        $years = array();
+        foreach (self::published_years() as $year) {
+            if (self::effective_display_date($year) <= $today) $years[] = $year;
+        }
+        return $years;
     }
 
     public static function published_years() {
@@ -455,6 +474,8 @@ final class Parcs_HT_Group_Tariff_Settings {
     public static function effective_display_date($year) {
         $year = (string)$year;
         if (!preg_match('/^20\d{2}$/', $year)) return '';
+        $all = self::raw_all_settings();
+        if (isset($all['seasons'][$year]['group_tariffs_visible'])) return '2000-01-01';
         $configured = self::clean_date(self::settings($year)['display_from'] ?? '');
         return $configured !== '' ? $configured : $year . '-01-01';
     }

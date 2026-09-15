@@ -128,3 +128,5 @@
 .htp-revisions{border:1px solid #dcdcde;border-radius:8px;overflow:hidden;background:#fff}
 .htp-revision-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 12px;border-bottom:1px solid #eee}
 .htp-revision-row:last-child{border-bottom:0}
+
+.htp-year-controls-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.htp-year-control{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px;background:#f5f8f6;border:1px solid #d4e0d9;border-radius:8px}.htp-year-control>span{font-weight:600}.htp-year-control select{min-width:150px}@media(max-width:780px){.htp-year-controls-grid{grid-template-columns:1fr}.htp-year-control{align-items:flex-start;flex-direction:column}}

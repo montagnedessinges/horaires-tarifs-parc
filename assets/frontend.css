@@ -701,3 +701,22 @@
 .parcs-ht-domain-note .parcs-ht-domain-times{display:block;margin:3px 0 0!important;font-weight:800}
 .parcs-ht-domain-note .parcs-ht-domain-extra{display:block;margin:6px 0 0!important;opacity:.88}
 @media(max-width:720px){.parcs-ht-park-hours-title{margin-top:6px!important;font-size:10px!important}.parcs-ht-domain-note{margin-top:7px!important;padding:8px 9px!important}.parcs-ht-domain-note .parcs-ht-domain-times{margin-top:2px!important}}
+
+/* Shared columns keep each price under its channel, including missing prices. */
+.parcs-ht-tariff-years [hidden]{display:none!important}
+.parcs-ht-retail-year-tabs{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:16px auto 24px}
+.parcs-ht-retail-year-tab{font:inherit;font-weight:700;padding:10px 24px;border:1px solid var(--htp-primary,#006757);border-radius:999px;background:transparent;color:var(--htp-primary,#006757);cursor:pointer}
+.parcs-ht-retail-year-tab.is-active{background:var(--htp-primary,#006757);color:#fff}
+.parcs-ht-retail-year-tab:focus-visible{outline:3px solid #d0aa32;outline-offset:3px}
+.parcs-ht-tariffs .parcs-ht-price-head{grid-template-columns:minmax(0,1fr) repeat(var(--htp-tariff-column-count,1),110px);gap:12px;padding:0 12px 12px;text-align:right}
+.parcs-ht-tariffs .parcs-ht-price-row{grid-template-columns:minmax(0,1fr) calc(var(--htp-tariff-column-count,1) * 122px - 12px)!important;gap:12px!important;padding:16px 12px!important;border-radius:0}
+.parcs-ht-tariffs .parcs-ht-price-values{display:grid!important;grid-template-columns:repeat(var(--htp-tariff-column-count,1),minmax(0,1fr));gap:12px}
+.parcs-ht-tariffs .parcs-ht-price-channel-label{display:none}
+@media(max-width:600px){
+.parcs-ht-tariffs .parcs-ht-price-head{display:none}
+.parcs-ht-tariffs .parcs-ht-price-row{grid-template-columns:1fr!important;gap:12px!important}
+.parcs-ht-tariffs .parcs-ht-price-values{justify-content:stretch;gap:8px}
+.parcs-ht-tariffs .parcs-ht-price-cell{align-items:flex-start!important;text-align:left;padding:10px!important;border:1px solid #d8e1dc;border-radius:8px}
+.parcs-ht-tariffs .parcs-ht-price-channel-label{display:block;font-size:12px!important;line-height:1.4}
+.parcs-ht-tariffs .parcs-ht-price-cell b{white-space:normal;overflow-wrap:anywhere}
+}

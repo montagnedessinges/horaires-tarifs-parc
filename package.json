@@ -2,7 +2,7 @@
   "name": "horaires-tarifs-parc-tests",
   "private": true,
   "scripts": {
-    "test": "node tests/frontend-engine.js && node tests/status-sync-engine.js && node tests/display-state-engine.js && node tests/public-ui-regressions.js && node tests/emergency-1920-regressions.js && node tests/quote-page-deletion-regressions.js && node tests/advent-ux-regressions.js"
+    "test": "node tests/frontend-engine.js && node tests/status-sync-engine.js && node tests/display-state-engine.js && node tests/public-ui-regressions.js && node tests/emergency-1920-regressions.js && node tests/quote-page-deletion-regressions.js && node tests/advent-ux-regressions.js && node tests/visibility-11512-ui.js"
   },
   "devDependencies": {
     "jquery": "3.7.1",
