@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Gestion du parc
  * Description: Gestion centralisée des horaires, calendriers, tarifs, événements, devis et outils du parc.
- * Version: 1.15.9
+ * Version: 1.15.10
  * Update URI: https://github.com/montagnedessinges/horaires-tarifs-parc
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -12,7 +12,7 @@
 
 if (!defined('ABSPATH')) { exit; }
 
-define('PARCS_HT_VERSION', '1.15.9');
+define('PARCS_HT_VERSION', '1.15.10');
 define('PARCS_HT_FILE', __FILE__);
 define('PARCS_HT_DIR', plugin_dir_path(__FILE__));
 define('PARCS_HT_URL', plugin_dir_url(__FILE__));
@@ -46,6 +46,7 @@ require_once PARCS_HT_DIR . 'includes/class-parcs-ht-advent.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-advent-appearance.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-advent-ux.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-public-seasons.php';
+require_once PARCS_HT_DIR . 'includes/class-parcs-ht-schedule-csv.php';
 Parcs_HT_HTTP_SSL::init();
 Parcs_HT_Tariff_Seasons::init();
 Parcs_HT_Season_Status::init();
@@ -103,6 +104,7 @@ add_action('plugins_loaded', static function () {
         Parcs_HT_Admin_Groups::init();
         Parcs_HT_Admin_Shortcode_Preview::init();
         Parcs_HT_Advent_Admin::init();
+        Parcs_HT_Schedule_CSV::init();
         add_action('admin_menu', static function () {
             global $menu;
             foreach ((array) $menu as $index => $item) {
