@@ -105,6 +105,31 @@ add_action('plugins_loaded', static function () {
         Parcs_HT_Admin_Shortcode_Preview::init();
         Parcs_HT_Advent_Admin::init();
         Parcs_HT_Schedule_CSV::init();
+        add_action('admin_footer', static function () {
+            if (!current_user_can('manage_options')) return;
+            // phpcs:disable WordPress.Security.NonceVerification.Recommended -- Sélection d'écran et de saison en lecture seule.
+            $page = isset($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : '';
+            $year = isset($_GET['season']) ? sanitize_text_field(wp_unslash($_GET['season'])) : '';
+            // phpcs:enable WordPress.Security.NonceVerification.Recommended
+            if ($page !== Parcs_HT_Admin::PAGE) return;
+            $settings = Parcs_HT_Defaults::settings($year);
+            $active_year = isset($settings['active_season_year']) ? (string)$settings['active_season_year'] : (string)($settings['general']['year'] ?? '');
+            echo '<div id="htp-schedule-csv-controls" hidden>';
+            Parcs_HT_Schedule_CSV::render_controls($active_year);
+            echo '</div>';
+            Parcs_HT_Schedule_CSV::render_external_form($active_year);
+            ?>
+            <script>
+            (function(){var box=document.getElementById('htp-schedule-csv-controls'),panel=document.getElementById('htp-regular');if(!box||!panel)return;box.hidden=false;panel.insertBefore(box,panel.children.length>2?panel.children[2]:null);}());
+            </script>
+            <?php
+        }, 50);
+        add_action('admin_notices', static function () {
+            // phpcs:disable WordPress.Security.NonceVerification.Recommended -- Message de confirmation uniquement.
+            if (!isset($_GET['page'], $_GET['csv_imported']) || sanitize_key(wp_unslash($_GET['page'])) !== Parcs_HT_Admin::PAGE || sanitize_text_field(wp_unslash($_GET['csv_imported'])) !== '1') return;
+            // phpcs:enable WordPress.Security.NonceVerification.Recommended
+            echo '<div class="notice notice-success is-dismissible"><p>Le CSV horaires & calendrier a été importé. Une révision de sécurité a été créée avant l’import.</p></div>';
+        });
         add_action('admin_menu', static function () {
             global $menu;
             foreach ((array) $menu as $index => $item) {
