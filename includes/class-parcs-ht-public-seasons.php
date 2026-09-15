@@ -101,16 +101,12 @@ final class Parcs_HT_Public_Seasons {
     }
 
     private static function raw_main() {
-        if (self::$raw_main === null) {
-            get_option(Parcs_HT_Defaults::OPTION, array());
-        }
+        if (self::$raw_main === null) get_option(Parcs_HT_Defaults::OPTION, array());
         return is_array(self::$raw_main) ? self::$raw_main : array();
     }
 
     private static function raw_group() {
-        if (self::$raw_group === null) {
-            get_option(Parcs_HT_Group_Tariff_Settings::OPTION, array());
-        }
+        if (self::$raw_group === null) get_option(Parcs_HT_Group_Tariff_Settings::OPTION, array());
         return is_array(self::$raw_group) ? self::$raw_group : array();
     }
 
@@ -170,7 +166,7 @@ final class Parcs_HT_Public_Seasons {
         $style = '';
         if (!$style_done) {
             $style_done = true;
-            $style = '<style>.parcs-ht-year-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 18px}.parcs-ht-year-tab{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:8px 16px;border:1px solid var(--htp-border,#d9d9d9);border-radius:999px;background:transparent;color:inherit;text-decoration:none;font-weight:600}.parcs-ht-year-tab.is-active{background:var(--htp-primary,#006757);border-color:var(--htp-primary,#006757);color:#fff}.parcs-ht-year-tab:focus-visible{outline:2px solid currentColor;outline-offset:2px}</style>';
+            $style = '<style>.parcs-ht-year-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 18px}.parcs-ht-year-tab{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:8px 16px;border:1px solid var(--htp-border,#d9d9d9);border-radius:999px;background:transparent;color:inherit;text-decoration:none;font-weight:600}.parcs-ht-year-tab.is-active{background:var(--htp-primary,#006757);border-color:var(--htp-primary,#006757);color:#fff}.parcs-ht-year-tab:focus-visible{outline:2px solid currentColor;outline-offset:2px}.parcs-ht-page.has-public-year-tabs .parcs-ht-year-list{display:none!important}</style>';
         }
         return $style . '<nav class="parcs-ht-year-tabs" role="tablist" aria-label="Année">' . $links . '</nav>';
     }
@@ -180,15 +176,18 @@ final class Parcs_HT_Public_Seasons {
         if (is_admin() || !is_string($output) || $output === '') return $output;
         $base = preg_replace('/_(fr|en|de)$/', '', (string)$tag);
         $groups = $base === 'parc_tarifs_groupes';
-        $core = in_array($base, array('parc_horaires_tarifs','parc_calendrier','parc_tableau_tarifs'), true);
+        $core = in_array($base, array('parc_horaires_tarifs','parc_tableau_tarifs'), true);
         if (!$groups && !$core) return $output;
         $years = self::visible_years($groups);
         if (count($years) < 2) return $output;
+        if ($base === 'parc_horaires_tarifs') {
+            $output = preg_replace('/class="parcs-ht-page(\s|\")/', 'class="parcs-ht-page has-public-year-tabs$1', $output, 1);
+        }
         return self::tabs_markup($years, self::selected_year($years)) . $output;
     }
 
     public static function save_display_until($new_value, $old_value, $option) {
-        unset($option);
+        unset($old_value, $option);
         if (!is_admin() || !is_array($new_value) || !current_user_can('manage_options')) return $new_value;
         if (!isset($_POST['_wpnonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'])), 'parcs_ht_save')) return $new_value;
         if (!isset($_POST['action']) || sanitize_key(wp_unslash($_POST['action'])) !== 'parcs_ht_save') return $new_value;
@@ -232,13 +231,15 @@ final class Parcs_HT_Public_Seasons {
         $saved = get_option(Parcs_HT_Advent::OPTION, array());
         $campaigns = is_array($saved) && isset($saved['campaigns']) && is_array($saved['campaigns']) ? $saved['campaigns'] : array();
         $park = Parcs_HT_Advent::installation_park_code();
-        $active = array(); $archives = array();
+        $active = array();
+        $archives = array();
         foreach ($campaigns as $id => $campaign) {
             if (!is_array($campaign) || (string)($campaign['parc_code'] ?? '') !== $park) continue;
             $status = (string)($campaign['statut_campagne'] ?? '');
             if (!in_array($status, array('active','archivee'), true)) continue;
             $key = sprintf('%04d|%s', (int)($campaign['annee'] ?? 0), sanitize_key((string)$id));
-            if ($status === 'active') $active[$key] = sanitize_key((string)$id); else $archives[$key] = sanitize_key((string)$id);
+            if ($status === 'active') $active[$key] = sanitize_key((string)$id);
+            else $archives[$key] = sanitize_key((string)$id);
         }
         if ($active) { krsort($active, SORT_NATURAL); return (string)reset($active); }
         if ($archives) { krsort($archives, SORT_NATURAL); return (string)reset($archives); }
