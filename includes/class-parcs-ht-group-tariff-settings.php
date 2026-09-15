@@ -491,6 +491,10 @@ final class Parcs_HT_Group_Tariff_Settings {
 
     public static function public_year($today = '') {
         $today = self::today($today);
+        if (class_exists('Parcs_HT_Display_Policy')) {
+            $forced = Parcs_HT_Display_Policy::selected_group_year();
+            if ($forced !== '' && in_array($forced, self::public_years($today), true)) return $forced;
+        }
         $eligible = array();
         foreach (self::published_years() as $year) {
             $effective = self::effective_display_date($year);

@@ -13,7 +13,7 @@ function stability_11511_check($condition, $message) {
     echo '[OK] ' . $message . PHP_EOL;
 }
 
-stability_11511_check(strpos($main, 'Version: 1.15.12') !== false && strpos($main, "define('PARCS_HT_VERSION', '1.15.12')") !== false, 'release version is 1.15.11');
+stability_11511_check(strpos($main, 'Version: 1.15.12') !== false && strpos($main, "define('PARCS_HT_VERSION', '1.15.12')") !== false, 'release version is 1.15.12');
 stability_11511_check(strpos($main, "class-parcs-ht-stability-11511.php") !== false && strpos($main, 'Parcs_HT_Stability_11511::init();') !== false, 'stability layer is loaded');
 stability_11511_check(strpos($stability, "remove_filter('pre_do_shortcode_tag', array('Parcs_HT_Public_Seasons', 'prepare_year_scope'), 6)") !== false, 'legacy shortcode year scoping is disabled');
 stability_11511_check(strpos($stability, "remove_filter('do_shortcode_tag', array('Parcs_HT_Public_Seasons', 'wrap_year_tabs'), 20)") !== false, 'legacy reload year links are disabled');

@@ -209,6 +209,8 @@ final class Parcs_HT_Display_Policy {
         self::$forced_group_tariff_year = preg_match('/^20\d{2}$/', (string)$year) ? (string)$year : '';
     }
 
+    public static function selected_group_year() { return self::$forced_group_tariff_year; }
+
     public static function end_group_tariff_year() { self::$forced_group_tariff_year = ''; }
 
     private static function requested_group_year() {
