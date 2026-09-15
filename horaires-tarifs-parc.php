@@ -35,6 +35,8 @@ require_once PARCS_HT_DIR . 'includes/class-parcs-ht-quote-gate.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-quote-page-save.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin-groups.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-group-tariffs.php';
+require_once PARCS_HT_DIR . 'includes/class-parcs-ht-display-policy.php';
+require_once PARCS_HT_DIR . 'includes/class-parcs-ht-group-portal.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-guide-stats.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-pedagogical-guides.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-guide-appearance.php';
@@ -51,6 +53,7 @@ Parcs_HT_Tariff_Identities::init();
 Parcs_HT_Group_Tariff_Settings::init();
 Parcs_HT_Group_Tariff_Switch_Admin::init();
 Parcs_HT_Quote_Page_Save::init();
+Parcs_HT_Display_Policy::init();
 Parcs_HT_Public_Seasons::init();
 Parcs_HT_Save_Integrity::init();
 
@@ -131,6 +134,7 @@ add_action('plugins_loaded', static function () {
         }
     }
     Parcs_HT_Group_Tariffs::init();
+    Parcs_HT_Group_Portal::init();
     Parcs_HT_Guide_Stats::init();
     Parcs_HT_Pedagogical_Guides::init();
     Parcs_HT_Guide_Appearance::init();
