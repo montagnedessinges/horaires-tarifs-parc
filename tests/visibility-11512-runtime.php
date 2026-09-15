@@ -4,6 +4,7 @@ define('ABSPATH', __DIR__);
 $GLOBALS['options'] = array();
 $GLOBALS['admin'] = false;
 function get_option($key, $fallback = array()) { return $GLOBALS['options'][$key] ?? $fallback; }
+function map_deep($value, $callback) { return is_array($value) ? array_map(static function ($v) use ($callback) { return map_deep($v, $callback); }, $value) : $callback($value); }
 function is_admin() { return $GLOBALS['admin']; }
 function current_user_can($cap) { return true; }
 function wp_verify_nonce($value, $action) { return $value === 'valid'; }

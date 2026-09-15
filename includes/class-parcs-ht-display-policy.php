@@ -267,10 +267,10 @@ final class Parcs_HT_Display_Policy {
         // Missing controls mean a partial save, never an implicit OFF.
         $fields = array('calendar_visible','retail_tariffs_visible','group_quotes_enabled','group_tariffs_visible',
             'public_display_from','public_force_display','groups_schedule_visible');
-        $posted = isset($_POST['settings']['general']) && is_array($_POST['settings']['general']) ? $_POST['settings']['general'] : array();
+        $posted = isset($_POST['settings']['general']) && is_array($_POST['settings']['general']) ? map_deep(wp_unslash($_POST['settings']['general']), 'sanitize_text_field') : array();
         foreach ($fields as $field) {
             if (array_key_exists($field, $posted) && is_scalar($posted[$field])) {
-                $raw = sanitize_text_field(wp_unslash($posted[$field]));
+                $raw = $posted[$field];
                 $new_value['seasons'][$year][$field] = $field === 'public_display_from' ? self::clean_date($raw) : ($raw === '1' ? '1' : '0');
             } elseif (isset($old_value['seasons'][$year][$field])) {
                 $new_value['seasons'][$year][$field] = $old_value['seasons'][$year][$field];
