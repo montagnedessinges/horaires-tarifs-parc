@@ -18,7 +18,8 @@
       tab.setAttribute('aria-selected',current?'true':'false');
       tab.setAttribute('tabindex',current?'0':'-1');
       var panelId=tab.getAttribute('aria-controls');
-      var panel=panelId?section.querySelector('#'+CSS.escape(panelId)):null;
+      var panel=panelId?document.getElementById(panelId):null;
+      if(panel&&!section.contains(panel))panel=null;
       if(panel)panel.hidden=!current;
       if(current&&focus)tab.focus();
     });
@@ -64,8 +65,7 @@
         try{window.history.replaceState(null,'',link.href);}catch(error){}
         document.dispatchEvent(new CustomEvent('parcsht:tariffs-updated',{detail:{year:year,section:imported}}));
       })
-      .catch(function(){window.location.href=link.href;})
-      .finally(function(){if(nav&&document.documentElement.contains(nav))nav.removeAttribute('aria-busy');});
+      .catch(function(){window.location.href=link.href;});
   }
 
   document.addEventListener('click',function(event){
@@ -88,7 +88,7 @@
 
   document.addEventListener('keydown',function(event){
     var tab=event.target.closest&&event.target.closest('[data-htp-tariff-tab]');
-    if(!tab||!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
+    if(!tab||['ArrowLeft','ArrowRight','Home','End'].indexOf(event.key)===-1)return;
     var section=tab.closest('.parcs-ht-tariffs');
     var tabs=qsa(section,'[data-htp-tariff-tab]');
     if(!tabs.length)return;
