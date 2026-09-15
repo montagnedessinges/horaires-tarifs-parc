@@ -139,7 +139,7 @@ final class Parcs_HT_Updater {
         $body = isset($release['body']) ? (string) $release['body'] : '';
 
         return (object) array(
-            'name'          => 'Horaires et tarifs du parc',
+            'name'          => PARCS_HT_DISPLAY_NAME,
             'slug'          => self::SLUG,
             'version'       => $version,
             'author'        => 'Tanguy Huriez – Montagne des Singes',

@@ -1,3 +1,12 @@
+## 1.15.9
+
+- Harmonise le nom de l’extension affiché par le système de mise à jour privé avec le nom WordPress « Gestion du parc ».
+- Synchronise le numéro de version de l’en-tête, de la constante interne et du fichier d’information de l’extension.
+- Ajoute un contrat de non-régression exécuté sur les sources et sur le ZIP de production afin de bloquer toute divergence future des métadonnées de mise à jour.
+- Corrige le contrat du Calendrier de l’Avent qui était figé sur la version 1.15.8, afin qu’il protège le correctif à partir de cette version sans bloquer les versions suivantes.
+- Documente la règle de travail : une demande limitée au développement et à la publication reste entièrement dans GitHub ; les sites WordPress ne sont consultés que sur demande explicite.
+- Aucun horaire, tarif, saison, événement, formulaire, contenu public ou réglage propre aux deux parcs n’est modifié.
+
 ## 1.15.6
 
 - Clarifie le détail d’une journée du calendrier : la date reste en premier, suivie d’un titre « Horaires du parc », des horaires et de la dernière entrée.
