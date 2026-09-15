@@ -35,12 +35,12 @@
     });
   }
 
-  function boot(){
-    qsa(document,'.parcs-ht-tariff-panel').forEach(function(panel){
+  function boot(root){
+    qsa(root||document,'.parcs-ht-tariff-panel').forEach(function(panel){
       var id=String(panel.id||'');
       if(/-panel-(individual|reduced)$/.test(id))enhancePanel(panel);
     });
   }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
-  new MutationObserver(boot).observe(document.documentElement,{childList:true,subtree:true});
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){boot(document);});else boot(document);
+  document.addEventListener('parcsht:tariffs-updated',function(event){boot(event.detail&&event.detail.section?event.detail.section:document);});
 }());

@@ -18,18 +18,23 @@
 
     if(until){
       var small=until.closest('.htp-field').querySelector('small');
-      if(small)small.textContent='Après cette date, la saison disparaît automatiquement du planning et des tarifs individuels. La case « Forcer l’affichage » reste prioritaire.';
+      if(small)small.textContent='Après cette date, la saison disparaît automatiquement du planning public. Les tarifs individuels ont en plus leur propre case Afficher.';
     }
 
     var from=document.createElement('label');
     from.className='htp-field htp-public-display-from';
-    from.innerHTML='<span>Afficher au grand public à partir du</span><input type="date" name="settings[general][public_display_from]" value=""><small class="description">Date commune au planning et aux tarifs individuels. Laisser vide pour autoriser l’affichage dès publication.</small>';
+    from.innerHTML='<span>Afficher au grand public à partir du</span><input type="date" name="settings[general][public_display_from]" value=""><small class="description">Date de publication de la saison publique. Laisser vide pour autoriser l’affichage dès publication.</small>';
     qs(from,'input').value=String(config.displayFrom||'');
 
     var force=document.createElement('label');
     force.className='htp-field htp-public-force-display';
     force.innerHTML='<span>Forçage public</span><span><input type="hidden" name="settings[general][public_force_display]" value="0"><input type="checkbox" name="settings[general][public_force_display]" value="1"> Afficher maintenant, même hors des dates prévues</span><small class="description">Prioritaire sur les dates de début et de fin. La saison doit tout de même être publiée.</small>';
     qs(force,'input[type="checkbox"]').checked=String(config.forceDisplay||'0')==='1';
+
+    var retail=document.createElement('label');
+    retail.className='htp-field htp-retail-tariffs-visible';
+    retail.innerHTML='<span>Tarifs individuels / réduits</span><span><input type="hidden" name="settings[general][retail_tariffs_visible]" value="0"><input type="checkbox" name="settings[general][retail_tariffs_visible]" value="1"> Afficher les tarifs de cette année</span><small class="description">Indépendant des tarifs groupes. Si cette case est décochée, l’année n’apparaît pas dans les onglets des tarifs visiteurs.</small>';
+    qs(retail,'input[type="checkbox"]').checked=String(config.retailTariffsVisible||'0')==='1';
 
     var groups=document.createElement('label');
     groups.className='htp-field htp-groups-schedule-visible';
@@ -38,17 +43,19 @@
 
     anchor.parentNode.insertBefore(from,anchor.nextSibling);
     anchor.parentNode.insertBefore(force,from.nextSibling);
-    anchor.parentNode.insertBefore(groups,force.nextSibling);
+    anchor.parentNode.insertBefore(retail,force.nextSibling);
+    anchor.parentNode.insertBefore(groups,retail.nextSibling);
   }
 
   function simplifyRetailColumns(){
     ['individual','reduced'].forEach(function(groupKey){
       var group=qs(document,'[data-htp-tariff-group="'+groupKey+'"]');
       if(!group)return;
-      qsa(group,'[data-htp-tariff-column]').forEach(function(row){
+      qsa(group,'[data-htp-tariff-column]').forEach(function(row,index){
         var id=qs(row,'[data-htp-column-id-input]');
-        var channel=id?String(id.value||''):'';
-        var name=channel==='online'?'En ligne':(channel==='onsite'?'Sur place':'Tarif');
+        var raw=id?String(id.value||''):'';
+        var channel=raw==='online'||raw==='onsite'?raw:(index===0?'online':'onsite');
+        var name=channel==='online'?'En ligne':'Sur place';
         qsa(row,'input[name*="[label]"]').forEach(function(input){input.readOnly=true;});
         var labelWrap=qs(row,'.htp-tariff-column-label');
         if(labelWrap){
@@ -71,7 +78,15 @@
     if(form)addVisibilityControls(form);
     simplifyRetailColumns();
     var root=qs(document,'#htp-tariffs');
-    if(root)new MutationObserver(simplifyRetailColumns).observe(root,{childList:true,subtree:true});
+    if(root){
+      var pending=false;
+      new MutationObserver(function(mutations){
+        var relevant=mutations.some(function(m){return Array.prototype.some.call(m.addedNodes||[],function(n){return n&&n.nodeType===1&&((n.matches&&n.matches('[data-htp-tariff-column],[data-htp-tariff-row]'))||(n.querySelector&&n.querySelector('[data-htp-tariff-column],[data-htp-tariff-row]')));});});
+        if(!relevant||pending)return;
+        pending=true;
+        window.requestAnimationFrame(function(){pending=false;simplifyRetailColumns();});
+      }).observe(root,{childList:true,subtree:true});
+    }
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 }());

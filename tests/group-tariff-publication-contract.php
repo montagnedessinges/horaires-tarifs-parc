@@ -26,6 +26,9 @@ group_publication_check(strpos($settings, 'quote_binding_valid') !== false && st
 
 group_publication_check(strpos($seasons, 'hide_unpublished_groups') !== false && strpos($seasons, "\$tariffs['groups'] = array();") !== false, 'general public tariff rendering cannot expose unpublished group rates');
 group_publication_check(strpos($quotes, 'Parcs_HT_Group_Tariff_Settings::is_published($year)') !== false, 'quote calculation requires group rates published for the visit year');
+group_publication_check(strpos($quotes, "array_keys((array)(\$all['seasons'] ?? array()))") !== false, 'online quote settings discover canonical future seasons instead of relying on legacy quote storage');
+group_publication_check(strpos($quotes, 'private static function stable_binding') !== false && strpos($quotes, 'krsort($previous, SORT_NUMERIC)') !== false, 'future seasons can inherit a stable quote binding from a previous season');
+group_publication_check(strpos($quotes, 'public static function season_for_year') !== false, 'quote engine exposes one canonical per-year availability accessor');
 
 group_publication_check(strpos($shortcode, 'Parcs_HT_Group_Tariff_Settings::public_year()') !== false, 'dedicated group shortcode selects the commercial group year');
 group_publication_check(strpos($shortcode, "\$settings['tariffs'] = isset(\$season['tariffs'])") !== false, 'dedicated group shortcode reads the selected year canonical tariff payload directly');
@@ -47,3 +50,5 @@ group_publication_check(strpos($switch_js, 'Saison publique générale') !== fal
 group_publication_check(strpos($switch_admin, "do_action('litespeed_purge_all')") !== false && strpos($switch_admin, 'wp_schedule_single_event') !== false, 'scheduled group switch purges the page cache');
 
 echo "Group tariff publication contract: OK\n";
+
+require __DIR__ . '/group-quote-future-season-runtime.php';

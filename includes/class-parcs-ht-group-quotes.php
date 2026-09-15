@@ -47,18 +47,30 @@ final class Parcs_HT_Group_Quotes {
         if (!isset($settings['tariff_binding']) || !is_array($settings['tariff_binding'])) $settings['tariff_binding'] = self::legacy_binding_defaults();
         if (!isset($settings['seasons']) || !is_array($settings['seasons'])) $settings['seasons'] = array();
         if (!$public) return $settings;
-        foreach ($settings['seasons'] as $year => &$row) {
-            if (!is_array($row)) $row = array();
-            $row['published'] = class_exists('Parcs_HT_Group_Tariff_Settings') && Parcs_HT_Group_Tariff_Settings::is_published((string)$year) ? '1' : '0';
+
+        // Le devis public doit refléter les saisons canoniques réellement publiées,
+        // y compris une nouvelle année qui n'existait pas dans l'ancien stockage du devis.
+        $all = class_exists('Parcs_HT_Defaults') ? Parcs_HT_Defaults::all_settings() : array();
+        $years = array_unique(array_merge(
+            array_keys($settings['seasons']),
+            array_keys((array)($all['seasons'] ?? array()))
+        ));
+        foreach ($years as $year) {
+            $year = (string)$year;
+            if (!preg_match('/^20\d{2}$/', $year)) continue;
+            $row = self::published_season($year, $settings);
+            if ($row) {
+                $settings['seasons'][$year] = $row;
+                continue;
+            }
+            if (!isset($settings['seasons'][$year]) || !is_array($settings['seasons'][$year])) $settings['seasons'][$year] = array();
+            $settings['seasons'][$year]['published'] = '0';
         }
-        unset($row);
         return $settings;
     }
 
-    public static function binding_for_year($year, $settings = null) {
-        if ($settings === null) $settings = self::settings(false);
-        $binding = isset($settings['tariff_bindings'][$year]) && is_array($settings['tariff_bindings'][$year]) ? $settings['tariff_bindings'][$year] : array();
-        if (!class_exists('Parcs_HT_Tariff_Identities')) return null;
+    private static function stable_binding($binding) {
+        if (!is_array($binding) || !class_exists('Parcs_HT_Tariff_Identities')) return null;
         if (!Parcs_HT_Tariff_Identities::is_column_id($binding['column_id'] ?? '')) return null;
         foreach (array('child','adult','disability','companion') as $role) {
             if (!Parcs_HT_Tariff_Identities::is_row_id($binding[$role . '_row_id'] ?? '')) return null;
@@ -66,6 +78,36 @@ final class Parcs_HT_Group_Quotes {
         $binding['free_adult_children'] = (string)max(1, (int)($binding['free_adult_children'] ?? 10));
         $binding['free_adult_round_threshold'] = (string)max(1, min((int)$binding['free_adult_children'], (int)($binding['free_adult_round_threshold'] ?? 5)));
         return $binding;
+    }
+
+    public static function binding_for_year($year, $settings = null) {
+        if ($settings === null) $settings = self::settings(false);
+        $year = (string)$year;
+        $binding = self::stable_binding($settings['tariff_bindings'][$year] ?? null);
+        if ($binding) return $binding;
+
+        // Les identifiants tarifaires sont conçus pour survivre à la duplication d'une saison.
+        // Si 2027 reprend la grille 2026, on hérite donc automatiquement de la liaison devis.
+        // published_season() vérifie ensuite que tous les IDs existent réellement dans l'année cible.
+        $bindings = isset($settings['tariff_bindings']) && is_array($settings['tariff_bindings']) ? $settings['tariff_bindings'] : array();
+        $previous = array();
+        $future = array();
+        foreach ($bindings as $candidate_year => $candidate_binding) {
+            if (!preg_match('/^20\d{2}$/', (string)$candidate_year)) continue;
+            $candidate = self::stable_binding($candidate_binding);
+            if (!$candidate) continue;
+            if ((int)$candidate_year < (int)$year) $previous[(int)$candidate_year] = $candidate;
+            elseif ((int)$candidate_year > (int)$year) $future[(int)$candidate_year] = $candidate;
+        }
+        if ($previous) {
+            krsort($previous, SORT_NUMERIC);
+            return reset($previous);
+        }
+        if ($future) {
+            ksort($future, SORT_NUMERIC);
+            return reset($future);
+        }
+        return null;
     }
 
     private static function year_from_date($value) {
@@ -110,6 +152,10 @@ final class Parcs_HT_Group_Quotes {
             $result[$role] = (string)$price;
         }
         return $result;
+    }
+
+    public static function season_for_year($year) {
+        return self::published_season((string)$year, self::settings(false));
     }
 
     private static function number_value($value) {

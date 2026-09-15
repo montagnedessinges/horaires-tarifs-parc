@@ -66,9 +66,11 @@ final class Parcs_HT_Tariff_Seasons {
         if ($year !== '' && isset($value['seasons'][$year]['tariffs']) && is_array($value['seasons'][$year]['tariffs'])) {
             $value['tariffs'] = $value['seasons'][$year]['tariffs'];
             if ($public) $value['tariffs'] = self::hide_unpublished_groups($value['tariffs'], $year);
+            if (isset($value['general']) && is_array($value['general'])) $value['general']['year'] = $year;
+            $value['active_season_year'] = $year;
         }
         if ($public && $year === '') {
-            // Sans saison publiée, aucun ancien tarif global ne doit servir de secours public.
+            // Sans saison tarifaire autorisée, aucun ancien tarif global ne doit servir de secours public.
             $value['tariffs'] = array('individual'=>array(),'reduced'=>array(),'groups'=>array(),'columns'=>array('individual'=>array(),'reduced'=>array(),'groups'=>array()),'notes'=>array(),'payment_methods'=>array(),'payment_items'=>array(),'print'=>array());
         }
         // La visibilité est appliquée au rendu, jamais à l'option pouvant être réenregistrée.
@@ -87,6 +89,21 @@ final class Parcs_HT_Tariff_Seasons {
             $year = sanitize_text_field(wp_unslash($_POST['season_year']));
             if (preg_match('/^20\d{2}$/', $year) && isset($settings['seasons'][$year])) return $year;
         }
+
+        if ($public && class_exists('Parcs_HT_Display_Policy')) {
+            $years = Parcs_HT_Display_Policy::retail_years();
+            $requested = isset($_GET['htp_year']) ? sanitize_text_field(wp_unslash($_GET['htp_year'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- sélection publique en lecture seule.
+            if (preg_match('/^20\d{2}$/', $requested) && in_array($requested, $years, true)) return $requested;
+
+            $current = wp_date('Y');
+            if (in_array($current, $years, true)) return $current;
+
+            $active = (string)($settings['active_season_year'] ?? ($settings['general']['year'] ?? ''));
+            if ($active !== '' && in_array($active, $years, true)) return $active;
+
+            return $years ? (string)end($years) : '';
+        }
+
         $today = wp_date('Y-m-d', null, new DateTimeZone(isset($settings['timezone']) ? (string)$settings['timezone'] : 'Europe/Paris'));
         $candidate = '';
         foreach ($settings['seasons'] as $year => $season) {
