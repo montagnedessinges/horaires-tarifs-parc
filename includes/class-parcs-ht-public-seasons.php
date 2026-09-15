@@ -8,7 +8,7 @@ if (!defined('ABSPATH')) { exit; }
  * - Une seule saison visible : aucun changement visuel.
  * - Plusieurs saisons visibles : onglets d'années au-dessus des shortcodes concernés.
  * - public_display_until masque automatiquement une saison après la date configurée.
- * - Le paramètre public htp_year sélectionne une saison sans modifier les données enregistrées.
+ * - Le paramètre public htp_year sélectionne une saison uniquement pendant le rendu du shortcode concerné.
  * - Le Calendrier de l'Avent reste indépendant et peut exposer explicitement une campagne archivée.
  */
 final class Parcs_HT_Public_Seasons {
@@ -16,6 +16,7 @@ final class Parcs_HT_Public_Seasons {
 
     private static $raw_main = null;
     private static $raw_group = null;
+    private static $year_scope = '';
     private static $advent_target = '';
 
     public static function init() {
@@ -23,6 +24,7 @@ final class Parcs_HT_Public_Seasons {
         add_filter('option_' . Parcs_HT_Group_Tariff_Settings::OPTION, array(__CLASS__, 'filter_group_option'), 5, 1);
         add_filter('pre_update_option_' . Parcs_HT_Defaults::OPTION, array(__CLASS__, 'save_display_until'), 96, 3);
         add_action('admin_enqueue_scripts', array(__CLASS__, 'admin_assets'), 96);
+        add_filter('pre_do_shortcode_tag', array(__CLASS__, 'prepare_year_scope'), 6, 4);
         add_filter('do_shortcode_tag', array(__CLASS__, 'wrap_year_tabs'), 20, 4);
         add_filter('pre_do_shortcode_tag', array(__CLASS__, 'intercept_advent_shortcode'), 8, 4);
         add_filter('option_' . Parcs_HT_Advent::OPTION, array(__CLASS__, 'filter_advent_option'), 5, 1);
@@ -50,6 +52,25 @@ final class Parcs_HT_Public_Seasons {
         return preg_match('/^20\d{2}$/', $year) ? $year : '';
     }
 
+    private static function shortcode_kind($tag) {
+        $base = preg_replace('/_(fr|en|de)$/', '', (string)$tag);
+        if ($base === 'parc_tarifs_groupes') return 'groups';
+        if (in_array($base, array('parc_horaires_tarifs','parc_tableau_tarifs'), true)) return 'core';
+        return '';
+    }
+
+    public static function prepare_year_scope($return, $tag, $attr, $m) {
+        unset($attr, $m);
+        if ($return !== false || is_admin()) return $return;
+        $kind = self::shortcode_kind($tag);
+        if ($kind === '') return false;
+        $requested = self::requested_year();
+        if ($requested === '') return false;
+        $years = self::visible_years($kind === 'groups');
+        if (in_array($requested, $years, true)) self::$year_scope = $requested;
+        return false;
+    }
+
     private static function season_is_visible($season, $today) {
         if (!is_array($season) || (string)($season['published'] ?? '0') !== '1') return false;
         $until = self::clean_date($season['public_display_until'] ?? '');
@@ -63,7 +84,7 @@ final class Parcs_HT_Public_Seasons {
         if (empty($value['seasons']) || !is_array($value['seasons'])) return $value;
 
         $today = self::today($value);
-        $requested = self::requested_year();
+        $requested = self::$year_scope;
         $requested_visible = $requested !== '' && isset($value['seasons'][$requested]) && self::season_is_visible($value['seasons'][$requested], $today);
 
         foreach ($value['seasons'] as $year => &$season) {
@@ -81,19 +102,19 @@ final class Parcs_HT_Public_Seasons {
     public static function filter_group_option($value) {
         if (!is_array($value)) return $value;
         if (self::$raw_group === null) self::$raw_group = $value;
-        if (is_admin()) return $value;
+        if (is_admin() || empty($value['seasons']) || !is_array($value['seasons'])) return $value;
 
-        $requested = self::requested_year();
-        if ($requested === '' || empty($value['seasons']) || !is_array($value['seasons'])) return $value;
         $visible = self::visible_years(false);
-        if (!in_array($requested, $visible, true) || empty($value['seasons'][$requested]) || !is_array($value['seasons'][$requested])) return $value;
-
+        $requested = self::$year_scope;
         foreach ($value['seasons'] as $year => &$season) {
             if (!is_array($season)) continue;
-            if ((string)$year === $requested) {
-                $season['display_from'] = '2000-01-01';
-            } else {
-                $season['display_from'] = '2099-12-31';
+            $year = (string)$year;
+            if (!in_array($year, $visible, true)) {
+                $season['published'] = '0';
+                continue;
+            }
+            if ($requested !== '') {
+                $season['display_from'] = $year === $requested ? '2000-01-01' : '2099-12-31';
             }
         }
         unset($season);
@@ -173,17 +194,21 @@ final class Parcs_HT_Public_Seasons {
 
     public static function wrap_year_tabs($output, $tag, $attr, $m) {
         unset($attr, $m);
-        if (is_admin() || !is_string($output) || $output === '') return $output;
+        $kind = self::shortcode_kind($tag);
+        if ($kind === '') return $output;
+        if (is_admin() || !is_string($output) || $output === '') {
+            self::$year_scope = '';
+            return $output;
+        }
         $base = preg_replace('/_(fr|en|de)$/', '', (string)$tag);
-        $groups = $base === 'parc_tarifs_groupes';
-        $core = in_array($base, array('parc_horaires_tarifs','parc_tableau_tarifs'), true);
-        if (!$groups && !$core) return $output;
-        $years = self::visible_years($groups);
+        $years = self::visible_years($kind === 'groups');
+        $selected = self::selected_year($years);
+        self::$year_scope = '';
         if (count($years) < 2) return $output;
         if ($base === 'parc_horaires_tarifs') {
             $output = preg_replace('/class="parcs-ht-page(\s|\")/', 'class="parcs-ht-page has-public-year-tabs$1', $output, 1);
         }
-        return self::tabs_markup($years, self::selected_year($years)) . $output;
+        return self::tabs_markup($years, $selected) . $output;
     }
 
     public static function save_display_until($new_value, $old_value, $option) {
