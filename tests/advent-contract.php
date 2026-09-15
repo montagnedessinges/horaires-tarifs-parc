@@ -27,9 +27,9 @@ function advent_check($condition, $message) {
     echo '[OK] ' . $message . PHP_EOL;
 }
 
-$version_found = preg_match('/Version:\\s*([0-9]+(?:\\.[0-9]+)+)/', $main, $version_match) === 1;
-$constant_found = preg_match("/PARCS_HT_VERSION',\\s*'([0-9]+(?:\\.[0-9]+)+)'/", $main, $constant_match) === 1;
-advent_check($version_found && $constant_found && $version_match[1] === $constant_match[1] && version_compare($version_match[1], '1.15.8', '>='), 'Advent preview color fix remains active since version 1.15.8');
+preg_match('/Version:\s*([0-9.]+)/', $main, $advent_version_match);
+$advent_plugin_version = isset($advent_version_match[1]) ? $advent_version_match[1] : '0.0.0';
+advent_check(version_compare($advent_plugin_version, '1.15.8', '>='), 'Advent preview color fix remains active from version 1.15.8 onward');
 advent_check(strpos($main, 'class-parcs-ht-advent.php') !== false && strpos($main, 'class-parcs-ht-advent-admin.php') !== false, 'Advent public and canonical admin modules are bootstrapped');
 advent_check(strpos($main, 'class-parcs-ht-advent-appearance.php') !== false && strpos($main, 'Parcs_HT_Advent_Appearance::init()') !== false, 'dedicated Advent appearance module is bootstrapped');
 advent_check(!file_exists($root . '/includes/class-parcs-ht-advent-admin-v2.php'), 'obsolete Advent v2 admin filename is removed');

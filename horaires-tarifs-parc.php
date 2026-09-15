@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Gestion du parc
  * Description: Gestion centralisée des horaires, calendriers, tarifs, événements, devis et outils du parc.
- * Version: 1.15.9
+ * Version: 1.15.10
  * Update URI: https://github.com/montagnedessinges/horaires-tarifs-parc
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -12,7 +12,7 @@
 
 if (!defined('ABSPATH')) { exit; }
 
-define('PARCS_HT_VERSION', '1.15.9');
+define('PARCS_HT_VERSION', '1.15.10');
 define('PARCS_HT_FILE', __FILE__);
 define('PARCS_HT_DIR', plugin_dir_path(__FILE__));
 define('PARCS_HT_URL', plugin_dir_url(__FILE__));
@@ -35,6 +35,8 @@ require_once PARCS_HT_DIR . 'includes/class-parcs-ht-quote-gate.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-quote-page-save.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin-groups.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-group-tariffs.php';
+require_once PARCS_HT_DIR . 'includes/class-parcs-ht-display-policy.php';
+require_once PARCS_HT_DIR . 'includes/class-parcs-ht-group-portal.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-guide-stats.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-pedagogical-guides.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-guide-appearance.php';
@@ -43,6 +45,8 @@ require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin-shortcode-preview.php
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-advent.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-advent-appearance.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-advent-ux.php';
+require_once PARCS_HT_DIR . 'includes/class-parcs-ht-public-seasons.php';
+require_once PARCS_HT_DIR . 'includes/class-parcs-ht-schedule-csv.php';
 Parcs_HT_HTTP_SSL::init();
 Parcs_HT_Tariff_Seasons::init();
 Parcs_HT_Season_Status::init();
@@ -50,6 +54,8 @@ Parcs_HT_Tariff_Identities::init();
 Parcs_HT_Group_Tariff_Settings::init();
 Parcs_HT_Group_Tariff_Switch_Admin::init();
 Parcs_HT_Quote_Page_Save::init();
+Parcs_HT_Display_Policy::init();
+Parcs_HT_Public_Seasons::init();
 Parcs_HT_Save_Integrity::init();
 
 register_activation_hook(__FILE__, array('Parcs_HT_Defaults', 'activate'));
@@ -98,6 +104,32 @@ add_action('plugins_loaded', static function () {
         Parcs_HT_Admin_Groups::init();
         Parcs_HT_Admin_Shortcode_Preview::init();
         Parcs_HT_Advent_Admin::init();
+        Parcs_HT_Schedule_CSV::init();
+        add_action('admin_footer', static function () {
+            if (!current_user_can('manage_options')) return;
+            // phpcs:disable WordPress.Security.NonceVerification.Recommended -- Sélection d'écran et de saison en lecture seule.
+            $page = isset($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : '';
+            $year = isset($_GET['season']) ? sanitize_text_field(wp_unslash($_GET['season'])) : '';
+            // phpcs:enable WordPress.Security.NonceVerification.Recommended
+            if ($page !== Parcs_HT_Admin::PAGE) return;
+            $settings = Parcs_HT_Defaults::settings($year);
+            $active_year = isset($settings['active_season_year']) ? (string)$settings['active_season_year'] : (string)($settings['general']['year'] ?? '');
+            echo '<div id="htp-schedule-csv-controls" hidden>';
+            Parcs_HT_Schedule_CSV::render_controls($active_year);
+            echo '</div>';
+            Parcs_HT_Schedule_CSV::render_external_form($active_year);
+            ?>
+            <script>
+            (function(){var box=document.getElementById('htp-schedule-csv-controls'),panel=document.getElementById('htp-regular');if(!box||!panel)return;box.hidden=false;panel.insertBefore(box,panel.children.length>2?panel.children[2]:null);}());
+            </script>
+            <?php
+        }, 50);
+        add_action('admin_notices', static function () {
+            // phpcs:disable WordPress.Security.NonceVerification.Recommended -- Message de confirmation uniquement.
+            if (!isset($_GET['page'], $_GET['csv_imported']) || sanitize_key(wp_unslash($_GET['page'])) !== Parcs_HT_Admin::PAGE || sanitize_text_field(wp_unslash($_GET['csv_imported'])) !== '1') return;
+            // phpcs:enable WordPress.Security.NonceVerification.Recommended
+            echo '<div class="notice notice-success is-dismissible"><p>Le CSV horaires & calendrier a été importé. Une révision de sécurité a été créée avant l’import.</p></div>';
+        });
         add_action('admin_menu', static function () {
             global $menu;
             foreach ((array) $menu as $index => $item) {
@@ -129,6 +161,7 @@ add_action('plugins_loaded', static function () {
         }
     }
     Parcs_HT_Group_Tariffs::init();
+    Parcs_HT_Group_Portal::init();
     Parcs_HT_Guide_Stats::init();
     Parcs_HT_Pedagogical_Guides::init();
     Parcs_HT_Guide_Appearance::init();

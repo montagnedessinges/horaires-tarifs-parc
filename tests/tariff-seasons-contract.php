@@ -30,3 +30,5 @@ foreach ($checks as $label => $ok) {
 }
 if ($failed) exit(1);
 echo "Tariff seasons contract: OK\n";
+
+require __DIR__ . '/public-seasons-contract.php';
