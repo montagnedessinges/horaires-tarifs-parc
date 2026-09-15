@@ -2,14 +2,7 @@
 
 if (!defined('ABSPATH')) { exit; }
 
-/**
- * Règles complémentaires d'affichage public.
- *
- * - Fenêtre publique commune aux horaires et tarifs individuels.
- * - Forçage manuel prioritaire sur les dates, sans publier un brouillon.
- * - Visibilité des horaires groupes indépendante du grand public.
- * - Deux canaux fixes pour les tarifs individuels/réduits : En ligne / Sur place.
- */
+/** Règles de visibilité publique, visibilité groupes et canaux tarifaires fixes. */
 final class Parcs_HT_Display_Policy {
     private static $raw_main = null;
     private static $raw_group = null;
@@ -44,11 +37,6 @@ final class Parcs_HT_Display_Policy {
         );
     }
 
-    private static function label_text($column) {
-        $labels = isset($column['label']) && is_array($column['label']) ? $column['label'] : array();
-        return strtolower(trim(implode(' ', array_map('strval', $labels))));
-    }
-
     private static function source_ids($columns) {
         $out = array('online'=>'','onsite'=>'');
         $fallback = array();
@@ -56,8 +44,9 @@ final class Parcs_HT_Display_Policy {
             if (!is_array($column)) continue;
             $id = sanitize_key((string)($column['id'] ?? ''));
             if ($id === '') continue;
+            $labels = isset($column['label']) && is_array($column['label']) ? $column['label'] : array();
+            $text = strtolower($id . ' ' . implode(' ', array_map('strval', $labels)));
             $fallback[] = $id;
-            $text = $id . ' ' . self::label_text($column);
             if ($out['online'] === '' && preg_match('/online|web|internet|en ligne/', $text)) $out['online'] = $id;
             if ($out['onsite'] === '' && preg_match('/onsite|on-site|sur place|caisse|guichet|place/', $text)) $out['onsite'] = $id;
         }
@@ -77,8 +66,7 @@ final class Parcs_HT_Display_Policy {
                 array('id'=>'online','label'=>$labels['online'],'visible'=>'1'),
                 array('id'=>'onsite','label'=>$labels['onsite'],'visible'=>'1'),
             );
-            if (empty($tariffs[$group]) || !is_array($tariffs[$group])) continue;
-            foreach ($tariffs[$group] as &$row) {
+            foreach ((array)($tariffs[$group] ?? array()) as &$row) {
                 if (!is_array($row)) continue;
                 if (!isset($row['cells']) || !is_array($row['cells'])) $row['cells'] = array();
                 foreach (array('online','onsite') as $channel) {
@@ -101,12 +89,9 @@ final class Parcs_HT_Display_Policy {
     private static function normalize_all_tariffs($value) {
         if (!is_array($value)) return $value;
         if (isset($value['tariffs']) && is_array($value['tariffs'])) $value['tariffs'] = self::normalize_tariffs($value['tariffs']);
-        if (!empty($value['seasons']) && is_array($value['seasons'])) {
-            foreach ($value['seasons'] as &$season) {
-                if (!is_array($season) || !isset($season['tariffs']) || !is_array($season['tariffs'])) continue;
-                $season['tariffs'] = self::normalize_tariffs($season['tariffs']);
-            }
-            unset($season);
+        foreach ((array)($value['seasons'] ?? array()) as $year => $season) {
+            if (!is_array($season) || !isset($season['tariffs']) || !is_array($season['tariffs'])) continue;
+            $value['seasons'][$year]['tariffs'] = self::normalize_tariffs($season['tariffs']);
         }
         return $value;
     }
@@ -116,12 +101,10 @@ final class Parcs_HT_Display_Policy {
         if (self::$raw_main === null) self::$raw_main = $value;
         $value = self::normalize_all_tariffs($value);
         if (is_admin() || empty($value['seasons']) || !is_array($value['seasons'])) return $value;
-
         $today = self::today($value);
         foreach ($value['seasons'] as &$season) {
             if (!is_array($season) || (string)($season['published'] ?? '0') !== '1') continue;
-            $force = (string)($season['public_force_display'] ?? '0') === '1';
-            if ($force) {
+            if ((string)($season['public_force_display'] ?? '0') === '1') {
                 $season['public_display_until'] = '';
                 continue;
             }
@@ -141,12 +124,12 @@ final class Parcs_HT_Display_Policy {
         if (!is_array($value) || is_admin()) return $value;
         $raw = is_array(self::$raw_group) ? self::$raw_group : $value;
         if (empty($raw['seasons']) || !is_array($raw['seasons'])) return $value;
-        $value['seasons'] = isset($value['seasons']) && is_array($value['seasons']) ? $value['seasons'] : array();
+        if (!isset($value['seasons']) || !is_array($value['seasons'])) $value['seasons'] = array();
         foreach ($raw['seasons'] as $year => $raw_season) {
             if (!is_array($raw_season)) continue;
             $year = (string)$year;
-            $published = (string)($raw_season['published'] ?? '0') === '1';
             if (!isset($value['seasons'][$year]) || !is_array($value['seasons'][$year])) $value['seasons'][$year] = $raw_season;
+            $published = (string)($raw_season['published'] ?? '0') === '1';
             $value['seasons'][$year]['published'] = $published ? '1' : '0';
             if (!$published) continue;
             $value['seasons'][$year]['display_from'] = '2000-01-01';
@@ -165,16 +148,15 @@ final class Parcs_HT_Display_Policy {
         $all = self::raw_main();
         foreach ((array)($all['seasons'] ?? array()) as $year => $season) {
             if (!preg_match('/^20\d{2}$/', (string)$year) || !is_array($season)) continue;
-            if ((string)($season['groups_schedule_visible'] ?? '0') !== '1') continue;
-            $years[] = (string)$year;
+            if ((string)($season['groups_schedule_visible'] ?? '0') === '1') $years[] = (string)$year;
         }
         sort($years, SORT_NUMERIC);
         return $years;
     }
 
     public static function raw_season($year) {
-        $year = (string)$year;
         $all = self::raw_main();
+        $year = (string)$year;
         return isset($all['seasons'][$year]) && is_array($all['seasons'][$year]) ? $all['seasons'][$year] : array();
     }
 
@@ -182,15 +164,10 @@ final class Parcs_HT_Display_Policy {
         self::$forced_group_tariff_year = preg_match('/^20\d{2}$/', (string)$year) ? (string)$year : '';
     }
 
-    public static function end_group_tariff_year() {
-        self::$forced_group_tariff_year = '';
-    }
+    public static function end_group_tariff_year() { self::$forced_group_tariff_year = ''; }
 
     private static function requested_group_year() {
-        // Sélection publique en lecture seule ; aucune donnée n'est enregistrée depuis ce paramètre.
-        // phpcs:disable WordPress.Security.NonceVerification.Recommended
-        $year = isset($_GET['htp_group_year']) ? sanitize_text_field(wp_unslash($_GET['htp_group_year'])) : '';
-        // phpcs:enable WordPress.Security.NonceVerification.Recommended
+        $year = isset($_GET['htp_group_year']) ? sanitize_text_field(wp_unslash($_GET['htp_group_year'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- sélection publique en lecture seule.
         return preg_match('/^20\d{2}$/', $year) ? $year : '';
     }
 
@@ -230,41 +207,40 @@ final class Parcs_HT_Display_Policy {
     }
 
     public static function save_controls($new_value, $old_value, $option) {
-        unset($option);
+        unset($option, $old_value);
         if (!is_admin() || !is_array($new_value) || !current_user_can('manage_options')) return $new_value;
         if (!isset($_POST['_wpnonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'])), 'parcs_ht_save')) return $new_value;
         if (!isset($_POST['action']) || sanitize_key(wp_unslash($_POST['action'])) !== 'parcs_ht_save') return $new_value;
         $year = isset($_POST['season_year']) ? sanitize_text_field(wp_unslash($_POST['season_year'])) : '';
         if (!preg_match('/^20\d{2}$/', $year) || empty($new_value['seasons'][$year]) || !is_array($new_value['seasons'][$year])) return $new_value;
 
-        $raw = isset($_POST['settings']['general']) && is_array($_POST['settings']['general']) ? wp_unslash($_POST['settings']['general']) : array();
-        $new_value['seasons'][$year]['public_display_from'] = self::clean_date(sanitize_text_field((string)($raw['public_display_from'] ?? '')));
-        $new_value['seasons'][$year]['public_force_display'] = isset($raw['public_force_display']) && (string)$raw['public_force_display'] === '1' ? '1' : '0';
-        $new_value['seasons'][$year]['groups_schedule_visible'] = isset($raw['groups_schedule_visible']) && (string)$raw['groups_schedule_visible'] === '1' ? '1' : '0';
+        $display_from = isset($_POST['settings']['general']['public_display_from']) ? sanitize_text_field(wp_unslash($_POST['settings']['general']['public_display_from'])) : '';
+        $force_display = isset($_POST['settings']['general']['public_force_display']) ? sanitize_text_field(wp_unslash($_POST['settings']['general']['public_force_display'])) : '0';
+        $groups_visible = isset($_POST['settings']['general']['groups_schedule_visible']) ? sanitize_text_field(wp_unslash($_POST['settings']['general']['groups_schedule_visible'])) : '0';
+        $new_value['seasons'][$year]['public_display_from'] = self::clean_date($display_from);
+        $new_value['seasons'][$year]['public_force_display'] = $force_display === '1' ? '1' : '0';
+        $new_value['seasons'][$year]['groups_schedule_visible'] = $groups_visible === '1' ? '1' : '0';
 
-        if (is_array($old_value) && isset($old_value['seasons'][$year]['tariffs']) && is_array($old_value['seasons'][$year]['tariffs'])) {
-            if (!isset($new_value['seasons'][$year]['tariffs']['_legacy_retail_1_15_9'])) {
-                $old_tariffs = $old_value['seasons'][$year]['tariffs'];
-                $new_value['seasons'][$year]['tariffs']['_legacy_retail_1_15_9'] = array(
-                    'columns'=>array(
-                        'individual'=>$old_tariffs['columns']['individual'] ?? array(),
-                        'reduced'=>$old_tariffs['columns']['reduced'] ?? array(),
-                    ),
-                    'individual'=>$old_tariffs['individual'] ?? array(),
-                    'reduced'=>$old_tariffs['reduced'] ?? array(),
-                );
-            }
+        $backup_source = is_array(self::$raw_main) ? self::$raw_main : array();
+        if (isset($backup_source['seasons'][$year]['tariffs']) && is_array($backup_source['seasons'][$year]['tariffs']) && !isset($new_value['seasons'][$year]['tariffs']['_legacy_retail_1_15_9'])) {
+            $old_tariffs = $backup_source['seasons'][$year]['tariffs'];
+            $new_value['seasons'][$year]['tariffs']['_legacy_retail_1_15_9'] = array(
+                'columns'=>array(
+                    'individual'=>$old_tariffs['columns']['individual'] ?? array(),
+                    'reduced'=>$old_tariffs['columns']['reduced'] ?? array(),
+                ),
+                'individual'=>$old_tariffs['individual'] ?? array(),
+                'reduced'=>$old_tariffs['reduced'] ?? array(),
+            );
         }
         return self::normalize_all_tariffs($new_value);
     }
 
     public static function admin_assets($hook) {
         if ($hook !== 'toplevel_page_parcs-horaires-tarifs') return;
-        $year = isset($_GET['season']) ? sanitize_text_field(wp_unslash($_GET['season'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- sélection d'administration en lecture seule.
+        $year = isset($_GET['season']) ? sanitize_text_field(wp_unslash($_GET['season'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- sélection d’administration en lecture seule.
         $all = Parcs_HT_Defaults::all_settings();
-        if ($year === '' || empty($all['seasons'][$year])) {
-            foreach ((array)($all['seasons'] ?? array()) as $candidate => $unused) { $year = (string)$candidate; break; }
-        }
+        if ($year === '' || empty($all['seasons'][$year])) foreach ((array)($all['seasons'] ?? array()) as $candidate => $unused) { $year = (string)$candidate; break; }
         $season = $year !== '' && isset($all['seasons'][$year]) && is_array($all['seasons'][$year]) ? $all['seasons'][$year] : array();
         wp_enqueue_script('parcs-ht-display-policy-admin', PARCS_HT_URL . 'assets/display-policy-admin.js', array('parcs-ht-tariff-seasons-admin','parcs-ht-public-seasons-admin'), PARCS_HT_VERSION, true);
         wp_add_inline_script('parcs-ht-display-policy-admin', 'window.ParcsHTDisplayPolicy=' . wp_json_encode(array(
