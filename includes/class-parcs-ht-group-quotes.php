@@ -129,7 +129,7 @@ final class Parcs_HT_Group_Quotes {
 
     private static function published_season($year, $settings = null) {
         if ($settings === null) $settings = self::settings(false);
-        if ($year === '' || !class_exists('Parcs_HT_Group_Tariff_Settings') || !Parcs_HT_Group_Tariff_Settings::is_published($year)) return null;
+        if ($year === '' || !class_exists('Parcs_HT_Group_Tariff_Settings') || !Parcs_HT_Group_Tariff_Settings::quote_enabled($year)) return null;
         $all = get_option(Parcs_HT_Defaults::OPTION, array());
         if (!is_array($all) || empty($all['seasons'][$year]) || !is_array($all['seasons'][$year])) return null;
         $season = $all['seasons'][$year];

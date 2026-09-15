@@ -15,7 +15,7 @@ final class Parcs_HT_Defaults {
 }
 
 final class Parcs_HT_Group_Tariff_Settings {
-    public static function is_published($year) { return in_array((string)$year, array('2026','2027'), true); }
+    public static function quote_enabled($year) { return in_array((string)$year, array('2026','2027'), true); }
 }
 
 final class Parcs_HT_Tariff_Identities {

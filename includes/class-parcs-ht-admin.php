@@ -93,7 +93,7 @@ final class Parcs_HT_Admin {
 
             <section class="htp-card htp-season-manager" data-htp-season-manager>
                 <h2>Saisons</h2>
-                <p>Une année n’apparaît sur le site que si vous l’avez créée et publiée.</p>
+                <p>Choisissez une année, puis réglez séparément son calendrier, ses tarifs visiteurs et ses tarifs groupes.</p>
                 <div class="htp-season-tabs">
                     <?php foreach ($all_settings['seasons'] as $year => $season) : ?>
                         <div class="htp-season-item">
@@ -132,6 +132,7 @@ final class Parcs_HT_Admin {
                 <input type="hidden" name="htp_active_tab" value="htp-general" data-htp-active-tab-input>
                 <?php wp_nonce_field('parcs_ht_save'); ?>
 
+                <?php Parcs_HT_Display_Policy::render_controls($active_year, $all_settings['seasons'][$active_year] ?? array()); ?>
                 <?php self::general_section($settings); ?>
                 <?php self::regular_section($settings); ?>
                 <?php self::holidays_section($settings); ?>
@@ -1180,7 +1181,7 @@ final class Parcs_HT_Admin {
         $all['alerts'] = $clean['alerts'];
         $all['tariffs'] = $clean['tariffs'];
         $all['quote_page'] = $clean['quote_page'];
-        $all['seasons'][$year] = array(
+        $all['seasons'][$year] = array_merge($all['seasons'][$year], array(
             'year' => $year,
             'published' => isset($clean['season_published']) ? $clean['season_published'] : '0',
             'season_start' => isset($clean['season_start']) ? $clean['season_start'] : '',
@@ -1191,7 +1192,7 @@ final class Parcs_HT_Admin {
             'public_holidays' => $clean['public_holidays'],
             'domain_rules' => $clean['domain_rules'],
             'exceptions' => $clean['exceptions'],
-        );
+        ));
         $all['schema_version'] = Parcs_HT_Defaults::SCHEMA_VERSION;
         update_option(Parcs_HT_Defaults::OPTION, $all, false);
         $clean['active_season_year'] = $year;

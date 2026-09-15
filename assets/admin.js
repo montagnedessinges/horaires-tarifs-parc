@@ -13,7 +13,7 @@
       var activeInput=form.querySelector('[data-htp-active-tab-input]');
       var activeId=activeInput?activeInput.value:'';
       form.querySelectorAll('section.htp-card').forEach(function(section){
-        if(section.id===activeId)return;
+        if(section.id===activeId||section.classList.contains('htp-year-controls'))return;
         section.querySelectorAll('input,select,textarea,button').forEach(function(control){control.disabled=true;});
       });
     });
