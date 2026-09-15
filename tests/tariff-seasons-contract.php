@@ -32,3 +32,4 @@ if ($failed) exit(1);
 echo "Tariff seasons contract: OK\n";
 
 require __DIR__ . '/public-seasons-contract.php';
+require __DIR__ . '/stability-11511-contract.php';
