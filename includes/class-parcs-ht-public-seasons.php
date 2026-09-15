@@ -47,8 +47,11 @@ final class Parcs_HT_Public_Seasons {
     }
 
     public static function requested_year() {
+        // Sélecteur public en lecture seule : aucun état n'est modifié depuis ce paramètre.
+        // phpcs:disable WordPress.Security.NonceVerification.Recommended
         if (!isset($_GET[self::QUERY_ARG])) return '';
-        $year = sanitize_text_field(wp_unslash($_GET[self::QUERY_ARG])); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- sélection publique en lecture seule.
+        $year = sanitize_text_field(wp_unslash($_GET[self::QUERY_ARG]));
+        // phpcs:enable WordPress.Security.NonceVerification.Recommended
         return preg_match('/^20\d{2}$/', $year) ? $year : '';
     }
 
@@ -218,7 +221,7 @@ final class Parcs_HT_Public_Seasons {
         if (!isset($_POST['action']) || sanitize_key(wp_unslash($_POST['action'])) !== 'parcs_ht_save') return $new_value;
         $year = isset($_POST['season_year']) ? sanitize_text_field(wp_unslash($_POST['season_year'])) : '';
         if (!preg_match('/^20\d{2}$/', $year) || !isset($new_value['seasons'][$year])) return $new_value;
-        $raw = isset($_POST['settings']['general']['public_display_until']) ? wp_unslash($_POST['settings']['general']['public_display_until']) : '';
+        $raw = isset($_POST['settings']['general']['public_display_until']) ? sanitize_text_field(wp_unslash($_POST['settings']['general']['public_display_until'])) : '';
         $date = self::clean_date($raw);
         $new_value['seasons'][$year]['public_display_until'] = $date;
         if (isset($new_value['general']) && is_array($new_value['general'])) $new_value['general']['public_display_until'] = $date;
@@ -302,6 +305,7 @@ final class Parcs_HT_Public_Seasons {
     }
 
     public static function prepare_advent_archive_ajax() {
+        if (!check_ajax_referer(Parcs_HT_Advent::PUBLIC_NONCE_ACTION, 'nonce', false)) return;
         $campaign_id = isset($_POST['campaign_id']) ? sanitize_key(wp_unslash($_POST['campaign_id'])) : '';
         if ($campaign_id !== '' && self::advent_campaign_is_public($campaign_id)) {
             $campaign = self::raw_advent_campaign($campaign_id);
