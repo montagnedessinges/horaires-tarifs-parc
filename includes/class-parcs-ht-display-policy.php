@@ -12,10 +12,12 @@ if (!defined('ABSPATH')) { exit; }
  */
 final class Parcs_HT_Display_Policy {
     private static $raw_main = null;
+    private static $raw_group = null;
     private static $forced_group_tariff_year = '';
 
     public static function init() {
         add_filter('option_' . Parcs_HT_Defaults::OPTION, array(__CLASS__, 'filter_main_option'), 4, 1);
+        add_filter('option_' . Parcs_HT_Group_Tariff_Settings::OPTION, array(__CLASS__, 'capture_group_option'), 2, 1);
         add_filter('option_' . Parcs_HT_Group_Tariff_Settings::OPTION, array(__CLASS__, 'filter_group_option'), 7, 1);
         add_filter('pre_update_option_' . Parcs_HT_Defaults::OPTION, array(__CLASS__, 'save_controls'), 97, 3);
         add_action('admin_enqueue_scripts', array(__CLASS__, 'admin_assets'), 98);
@@ -120,7 +122,6 @@ final class Parcs_HT_Display_Policy {
             if (!is_array($season) || (string)($season['published'] ?? '0') !== '1') continue;
             $force = (string)($season['public_force_display'] ?? '0') === '1';
             if ($force) {
-                // Le moteur historique gère public_display_until : on le neutralise uniquement en mémoire.
                 $season['public_display_until'] = '';
                 continue;
             }
@@ -131,17 +132,26 @@ final class Parcs_HT_Display_Policy {
         return $value;
     }
 
+    public static function capture_group_option($value) {
+        if (self::$raw_group === null && is_array($value)) self::$raw_group = $value;
+        return $value;
+    }
+
     public static function filter_group_option($value) {
-        if (!is_array($value) || is_admin() || empty($value['seasons']) || !is_array($value['seasons'])) return $value;
-        foreach ($value['seasons'] as $year => &$season) {
-            if (!is_array($season)) continue;
-            $published = (string)($season['published'] ?? '0') === '1';
+        if (!is_array($value) || is_admin()) return $value;
+        $raw = is_array(self::$raw_group) ? self::$raw_group : $value;
+        if (empty($raw['seasons']) || !is_array($raw['seasons'])) return $value;
+        $value['seasons'] = isset($value['seasons']) && is_array($value['seasons']) ? $value['seasons'] : array();
+        foreach ($raw['seasons'] as $year => $raw_season) {
+            if (!is_array($raw_season)) continue;
+            $year = (string)$year;
+            $published = (string)($raw_season['published'] ?? '0') === '1';
+            if (!isset($value['seasons'][$year]) || !is_array($value['seasons'][$year])) $value['seasons'][$year] = $raw_season;
+            $value['seasons'][$year]['published'] = $published ? '1' : '0';
             if (!$published) continue;
-            // Pour les groupes, la case Afficher suffit : aucune date commerciale n'est imposée.
-            $season['display_from'] = '2000-01-01';
-            if (self::$forced_group_tariff_year !== '' && (string)$year !== self::$forced_group_tariff_year) $season['published'] = '0';
+            $value['seasons'][$year]['display_from'] = '2000-01-01';
+            if (self::$forced_group_tariff_year !== '' && $year !== self::$forced_group_tariff_year) $value['seasons'][$year]['published'] = '0';
         }
-        unset($season);
         return $value;
     }
 
@@ -152,7 +162,8 @@ final class Parcs_HT_Display_Policy {
 
     public static function group_schedule_years() {
         $years = array();
-        foreach ((array)(self::raw_main()['seasons'] ?? array()) as $year => $season) {
+        $all = self::raw_main();
+        foreach ((array)($all['seasons'] ?? array()) as $year => $season) {
             if (!preg_match('/^20\d{2}$/', (string)$year) || !is_array($season)) continue;
             if ((string)($season['groups_schedule_visible'] ?? '0') !== '1') continue;
             $years[] = (string)$year;
@@ -214,6 +225,7 @@ final class Parcs_HT_Display_Policy {
         $requested = self::requested_group_year();
         $selected = $requested !== '' && in_array($requested, $years, true) ? $requested : ($years ? (string)end($years) : '');
         self::end_group_tariff_year();
+        $output = preg_replace('/^(?:<style>.*?<\/style>)?<nav class="parcs-ht-year-tabs".*?<\/nav>/s', '', (string)$output, 1);
         return self::group_year_tabs($years, $selected) . $output;
     }
 
@@ -243,8 +255,7 @@ final class Parcs_HT_Display_Policy {
                 );
             }
         }
-        $new_value = self::normalize_all_tariffs($new_value);
-        return $new_value;
+        return self::normalize_all_tariffs($new_value);
     }
 
     public static function admin_assets($hook) {
@@ -264,10 +275,10 @@ final class Parcs_HT_Display_Policy {
     }
 
     public static function frontend_assets() {
-        wp_register_script('parcs-ht-retail-channels', PARCS_HT_URL . 'assets/retail-channels.js', array(), PARCS_HT_VERSION, true);
-        wp_enqueue_script('parcs-ht-retail-channels');
+        if (!wp_script_is('parcs-ht-frontend', 'enqueued')) return;
+        wp_enqueue_script('parcs-ht-retail-channels', PARCS_HT_URL . 'assets/retail-channels.js', array('parcs-ht-frontend'), PARCS_HT_VERSION, true);
         wp_register_style('parcs-ht-retail-channels', false, array(), PARCS_HT_VERSION);
         wp_enqueue_style('parcs-ht-retail-channels');
-        wp_add_inline_style('parcs-ht-retail-channels', '.parcs-ht-price-channel-label{display:block;font-size:.78em;font-weight:600;opacity:.72;margin-bottom:2px}.parcs-ht-group-year-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 18px}.parcs-ht-price-cell[hidden]{display:none!important}');
+        wp_add_inline_style('parcs-ht-retail-channels', '.parcs-ht-price-channel-label{display:block;font-size:.78em;font-weight:600;opacity:.72;margin-bottom:2px}.parcs-ht-group-year-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 18px}.parcs-ht-year-tab{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:8px 16px;border:1px solid var(--htp-border,#d9d9d9);border-radius:999px;background:transparent;color:inherit;text-decoration:none;font-weight:600}.parcs-ht-year-tab.is-active{background:var(--htp-primary,#006757);border-color:var(--htp-primary,#006757);color:#fff}.parcs-ht-price-cell[hidden]{display:none!important}');
     }
 }
