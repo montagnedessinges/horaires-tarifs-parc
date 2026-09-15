@@ -12,17 +12,17 @@ if (!is_string($helper) || !is_string($admin) || !is_string($main)) {
 
 $required = array(
     "const QUERY_ARG = 'htp_year'",
-    "public_display_until",
-    "parc_tableau_tarifs",
-    "parc_tarifs_groupes",
-    "parc_horaires_tarifs",
-    "visible_years",
-    "count($years) < 2",
-    "archivee",
-    "parc_calendrier_avent",
-    "parc_reglement_avent",
+    'public_display_until',
+    'parc_tableau_tarifs',
+    'parc_tarifs_groupes',
+    'parc_horaires_tarifs',
+    'visible_years',
+    'count($years) < 2',
+    'archivee',
+    'parc_calendrier_avent',
+    'parc_reglement_avent',
     "['id']",
-    "latest_advent_campaign_id",
+    'latest_advent_campaign_id',
 );
 foreach ($required as $marker) {
     if (strpos($helper, $marker) === false) {
@@ -43,7 +43,7 @@ foreach (array('Afficher cette année jusqu’au', 'settings[general][public_dis
     }
 }
 
-foreach (array("Version: 1.15.9", "define('PARCS_HT_VERSION', '1.15.9')", "class-parcs-ht-public-seasons.php", "Parcs_HT_Public_Seasons::init()") as $marker) {
+foreach (array("Version: 1.15.9", "define('PARCS_HT_VERSION', '1.15.9')", 'class-parcs-ht-public-seasons.php', 'Parcs_HT_Public_Seasons::init()') as $marker) {
     if (strpos($main, $marker) === false) {
         fwrite(STDERR, "Missing 1.15.9 bootstrap marker: {$marker}\n");
         exit(1);
