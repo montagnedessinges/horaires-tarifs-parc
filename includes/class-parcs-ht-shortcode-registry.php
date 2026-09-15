@@ -13,6 +13,7 @@ final class Parcs_HT_Shortcode_Registry {
             'parc_reglement_avent' => array('label'=>'Règlement du Calendrier de l’Avent','kind'=>'advent','module'=>'rules','preview'=>true),
             'parc_tableau_tarifs' => array('label'=>'Tableau des tarifs','kind'=>'core','module'=>'tariffs','preview'=>true),
             'parc_tarifs_groupes' => array('label'=>'Tarifs groupes uniquement','kind'=>'groups','module'=>'group_tariffs','preview'=>true),
+            'parc_groupes_horaires_tarifs' => array('label'=>'Groupes — horaires et tarifs','kind'=>'group_portal','module'=>'group_portal','preview'=>true),
             'parc_fermeture_exceptionnelle' => array('label'=>'Alerte de fermeture','kind'=>'core','module'=>'alert','preview'=>true),
             'parc_horaire' => array('label'=>'Texte horaire dynamique pour l’en-tête','kind'=>'core','module'=>'header_hour','preview'=>true),
             'parc_statut' => array('label'=>'Statut OUVERT / FERMÉ pour l’en-tête','kind'=>'core','module'=>'header_status','preview'=>true),
@@ -45,6 +46,9 @@ final class Parcs_HT_Shortcode_Registry {
         }
         if ($definition['kind'] === 'groups' && class_exists('Parcs_HT_Group_Tariffs')) {
             return Parcs_HT_Group_Tariffs::render($language, array());
+        }
+        if ($definition['kind'] === 'group_portal' && class_exists('Parcs_HT_Group_Portal')) {
+            return Parcs_HT_Group_Portal::render($language, array());
         }
         if ($definition['kind'] === 'guides') {
             return do_shortcode(self::shortcode($base, $language));
