@@ -75,11 +75,17 @@ foreach (array('parc_groupes_horaires_tarifs','Horaires d’ouverture','Tarifs g
     }
 }
 
-foreach (array("Version: 1.15.9", "define('PARCS_HT_VERSION', '1.15.9')", 'class-parcs-ht-public-seasons.php', 'Parcs_HT_Public_Seasons::init()', 'class-parcs-ht-display-policy.php', 'Parcs_HT_Display_Policy::init()', 'class-parcs-ht-group-portal.php', 'Parcs_HT_Group_Portal::init()') as $marker) {
+preg_match('/Version:\s*([0-9.]+)/', $main, $version_match);
+$version = isset($version_match[1]) ? $version_match[1] : '0.0.0';
+if (!version_compare($version, '1.15.9', '>=')) {
+    fwrite(STDERR, "Public seasons require plugin version 1.15.9 or later.\n");
+    exit(1);
+}
+foreach (array('class-parcs-ht-public-seasons.php', 'Parcs_HT_Public_Seasons::init()', 'class-parcs-ht-display-policy.php', 'Parcs_HT_Display_Policy::init()', 'class-parcs-ht-group-portal.php', 'Parcs_HT_Group_Portal::init()') as $marker) {
     if (strpos($main, $marker) === false) {
-        fwrite(STDERR, "Missing 1.15.9 bootstrap marker: {$marker}\n");
+        fwrite(STDERR, "Missing public seasons bootstrap marker: {$marker}\n");
         exit(1);
     }
 }
 
-echo "Public seasons and display policy contract OK\n";
+echo "Public seasons and display policy contract OK for {$version}\n";
