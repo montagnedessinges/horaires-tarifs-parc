@@ -3,11 +3,18 @@
 $root = dirname(__DIR__);
 $helper = file_get_contents($root . '/includes/class-parcs-ht-public-seasons.php');
 $admin = file_get_contents($root . '/assets/public-seasons-admin.js');
+$policy = file_get_contents($root . '/includes/class-parcs-ht-display-policy.php');
+$policy_admin = file_get_contents($root . '/assets/display-policy-admin.js');
+$retail = file_get_contents($root . '/assets/retail-channels.js');
+$portal = file_get_contents($root . '/includes/class-parcs-ht-group-portal.php');
+$registry = file_get_contents($root . '/includes/class-parcs-ht-shortcode-registry.php');
 $main = file_get_contents($root . '/horaires-tarifs-parc.php');
 
-if (!is_string($helper) || !is_string($admin) || !is_string($main)) {
-    fwrite(STDERR, "Unable to read public seasons implementation.\n");
-    exit(1);
+foreach (array($helper,$admin,$policy,$policy_admin,$retail,$portal,$registry,$main) as $content) {
+    if (!is_string($content)) {
+        fwrite(STDERR, "Unable to read public display implementation.\n");
+        exit(1);
+    }
 }
 
 $required = array(
@@ -43,11 +50,36 @@ foreach (array('Afficher cette année jusqu’au', 'settings[general][public_dis
     }
 }
 
-foreach (array("Version: 1.15.9", "define('PARCS_HT_VERSION', '1.15.9')", 'class-parcs-ht-public-seasons.php', 'Parcs_HT_Public_Seasons::init()') as $marker) {
+foreach (array('public_display_from','public_force_display','groups_schedule_visible','En ligne','Sur place','_legacy_retail_1_15_9','htp_group_year') as $marker) {
+    if (strpos($policy, $marker) === false) {
+        fwrite(STDERR, "Missing display policy marker: {$marker}\n");
+        exit(1);
+    }
+}
+foreach (array('Afficher au grand public à partir du','Forçage public','Afficher cette année aux groupes') as $marker) {
+    if (strpos($policy_admin, $marker) === false) {
+        fwrite(STDERR, "Missing admin publication control: {$marker}\n");
+        exit(1);
+    }
+}
+foreach (array('parcs-ht-price-channel-label','En ligne','Sur place') as $marker) {
+    if (strpos($retail, $marker) === false) {
+        fwrite(STDERR, "Missing retail channel rendering marker: {$marker}\n");
+        exit(1);
+    }
+}
+foreach (array('parc_groupes_horaires_tarifs','Horaires d’ouverture','Tarifs groupes','group_schedule_years','begin_group_tariff_year') as $marker) {
+    if (strpos($portal . "\n" . $registry, $marker) === false) {
+        fwrite(STDERR, "Missing group portal marker: {$marker}\n");
+        exit(1);
+    }
+}
+
+foreach (array("Version: 1.15.9", "define('PARCS_HT_VERSION', '1.15.9')", 'class-parcs-ht-public-seasons.php', 'Parcs_HT_Public_Seasons::init()', 'class-parcs-ht-display-policy.php', 'Parcs_HT_Display_Policy::init()', 'class-parcs-ht-group-portal.php', 'Parcs_HT_Group_Portal::init()') as $marker) {
     if (strpos($main, $marker) === false) {
         fwrite(STDERR, "Missing 1.15.9 bootstrap marker: {$marker}\n");
         exit(1);
     }
 }
 
-echo "Public seasons contract OK\n";
+echo "Public seasons and display policy contract OK\n";
