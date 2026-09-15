@@ -52,6 +52,16 @@ Avant toute modification :
 14. Toute information importante apprise pendant le travail doit être consignée dans GitHub avant de considérer le sujet terminé.
 15. Lorsqu’une mise à jour de l’extension est demandée, ne revenir vers l’utilisateur avec le résultat final que lorsque la nouvelle version est réellement publiée dans les Releases GitHub et que le ZIP de production est disponible. Un commit poussé, un workflow en cours, une version seulement présente dans le code ou des tests encore en cours ne constituent pas une mise à jour publiée. En cas d’échec ou de contrôle encore en cours, poursuivre les corrections et vérifications sans annoncer la mise à jour comme terminée ni demander à l’utilisateur de l’installer.
 
+### Développement sans intervention sur les sites
+
+Lorsqu’une demande porte uniquement sur le développement et la publication de l’extension :
+
+- travailler exclusivement depuis le dépôt GitHub canonique ;
+- effectuer les contrôles, augmenter la version et publier la release depuis GitHub ;
+- ne pas ouvrir, consulter ni tester les sites WordPress de la Montagne des Singes ou de la Forêt des Singes ;
+- n’intervenir sur un site que si l’utilisateur demande explicitement une installation, une mise à jour ou une vérification sur ce site.
+
+
 ### Compatibilité du shortcode Tarifs groupes
 
 Le shortcode public `[parc_tarifs_groupes]` et ses variantes de langue doivent rester capables d’afficher des tarifs groupes déjà enregistrés dans les anciens formats de données (`price`, `cells['price']`, prix au niveau de la ligne), même si les identifiants permanents `tariff_row_...` / `tariff_col_...` n’ont pas encore été persistés par une migration d’administration. Les identifiants permanents restent la référence pour les liaisons métier du devis, mais ils ne doivent pas être une condition préalable au simple affichage public d’un tarif existant. Ne jamais réécrire silencieusement les tarifs du parc uniquement pour rendre ce shortcode affichable. Le test `tests/group-tariff-shortcode-runtime.php` protège ce comportement.
