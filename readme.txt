@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.15.17
+Stable tag: 1.15.18
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes et outils du parc.
 
@@ -19,6 +19,12 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.15.18 =
+* Ajoute une migration unique pour restaurer l’activation du devis groupes 2026 lorsqu’une ancienne mise à jour l’a enregistrée à tort sur NON malgré une grille et un historique de devis valides.
+* La migration ne touche jamais une année future comme 2027 et ne modifie aucun tarif.
+* Après cette migration, les interrupteurs 2026 et 2027 restent totalement indépendants et un OFF manuel reste définitif.
+* Ajoute un test de non-régression reproduisant la restauration 2026 tout en vérifiant que 2027 reste inchangé.
 
 = 1.15.17 =
 * Sépare définitivement l’activation du devis groupes de la publication commerciale des tarifs groupes : publier ou préparer 2027 ne peut plus désactiver un devis 2026 historique.
