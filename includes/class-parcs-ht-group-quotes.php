@@ -80,22 +80,105 @@ final class Parcs_HT_Group_Quotes {
         return $binding;
     }
 
+    private static function translated_label($value) {
+        if (!is_array($value)) return '';
+        foreach (array('fr','en','de') as $lang) {
+            $text = trim((string)($value[$lang] ?? ''));
+            if ($text !== '') return $text;
+        }
+        return '';
+    }
+
+    private static function binding_matches_year($year, $binding) {
+        $binding = self::stable_binding($binding);
+        if (!$binding) return false;
+        $all = get_option(Parcs_HT_Defaults::OPTION, array());
+        if (!is_array($all) || empty($all['seasons'][$year]) || !is_array($all['seasons'][$year])) return false;
+        $tariffs = isset($all['seasons'][$year]['tariffs']) && is_array($all['seasons'][$year]['tariffs']) ? $all['seasons'][$year]['tariffs'] : array();
+        $rows = isset($tariffs['groups']) && is_array($tariffs['groups']) ? array_values($tariffs['groups']) : array();
+        $columns = isset($tariffs['columns']['groups']) && is_array($tariffs['columns']['groups']) ? array_values($tariffs['columns']['groups']) : array();
+        if (!$rows || !$columns || !Parcs_HT_Tariff_Identities::column_exists($columns, $binding['column_id'])) return false;
+        foreach (array('child','adult','disability','companion') as $role) {
+            $row = Parcs_HT_Tariff_Identities::row_by_id($rows, $binding[$role . '_row_id']);
+            if (!$row || self::price_from_row($row, $binding['column_id']) === null) return false;
+        }
+        return true;
+    }
+
+    private static function legacy_binding_for_year($year, $settings) {
+        $all = get_option(Parcs_HT_Defaults::OPTION, array());
+        if (!is_array($all) || empty($all['seasons'][$year]) || !is_array($all['seasons'][$year])) return null;
+        $tariffs = isset($all['seasons'][$year]['tariffs']) && is_array($all['seasons'][$year]['tariffs']) ? $all['seasons'][$year]['tariffs'] : array();
+        $rows = isset($tariffs['groups']) && is_array($tariffs['groups']) ? array_values($tariffs['groups']) : array();
+        $columns = isset($tariffs['columns']['groups']) && is_array($tariffs['columns']['groups']) ? array_values($tariffs['columns']['groups']) : array();
+        if (!$rows || !$columns) return null;
+
+        $legacy = isset($settings['tariff_binding']) && is_array($settings['tariff_binding']) ? $settings['tariff_binding'] : self::legacy_binding_defaults();
+        $legacy_column = sanitize_key((string)($legacy['column'] ?? 'price'));
+        $column_id = '';
+        foreach ($columns as $column) {
+            if (!is_array($column)) continue;
+            $candidate = sanitize_key((string)($column['id'] ?? ''));
+            if (!Parcs_HT_Tariff_Identities::is_column_id($candidate)) continue;
+            if ($legacy_column === '' || $legacy_column === 'price' || $candidate === $legacy_column) {
+                $column_id = $candidate;
+                break;
+            }
+        }
+        if ($column_id === '') return null;
+
+        $binding = array(
+            'column_id'=>$column_id,
+            'free_adult_children'=>(string)max(1, (int)($legacy['free_adult_children'] ?? 10)),
+            'free_adult_round_threshold'=>(string)max(1, (int)($legacy['free_adult_round_threshold'] ?? 5)),
+        );
+        $binding['free_adult_round_threshold'] = (string)min((int)$binding['free_adult_children'], (int)$binding['free_adult_round_threshold']);
+
+        foreach (array('child','adult','disability','companion') as $role) {
+            $index = isset($legacy[$role . '_row']) ? (int)$legacy[$role . '_row'] : -1;
+            $expected = trim((string)($legacy[$role . '_label'] ?? ''));
+            $matched = null;
+            if ($index >= 0 && isset($rows[$index]) && is_array($rows[$index])) {
+                $label = self::translated_label($rows[$index]['label'] ?? array());
+                if ($expected === '' || $label === $expected) $matched = $rows[$index];
+            }
+            if (!$matched && $expected !== '') {
+                foreach ($rows as $row) {
+                    if (is_array($row) && self::translated_label($row['label'] ?? array()) === $expected) {
+                        $matched = $row;
+                        break;
+                    }
+                }
+            }
+            $id = sanitize_key((string)(is_array($matched) ? ($matched['id'] ?? '') : ''));
+            if (!Parcs_HT_Tariff_Identities::is_row_id($id)) return null;
+            $binding[$role . '_row_id'] = $id;
+        }
+
+        return self::binding_matches_year($year, $binding) ? $binding : null;
+    }
+
     public static function binding_for_year($year, $settings = null) {
         if ($settings === null) $settings = self::settings(false);
         $year = (string)$year;
         $binding = self::stable_binding($settings['tariff_bindings'][$year] ?? null);
-        if ($binding) return $binding;
+        if ($binding && self::binding_matches_year($year, $binding)) return $binding;
 
-        // Les identifiants tarifaires sont conçus pour survivre à la duplication d'une saison.
-        // Si 2027 reprend la grille 2026, on hérite donc automatiquement de la liaison devis.
-        // published_season() vérifie ensuite que tous les IDs existent réellement dans l'année cible.
+        // Si la liaison stable d'une année a disparu ou n'a jamais été migrée,
+        // reconstruire d'abord une liaison propre à cette année depuis le mapping historique.
+        $legacy = self::legacy_binding_for_year($year, $settings);
+        if ($legacy) return $legacy;
+
+        // Une liaison provenant d'une autre année n'est réutilisée que si ses identifiants
+        // existent réellement dans la grille de l'année demandée. Une année future ne peut
+        // donc plus rendre l'année courante indisponible par simple présence de ses IDs.
         $bindings = isset($settings['tariff_bindings']) && is_array($settings['tariff_bindings']) ? $settings['tariff_bindings'] : array();
         $previous = array();
         $future = array();
         foreach ($bindings as $candidate_year => $candidate_binding) {
             if (!preg_match('/^20\d{2}$/', (string)$candidate_year)) continue;
             $candidate = self::stable_binding($candidate_binding);
-            if (!$candidate) continue;
+            if (!$candidate || !self::binding_matches_year($year, $candidate)) continue;
             if ((int)$candidate_year < (int)$year) $previous[(int)$candidate_year] = $candidate;
             elseif ((int)$candidate_year > (int)$year) $future[(int)$candidate_year] = $candidate;
         }
