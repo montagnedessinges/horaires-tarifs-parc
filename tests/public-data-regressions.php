@@ -11,11 +11,13 @@ function is_admin() { return $GLOBALS['admin_context']; }
 function current_user_can($capability) { return $GLOBALS['can_manage'] && $capability === 'manage_options'; }
 function wp_verify_nonce($nonce, $action) { return $nonce === 'valid-test-nonce' && $action === 'parcs_ht_save'; }
 function get_option($key, $default = false) { return $GLOBALS['options'][$key] ?? $default; }
+function update_option($key, $value, $autoload = null) { $GLOBALS['options'][$key] = $value; return true; }
 function wp_date($format, $timestamp = null, $timezone = null) { return (new DateTimeImmutable('2026-08-31 12:00:00'))->format($format); }
 function wp_unslash($value) { return $value; }
 function sanitize_key($value) { return preg_replace('/[^a-z0-9_\-]/', '', strtolower($value)); }
 function sanitize_text_field($value) { return strip_tags($value); }
 function sanitize_textarea_field($value) { return strip_tags($value); }
+function remove_accents($value) { return strtr((string)$value, array('é'=>'e','è'=>'e','ê'=>'e','à'=>'a','ù'=>'u','ô'=>'o','î'=>'i')); }
 function esc_url_raw($value) { return (string)$value; }
 function wp_enqueue_script() {}
 function wp_script_is() { return false; }
@@ -90,12 +92,17 @@ $GLOBALS['options'][Parcs_HT_Group_Quotes::OPTION] = array(
     'tariff_binding'=>Parcs_HT_Group_Quotes::legacy_binding_defaults(),
     'seasons'=>array('2027'=>array('published'=>'1','child'=>'99','adult'=>'99','disability'=>'99','companion'=>'99','private_note'=>'PRIVATE_NOTE')),
 );
+// Depuis 1.15.18 l'activation du devis est une donnée annuelle dédiée, indépendante des autres publications.
+$GLOBALS['options'][Parcs_HT_Group_Quotes::STATE_OPTION] = array(
+    'version'=>Parcs_HT_Group_Quotes::STATE_VERSION,
+    'years'=>array('2026'=>array('enabled'=>'1'),'2027'=>array('enabled'=>'0')),
+);
 $saved = $GLOBALS['options'];
 $quotes = Parcs_HT_Group_Quotes::settings();
-verify($quotes['seasons']['2027']['published'] === '0', 'Explicit 2027 quote switch keeps the draft quote unavailable');
-verify($quotes['seasons']['2026']['published'] === '1', 'Explicit 2026 quote switch keeps the current quote available');
+verify($quotes['seasons']['2027']['published'] === '0', 'Explicit 2027 quote state keeps the draft quote unavailable');
+verify($quotes['seasons']['2026']['published'] === '1', 'Explicit 2026 quote state keeps the current quote available');
 verify(Parcs_HT_Group_Quotes::settings(false)['seasons']['2027']['published'] === '1', 'Legacy quote metadata remains stored for rollback only');
-verify($GLOBALS['options'] === $saved, 'Reading public settings does not modify saved options');
+verify($GLOBALS['options'] === $saved, 'Reading public settings does not modify saved options after state migration');
 Parcs_HT_Group_Quotes::assets();
 $payload = $GLOBALS['inline']['parcs-ht-group-quotes'];
 verify(strpos($payload, '2027') === false && strpos($payload, 'PRIVATE_NOTE') === false && strpos($payload, '99') === false, 'Disabled quote year and legacy quote rates stay out of JavaScript');
@@ -106,17 +113,19 @@ $GLOBALS['options'][Parcs_HT_Defaults::OPTION]['seasons']['2027']['published'] =
 verify(Parcs_HT_Group_Quotes::settings()['seasons']['2027']['published'] === '0', 'Publishing the general season alone does not enable the 2027 quote');
 $GLOBALS['public_settings']['seasons']['2027']['group_quotes_enabled'] = '1';
 $GLOBALS['options'][Parcs_HT_Defaults::OPTION]['seasons']['2027']['group_quotes_enabled'] = '1';
-verify(Parcs_HT_Group_Quotes::settings()['seasons']['2027']['published'] === '1', 'The dedicated annual quote switch enables 2027 independently from tariff publication');
+$GLOBALS['options'][Parcs_HT_Group_Quotes::STATE_OPTION]['years']['2027']['enabled'] = '1';
+verify(Parcs_HT_Group_Quotes::settings()['seasons']['2027']['published'] === '1', 'The dedicated annual quote state enables 2027 independently from tariff publication');
 $GLOBALS['public_settings'] = $settings;
 $GLOBALS['options'][Parcs_HT_Defaults::OPTION] = $settings;
+$GLOBALS['options'][Parcs_HT_Group_Quotes::STATE_OPTION]['years']['2027']['enabled'] = '0';
 $GLOBALS['options'][Parcs_HT_Group_Tariff_Settings::OPTION]['seasons']['2027']['published'] = '0';
 
 $input = array('visite'=>'2027-09-01','groupedevis'=>'Groupe','nbrenfants'=>'20','nbradultes'=>'3','totalprixscolaire'=>'1,00 €');
-verify(Parcs_HT_Group_Quotes::canonicalize_posted_data($input)['totalprixscolaire'] === '', 'Server refuses a year whose dedicated quote switch is disabled');
+verify(Parcs_HT_Group_Quotes::canonicalize_posted_data($input)['totalprixscolaire'] === '', 'Server refuses a year whose dedicated quote state is disabled');
 $GLOBALS['submission'] = $input;
 $validation = new Quote_Validation_Result();
 Parcs_HT_Group_Quotes::validate_quote($validation, array((object)array('name'=>'visite')));
-verify(isset($validation->invalid['visite']), 'CF7 validation blocks sending a quote when the annual quote switch is disabled');
+verify(isset($validation->invalid['visite']), 'CF7 validation blocks sending a quote when the annual quote state is disabled');
 $gate = new ReflectionMethod('Parcs_HT_Quote_Gate', 'tariff_available');
 $gate->setAccessible(true);
 verify(!$gate->invoke(null, '2027') && $gate->invoke(null, '2026'), 'Date gate follows independent annual quote activation');
@@ -162,7 +171,6 @@ $settings['seasons']['2026']['published'] = '0';
 $settings['tariffs'] = array('groups'=>array(array('enabled'=>'1','cells'=>array($priceColumn=>array('value'=>'PRIVATE_LEGACY_RATE')))));
 verify(Parcs_HT_Tariff_Seasons::select_season_tariffs($settings, true)['tariffs']['groups'] === array(), 'No published season means no legacy price fallback at public render');
 verify(Parcs_HT_Tariff_Seasons::select_season_tariffs($settings)['tariffs'] === $settings['tariffs'], 'Raw unpublished tariffs remain intact for migrations and editor saves');
-
 
 // 1.15.6 — Le titre des horaires reste configurable et les heures d’accès limité
 // continuent de provenir des champs de la règle, sans valeur horaire figée dans le rendu.
