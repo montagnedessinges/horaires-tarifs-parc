@@ -5,7 +5,6 @@
   var rows=Array.isArray(config.rows)?config.rows:[];
   var STORAGE_BASE='parcs_ht_shortcode_preview_base';
   var STORAGE_LANG='parcs_ht_shortcode_preview_lang';
-  var STORAGE_BG='parcs_ht_shortcode_preview_bg';
   var selectedBase='';
   var selectedLang='fr';
   var frame=null;
@@ -15,18 +14,16 @@
   var languageNav=null;
   var refresh=null;
   var status=null;
-  var colorInput=null;
 
   function stored(key,fallback){
     try{return sessionStorage.getItem(key)||fallback;}catch(e){return fallback;}
   }
   function save(key,value){try{sessionStorage.setItem(key,value);}catch(e){}}
-  function validColor(value){return /^#[0-9a-f]{6}$/i.test(String(value||''))?value:'#ffffff';}
   function findRow(base){return rows.filter(function(row){return String(row.base||'')===base;})[0]||null;}
   function rowFor(base){return findRow(base)||rows[0]||null;}
   function currentDate(){var input=document.querySelector('[data-htp-preview-date]');return input&&input.value?input.value:String(config.defaultDate||'');}
   function currentTime(){var input=document.querySelector('[data-htp-preview-time]');return input&&input.value?input.value:String(config.defaultTime||'');}
-  function currentBackground(){return colorInput?validColor(colorInput.value):validColor(stored(STORAGE_BG,'#ffffff'));}
+  function currentBackground(){return '#ffffff';}
 
   function ensureTimeControl(){
     var controls=document.querySelector('.htp-preview-controls');
@@ -112,10 +109,9 @@
     var block=document.createElement('div');
     block.className='htp-real-shortcode-preview';
     block.innerHTML='<div class="htp-real-shortcode-preview-head">'+
-      '<div><h3>Aperçu des shortcodes</h3><p>Choisissez un shortcode et une langue. Seul l’aperçu sélectionné est chargé.</p></div>'+
+      '<div><h3>Aperçu des shortcodes</h3><p>Choisissez un shortcode et une langue. Seul l’aperçu sélectionné est chargé.</p><p><strong>Conseil d’intégration :</strong> placez les shortcodes dans une section du site à fond blanc. Le fond du shortcode reste transparent afin de s’intégrer naturellement à la page.</p></div>'+
       '<div class="htp-real-shortcode-preview-tools">'+
         '<button type="button" class="button button-primary" data-htp-shortcode-preview-refresh>Mettre à jour l’aperçu</button>'+
-        '<label class="htp-real-shortcode-preview-bg"><span>Fond de l’aperçu</span><input type="color" data-htp-shortcode-preview-bg></label>'+
       '</div></div>'+
       '<div class="htp-shortcode-preview-workbench">'+
         '<nav class="htp-shortcode-preview-nav" aria-label="Shortcodes à prévisualiser" data-htp-shortcode-preview-nav></nav>'+
@@ -130,11 +126,9 @@
     languageNav=block.querySelector('[data-htp-preview-languages]');
     frame=block.querySelector('[data-htp-preview-frame]');
     code=block.querySelector('[data-htp-preview-code]');
-    label=block.querySelector('[data-htp-shortcode-preview-label]');
+    label=block.querySelector('[data-htp-preview-label]');
     refresh=block.querySelector('[data-htp-shortcode-preview-refresh]');
     status=block.querySelector('[data-htp-preview-status]');
-    colorInput=block.querySelector('[data-htp-shortcode-preview-bg]');
-    colorInput.value=validColor(stored(STORAGE_BG,'#ffffff'));
 
     rows.forEach(function(row){
       var button=document.createElement('button');
@@ -158,7 +152,6 @@
     });
 
     refresh.addEventListener('click',loadPreview);
-    colorInput.addEventListener('change',function(){save(STORAGE_BG,currentBackground());loadPreview();});
     frame.addEventListener('load',function(){
       if(status)status.textContent='';
       if(refresh){refresh.disabled=false;refresh.textContent='Mettre à jour l’aperçu';}
