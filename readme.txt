@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.16.4
+Stable tag: 1.16.5
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes et outils du parc.
 
@@ -19,6 +19,13 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.16.5 =
+* Corrige l’affichage des tarifs groupes des années futures comme 2027 lorsque l’année est activée dans le shortcode Groupes.
+* Une grille groupes est désormais considérée exploitable dès qu’une ligne active contient un tarif, sans dépendre de l’ancien état visible/masqué des colonnes commerciales.
+* Le rendu public des groupes projette les anciennes structures tarifaires dans une seule colonne canonique « Tarif » / « Price » / « Preis » sans modifier les données enregistrées.
+* Les anciennes lignes groupes dépourvues du champ technique `enabled` restent affichables, conformément au comportement historique des tarifs groupes.
+* Conserve la bascule annuelle automatique 1.16.4 et la synchronisation commune des années entre tarifs groupes et horaires groupes.
 
 = 1.16.4 =
 * Remplace l’ancienne logique de fenêtre par deux dates maîtresses : avant la date d’apparition les interrupteurs restent manuels, à partir de la date d’apparition tous les modules de l’année sont actifs, et à partir de la date de disparition tous les modules sont inactifs.
