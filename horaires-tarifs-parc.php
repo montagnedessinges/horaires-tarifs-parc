@@ -92,6 +92,10 @@ add_action('wp_enqueue_scripts', static function () {
         array(),
         PARCS_HT_VERSION
     );
+    wp_add_inline_style(
+        'parcs-ht-tariffs-visual-v2',
+        '.parcs-ht-tariff-heading .parcs-ht-kicker{display:none!important;}'
+    );
 }, 100);
 
 add_action('wp_footer', static function () {
