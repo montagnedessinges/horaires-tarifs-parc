@@ -25,7 +25,10 @@ group_publication_check(strpos($settings, "return \$configured !== '' ? \$config
 group_publication_check(strpos($settings, 'quote_binding_valid') !== false && strpos($settings, 'readiness') !== false, 'admin readiness covers the quote binding and public year');
 
 group_publication_check(strpos($seasons, 'hide_unpublished_groups') !== false && strpos($seasons, "\$tariffs['groups'] = array();") !== false, 'general public tariff rendering cannot expose unpublished group rates');
-group_publication_check(strpos($quotes, 'Parcs_HT_Group_Tariff_Settings::quote_enabled($year)') !== false, 'quote calculation requires independent quote activation for the visit year');
+group_publication_check(strpos($quotes, 'private static function quote_enabled_for_year') !== false, 'quote engine owns per-year quote activation resolution');
+group_publication_check(strpos($quotes, "array_key_exists('group_quotes_enabled', \$season)") !== false, 'explicit annual quote switch remains authoritative');
+group_publication_check(strpos($quotes, 'Parcs_HT_Group_Tariff_Settings::quote_enabled($year)') === false, 'quote availability no longer depends on commercial group publication state');
+group_publication_check(strpos($quotes, "get_option(self::OPTION, array())") !== false, 'legacy quote activation is recovered from the historical quote store itself');
 group_publication_check(strpos($quotes, "array_keys((array)(\$all['seasons'] ?? array()))") !== false, 'online quote settings discover canonical future seasons instead of relying on legacy quote storage');
 group_publication_check(strpos($quotes, 'private static function stable_binding') !== false && strpos($quotes, 'krsort($previous, SORT_NUMERIC)') !== false, 'future seasons can inherit a stable quote binding from a previous season');
 group_publication_check(strpos($quotes, 'private static function binding_matches_year') !== false, 'cross-year quote bindings are validated against the target year');
@@ -54,3 +57,4 @@ group_publication_check(strpos($switch_admin, "do_action('litespeed_purge_all')"
 echo "Group tariff publication contract: OK\n";
 
 require __DIR__ . '/group-quote-future-season-runtime.php';
+require __DIR__ . '/group-quote-year-isolation-runtime.php';
