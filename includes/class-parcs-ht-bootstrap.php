@@ -12,6 +12,9 @@ final class Parcs_HT_Bootstrap {
     private static $tags = null;
 
     public static function init() {
+        require_once PARCS_HT_DIR . 'includes/class-parcs-ht-quote-activation-migration.php';
+        Parcs_HT_Quote_Activation_Migration::init();
+
         foreach (self::tags() as $tag => $config) {
             add_shortcode($tag, static function ($atts = array()) use ($config) {
                 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-shortcodes.php';
