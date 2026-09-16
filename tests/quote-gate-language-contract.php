@@ -33,6 +33,24 @@ release_contract_require_all($gate, array(
     "self::localized_message(\$s, 'unavailable', \$language)",
 ), 'Public quote language selection');
 
+release_contract_transition(
+    $version,
+    '1.15.13',
+    static function () {},
+    static function () use ($gate) {
+        release_contract_require_all($gate, array(
+            'public static function status_for_date($date)',
+            '$closed = true;',
+            'checkdate($month, $day, $year)',
+            'Parcs_HT_Schedule::resolve_day',
+            "return array('valid'=>false, 'tariffs'=>false, 'closed'=>true, 'year'=>'')",
+        ), 'Fail-closed group quote date status');
+        release_contract_forbid($gate, array(
+            'fail-open quote date default' => '$closed = false;',
+        ), 'Fail-closed group quote date status');
+    }
+);
+
 release_contract_require_all($languages, array(
     'Parcs_HT_Defaults::OPTION',
     "'form_shortcodes'",
