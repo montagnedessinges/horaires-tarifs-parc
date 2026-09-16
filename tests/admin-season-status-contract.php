@@ -13,7 +13,8 @@ $version = isset($versionMatch[1]) ? $versionMatch[1] : '0.0.0';
 $checks = array(
     'version supports yearly activation model' => version_compare($version, '1.15.13', '>='),
     'season status compatibility layer loaded' => strpos($main, 'class-parcs-ht-season-status.php') !== false && strpos($main, 'Parcs_HT_Season_Status::init()') !== false,
-    'calendar visibility drives legacy published marker' => strpos($status, "array_key_exists('calendar_visible', \$posted_general)") !== false && strpos($status, "\$posted_general['calendar_visible']") !== false,
+    'calendar visibility drives legacy published marker' => strpos($status, "['calendar_visible']") !== false && strpos($status, '$calendar_visible') !== false,
+    'calendar activation input is sanitized' => strpos($status, "sanitize_text_field(wp_unslash(\$_POST['settings']['general']['calendar_visible']))") !== false,
     'plain partial save preserves legacy status' => strpos($status, '$new_status = $old_status') !== false,
     'duplicated year starts with every activation disabled' => strpos($status, "'calendar_visible','retail_tariffs_visible','groups_schedule_visible','group_quotes_enabled','group_tariffs_visible'") !== false && strpos($status, "\$season[\$flag] = '0'") !== false,
     'global publish draft UI removed' => strpos($statusJs, 'Publier la saison') === false && strpos($statusJs, 'Remettre en brouillon') === false && strpos($statusJs, 'htp-season-status-banner') === false,
