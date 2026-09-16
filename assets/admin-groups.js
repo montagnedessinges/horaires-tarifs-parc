@@ -5,6 +5,19 @@ $(function(){
     var $nav=$('[data-htp-admin-tabs]');
     if(!$nav.length)return;
 
+    var $mainForm=$('[data-htp-main-settings-form]');
+    var $sticky=$mainForm.find('.htp-sticky-save');
+    var guidesMode=false;
+    var tariffViewKey='parcsHTGroupTariffView:'+(cfg.year||'default');
+
+    function rememberGroupTariffView(active){
+        try{if(active)window.localStorage.setItem(tariffViewKey,'1');else window.localStorage.removeItem(tariffViewKey);}catch(error){}
+    }
+
+    function storedGroupTariffView(){
+        try{return window.localStorage.getItem(tariffViewKey)==='1';}catch(error){return false;}
+    }
+
     function groupButton(id,label,children){
         var $first=$nav.find('[data-htp-admin-tab="'+children[0].id+'"]');
         var $button=$('<button type="button" class="nav-tab htp-group-tab" role="tab" aria-selected="false"></button>').text(label).attr('data-htp-admin-group',id);
@@ -14,7 +27,9 @@ $(function(){
             var $old=$nav.find('[data-htp-admin-tab="'+child.id+'"]');
             if(!$old.length)return;
             $sub.append($('<button type="button" class="button htp-admin-subtab"></button>').text(child.label).attr('data-htp-target',child.id));
-            $old.remove();
+            // Le bouton canonique reste dans le DOM : admin.js reste l'unique moteur
+            // qui affiche/masque les panneaux. On ne le supprime plus après coup.
+            $old.attr('hidden',true).attr('aria-hidden','true').attr('data-htp-group-child',id);
         });
         $sub.insertAfter($nav);
         return {$button:$button,$sub:$sub};
@@ -30,7 +45,7 @@ $(function(){
     var $quoteTab=$nav.find('[data-htp-admin-tab="htp-quote"]');
     var $groupsButton=$('<button type="button" class="nav-tab htp-group-tab" role="tab" aria-selected="false" data-htp-admin-group="groups">Groupes</button>');
     if($quoteTab.length)$groupsButton.insertBefore($quoteTab);else $nav.append($groupsButton);
-    $quoteTab.remove();
+    $quoteTab.attr('hidden',true).attr('aria-hidden','true').attr('data-htp-group-child','groups');
     var $groupsSub=$('<div class="htp-admin-subtabs" data-htp-subtabs="groups" hidden></div>');
     var $groupsTariffs=$('<button type="button" class="button htp-admin-subtab" data-htp-target="htp-tariffs-groups">Tarifs</button>');
     var $groupsQuote=$('<button type="button" class="button htp-admin-subtab" data-htp-target="htp-quote">Devis</button>');
@@ -59,17 +74,44 @@ $(function(){
         $tariffs.find('[data-htp-group-context],[data-htp-group-info]').attr('hidden',true);
     }
 
-    function activate(target,group,saveTarget){
-        $('.htp-admin-tab,.htp-group-tab').removeClass('nav-tab-active').attr('aria-selected','false');
+    function setGroupUi(group,target){
+        $('.htp-group-tab').removeClass('nav-tab-active').attr('aria-selected','false');
         $('.htp-admin-subtabs[data-htp-subtabs]').attr('hidden',true);
         $('.htp-admin-subtab').removeClass('button-primary');
-        if(group){
-            $('[data-htp-admin-group="'+group+'"]').addClass('nav-tab-active').attr('aria-selected','true');
-            $('[data-htp-subtabs="'+group+'"]').removeAttr('hidden').find('[data-htp-target="'+target+'"]').addClass('button-primary');
-        }else $('[data-htp-admin-tab="'+target+'"]').addClass('nav-tab-active').attr('aria-selected','true');
-        $('.htp-card[id^="htp-"]').attr('hidden',true);
+        $nav.find('[data-htp-group-child]').removeClass('nav-tab-active').attr('aria-selected','false');
+        if(!group)return;
+        $('[data-htp-admin-group="'+group+'"]').addClass('nav-tab-active').attr('aria-selected','true');
+        $('[data-htp-subtabs="'+group+'"]').removeAttr('hidden').find('[data-htp-target="'+target+'"]').addClass('button-primary');
+    }
+
+    function canonicalActivate(target){
         var visualTarget=target==='htp-tariffs-groups'?'htp-tariffs':target;
-        $('#'+visualTarget).removeAttr('hidden');
+        var $tab=$nav.find('[data-htp-admin-tab="'+visualTarget+'"]').first();
+        if(!$tab.length)return false;
+        $tab.trigger('click');
+        return true;
+    }
+
+    function leaveGuidesMode(){
+        if(!guidesMode)return;
+        guidesMode=false;
+        if($mainForm.length)$mainForm.prop('hidden',false);
+        if($sticky.length)$sticky.prop('hidden',false);
+    }
+
+    function activate(target,group,saveTarget){
+        var visualTarget=target==='htp-tariffs-groups'?'htp-tariffs':target;
+        if(target==='htp-guides'){
+            guidesMode=true;
+            $('.htp-card[id^="htp-"]').attr('hidden',true);
+            $('#htp-guides').removeAttr('hidden');
+            if($mainForm.length)$mainForm.prop('hidden',true);
+            if($sticky.length)$sticky.prop('hidden',true);
+        }else{
+            leaveGuidesMode();
+            canonicalActivate(target);
+        }
+        setGroupUi(group,target);
         $('[data-htp-active-tab-input]').val(saveTarget||visualTarget);
         if(target!=='htp-tariffs-groups')resetTariffView();
         if(window.history&&window.history.replaceState){
@@ -287,13 +329,23 @@ $(function(){
         if(!$tariffs.find('[data-htp-group-context-banner]').length){
             $('<div class="notice notice-info inline" data-htp-group-context data-htp-group-context-banner><p><strong>Groupes → Tarifs :</strong> cette grille est la source unique du shortcode général, du shortcode tarifs groupes et du devis. Les identifiants affichés sont permanents et non modifiables.</p></div>').insertAfter($heading);
         }else $tariffs.find('[data-htp-group-context-banner]').removeAttr('hidden');
+        rememberGroupTariffView(true);
     }
 
     $groupsButton.on('click',showGroupTariffs);
     $groupsTariffs.on('click',showGroupTariffs);
-    $groupsQuote.on('click',function(){activate('htp-quote','groups');});
-    $groupsGuides.on('click',function(){activate('htp-guides','groups');});
-    $nav.on('click','[data-htp-admin-tab="htp-tariffs"]',resetTariffView);
+    $groupsQuote.on('click',function(){rememberGroupTariffView(false);activate('htp-quote','groups');});
+    $groupsGuides.on('click',function(){rememberGroupTariffView(false);activate('htp-guides','groups');});
+    $nav.on('click','[data-htp-admin-tab]:not([data-htp-group-child])',function(){
+        leaveGuidesMode();
+        $('.htp-group-tab').removeClass('nav-tab-active').attr('aria-selected','false');
+        $('.htp-admin-subtabs[data-htp-subtabs]').attr('hidden',true);
+        $('.htp-admin-subtab').removeClass('button-primary');
+        if($(this).data('htp-admin-tab')==='htp-tariffs'){
+            resetTariffView();
+            rememberGroupTariffView(false);
+        }
+    });
 
     var $quote=$('#htp-quote');
     if($quote.length){
@@ -315,7 +367,7 @@ $(function(){
         $multiForm.on('click','[data-lang]',function(){storeCurrent();showLang($(this).data('lang'));});showLang('fr');
 
         var g=cfg.gate||{};
-        var $gate=$('<div class="htp-quote-admin-pane" data-htp-quote-pane="gate" hidden><h2>Accès au devis automatique</h2><p class="description">Le devis exige désormais une saison publiée, des tarifs groupes publiés et des liaisons par identifiants valides pour l’année choisie.</p><div class="htp-check-list"><label><input type="checkbox" data-g="enabled"> Activer le choix de la date avant l’affichage du formulaire complet</label></div><div class="htp-subsection"><h3>Date où le parc est fermé</h3><label><input type="checkbox" data-g="closed_enabled"> Afficher un avertissement</label><div class="htp-lang-tabs" data-g-lang-tabs="closed"><button type="button" class="button button-primary" data-lang="fr">FR</button><button type="button" class="button" data-lang="en">EN</button><button type="button" class="button" data-lang="de">DE</button></div><p><textarea class="large-text" rows="5" data-g-message="closed"></textarea></p><label class="htp-field"><span>Contact ou lien</span><input type="text" data-g="closed_contact"></label></div><div class="htp-subsection"><h3>Tarifs indisponibles</h3><label><input type="checkbox" data-g="unavailable_enabled"> Afficher le message d’indisponibilité</label><div class="htp-lang-tabs" data-g-lang-tabs="unavailable"><button type="button" class="button button-primary" data-lang="fr">FR</button><button type="button" class="button" data-lang="en">EN</button><button type="button" class="button" data-lang="de">DE</button></div><p><textarea class="large-text" rows="5" data-g-message="unavailable"></textarea></p><label class="htp-field"><span>Contact ou lien</span><input type="text" data-g="unavailable_contact"></label></div><p><button type="button" class="button button-primary" data-g-save>Enregistrer l’accès au devis</button> <span data-g-status></span></p></div>');
+        var $gate=$('<div class="htp-quote-admin-pane" data-htp-quote-pane="gate" hidden><h2>Accès au devis automatique</h2><p class="description">Le devis exige des tarifs groupes actifs et des liaisons par identifiants valides pour l’année choisie. Le calendrier public peut rester masqué.</p><div class="htp-check-list"><label><input type="checkbox" data-g="enabled"> Activer le choix de la date avant l’affichage du formulaire complet</label></div><div class="htp-subsection"><h3>Date où le parc est fermé</h3><label><input type="checkbox" data-g="closed_enabled"> Afficher un avertissement</label><div class="htp-lang-tabs" data-g-lang-tabs="closed"><button type="button" class="button button-primary" data-lang="fr">FR</button><button type="button" class="button" data-lang="en">EN</button><button type="button" class="button" data-lang="de">DE</button></div><p><textarea class="large-text" rows="5" data-g-message="closed"></textarea></p><label class="htp-field"><span>Contact ou lien</span><input type="text" data-g="closed_contact"></label></div><div class="htp-subsection"><h3>Tarifs indisponibles</h3><label><input type="checkbox" data-g="unavailable_enabled"> Afficher le message d’indisponibilité</label><div class="htp-lang-tabs" data-g-lang-tabs="unavailable"><button type="button" class="button button-primary" data-lang="fr">FR</button><button type="button" class="button" data-lang="en">EN</button><button type="button" class="button" data-lang="de">DE</button></div><p><textarea class="large-text" rows="5" data-g-message="unavailable"></textarea></p><label class="htp-field"><span>Contact ou lien</span><input type="text" data-g="unavailable_contact"></label></div><p><button type="button" class="button button-primary" data-g-save>Enregistrer l’accès au devis</button> <span data-g-status></span></p></div>');
         ['enabled','closed_enabled','unavailable_enabled'].forEach(function(k){$gate.find('[data-g="'+k+'"]').prop('checked',String(g[k])==='1');});
         ['closed_contact','unavailable_contact'].forEach(function(k){$gate.find('[data-g="'+k+'"]').val(g[k]||'');});
         var gateMessages={closed:{fr:g.closed_message_fr||g.closed_message||'',en:g.closed_message_en||'',de:g.closed_message_de||''},unavailable:{fr:g.unavailable_message_fr||g.unavailable_message||'',en:g.unavailable_message_en||'',de:g.unavailable_message_de||''}},gateLang={closed:'fr',unavailable:'fr'};
@@ -353,7 +405,8 @@ $(function(){
     if(requested==='htp-guides'&&$('#htp-guides').length)activate('htp-guides','groups');
     else if(requested==='htp-tariffs-groups')showGroupTariffs();
     else if(requested==='htp-quote')activate('htp-quote','groups');
+    else if(requested==='htp-tariffs'&&storedGroupTariffView())showGroupTariffs();
     else if(requested==='htp-tariffs')resetTariffView();
-    else {var current=$('[data-htp-active-tab-input]').val();if(current==='htp-quote')activate('htp-quote','groups');else if(current==='htp-tariffs')resetTariffView();}
+    else {var current=$('[data-htp-active-tab-input]').val();if(current==='htp-quote')activate('htp-quote','groups');else if(current==='htp-tariffs'&&storedGroupTariffView())showGroupTariffs();else if(current==='htp-tariffs')resetTariffView();}
 });
 })(jQuery);
