@@ -1,3 +1,13 @@
+## 1.16.0
+
+- Refonte complète du rendu public des tarifs sans modifier le moteur des horaires ni le calendrier existant.
+- Nouveau composant compact et responsive pour les tarifs individuels, réduits et groupes, avec fond transparent conçu pour une section de page blanche.
+- Onglets, années et moyens de paiement restent sur une ligne avec défilement horizontal local sur les petits écrans, sans débordement global de la page.
+- Les cellules tarifaires vides ne sont plus rendues ; le canal Sur place reste neutre et le canal En ligne est visuellement distinct et cliquable lorsqu’un lien d’achat est disponible.
+- Le shortcode Groupes affiche les tarifs avant les horaires, tout en conservant des moyens de paiement et des réglages distincts entre visiteurs et groupes.
+- La charte graphique du parc fournit les valeurs par défaut ; les titres sont noirs sur les blocs transparents et les réglages de couleurs existants restent personnalisables.
+- La version 1.15.18 et son correctif du moteur annuel des devis groupes sont conservés intégralement comme base de cette mise à jour.
+
 ## 1.15.18
 
 - Refonte complète du moteur des devis groupes autour d’un état d’activation strictement indépendant pour chaque année.
