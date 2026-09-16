@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.15.13
+Stable tag: 1.15.14
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes et outils du parc.
 
@@ -19,6 +19,14 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.15.14 =
+* Ajoute une recherche instantanée et purement visuelle dans Périodes repères, Événements, Exceptions et Accès temporairement limité, avec compteur, effacement rapide et message lorsqu’aucune ligne ne correspond.
+* La recherche tient compte des libellés, titres, dates, types et contenus déjà présents dans les champs sans modifier, supprimer ni réordonner les données du formulaire.
+* Étend l’outil CSV avec un export de la saison et un type canonique `limited_access` pour les règles d’accès temporairement limité, traductions comprises.
+* L’import valide le fichier complet avant écriture, crée toujours une révision de sécurité et continue de préserver les catégories absentes du CSV.
+* Les quatre sections concernées indiquent clairement qu’elles sont couvertes par l’outil CSV commun.
+* Ajoute une documentation du format CSV et des contrats de non-régression dédiés.
 
 = 1.15.13 =
 * Stabilise la navigation de l’administration : les onglets Groupes et Horaires n’effacent plus les onglets canoniques après chargement et s’appuient sur un seul moteur d’affichage des panneaux.

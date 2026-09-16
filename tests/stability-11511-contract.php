@@ -15,7 +15,10 @@ function stability_11511_check($condition, $message) {
     echo '[OK] ' . $message . PHP_EOL;
 }
 
-stability_11511_check(strpos($main, 'Version: 1.15.13') !== false && strpos($main, "define('PARCS_HT_VERSION', '1.15.13')") !== false, 'release version is 1.15.13');
+preg_match('/Version:\s*([0-9.]+)/', $main, $version_match);
+$version = isset($version_match[1]) ? $version_match[1] : '0.0.0';
+stability_11511_check(version_compare($version, '1.15.13', '>='), 'release version is 1.15.13 or later');
+stability_11511_check(strpos($main, "define('PARCS_HT_VERSION', '" . $version . "')") !== false, 'header and internal release versions match');
 stability_11511_check(strpos($main, "class-parcs-ht-stability-11511.php") !== false && strpos($main, 'Parcs_HT_Stability_11511::init();') !== false, 'stability layer is loaded');
 stability_11511_check(strpos($stability, "remove_filter('pre_do_shortcode_tag', array('Parcs_HT_Public_Seasons', 'prepare_year_scope'), 6)") !== false, 'legacy shortcode year scoping is disabled');
 stability_11511_check(strpos($stability, "remove_filter('do_shortcode_tag', array('Parcs_HT_Public_Seasons', 'wrap_year_tabs'), 20)") !== false, 'legacy reload year links are disabled');
@@ -36,4 +39,4 @@ stability_11511_check(strpos($admin_groups_js, 'canonicalActivate') !== false, '
 stability_11511_check(strpos($admin_groups_js, 'parcsHTGroupTariffView:') !== false, 'group tariff context survives a main-form save');
 stability_11511_check(strpos($quote_gate, '$closed = true;') !== false && strpos($quote_gate, '$closed = false;') === false, 'quote date resolution fails closed when schedules are unavailable');
 
-echo "1.15.13 stabilization contract: OK\n";
+echo "1.15.13+ stabilization contract: OK\n";
