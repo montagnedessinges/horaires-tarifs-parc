@@ -3,15 +3,17 @@
 if (!defined('ABSPATH')) { exit; }
 
 /**
- * Règles publiques communes aux saisons visibles.
+ * Visibilité publique annuelle.
  *
- * Centralise l'ordre des années et les fenêtres d'affichage afin que le calendrier,
- * les tarifs visiteurs et les espaces groupes utilisent la même logique temporelle.
+ * Les interrupteurs restent utilisables pour préparer et tester une année avant sa
+ * mise en ligne automatique. Les deux dates maîtresses ont ensuite priorité :
+ * - à partir de public_display_from : tous les modules de l'année sont actifs ;
+ * - à partir de public_display_until : tous les modules de l'année sont inactifs.
+ *
+ * La date de retrait est donc une date de bascule : l'année disparaît ce jour-là.
  */
 final class Parcs_HT_Public_Visibility {
     public static function init() {
-        // Parcs_HT_Display_Policy capture l'option brute en priorité 4. On applique
-        // ensuite la fenêtre publique au calendrier historique sans écraser les données.
         add_filter('option_' . Parcs_HT_Defaults::OPTION, array(__CLASS__, 'filter_calendar_window'), 8, 1);
         add_filter('pre_update_option_' . Parcs_HT_Defaults::OPTION, array(__CLASS__, 'save_window'), 98, 3);
         add_action('admin_enqueue_scripts', array(__CLASS__, 'admin_assets'), 99);
@@ -61,16 +63,57 @@ final class Parcs_HT_Public_Visibility {
         return self::order_years($years);
     }
 
+    /**
+     * Retourne on/off/manual pour l'automatisation de l'année.
+     * Le retrait est prioritaire afin d'éviter toute réactivation après la date de fin.
+     */
+    public static function scheduled_state($year, $today = '') {
+        $season = self::raw_season($year);
+        if (!$season) return 'off';
+        return self::scheduled_state_for_season($season, $today);
+    }
+
+    private static function scheduled_state_for_season($season, $today = '') {
+        $season = is_array($season) ? $season : array();
+        $today = self::clean_date($today);
+        if ($today === '') $today = self::today();
+        $from = self::clean_date($season['public_display_from'] ?? '');
+        $until = self::clean_date($season['public_display_until'] ?? '');
+
+        if ($until !== '' && $today >= $until) return 'off';
+        if ($from !== '' && $today >= $from) return 'on';
+        return 'manual';
+    }
+
+    private static function module_visible_for_season($season, $flag, $fallback, $today = '') {
+        $state = self::scheduled_state_for_season($season, $today);
+        if ($state === 'off') return false;
+        if ($state === 'on') return true;
+        if (array_key_exists($flag, $season)) return (string)$season[$flag] === '1';
+        return (bool)$fallback;
+    }
+
+    /** Visibilité effective d'un module, dates maîtresses prioritaires. */
+    public static function module_visible($year, $flag, $fallback = false, $today = '') {
+        $season = self::raw_season($year);
+        if (!$season) return false;
+        return self::module_visible_for_season($season, (string)$flag, (bool)$fallback, $today);
+    }
+
+    /**
+     * Compatibilité : indique uniquement si la date est comprise dans la fenêtre.
+     * Les modules publics utilisent module_visible(), qui permet les tests manuels
+     * avant la date d'apparition.
+     */
     public static function in_window($year, $today = '') {
         $season = self::raw_season($year);
         if (!$season) return false;
-        if ((string)($season['public_force_display'] ?? '0') === '1') return true;
         $today = self::clean_date($today);
         if ($today === '') $today = self::today();
         $from = self::clean_date($season['public_display_from'] ?? '');
         $until = self::clean_date($season['public_display_until'] ?? '');
         if ($from !== '' && $today < $from) return false;
-        if ($until !== '' && $today > $until) return false;
+        if ($until !== '' && $today >= $until) return false;
         return true;
     }
 
@@ -86,9 +129,9 @@ final class Parcs_HT_Public_Visibility {
             if (array_key_exists($field, $posted) && is_scalar($posted[$field])) $new_value['seasons'][$year][$field] = self::clean_date($posted[$field]);
             elseif (isset($old_value['seasons'][$year][$field])) $new_value['seasons'][$year][$field] = $old_value['seasons'][$year][$field];
         }
-        if (array_key_exists('public_force_display', $posted) && is_scalar($posted['public_force_display'])) {
-            $new_value['seasons'][$year]['public_force_display'] = (string)$posted['public_force_display'] === '1' ? '1' : '0';
-        } elseif (isset($old_value['seasons'][$year]['public_force_display'])) {
+        // Ancien champ conservé en base pour compatibilité, mais il n'a plus de rôle
+        // dans la nouvelle bascule automatique à deux dates.
+        if (isset($old_value['seasons'][$year]['public_force_display'])) {
             $new_value['seasons'][$year]['public_force_display'] = $old_value['seasons'][$year]['public_force_display'];
         }
         return $new_value;
@@ -104,17 +147,22 @@ final class Parcs_HT_Public_Visibility {
         wp_add_inline_script('parcs-ht-public-visibility-admin', 'window.ParcsHTPublicVisibility=' . wp_json_encode(array(
             'from'=>self::clean_date($season['public_display_from'] ?? ''),
             'until'=>self::clean_date($season['public_display_until'] ?? ''),
-            'force'=>(string)($season['public_force_display'] ?? '0'),
         )) . ';', 'before');
     }
 
+    /**
+     * Le moteur calendrier historique continue à lire `published`. On lui donne donc
+     * l'état effectif du module calendrier sans modifier la valeur enregistrée en base.
+     */
     public static function filter_calendar_window($value) {
         if (is_admin() || !is_array($value) || empty($value['seasons']) || !is_array($value['seasons'])) return $value;
-        // Ne rappelle jamais get_option() depuis ce filtre : cela provoquerait une récursion.
         $today = self::today_from_settings($value);
-        foreach ($value['seasons'] as $year => &$season) {
+        foreach ($value['seasons'] as &$season) {
             if (!is_array($season)) continue;
-            if (!self::in_window((string)$year, $today)) $season['published'] = '0';
+            $fallback = array_key_exists('calendar_visible', $season)
+                ? (string)$season['calendar_visible'] === '1'
+                : (string)($season['published'] ?? '0') === '1';
+            $season['published'] = self::module_visible_for_season($season, 'calendar_visible', $fallback, $today) ? '1' : '0';
         }
         unset($season);
         return $value;
@@ -144,10 +192,10 @@ final class Parcs_HT_Public_Visibility {
         $years = array();
         foreach (self::all_years() as $year) {
             $season = self::raw_season($year);
-            $enabled = array_key_exists('calendar_visible', $season)
+            $fallback = array_key_exists('calendar_visible', $season)
                 ? (string)$season['calendar_visible'] === '1'
                 : (string)($season['published'] ?? '0') === '1';
-            if ($enabled && self::in_window($year)) $years[] = $year;
+            if (self::module_visible($year, 'calendar_visible', $fallback)) $years[] = $year;
         }
         return self::order_years($years);
     }
@@ -157,10 +205,10 @@ final class Parcs_HT_Public_Visibility {
         $current = self::current_year();
         foreach (self::all_years() as $year) {
             $season = self::raw_season($year);
-            $enabled = array_key_exists('retail_tariffs_visible', $season)
+            $fallback = array_key_exists('retail_tariffs_visible', $season)
                 ? (string)$season['retail_tariffs_visible'] === '1'
                 : ((string)($season['published'] ?? '0') === '1' && $year === $current);
-            if ($enabled && self::in_window($year)) $years[] = $year;
+            if (self::module_visible($year, 'retail_tariffs_visible', $fallback)) $years[] = $year;
         }
         return self::order_years($years);
     }
@@ -169,7 +217,8 @@ final class Parcs_HT_Public_Visibility {
         $years = array();
         foreach (self::all_years() as $year) {
             $season = self::raw_season($year);
-            if ((string)($season['groups_schedule_visible'] ?? '0') === '1' && self::in_window($year)) $years[] = $year;
+            $fallback = (string)($season['groups_schedule_visible'] ?? '0') === '1';
+            if (self::module_visible($year, 'groups_schedule_visible', $fallback)) $years[] = $year;
         }
         return self::order_years($years);
     }
@@ -177,18 +226,32 @@ final class Parcs_HT_Public_Visibility {
     public static function group_tariff_years() {
         $years = array();
         foreach (self::all_years() as $year) {
-            if (!class_exists('Parcs_HT_Group_Tariff_Settings') || !Parcs_HT_Group_Tariff_Settings::is_published($year)) continue;
-            if (!self::in_window($year)) continue;
-            $display = Parcs_HT_Group_Tariff_Settings::settings($year);
-            $from = self::clean_date($display['display_from'] ?? '');
-            if ($from !== '' && self::today() < $from) continue;
-            $years[] = $year;
+            if (!class_exists('Parcs_HT_Group_Tariff_Settings') || !Parcs_HT_Group_Tariff_Settings::has_grid($year)) continue;
+            $season = self::raw_season($year);
+            $fallback = array_key_exists('group_tariffs_visible', $season)
+                ? (string)$season['group_tariffs_visible'] === '1'
+                : (string)(Parcs_HT_Group_Tariff_Settings::settings($year)['published'] ?? '0') === '1';
+            if (self::module_visible($year, 'group_tariffs_visible', $fallback)) $years[] = $year;
+        }
+        return self::order_years($years);
+    }
+
+    public static function quote_years() {
+        $years = array();
+        foreach (self::all_years() as $year) {
+            $season = self::raw_season($year);
+            $fallback = (string)($season['group_quotes_enabled'] ?? '0') === '1';
+            if (self::module_visible($year, 'group_quotes_enabled', $fallback)) $years[] = $year;
         }
         return self::order_years($years);
     }
 
     public static function tariff_years() {
         return self::order_years(array_merge(self::retail_years(), self::group_tariff_years()));
+    }
+
+    public static function group_portal_years() {
+        return self::order_years(array_merge(self::group_tariff_years(), self::group_schedule_years()));
     }
 
     public static function default_year($years, $requested = '') {
