@@ -14,8 +14,10 @@ final class Parcs_HT_Defaults {
     public static function all_settings() { return get_option(self::OPTION, array()); }
 }
 
+// Simule précisément l'ancien conflit : le statut de publication commerciale
+// ne doit plus décider si le moteur de devis peut utiliser une année.
 final class Parcs_HT_Group_Tariff_Settings {
-    public static function quote_enabled($year) { return in_array((string)$year, array('2026','2027'), true); }
+    public static function quote_enabled($year) { return false; }
 }
 
 final class Parcs_HT_Tariff_Identities {
@@ -55,14 +57,15 @@ $rows_2027 = quote_isolation_rows($column_2027, 'tariff_row_20000', '9 €', '6,
 
 $GLOBALS['htp_quote_isolation_options'][Parcs_HT_Defaults::OPTION] = array(
     'seasons'=>array(
+        // 2026 n'a volontairement PAS le nouvel interrupteur group_quotes_enabled :
+        // c'est une saison historique déjà utilisée par le devis.
         '2026'=>array('tariffs'=>array('columns'=>array('groups'=>array(array('id'=>$column_2026))), 'groups'=>$rows_2026)),
+        // 2027 possède sa propre grille et sa propre liaison.
         '2027'=>array('tariffs'=>array('columns'=>array('groups'=>array(array('id'=>$column_2027))), 'groups'=>$rows_2027)),
     ),
 );
 
 $GLOBALS['htp_quote_isolation_options'][Parcs_HT_Group_Quotes::OPTION] = array(
-    // Reproduit le cas problématique : seule la liaison stable 2027 est présente.
-    // Elle ne doit jamais être appliquée à la grille 2026 si ses IDs sont différents.
     'tariff_bindings'=>array(
         '2027'=>array(
             'column_id'=>$column_2027,
@@ -75,6 +78,7 @@ $GLOBALS['htp_quote_isolation_options'][Parcs_HT_Group_Quotes::OPTION] = array(
         ),
     ),
     'tariff_binding'=>Parcs_HT_Group_Quotes::legacy_binding_defaults(),
+    // Preuve historique que 2026 était déjà exploité par le devis avant les nouveaux interrupteurs.
     'seasons'=>array('2026'=>array('child'=>'6','adult'=>'8.50','disability'=>'6','companion'=>'6')),
 );
 
@@ -85,17 +89,17 @@ quote_isolation_assert(($binding_2026['adult_row_id'] ?? '') === 'tariff_row_100
 quote_isolation_assert(($binding_2026['child_row_id'] ?? '') === 'tariff_row_100003', '2026 keeps its own child row identity');
 
 $season_2026 = Parcs_HT_Group_Quotes::season_for_year('2026');
-quote_isolation_assert(is_array($season_2026), '2026 remains available to the quote engine after 2027 is configured');
+quote_isolation_assert(is_array($season_2026), 'historical 2026 quote remains available even when commercial publication status is false');
 quote_isolation_assert((string)($season_2026['adult'] ?? '') === '8.5', '2026 quote keeps the 2026 adult price');
 quote_isolation_assert((string)($season_2026['child'] ?? '') === '6', '2026 quote keeps the 2026 child price');
 
 $season_2027 = Parcs_HT_Group_Quotes::season_for_year('2027');
-quote_isolation_assert(is_array($season_2027), '2027 remains independently available to the quote engine');
+quote_isolation_assert(is_array($season_2027), '2027 remains independently available through its exact quote binding');
 quote_isolation_assert((string)($season_2027['adult'] ?? '') === '9', '2027 quote keeps the 2027 adult price');
 quote_isolation_assert((string)($season_2027['child'] ?? '') === '6.5', '2027 quote keeps the 2027 child price');
 
 $public = Parcs_HT_Group_Quotes::settings(true);
-quote_isolation_assert((string)($public['seasons']['2026']['published'] ?? '0') === '1', 'public quote payload exposes 2026');
+quote_isolation_assert((string)($public['seasons']['2026']['published'] ?? '0') === '1', 'public quote payload exposes historical 2026 independently of public group tariff publication');
 quote_isolation_assert((string)($public['seasons']['2027']['published'] ?? '0') === '1', 'public quote payload exposes 2027 without blocking 2026');
 
-echo "Group quote year isolation runtime: OK\n";
+echo "Group quote year and activation isolation runtime: OK\n";
