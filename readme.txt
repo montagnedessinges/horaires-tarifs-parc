@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.15.12
+Stable tag: 1.15.13
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes et outils du parc.
 
@@ -19,6 +19,15 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.15.13 =
+* Stabilise la navigation de l’administration : les onglets Groupes et Horaires n’effacent plus les onglets canoniques après chargement et s’appuient sur un seul moteur d’affichage des panneaux.
+* Conserve le contexte Groupes → Tarifs après une sauvegarde et isole correctement l’écran Guides pédagogiques des commandes du formulaire principal.
+* Remplace l’ancien pilotage global Brouillon / Publié par cinq activations annuelles indépendantes : calendrier public, tarifs visiteurs, horaires groupes, devis groupes et tarifs groupes publics.
+* Une année dupliquée démarre avec toutes ses activations publiques désactivées afin de pouvoir être préparée sans publication involontaire.
+* Corrige le contrôle de date du devis groupes : une année ou une date sans horaire exploitable est considérée fermée par défaut, tout en laissant le devis possible lorsque les tarifs sont disponibles.
+* Rejette les dates calendaires impossibles dans le contrôle préalable du devis.
+* Ajoute des contrats de non-régression dédiés à la navigation d’administration, aux activations annuelles et au comportement fail-closed des dates de devis.
 
 = 1.15.12 =
 * Stabilisation du sélecteur annuel des tarifs visiteurs : les années affichées sont contrôlées explicitement et ne remplacent plus silencieusement l’année courante.

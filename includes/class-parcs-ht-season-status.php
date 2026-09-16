@@ -3,8 +3,10 @@
 if (!defined('ABSPATH')) { exit; }
 
 /**
- * Gestion explicite du statut d'une saison.
- * Enregistrer ne change jamais le statut ; publier/remettre en brouillon sont des actions volontaires.
+ * Couche de compatibilité du statut historique d'une saison.
+ * Depuis 1.15.13, la visibilité publique est pilotée par les commandes annuelles
+ * (calendrier, tarifs visiteurs, horaires groupes, devis et tarifs groupes),
+ * et non par un bouton global Brouillon / Publié.
  */
 final class Parcs_HT_Season_Status {
     public static function init() {
@@ -15,21 +17,41 @@ final class Parcs_HT_Season_Status {
     public static function enforce_explicit_status($new_value, $old_value, $option) {
         unset($option);
         if (!is_admin() || !is_array($new_value) || !is_array($old_value)) return $new_value;
-        if (!current_user_can('manage_options') || !isset($_POST['_wpnonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'])), 'parcs_ht_save')) return $new_value;
-        if (!isset($_POST['action']) || sanitize_key(wp_unslash($_POST['action'])) !== 'parcs_ht_save') return $new_value;
+        if (!current_user_can('manage_options')) return $new_value;
+
+        $action = isset($_POST['action']) ? sanitize_key(wp_unslash($_POST['action'])) : '';
+
+        // Lors d'une duplication, la nouvelle année reste entièrement inactive par défaut.
+        if ($action === 'parcs_ht_duplicate_season') {
+            $source = isset($_POST['season_year']) ? sanitize_text_field(wp_unslash($_POST['season_year'])) : '';
+            $nonce = isset($_POST['_wpnonce']) ? sanitize_text_field(wp_unslash($_POST['_wpnonce'])) : '';
+            if (!preg_match('/^20\d{2}$/', $source) || !wp_verify_nonce($nonce, 'parcs_ht_duplicate_season_' . $source)) return $new_value;
+
+            foreach ((array)($new_value['seasons'] ?? array()) as $year => &$season) {
+                if (isset($old_value['seasons'][$year]) || !is_array($season)) continue;
+                foreach (array('calendar_visible','retail_tariffs_visible','groups_schedule_visible','group_quotes_enabled','group_tariffs_visible') as $flag) {
+                    $season[$flag] = '0';
+                }
+                $season['published'] = '0';
+            }
+            unset($season);
+            return $new_value;
+        }
+
+        if ($action !== 'parcs_ht_save') return $new_value;
+        if (!isset($_POST['_wpnonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'])), 'parcs_ht_save')) return $new_value;
 
         $year = isset($_POST['season_year']) ? sanitize_text_field(wp_unslash($_POST['season_year'])) : '';
-        if (!preg_match('/^20\d{2}$/', $year) || !isset($new_value['seasons'][$year])) return $new_value;
+        if (!preg_match('/^20\d{2}$/', $year) || !isset($new_value['seasons'][$year]) || !is_array($new_value['seasons'][$year])) return $new_value;
 
-        $action = isset($_POST['htp_season_action']) ? sanitize_key(wp_unslash($_POST['htp_season_action'])) : 'save';
         $old_status = isset($old_value['seasons'][$year]['published']) && (string)$old_value['seasons'][$year]['published'] === '1' ? '1' : '0';
+        $calendar_visible = isset($_POST['settings']['general']['calendar_visible']) ? sanitize_text_field(wp_unslash($_POST['settings']['general']['calendar_visible'])) : null;
 
-        if ($action === 'publish') {
-            $new_status = '1';
-        } elseif ($action === 'draft') {
-            $new_status = '0';
+        // Le vieux champ `published` reste seulement pour compatibilité interne.
+        // Sa valeur suit désormais la commande annuelle « Afficher le calendrier ».
+        if ($calendar_visible !== null) {
+            $new_status = $calendar_visible === '1' ? '1' : '0';
         } else {
-            // Une simple sauvegarde ne publie ni ne dépublie jamais une saison.
             $new_status = $old_status;
         }
 
@@ -40,13 +62,9 @@ final class Parcs_HT_Season_Status {
 
     public static function admin_assets($hook) {
         if ($hook !== 'toplevel_page_parcs-horaires-tarifs') return;
-        $year = isset($_GET['season']) ? sanitize_text_field(wp_unslash($_GET['season'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Sélection d’aperçu en lecture seule ; aucun enregistrement.
-        $all = Parcs_HT_Defaults::all_settings();
-        if ($year === '' || !isset($all['seasons'][$year])) {
-            foreach ((array)($all['seasons'] ?? array()) as $candidate => $season) { $year = (string)$candidate; break; }
-        }
-        $published = $year !== '' && isset($all['seasons'][$year]) && (string)($all['seasons'][$year]['published'] ?? '0') === '1';
+        // Le script ne reconstruit plus la barre d'enregistrement et n'ajoute plus
+        // de statut Brouillon / Publié. Il masque uniquement l'ancien champ global
+        // encore rendu par le formulaire historique.
         wp_enqueue_script('parcs-ht-season-status-admin', PARCS_HT_URL . 'assets/season-status-admin.js', array('parcs-ht-admin'), PARCS_HT_VERSION, true);
-        wp_add_inline_script('parcs-ht-season-status-admin', 'window.ParcsHTSeasonStatus=' . wp_json_encode(array('year'=>$year,'published'=>$published)) . ';', 'before');
     }
 }

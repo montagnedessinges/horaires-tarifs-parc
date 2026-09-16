@@ -122,21 +122,47 @@ final class Parcs_HT_Quote_Gate {
         return true;
     }
 
-    public static function date_status() {
-        check_ajax_referer('parcs_ht_quote_gate', 'nonce');
-        $date = isset($_POST['date']) ? sanitize_text_field(wp_unslash($_POST['date'])) : '';
-        if (!preg_match('/^(20\d{2})-\d{2}-\d{2}$/', $date)) wp_send_json_error(array('message'=>'Date invalide.'), 400);
+    private static function valid_date($date) {
+        $date = trim((string)$date);
+        if (!preg_match('/^(20\d{2})-(\d{2})-(\d{2})$/', $date)) return false;
+        $year = (int)substr($date, 0, 4);
+        $month = (int)substr($date, 5, 2);
+        $day = (int)substr($date, 8, 2);
+        return checkdate($month, $day, $year);
+    }
+
+    /**
+     * Résout le statut d'une date sans dépendre de la visibilité du calendrier public.
+     * Règle de sécurité : si aucune saison exploitable n'est trouvée, la date est fermée.
+     */
+    public static function status_for_date($date) {
+        $date = trim((string)$date);
+        if (!self::valid_date($date)) {
+            return array('valid'=>false, 'tariffs'=>false, 'closed'=>true, 'year'=>'');
+        }
+
         $year = substr($date, 0, 4);
         $tariffs = self::tariff_available($year);
-        $closed = false;
+        $closed = true;
         $all = get_option(Parcs_HT_Defaults::OPTION, array());
+
         if (is_array($all) && isset($all['seasons'][$year]) && is_array($all['seasons'][$year])) {
             $season = $all['seasons'][$year];
             $general = isset($all['general']) && is_array($all['general']) ? $all['general'] : array();
             $status = Parcs_HT_Schedule::resolve_day($season, $general, $date, Parcs_HT_Schedule::timezone($general));
             $closed = empty($status['open']);
         }
-        wp_send_json_success(array('tariffs'=>$tariffs,'closed'=>$closed,'year'=>$year));
+
+        return array('valid'=>true, 'tariffs'=>$tariffs, 'closed'=>$closed, 'year'=>$year);
+    }
+
+    public static function date_status() {
+        check_ajax_referer('parcs_ht_quote_gate', 'nonce');
+        $date = isset($_POST['date']) ? sanitize_text_field(wp_unslash($_POST['date'])) : '';
+        $status = self::status_for_date($date);
+        if (empty($status['valid'])) wp_send_json_error(array('message'=>'Date invalide.'), 400);
+        unset($status['valid']);
+        wp_send_json_success($status);
     }
 
     public static function assets() {
