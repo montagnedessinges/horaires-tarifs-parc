@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.16.1
+Stable tag: 1.16.2
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes et outils du parc.
 
@@ -19,6 +19,12 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.16.2 =
+* Simplifie les shortcodes composés : Horaires & Tarifs assemble désormais directement les shortcodes autonomes de l’état du jour, du calendrier et des tarifs.
+* Le shortcode Groupes assemble directement le shortcode des tarifs groupes et le shortcode calendrier existant, sans recréer ni réinjecter un second moteur d’horaires.
+* Supprime du chemin public composé les synchronisations JavaScript fragiles et les injections de données parallèles ; chaque bloc garde son propre moteur, ses données et son comportement éprouvé.
+* Conserve les shortcodes individuels utilisables séparément tout en gardant les shortcodes communs pour simplifier l’intégration dans les pages WordPress.
 
 = 1.16.1 =
 * Restaure le shortcode complet Horaires & Tarifs avec l’état du jour, le calendrier existant et le nouveau tableau de tarifs dans cet ordre.
