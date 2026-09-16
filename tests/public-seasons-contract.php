@@ -56,9 +56,9 @@ foreach (array('public_display_from','public_force_display','groups_schedule_vis
         exit(1);
     }
 }
-foreach (array('Afficher le calendrier','Afficher les tarifs visiteurs','Activer les tarifs groupes pour les devis','Afficher les tarifs groupes sur le site') as $marker) {
+foreach (array('Afficher le calendrier public','Afficher les tarifs visiteurs','Afficher les horaires aux groupes','Activer les devis groupes','Afficher les tarifs groupes sur le site') as $marker) {
     if (strpos($policy, $marker) === false) {
-        fwrite(STDERR, "Missing admin publication control: {$marker}\n");
+        fwrite(STDERR, "Missing yearly activation control: {$marker}\n");
         exit(1);
     }
 }
