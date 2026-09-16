@@ -2,7 +2,7 @@
 
 Date : 16/09/2026
 
-Cette note complète les documents `ROADMAP-2026-09-16-MAJ-1-2.md` et `ADDENDUM-2026-09-16-MAJ-1-2-GROUPES-CSV.md`.
+Cette note complète les documents `ROADMAP-2026-09-16-MAJ-1-2.md`, `ADDENDUM-2026-09-16-MAJ-1-2-GROUPES-CSV.md`, `ADDENDUM-2026-09-16-MAJ-1-CALENDRIER-GROUPES.md` et `ADDENDUM-2026-09-16-MAJ-2-REFONTE-VISUELLE-GROUPES.md`.
 
 ## Principe général
 
@@ -163,6 +163,8 @@ Exemple :
 
 => les horaires 2027 n’apparaissent pas sur le calendrier public général mais les **mêmes données horaires 2027** apparaissent dans la partie Groupes.
 
+Le rendu Groupes doit réutiliser le **même composant calendrier que la partie principale Horaires & Tarifs**, pas un tableau parallèle `Dates / Jours / Horaires`.
+
 ## 5. Shortcodes Groupes
 
 Prévoir une séparation fonctionnelle claire :
@@ -174,6 +176,16 @@ Prévoir une séparation fonctionnelle claire :
 Le shortcode horaires Groupes ne doit jamais dépendre d’une grille d’horaires spécifique aux groupes, puisqu’elle ne doit pas exister.
 
 Le shortcode tarifs Groupes ne doit pas dépendre de l’affichage des horaires Groupes.
+
+Dans le shortcode combiné :
+
+- **Tarifs groupes doit être présenté en premier et actif par défaut** lorsque ce module est disponible ;
+- `Horaires d’ouverture` vient ensuite ;
+- si un seul module est disponible, ne pas afficher un onglet vide ;
+- plusieurs années peuvent être proposées simultanément lorsque leurs règles d’affichage l’autorisent ;
+- un sélecteur d’année doit permettre de passer d’une grille annuelle à une autre ;
+- les tarifs et horaires restent propres à chaque année ;
+- un paramètre facultatif du shortcode peut limiter les années demandées sans contourner les règles de visibilité de `Parc & apparence`.
 
 ## 6. Affichage des tarifs groupes
 
@@ -205,21 +217,65 @@ Cette mise à jour intervient **après** la stabilisation technique de la mise �
 
 Elle ne doit pas redéfinir la logique de visibilité ni les sources de données.
 
-Elle concerne uniquement le rendu et l’expérience utilisateur :
+## Périmètre visuel final
 
-- tableau des tarifs plus compact ;
-- meilleure adaptation mobile ;
-- onglets Individuels / Tarifs réduits / Groupes plus compacts ;
-- couleurs distinctes Sur place / En ligne ;
-- mise en avant graphique du canal En ligne ;
-- cellule En ligne cliquable visuellement propre ;
-- réduction des hauteurs, paddings et espaces inutiles ;
-- refonte visuelle de la partie Tarifs groupes ;
-- refonte visuelle de la partie Horaires / Tarifs groupes ;
-- moyens de paiement plus compacts ;
-- blocs d’informations Groupes plus lisibles ;
-- sélecteurs d’année plus compacts ;
-- responsive mobile propre.
+La MAJ 2 doit se concentrer sur :
+
+- les tableaux de tarifs visiteurs ;
+- les tableaux de tarifs groupes ;
+- les onglets liés aux tarifs ;
+- les sélecteurs d’année ;
+- les moyens de paiement ;
+- les petits messages directement liés aux tarifs.
+
+Le calendrier principal fonctionne déjà correctement : **ne pas le redessiner inutilement**. Le calendrier Groupes doit reprendre ce même composant grâce à la MAJ 1.
+
+Ne pas transformer toute la page en dashboard ou en succession de grosses cartes.
+
+## Direction graphique
+
+S’inspirer de l’esprit des **guides / ressources pédagogiques** : rendu propre, simple, arrondi, cohérent avec le site, mais beaucoup plus compact.
+
+Tous les tableaux de tarifs doivent appartenir au même système graphique.
+
+## Règles principales
+
+- `Individuels | Tarifs réduits | Groupes` sur une seule ligne ;
+- `Tarifs groupes | Horaires d’ouverture` sur une seule ligne ;
+- sélecteurs d’année sur une seule ligne ;
+- défilement horizontal **local** sur très petit écran si nécessaire, jamais de scroll horizontal global ;
+- tableau Individuels compact avec distinction claire `Sur place / En ligne` ;
+- cellule En ligne entière cliquable ;
+- cellule absente réellement supprimée, sans `—` ni faux espace ;
+- moins de 5 ans : seulement `Gratuit` lorsqu’il n’existe pas de billet en ligne ;
+- tarifs réduits : rendu compact sans colonne En ligne inutile ;
+- tarifs groupes : même famille graphique que les tarifs visiteurs, sans inventer de colonnes qui ne correspondent pas aux données ;
+- hauteur verticale fortement réduite sur mobile.
+
+## Moyens de paiement
+
+Les moyens de paiement **Particuliers** et **Groupes sont deux listes distinctes**.
+
+Ils doivent partager le même style graphique mais jamais être fusionnés automatiquement.
+
+Particuliers : conserver notamment les éléments actuellement affichés comme `Carte bancaire`, `Espèces`, `Chèques-Vacances papier`, `Chèques-Vacances Connect`.
+
+Groupes : utiliser la liste propre aux groupes et ses moyens spécifiques lorsqu’ils sont activés, notamment voucher, bon de commande, Chorus Pro, etc.
+
+Pour chaque contexte :
+
+- une seule ligne visuelle ;
+- pills / badges plus petits ;
+- icônes et espacements réduits ;
+- **pas de retour sur une deuxième ligne** ;
+- sur mobile, scroll horizontal local de la barre si nécessaire ;
+- garder des libellés suffisamment explicites.
+
+## Référence détaillée
+
+Pour tous les critères visuels détaillés et les cas mobiles, la référence prioritaire est :
+
+`ADDENDUM-2026-09-16-MAJ-2-REFONTE-VISUELLE-GROUPES.md`
 
 Les options fonctionnelles nécessaires au rendu (par exemple masquer une cellule En ligne, texte contextuel modifiable, lien spécifique par tarif) doivent être **créées côté technique dans la mise à jour 1 si leur stockage ou leur logique nécessite une évolution**, puis simplement mises en forme dans la mise à jour 2.
 
