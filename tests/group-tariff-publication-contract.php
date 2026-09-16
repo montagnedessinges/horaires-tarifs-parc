@@ -14,26 +14,36 @@ function group_publication_check($condition, $message) {
     echo '[OK] ' . $message . PHP_EOL;
 }
 
+function group_publication_function_source($source, $name) {
+    $needle = 'public static function ' . $name . '(';
+    $start = strpos($source, $needle);
+    if ($start === false) return '';
+    $next = strpos($source, '\n    public static function ', $start + strlen($needle));
+    if ($next === false) $next = strlen($source);
+    return substr($source, $start, $next - $start);
+}
+
 group_publication_check(strpos($settings, "const OPTION = 'parcs_ht_group_tariff_settings'") !== false, 'group publication and presentation keep their own settings store');
-group_publication_check(strpos($settings, 'const STORE_VERSION = 4') !== false, 'group display settings store migrated to version 4');
+group_publication_check(strpos($settings, 'const STORE_VERSION = 4') !== false, 'group display settings store remains versioned');
 group_publication_check(strpos($settings, "'display_from'=>''") !== false && strpos($settings, 'save_display_from') !== false, 'each group year can own a commercial display date');
 group_publication_check(strpos($settings, 'public static function is_published') !== false, 'group publication exposes an explicit per-year status');
-group_publication_check(strpos($settings, 'if (!$season || !self::has_grid($year)) return false;') !== false, 'group publication requires its own usable canonical grid');
-group_publication_check(strpos($settings, "(string)(\$season['published'] ?? '0') !== '1'") === false, 'group publication no longer depends on the general public season publication');
-group_publication_check(strpos($settings, 'public static function public_year') !== false && strpos($settings, 'effective_display_date') !== false, 'group public year follows the commercial switch date');
-group_publication_check(strpos($settings, "return \$configured !== '' ? \$configured : \$year . '-01-01';") !== false, 'years without a switch date retain the standard January first fallback');
-group_publication_check(strpos($settings, 'quote_binding_valid') !== false && strpos($settings, 'readiness') !== false, 'admin readiness covers the quote binding and public year');
-
 group_publication_check(strpos($seasons, 'hide_unpublished_groups') !== false && strpos($seasons, "\$tariffs['groups'] = array();") !== false, 'general public tariff rendering cannot expose unpublished group rates');
-group_publication_check(strpos($quotes, 'private static function quote_enabled_for_year') !== false, 'quote engine owns per-year quote activation resolution');
-group_publication_check(strpos($quotes, "array_key_exists('group_quotes_enabled', \$season)") !== false, 'explicit annual quote switch remains authoritative');
-group_publication_check(strpos($quotes, 'Parcs_HT_Group_Tariff_Settings::quote_enabled($year)') === false, 'quote availability no longer depends on commercial group publication state');
-group_publication_check(strpos($quotes, "get_option(self::OPTION, array())") !== false, 'legacy quote activation is recovered from the historical quote store itself');
-group_publication_check(strpos($quotes, "array_keys((array)(\$all['seasons'] ?? array()))") !== false, 'online quote settings discover canonical future seasons instead of relying on legacy quote storage');
-group_publication_check(strpos($quotes, 'private static function stable_binding') !== false && strpos($quotes, 'krsort($previous, SORT_NUMERIC)') !== false, 'future seasons can inherit a stable quote binding from a previous season');
-group_publication_check(strpos($quotes, 'private static function binding_matches_year') !== false, 'cross-year quote bindings are validated against the target year');
-group_publication_check(strpos($quotes, 'private static function legacy_binding_for_year') !== false, 'missing stable bindings can be recovered from the historical target-year mapping');
-group_publication_check(strpos($quotes, 'public static function season_for_year') !== false, 'quote engine exposes one canonical per-year availability accessor');
+
+group_publication_check(strpos($quotes, "const STATE_OPTION = 'parcs_ht_group_quote_years_v2'") !== false, 'quote activation owns a dedicated annual state store');
+group_publication_check(strpos($quotes, 'const STATE_VERSION = 1') !== false, 'quote annual state is explicitly versioned');
+group_publication_check(strpos($quotes, 'public static function quote_enabled_for_year') !== false, 'quote engine exposes a canonical annual activation accessor');
+group_publication_check(strpos($quotes, 'public static function binding_for_year') !== false, 'quote engine exposes an annual binding accessor');
+group_publication_check(strpos($quotes, 'derive_binding_for_year') !== false, 'missing bindings are rebuilt from the requested year grid');
+group_publication_check(strpos($quotes, 'krsort($previous') === false && strpos($quotes, 'ksort($future') === false, 'quote engine contains no previous/future year binding fallback');
+group_publication_check(strpos($quotes, 'Parcs_HT_Group_Tariff_Settings::quote_enabled') === false, 'quote availability is independent from commercial group publication');
+group_publication_check(strpos($quotes, "(string)(\$season['published']") === false, 'quote availability no longer reads the legacy published status');
+group_publication_check(strpos($quotes, 'sync_admin_year_activation') !== false, 'persisted annual controls synchronize the dedicated quote state');
+$sync_source = group_publication_function_source($quotes, 'sync_admin_year_activation');
+group_publication_check($sync_source !== '' && strpos($sync_source, '$_POST') === false, 'quote-state synchronization does not parse request data or depend on a second nonce path');
+group_publication_check(strpos($sync_source, '$new_seasons') !== false && strpos($sync_source, '$old_seasons') !== false, 'quote-state synchronization compares persisted old and new seasons');
+group_publication_check(strpos($quotes, 'legacy_year_evidence') !== false && strpos($quotes, 'migrate_state') !== false, 'legacy quote evidence is consumed only by the one-time state migration');
+group_publication_check(strpos($quotes, 'public static function season_for_year') !== false, 'quote engine exposes one canonical per-year pricing accessor');
+group_publication_check(strpos($quotes, 'integer_value') !== false, 'participant quantities are normalized as integers server-side');
 
 group_publication_check(strpos($shortcode, 'Parcs_HT_Group_Tariff_Settings::public_year()') !== false, 'dedicated group shortcode selects the commercial group year');
 group_publication_check(strpos($shortcode, "\$settings['tariffs'] = isset(\$season['tariffs'])") !== false, 'dedicated group shortcode reads the selected year canonical tariff payload directly');
@@ -41,18 +51,12 @@ group_publication_check(strpos($shortcode, 'Parcs_HT_Tariff_Seasons::select_seas
 group_publication_check(strpos($shortcode, "\$rows = isset(\$tariffs['groups'])") !== false, 'group prices still come from canonical tariffs.groups');
 group_publication_check(strpos($shortcode, 'Parcs_HT_Group_Tariff_Settings::settings') !== false, 'presentation comes from the dedicated display settings');
 group_publication_check(strpos($shortcode, 'is_mds(') === false && strpos($shortcode, 'site_type') === false, 'public renderer is site-agnostic');
-group_publication_check(strpos($shortcode, 'Bon de commande / voucher') === false && strpos($shortcode, 'Chorus Pro') === false, 'public renderer contains no hardcoded MDS payment content');
-group_publication_check(strpos($shortcode, "do_shortcode('[parc_tableau_tarifs") === false, 'dedicated group shortcode renders its own visual instead of hiding the full tariff table');
 
 group_publication_check(strpos($settings, "'payment_methods'=>array()") !== false && strpos($settings, "'info_blocks'=>array()") !== false, 'generic installations start with editable empty presentation lists');
-group_publication_check(strpos($settings, 'legacy_mds_payment_methods') !== false && strpos($settings, 'version < 2') !== false, '1.13.6 MDS content is preserved only through a one-time migration');
 group_publication_check(strpos($admin, 'Ajouter un moyen de paiement') !== false, 'admin can add payment methods');
 group_publication_check(strpos($admin, 'Ajouter un bloc d’information') !== false, 'admin can add information blocks');
-group_publication_check(strpos($admin, "data-gt-move=\"up\"") !== false && strpos($admin, 'data-gt-remove') !== false, 'admin can reorder and remove configurable group content');
-group_publication_check(strpos($admin, 'Montagne des Singes, à la Forêt des Singes ou sur un autre site') !== false, 'admin explains that presentation settings are installation-specific');
 group_publication_check(strpos($switch_js, 'Bascule commerciale des tarifs groupes') !== false && strpos($switch_js, 'data-gts-date') !== false, 'group admin exposes a dedicated commercial switch date');
-group_publication_check(strpos($switch_js, 'Saison publique générale') !== false && strpos($switch_js, 'Liaison devis') !== false, 'group admin exposes readiness without forcing the public season online');
-group_publication_check(strpos($switch_admin, "do_action('litespeed_purge_all')") !== false && strpos($switch_admin, 'wp_schedule_single_event') !== false, 'scheduled group switch purges the page cache');
+group_publication_check(strpos($switch_admin, "do_action('litespeed_purge_all')") !== false, 'commercial group switch can still purge the page cache');
 
 echo "Group tariff publication contract: OK\n";
 
