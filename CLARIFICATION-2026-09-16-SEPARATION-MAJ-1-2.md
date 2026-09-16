@@ -26,10 +26,10 @@ Pour les fonctions concernées par cette mise à jour, **ne pas utiliser une log
 L’objectif est volontairement simple : chaque contenu / année dispose d’un interrupteur de visibilité **Afficher : OUI / NON**.
 
 - `OUI` = on affiche dans l’emplacement concerné ;
-- `NON` = on n’affiche pas ;
+- `NON` = on n’affiche pas, sauf si une planification automatique définie ci-dessous rend temporairement le contenu visible ;
 - **la valeur par défaut doit être NON** lorsqu’un nouveau réglage / une nouvelle saison est créé(e) ;
 - il ne doit pas être nécessaire de “publier” une saison ou de la sortir d’un “brouillon” pour que ces interrupteurs fonctionnent ;
-- les interrupteurs de visibilité sont la source de vérité pour l’affichage des modules concernés.
+- les interrupteurs de visibilité, complétés éventuellement par leur planification automatique, sont la source de vérité pour l’affichage des modules concernés.
 
 Si une ancienne notion `published` / brouillon doit être conservée temporairement pour compatibilité interne ou migration, elle ne doit plus piloter ces affichages publics lorsque les nouveaux interrupteurs existent.
 
@@ -59,6 +59,57 @@ Clarifier et fiabiliser les interrupteurs par saison :
 Ces commandes sont indépendantes et doivent être **NON par défaut** pour une nouvelle année / saison tant que l’utilisateur ne les active pas explicitement.
 
 Il ne faut pas ajouter une étape séparée “Publier la saison”. L’utilisateur choisit seulement si chaque bloc doit être affiché ou non.
+
+## 3 bis. Planification automatique de la visibilité
+
+Pour chaque interrupteur d’affichage concerné, ajouter deux dates facultatives :
+
+- **Afficher automatiquement à partir du** ;
+- **Ne plus afficher à partir du**.
+
+L’objectif est de pouvoir préparer une année à l’avance sans revenir manuellement dans l’administration le jour du changement.
+
+### Priorité du réglage manuel
+
+Le réglage manuel `OUI` est prioritaire :
+
+- si l’utilisateur met **OUI**, le contenu reste affiché ;
+- les dates automatiques ne doivent pas repasser un réglage manuel `OUI` à `NON` ;
+- l’utilisateur peut donc forcer l’affichage à tout moment.
+
+Le mode automatique intervient lorsque le réglage manuel est sur **NON**.
+
+### Comportement lorsque le réglage manuel est sur NON
+
+- sans date de début : le contenu reste masqué ;
+- avec une date de début future : le contenu reste masqué avant cette date ;
+- à partir de la date de début, il devient automatiquement visible ;
+- si aucune date de fin n’est définie, il reste ensuite visible automatiquement ;
+- si une date de fin est définie, il redevient automatiquement masqué **à partir de cette date**.
+
+Exemple pour les tarifs visiteurs 2027 :
+
+- `Afficher les tarifs visiteurs 2027 = NON`
+- `Afficher automatiquement à partir du = 01/12/2026`
+- `Ne plus afficher à partir du = 01/12/2027`
+
+Résultat :
+
+- jusqu’au 30/11/2026 : masqué ;
+- du 01/12/2026 au 30/11/2027 : affiché automatiquement ;
+- à partir du 01/12/2027 : masqué automatiquement.
+
+Si l’utilisateur passe manuellement le réglage à `OUI` pendant cette période, **OUI reste prioritaire** et le contenu continue d’être affiché, même après la date de fin, jusqu’à ce que l’utilisateur remette le réglage sur `NON`.
+
+### Validation des dates
+
+- les deux dates sont facultatives ;
+- si les deux sont renseignées, la date de fin ne doit pas précéder la date de début ;
+- les calculs doivent utiliser le fuseau horaire configuré par l’extension ;
+- l’état effectif doit être calculé au rendu / à la lecture et ne doit pas nécessiter un cron pour modifier physiquement la valeur enregistrée de `OUI/NON` ;
+- l’administration doit pouvoir indiquer clairement l’état effectif : `Affiché manuellement`, `Planifié`, `Affiché automatiquement`, `Masqué` ou équivalent, sans transformer cette information en nouvelle logique de publication/brouillon.
+
+Cette planification doit être disponible pour les affichages publics concernés. Elle reste indépendante pour chaque bloc : calendrier, tarifs visiteurs, horaires Groupes et tarifs groupes. Pour le moteur de devis, ne l’appliquer que si le développeur confirme qu’une activation planifiée est souhaitable et sans risque ; sinon conserver `Activer les tarifs groupes pour les devis` comme interrupteur manuel indépendant.
 
 ## 4. Horaires Groupes : une seule source de données
 
@@ -99,7 +150,7 @@ Quand `Afficher les tarifs groupes sur le site [année] = OUI`, et qu’une gril
 - dans l’onglet Groupes du tableau public général des tarifs ;
 - dans le shortcode / module public dédié aux tarifs groupes.
 
-Quand ce réglage est sur `NON`, cette année ne doit pas apparaître dans ces affichages.
+Quand ce réglage est sur `NON`, cette année ne doit pas apparaître dans ces affichages, sauf pendant une fenêtre de planification automatique active définie au point 3 bis.
 
 Ce réglage reste indépendant de `Activer les tarifs groupes pour les devis`.
 
@@ -146,6 +197,7 @@ Avant de commencer la mise à jour 2, la mise à jour 1 doit avoir stabilisé :
 - les réglages ;
 - les shortcodes ;
 - les règles de visibilité ;
+- la planification automatique de visibilité ;
 - les années affichables ;
 - les imports/exports CSV.
 
