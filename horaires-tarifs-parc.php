@@ -80,6 +80,16 @@ add_action('added_option', static function ($option, $value) {
     }
 }, 10, 2);
 
+add_action('wp_enqueue_scripts', static function () {
+    if (is_admin()) return;
+    wp_enqueue_style(
+        'parcs-ht-shortcodes-white-section',
+        PARCS_HT_URL . 'assets/shortcodes-white-section.css',
+        array(),
+        PARCS_HT_VERSION
+    );
+}, 95);
+
 add_action('wp_footer', static function () {
     if (!wp_script_is('parcs-ht-frontend', 'enqueued')) return;
     wp_enqueue_script('parcs-ht-frontend-i18n', PARCS_HT_URL . 'assets/frontend-i18n.js', array('parcs-ht-frontend'), PARCS_HT_VERSION, true);
