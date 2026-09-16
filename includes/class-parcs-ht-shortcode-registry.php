@@ -40,12 +40,20 @@ final class Parcs_HT_Shortcode_Registry {
         $definition = $definitions[$base];
         $language = in_array($language, self::languages(), true) ? $language : 'fr';
 
+        if ($base === 'parc_horaires_tarifs' && class_exists('Parcs_HT_Tariff_Display')) {
+            require_once PARCS_HT_DIR . 'includes/class-parcs-ht-shortcodes.php';
+            return Parcs_HT_Tariff_Display::render_page($language, array());
+        }
+        if ($base === 'parc_tableau_tarifs' && class_exists('Parcs_HT_Tariff_Display')) {
+            return Parcs_HT_Tariff_Display::render_public($language, array());
+        }
         if ($definition['kind'] === 'core') {
             require_once PARCS_HT_DIR . 'includes/class-parcs-ht-shortcodes.php';
             return Parcs_HT_Shortcodes::render($definition['module'], $language, array());
         }
-        if ($definition['kind'] === 'groups' && class_exists('Parcs_HT_Group_Tariffs')) {
-            return Parcs_HT_Group_Tariffs::render($language, array());
+        if ($definition['kind'] === 'groups') {
+            if (class_exists('Parcs_HT_Tariff_Display')) return Parcs_HT_Tariff_Display::render_group($language, array());
+            if (class_exists('Parcs_HT_Group_Tariffs')) return Parcs_HT_Group_Tariffs::render($language, array());
         }
         if ($definition['kind'] === 'group_portal' && class_exists('Parcs_HT_Group_Portal')) {
             return Parcs_HT_Group_Portal::render($language, array());

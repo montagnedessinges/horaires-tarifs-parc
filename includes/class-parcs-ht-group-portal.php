@@ -83,6 +83,16 @@ final class Parcs_HT_Group_Portal {
         return $html . '</div>';
     }
 
+    private static function group_tariffs($year, $language) {
+        if (class_exists('Parcs_HT_Tariff_Display')) {
+            return Parcs_HT_Tariff_Display::render_group($language, array(), $year);
+        }
+        Parcs_HT_Display_Policy::begin_group_tariff_year($year);
+        $html = Parcs_HT_Group_Tariffs::render($language, array());
+        Parcs_HT_Display_Policy::end_group_tariff_year();
+        return $html;
+    }
+
     public static function render($language, $atts = array()) {
         unset($atts);
         $language = in_array($language, array('fr','en','de'), true) ? $language : 'fr';
@@ -92,29 +102,53 @@ final class Parcs_HT_Group_Portal {
         $id = 'parcs-ht-group-portal-' . self::$instance;
         $schedule_active = $schedule_years ? (string)end($schedule_years) : '';
         $tariff_active = $tariff_years ? (string)end($tariff_years) : '';
+        $has_tariffs = !empty($tariff_years);
+        $has_hours = !empty($schedule_years);
+        $default_tab = $has_tariffs ? 'tariffs' : 'hours';
+        $show_main_tabs = $has_tariffs && $has_hours;
 
         ob_start(); ?>
         <div id="<?php echo esc_attr($id); ?>" class="parcs-ht-group-portal" data-group-portal>
-            <div class="parcs-ht-group-portal-tabs" role="tablist">
-                <button type="button" class="is-active" data-group-main-tab="hours" aria-selected="true"><?php echo esc_html(self::text($language, 'Horaires d’ouverture', 'Opening hours', 'Öffnungszeiten')); ?></button>
-                <button type="button" data-group-main-tab="tariffs" aria-selected="false"><?php echo esc_html(self::text($language, 'Tarifs groupes', 'Group rates', 'Gruppentarife')); ?></button>
-            </div>
-            <div data-group-main-panel="hours">
-                <?php echo self::year_tabs($schedule_years, 'hours', $schedule_active, $language); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- construit et échappé localement. ?>
-                <?php if (!$schedule_years) : ?><p><?php echo esc_html(self::text($language, 'Aucun horaire groupe publié pour le moment.', 'No group opening hours are published yet.', 'Derzeit sind keine Gruppenöffnungszeiten veröffentlicht.')); ?></p><?php endif; ?>
-                <?php foreach ($schedule_years as $year) : ?><div data-group-year-panel="<?php echo esc_attr('hours-' . $year); ?>" <?php if ($year !== $schedule_active) echo 'hidden'; ?>><?php echo self::schedule_year($year, $language); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- HTML interne échappé. ?></div><?php endforeach; ?>
-            </div>
-            <div data-group-main-panel="tariffs" hidden>
-                <?php echo self::year_tabs($tariff_years, 'tariffs', $tariff_active, $language); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- construit et échappé localement. ?>
-                <?php if (!$tariff_years) : ?><p><?php echo esc_html(self::text($language, 'Aucun tarif groupe publié pour le moment.', 'No group rates are published yet.', 'Derzeit sind keine Gruppentarife veröffentlicht.')); ?></p><?php endif; ?>
-                <?php foreach ($tariff_years as $year) :
-                    Parcs_HT_Display_Policy::begin_group_tariff_year($year);
-                    $tariff_html = Parcs_HT_Group_Tariffs::render($language, array());
-                    Parcs_HT_Display_Policy::end_group_tariff_year();
-                ?><div data-group-year-panel="<?php echo esc_attr('tariffs-' . $year); ?>" <?php if ($year !== $tariff_active) echo 'hidden'; ?>><?php echo $tariff_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- rendu interne du shortcode groupes. ?></div><?php endforeach; ?>
-            </div>
+            <?php if ($show_main_tabs) : ?>
+                <div class="parcs-ht-group-portal-tabs" role="tablist">
+                    <button type="button" class="is-active" data-group-main-tab="tariffs" aria-selected="true"><?php echo esc_html(self::text($language, 'Tarifs groupes', 'Group rates', 'Gruppentarife')); ?></button>
+                    <button type="button" data-group-main-tab="hours" aria-selected="false"><?php echo esc_html(self::text($language, 'Horaires d’ouverture', 'Opening hours', 'Öffnungszeiten')); ?></button>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($has_tariffs) : ?>
+                <div data-group-main-panel="tariffs" <?php if ($default_tab !== 'tariffs') echo 'hidden'; ?>>
+                    <?php echo self::year_tabs($tariff_years, 'tariffs', $tariff_active, $language); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- construit et échappé localement. ?>
+                    <?php foreach ($tariff_years as $year) : ?><div data-group-year-panel="<?php echo esc_attr('tariffs-' . $year); ?>" <?php if ($year !== $tariff_active) echo 'hidden'; ?>><?php echo self::group_tariffs($year, $language); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- rendu interne échappé par le moteur tarifs. ?></div><?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($has_hours) : ?>
+                <div data-group-main-panel="hours" <?php if ($default_tab !== 'hours') echo 'hidden'; ?>>
+                    <?php echo self::year_tabs($schedule_years, 'hours', $schedule_active, $language); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- construit et échappé localement. ?>
+                    <?php foreach ($schedule_years as $year) : ?><div data-group-year-panel="<?php echo esc_attr('hours-' . $year); ?>" <?php if ($year !== $schedule_active) echo 'hidden'; ?>><?php echo self::schedule_year($year, $language); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- HTML interne échappé. ?></div><?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if (!$has_tariffs && !$has_hours) : ?>
+                <p><?php echo esc_html(self::text($language, 'Aucun tarif groupe ni horaire disponible pour le moment.', 'No group rates or opening hours are available at the moment.', 'Derzeit sind keine Gruppentarife oder Öffnungszeiten verfügbar.')); ?></p>
+            <?php endif; ?>
         </div>
-        <style>#<?php echo esc_attr($id); ?> .parcs-ht-group-portal-tabs,#<?php echo esc_attr($id); ?> .parcs-ht-group-portal-years{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}#<?php echo esc_attr($id); ?> .parcs-ht-group-portal-tabs button,#<?php echo esc_attr($id); ?> .parcs-ht-group-portal-years button{border:1px solid #d7d7d7;background:transparent;color:inherit;border-radius:999px;padding:9px 16px;font-weight:600;cursor:pointer}#<?php echo esc_attr($id); ?> .parcs-ht-group-portal-tabs button.is-active,#<?php echo esc_attr($id); ?> .parcs-ht-group-portal-years button.is-active{background:var(--htp-primary,#006757);border-color:var(--htp-primary,#006757);color:#fff}#<?php echo esc_attr($id); ?> .parcs-ht-group-schedule-table-wrap{overflow-x:auto}#<?php echo esc_attr($id); ?> .parcs-ht-group-schedule-table{width:100%;border-collapse:collapse}#<?php echo esc_attr($id); ?> .parcs-ht-group-schedule-table th,#<?php echo esc_attr($id); ?> .parcs-ht-group-schedule-table td{text-align:left;padding:10px;border-bottom:1px solid rgba(127,127,127,.22)}#<?php echo esc_attr($id); ?> .parcs-ht-group-schedule-table tr.is-exception{font-weight:600}</style>
+        <style>
+        #<?php echo esc_attr($id); ?> .parcs-ht-group-portal-tabs,
+        #<?php echo esc_attr($id); ?> .parcs-ht-group-portal-years{display:flex;flex-wrap:nowrap;align-items:center;gap:6px;margin:0 0 10px;padding:2px 0 4px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+        #<?php echo esc_attr($id); ?> .parcs-ht-group-portal-tabs button,
+        #<?php echo esc_attr($id); ?> .parcs-ht-group-portal-years button{flex:0 0 auto;min-height:38px;border:1px solid var(--htp-primary,#006757);background:transparent;color:var(--htp-primary,#006757);border-radius:999px;padding:7px 13px;font:inherit;font-size:14px;font-weight:800;line-height:1.15;white-space:nowrap;cursor:pointer}
+        #<?php echo esc_attr($id); ?> .parcs-ht-group-portal-tabs button.is-active,
+        #<?php echo esc_attr($id); ?> .parcs-ht-group-portal-years button.is-active{background:var(--htp-primary,#006757);border-color:var(--htp-primary,#006757);color:#fff}
+        #<?php echo esc_attr($id); ?> .parcs-ht-group-portal-tabs button:focus-visible,
+        #<?php echo esc_attr($id); ?> .parcs-ht-group-portal-years button:focus-visible{outline:3px solid var(--htp-highlight,#e7c55b);outline-offset:2px}
+        #<?php echo esc_attr($id); ?> .parcs-ht-group-schedule-table-wrap{overflow-x:auto}
+        #<?php echo esc_attr($id); ?> .parcs-ht-group-schedule-table{width:100%;border-collapse:collapse}
+        #<?php echo esc_attr($id); ?> .parcs-ht-group-schedule-table th,#<?php echo esc_attr($id); ?> .parcs-ht-group-schedule-table td{text-align:left;padding:10px;border-bottom:1px solid rgba(127,127,127,.22)}
+        #<?php echo esc_attr($id); ?> .parcs-ht-group-schedule-table tr.is-exception{font-weight:600}
+        @media(max-width:600px){#<?php echo esc_attr($id); ?> .parcs-ht-group-portal-tabs button,#<?php echo esc_attr($id); ?> .parcs-ht-group-portal-years button{min-height:35px;padding:6px 9px;font-size:12px}}
+        </style>
         <script>(function(){var root=document.getElementById(<?php echo wp_json_encode($id); ?>);if(!root)return;root.querySelectorAll('[data-group-main-tab]').forEach(function(btn){btn.addEventListener('click',function(){var key=btn.getAttribute('data-group-main-tab');root.querySelectorAll('[data-group-main-tab]').forEach(function(b){var on=b===btn;b.classList.toggle('is-active',on);b.setAttribute('aria-selected',on?'true':'false');});root.querySelectorAll('[data-group-main-panel]').forEach(function(p){p.hidden=p.getAttribute('data-group-main-panel')!==key;});});});root.querySelectorAll('[data-group-year-tab]').forEach(function(btn){btn.addEventListener('click',function(){var key=btn.getAttribute('data-group-year-tab'),prefix=key.split('-')[0];root.querySelectorAll('[data-group-year-tab^="'+prefix+'-"]').forEach(function(b){var on=b===btn;b.classList.toggle('is-active',on);b.setAttribute('aria-selected',on?'true':'false');});root.querySelectorAll('[data-group-year-panel^="'+prefix+'-"]').forEach(function(p){p.hidden=p.getAttribute('data-group-year-panel')!==key;});});});}());</script>
         <?php return ob_get_clean();
     }
