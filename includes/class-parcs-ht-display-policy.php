@@ -14,8 +14,6 @@ final class Parcs_HT_Display_Policy {
         add_filter('option_' . Parcs_HT_Group_Tariff_Settings::OPTION, array(__CLASS__, 'capture_group_option'), 2, 1);
         add_filter('option_' . Parcs_HT_Group_Tariff_Settings::OPTION, array(__CLASS__, 'filter_group_option'), 7, 1);
         add_filter('pre_update_option_' . Parcs_HT_Defaults::OPTION, array(__CLASS__, 'save_controls'), 97, 3);
-        add_filter('pre_do_shortcode_tag', array(__CLASS__, 'prepare_group_tariff_year'), 5, 4);
-        add_filter('do_shortcode_tag', array(__CLASS__, 'wrap_group_tariff_years'), 55, 4);
         add_action('admin_enqueue_scripts', array(__CLASS__, 'admin_assets'), 98);
         add_action('wp_enqueue_scripts', array(__CLASS__, 'frontend_assets'), 35);
     }
@@ -218,25 +216,14 @@ final class Parcs_HT_Display_Policy {
         return preg_match('/^20\d{2}$/', $year) ? $year : '';
     }
 
-    private static function default_group_year($years) {
-        $years = array_values(array_map('strval', is_array($years) ? $years : array()));
-        if (!$years) return '';
-        $current = (string)wp_date('Y');
-        if (in_array($current, $years, true)) return $current;
-        $past = array_values(array_filter($years, static function ($year) use ($current) { return (int)$year <= (int)$current; }));
-        if ($past) return (string)end($past);
-        return (string)reset($years);
-    }
-
     public static function prepare_group_tariff_year($return, $tag, $attr, $m) {
         unset($attr, $m);
         if ($return !== false || is_admin()) return $return;
         $base = preg_replace('/_(fr|en|de)$/', '', (string)$tag);
         if ($base !== 'parc_tarifs_groupes') return false;
+        $year = self::requested_group_year();
         $published = class_exists('Parcs_HT_Group_Tariff_Settings') ? Parcs_HT_Group_Tariff_Settings::published_years() : array();
-        $requested = self::requested_group_year();
-        $year = $requested !== '' && in_array($requested, $published, true) ? $requested : self::default_group_year($published);
-        if ($year !== '') self::begin_group_tariff_year($year);
+        if ($year !== '' && in_array($year, $published, true)) self::begin_group_tariff_year($year);
         return false;
     }
 
@@ -258,7 +245,7 @@ final class Parcs_HT_Display_Policy {
         if ($base !== 'parc_tarifs_groupes' || is_admin()) return $output;
         $years = class_exists('Parcs_HT_Group_Tariff_Settings') ? Parcs_HT_Group_Tariff_Settings::published_years() : array();
         $requested = self::requested_group_year();
-        $selected = $requested !== '' && in_array($requested, $years, true) ? $requested : self::default_group_year($years);
+        $selected = $requested !== '' && in_array($requested, $years, true) ? $requested : ($years ? (string)end($years) : '');
         self::end_group_tariff_year();
         $output = preg_replace('/^(?:<style>.*?<\/style>)?<nav class="parcs-ht-year-tabs".*?<\/nav>/s', '', (string)$output, 1);
         return self::group_year_tabs($years, $selected) . $output;

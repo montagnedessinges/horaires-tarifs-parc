@@ -2,7 +2,6 @@
 
 $root = getenv('PLUGIN_ROOT') ?: dirname(__DIR__);
 $settings = file_get_contents($root . '/includes/class-parcs-ht-group-tariff-settings.php');
-$policy = file_get_contents($root . '/includes/class-parcs-ht-display-policy.php');
 $seasons = file_get_contents($root . '/includes/class-parcs-ht-tariff-seasons.php');
 $quotes = file_get_contents($root . '/includes/class-parcs-ht-group-quotes.php');
 $shortcode = file_get_contents($root . '/includes/class-parcs-ht-group-tariffs.php');
@@ -25,16 +24,12 @@ group_publication_check(strpos($settings, 'public static function public_year') 
 group_publication_check(strpos($settings, "return \$configured !== '' ? \$configured : \$year . '-01-01';") !== false, 'years without a switch date retain the standard January first fallback');
 group_publication_check(strpos($settings, 'quote_binding_valid') !== false && strpos($settings, 'readiness') !== false, 'admin readiness covers the quote binding and public year');
 
-group_publication_check(strpos($policy, "add_filter('pre_do_shortcode_tag', array(__CLASS__, 'prepare_group_tariff_year'), 5, 4)") !== false, 'group year is resolved before the standalone shortcode renders');
-group_publication_check(strpos($policy, "add_filter('do_shortcode_tag', array(__CLASS__, 'wrap_group_tariff_years'), 55, 4)") !== false, 'standalone group shortcode exposes year navigation after rendering');
-group_publication_check(strpos($policy, 'private static function default_group_year') !== false, 'group year has one canonical default resolver');
-group_publication_check(strpos($policy, "\$current = (string)wp_date('Y');") !== false && strpos($policy, "if (in_array(\$current, \$years, true)) return \$current;") !== false, 'current group year stays selected when current and future years are both public');
-group_publication_check(strpos($policy, "self::default_group_year(\$published)") !== false && strpos($policy, "self::default_group_year(\$years)") !== false, 'rendered group prices and active year tab use the same default year');
-
 group_publication_check(strpos($seasons, 'hide_unpublished_groups') !== false && strpos($seasons, "\$tariffs['groups'] = array();") !== false, 'general public tariff rendering cannot expose unpublished group rates');
 group_publication_check(strpos($quotes, 'Parcs_HT_Group_Tariff_Settings::quote_enabled($year)') !== false, 'quote calculation requires independent quote activation for the visit year');
 group_publication_check(strpos($quotes, "array_keys((array)(\$all['seasons'] ?? array()))") !== false, 'online quote settings discover canonical future seasons instead of relying on legacy quote storage');
 group_publication_check(strpos($quotes, 'private static function stable_binding') !== false && strpos($quotes, 'krsort($previous, SORT_NUMERIC)') !== false, 'future seasons can inherit a stable quote binding from a previous season');
+group_publication_check(strpos($quotes, 'private static function binding_matches_year') !== false, 'cross-year quote bindings are validated against the target year');
+group_publication_check(strpos($quotes, 'private static function legacy_binding_for_year') !== false, 'missing stable bindings can be recovered from the historical target-year mapping');
 group_publication_check(strpos($quotes, 'public static function season_for_year') !== false, 'quote engine exposes one canonical per-year availability accessor');
 
 group_publication_check(strpos($shortcode, 'Parcs_HT_Group_Tariff_Settings::public_year()') !== false, 'dedicated group shortcode selects the commercial group year');

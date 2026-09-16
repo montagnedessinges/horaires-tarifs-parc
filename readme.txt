@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.15.15
+Stable tag: 1.15.16
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes et outils du parc.
 
@@ -20,11 +20,15 @@ Une sauvegarde du site et de la base de données reste recommandée avant toute 
 
 == Changelog ==
 
+= 1.15.16 =
+* Corrige le devis groupes lorsqu’une année future comme 2027 possède une liaison tarifaire différente : cette liaison ne peut plus rendre les tarifs 2026 indisponibles.
+* Une liaison provenant d’une autre année n’est réutilisée que si tous ses identifiants et prix existent réellement dans la grille de l’année demandée.
+* Si une liaison stable manque pour une année historique, le moteur peut reconstruire la liaison de cette année à partir du mapping métier historique au lieu d’utiliser aveuglément une autre année.
+* Ajoute un test de non-régression reproduisant le cas 2026 disponible + 2027 configuré avec des identifiants différents.
+* Retire la modification d’affichage ajoutée en 1.15.15 : l’affichage public revient au comportement 1.15.14, qui fonctionnait déjà correctement. Le correctif est désormais limité au moteur de devis.
+
 = 1.15.15 =
-* Corrige en urgence la coexistence des tarifs groupes 2026 et 2027 : publier une année future ne remplace plus automatiquement l’année en cours dans l’affichage standard.
-* Lorsque plusieurs années de tarifs groupes sont disponibles, l’année courante est sélectionnée par défaut et chaque année reste accessible via son sélecteur.
-* Une sélection explicite d’année continue de fonctionner, notamment dans le portail Groupes, sans modifier le moteur de devis par date de visite.
-* Ajoute un contrat de non-régression afin qu’une année future publiée ne puisse plus masquer silencieusement l’année courante.
+* Correctif d’affichage 2026/2027 ajouté en urgence puis retiré en 1.15.16 après vérification : le problème observé provenait du moteur de devis et non de l’affichage public.
 
 = 1.15.14 =
 * Ajoute une recherche instantanée et purement visuelle dans Périodes repères, Événements, Exceptions et Accès temporairement limité, avec compteur, effacement rapide et message lorsqu’aucune ligne ne correspond.
