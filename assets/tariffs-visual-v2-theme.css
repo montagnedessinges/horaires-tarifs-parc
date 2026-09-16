@@ -22,6 +22,34 @@
   color:var(--htp-body-text,#24312d);
 }
 
+/*
+ * Titres sur fond transparent / section blanche.
+ * Noir par défaut pour garantir la lisibilité, mais une variable spécialisée
+ * déjà fournie par l'extension reste prioritaire. --htp-title-on-light permet
+ * aussi de modifier globalement cette couleur plus tard sans changer le CSS.
+ */
+.parcs-ht-calendar .parcs-ht-heading h2 {
+  color:var(--htp-calendar-title,var(--htp-title-on-light,#000)) !important;
+}
+
+.parcs-ht-tariffs .parcs-ht-heading h2,
+.parcs-ht-tariffs .parcs-ht-title,
+.parcs-ht-group-tariffs-only .parcs-ht-heading h2,
+.parcs-ht-group-tariffs-only .parcs-ht-title {
+  color:var(--htp-tariff-title,var(--htp-title-on-light,#000)) !important;
+}
+
+.parcs-ht-group-portal h2,
+.parcs-ht-group-portal h3,
+.parcs-ht-group-schedule h3 {
+  color:var(--htp-group-title,var(--htp-title-on-light,#000)) !important;
+}
+
+.parcs-ht-guides .parcs-ht-guides-label,
+.parcs-ht-guides .parcs-ht-guide-body h4 {
+  color:var(--htp-guide-title,var(--htp-title-on-light,#000)) !important;
+}
+
 /* Onglets et années : vert principal. */
 .parcs-ht-tariff-tabs button,
 .parcs-ht-retail-year-tab,
