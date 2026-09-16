@@ -32,7 +32,6 @@ final class Parcs_HT_Group_Quotes {
             'school_value'=>'Groupe','disability_value'=>'Groupe en situation de handicap',
             'binding_version'=>2,
             'tariff_bindings'=>array(),
-            // Conservé uniquement pour migration/retour arrière. Le moteur 1.13+ ne l'utilise jamais pour calculer un devis.
             'tariff_binding'=>self::legacy_binding_defaults(),
             'seasons'=>array('2026'=>array('child'=>'6','adult'=>'8.50','disability'=>'6','companion'=>'6','free_adult_children'=>'10')),
         );
@@ -48,8 +47,6 @@ final class Parcs_HT_Group_Quotes {
         if (!isset($settings['seasons']) || !is_array($settings['seasons'])) $settings['seasons'] = array();
         if (!$public) return $settings;
 
-        // Le devis public doit refléter les saisons canoniques réellement publiées,
-        // y compris une nouvelle année qui n'existait pas dans l'ancien stockage du devis.
         $all = class_exists('Parcs_HT_Defaults') ? Parcs_HT_Defaults::all_settings() : array();
         $years = array_unique(array_merge(
             array_keys($settings['seasons']),
@@ -87,6 +84,19 @@ final class Parcs_HT_Group_Quotes {
             if ($text !== '') return $text;
         }
         return '';
+    }
+
+    private static function numeric_price($value) {
+        $value = html_entity_decode((string)$value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $value = str_replace(array("\xc2\xa0", ' ', '€'), '', $value);
+        $value = str_replace(',', '.', $value);
+        return preg_match('/([0-9]+(?:\.[0-9]+)?)/', $value, $match) ? (float)$match[1] : null;
+    }
+
+    private static function price_from_row($row, $column_id) {
+        if (!is_array($row) || (string)($row['enabled'] ?? '1') !== '1') return null;
+        if (!isset($row['cells'][$column_id]) || !is_array($row['cells'][$column_id])) return null;
+        return self::numeric_price($row['cells'][$column_id]['value'] ?? '');
     }
 
     private static function binding_matches_year($year, $binding) {
@@ -164,14 +174,9 @@ final class Parcs_HT_Group_Quotes {
         $binding = self::stable_binding($settings['tariff_bindings'][$year] ?? null);
         if ($binding && self::binding_matches_year($year, $binding)) return $binding;
 
-        // Si la liaison stable d'une année a disparu ou n'a jamais été migrée,
-        // reconstruire d'abord une liaison propre à cette année depuis le mapping historique.
         $legacy = self::legacy_binding_for_year($year, $settings);
         if ($legacy) return $legacy;
 
-        // Une liaison provenant d'une autre année n'est réutilisée que si ses identifiants
-        // existent réellement dans la grille de l'année demandée. Une année future ne peut
-        // donc plus rendre l'année courante indisponible par simple présence de ses IDs.
         $bindings = isset($settings['tariff_bindings']) && is_array($settings['tariff_bindings']) ? $settings['tariff_bindings'] : array();
         $previous = array();
         $future = array();
@@ -197,25 +202,31 @@ final class Parcs_HT_Group_Quotes {
         return preg_match('/^(20\d{2})-\d{2}-\d{2}$/', trim((string)$value), $match) ? $match[1] : '';
     }
 
-    private static function numeric_price($value) {
-        $value = html_entity_decode((string)$value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-        $value = str_replace(array("\xc2\xa0", ' ', '€'), '', $value);
-        $value = str_replace(',', '.', $value);
-        return preg_match('/([0-9]+(?:\.[0-9]+)?)/', $value, $match) ? (float)$match[1] : null;
-    }
+    private static function quote_enabled_for_year($year, $season) {
+        if (!is_array($season)) return false;
+        if (array_key_exists('group_quotes_enabled', $season)) return (string)$season['group_quotes_enabled'] === '1';
 
-    private static function price_from_row($row, $column_id) {
-        if (!is_array($row) || (string)($row['enabled'] ?? '1') !== '1') return null;
-        if (!isset($row['cells'][$column_id]) || !is_array($row['cells'][$column_id])) return null;
-        return self::numeric_price($row['cells'][$column_id]['value'] ?? '');
+        // Compatibilité des installations créées avant les interrupteurs annuels :
+        // l'état du devis est déduit uniquement de l'ancien stockage du devis lui-même,
+        // jamais du statut de publication des tarifs groupes.
+        $saved = get_option(self::OPTION, array());
+        if (!is_array($saved)) return false;
+        if (isset($saved['tariff_bindings'][$year]) && self::stable_binding($saved['tariff_bindings'][$year])) return true;
+        $legacy = isset($saved['seasons'][$year]) && is_array($saved['seasons'][$year]) ? $saved['seasons'][$year] : array();
+        if (!$legacy) return false;
+        foreach (array('child','adult','disability','companion') as $key) {
+            if (!array_key_exists($key, $legacy) || self::numeric_price($legacy[$key]) === null) return false;
+        }
+        return true;
     }
 
     private static function published_season($year, $settings = null) {
         if ($settings === null) $settings = self::settings(false);
-        if ($year === '' || !class_exists('Parcs_HT_Group_Tariff_Settings') || !Parcs_HT_Group_Tariff_Settings::quote_enabled($year)) return null;
+        if ($year === '') return null;
         $all = get_option(Parcs_HT_Defaults::OPTION, array());
         if (!is_array($all) || empty($all['seasons'][$year]) || !is_array($all['seasons'][$year])) return null;
         $season = $all['seasons'][$year];
+        if (!self::quote_enabled_for_year($year, $season)) return null;
         $tariffs = isset($season['tariffs']) && is_array($season['tariffs']) ? $season['tariffs'] : array();
         $rows = isset($tariffs['groups']) && is_array($tariffs['groups']) ? array_values($tariffs['groups']) : array();
         $columns = isset($tariffs['columns']['groups']) && is_array($tariffs['columns']['groups']) ? array_values($tariffs['columns']['groups']) : array();
@@ -248,11 +259,6 @@ final class Parcs_HT_Group_Quotes {
 
     private static function euro($value) { return number_format((float)$value, 2, ',', ' ') . ' €'; }
 
-    /**
-     * Règle scolaire : 1 gratuité par tranche, avec arrondi à la tranche
-     * supérieure lorsque le reliquat atteint le seuil configuré.
-     * Exemple officiel actuel : ratio 10, seuil 5 => 26 enfants = 3 gratuités.
-     */
     public static function complimentary_adults($children, $adults, $ratio = 10, $threshold = 5) {
         $children = max(0, (int)$children);
         $adults = max(0, (int)$adults);
