@@ -16,8 +16,6 @@ final class Parcs_HT_Display_Policy {
         add_filter('pre_update_option_' . Parcs_HT_Defaults::OPTION, array(__CLASS__, 'save_controls'), 97, 3);
         add_action('admin_enqueue_scripts', array(__CLASS__, 'admin_assets'), 98);
         add_action('wp_enqueue_scripts', array(__CLASS__, 'frontend_assets'), 35);
-
-
     }
 
     private static function clean_date($value) {
@@ -261,9 +259,6 @@ final class Parcs_HT_Display_Policy {
         $year = isset($_POST['season_year']) ? sanitize_text_field(wp_unslash($_POST['season_year'])) : '';
         if (!preg_match('/^20\d{2}$/', $year) || empty($new_value['seasons'][$year]) || !is_array($new_value['seasons'][$year])) return $new_value;
 
-        $display_from = isset($_POST['settings']['general']['public_display_from']) ? sanitize_text_field(wp_unslash($_POST['settings']['general']['public_display_from'])) : '';
-        $force_display = isset($_POST['settings']['general']['public_force_display']) ? sanitize_text_field(wp_unslash($_POST['settings']['general']['public_force_display'])) : '0';
-        $groups_visible = isset($_POST['settings']['general']['groups_schedule_visible']) ? sanitize_text_field(wp_unslash($_POST['settings']['general']['groups_schedule_visible'])) : '0';
         // Missing controls mean a partial save, never an implicit OFF.
         $fields = array('calendar_visible','retail_tariffs_visible','group_quotes_enabled','group_tariffs_visible',
             'public_display_from','public_force_display','groups_schedule_visible');
@@ -304,16 +299,18 @@ final class Parcs_HT_Display_Policy {
         $defaults = array(
             'calendar_visible'=>$calendar,
             'retail_tariffs_visible'=>self::retail_year_is_visible($year, $season),
+            'groups_schedule_visible'=>(string)($season['groups_schedule_visible'] ?? '0') === '1',
             'group_quotes_enabled'=>Parcs_HT_Group_Tariff_Settings::quote_enabled($year),
             'group_tariffs_visible'=>in_array($year, Parcs_HT_Group_Tariff_Settings::public_years(), true),
         );
         $labels = array(
-            'calendar_visible'=>'Afficher le calendrier',
+            'calendar_visible'=>'Afficher le calendrier public',
             'retail_tariffs_visible'=>'Afficher les tarifs visiteurs',
-            'group_quotes_enabled'=>'Activer les tarifs groupes pour les devis',
+            'groups_schedule_visible'=>'Afficher les horaires aux groupes',
+            'group_quotes_enabled'=>'Activer les devis groupes',
             'group_tariffs_visible'=>'Afficher les tarifs groupes sur le site',
         );
-        echo '<section class="htp-card htp-year-controls" aria-label="Affichage de l’année ' . esc_attr($year) . '"><h2>Affichage et devis — ' . esc_html($year) . '</h2><p>Ces quatre commandes sont indépendantes du statut général de la saison. Enregistrez pour appliquer vos choix.</p><div class="htp-year-controls-grid">';
+        echo '<section class="htp-card htp-year-controls" aria-label="Affichage de l’année ' . esc_attr($year) . '"><h2>Activation de l’année — ' . esc_html($year) . '</h2><p>Chaque module est indépendant. Une nouvelle année peut être entièrement préparée sans rendre son calendrier, ses tarifs ou ses devis publics.</p><div class="htp-year-controls-grid">';
         foreach ($labels as $key => $label) {
             $on = array_key_exists($key, $season) ? (string)$season[$key] === '1' : $defaults[$key];
             $name = 'settings[general][' . $key . ']';
