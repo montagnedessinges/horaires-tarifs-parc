@@ -5,18 +5,18 @@ if (!defined('ABSPATH')) { exit; }
 /**
  * Visibilité publique annuelle.
  *
- * Les interrupteurs restent utilisables pour préparer et tester une année avant sa
- * mise en ligne automatique. Les deux dates maîtresses ont ensuite priorité :
- * - à partir de public_display_from : tous les modules de l'année sont actifs ;
- * - à partir de public_display_until : tous les modules de l'année sont inactifs.
- *
- * La date de retrait est donc une date de bascule : l'année disparaît ce jour-là.
+ * Avant la date d'apparition, chaque interrupteur reste manuel. À partir de la
+ * date d'apparition, tous les modules de l'année sont actifs. À partir de la date
+ * de disparition, tous les modules sont inactifs. La disparition est prioritaire.
  */
 final class Parcs_HT_Public_Visibility {
     public static function init() {
         add_filter('option_' . Parcs_HT_Defaults::OPTION, array(__CLASS__, 'filter_calendar_window'), 8, 1);
         add_filter('pre_update_option_' . Parcs_HT_Defaults::OPTION, array(__CLASS__, 'save_window'), 98, 3);
         add_action('admin_enqueue_scripts', array(__CLASS__, 'admin_assets'), 99);
+        if (class_exists('Parcs_HT_Group_Quotes')) {
+            add_filter('option_' . Parcs_HT_Group_Quotes::STATE_OPTION, array(__CLASS__, 'filter_quote_state'), 20, 1);
+        }
     }
 
     private static function clean_date($value) {
@@ -63,10 +63,6 @@ final class Parcs_HT_Public_Visibility {
         return self::order_years($years);
     }
 
-    /**
-     * Retourne on/off/manual pour l'automatisation de l'année.
-     * Le retrait est prioritaire afin d'éviter toute réactivation après la date de fin.
-     */
     public static function scheduled_state($year, $today = '') {
         $season = self::raw_season($year);
         if (!$season) return 'off';
@@ -79,7 +75,6 @@ final class Parcs_HT_Public_Visibility {
         if ($today === '') $today = self::today();
         $from = self::clean_date($season['public_display_from'] ?? '');
         $until = self::clean_date($season['public_display_until'] ?? '');
-
         if ($until !== '' && $today >= $until) return 'off';
         if ($from !== '' && $today >= $from) return 'on';
         return 'manual';
@@ -93,18 +88,13 @@ final class Parcs_HT_Public_Visibility {
         return (bool)$fallback;
     }
 
-    /** Visibilité effective d'un module, dates maîtresses prioritaires. */
     public static function module_visible($year, $flag, $fallback = false, $today = '') {
         $season = self::raw_season($year);
         if (!$season) return false;
         return self::module_visible_for_season($season, (string)$flag, (bool)$fallback, $today);
     }
 
-    /**
-     * Compatibilité : indique uniquement si la date est comprise dans la fenêtre.
-     * Les modules publics utilisent module_visible(), qui permet les tests manuels
-     * avant la date d'apparition.
-     */
+    /** Compatibilité avec les anciens appels : fenêtre stricte apparition/retrait. */
     public static function in_window($year, $today = '') {
         $season = self::raw_season($year);
         if (!$season) return false;
@@ -129,8 +119,6 @@ final class Parcs_HT_Public_Visibility {
             if (array_key_exists($field, $posted) && is_scalar($posted[$field])) $new_value['seasons'][$year][$field] = self::clean_date($posted[$field]);
             elseif (isset($old_value['seasons'][$year][$field])) $new_value['seasons'][$year][$field] = $old_value['seasons'][$year][$field];
         }
-        // Ancien champ conservé en base pour compatibilité, mais il n'a plus de rôle
-        // dans la nouvelle bascule automatique à deux dates.
         if (isset($old_value['seasons'][$year]['public_force_display'])) {
             $new_value['seasons'][$year]['public_force_display'] = $old_value['seasons'][$year]['public_force_display'];
         }
@@ -139,7 +127,7 @@ final class Parcs_HT_Public_Visibility {
 
     public static function admin_assets($hook) {
         if ($hook !== 'toplevel_page_parcs-horaires-tarifs') return;
-        $year = isset($_GET['season']) ? sanitize_text_field(wp_unslash($_GET['season'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- sélection admin en lecture seule.
+        $year = isset($_GET['season']) ? sanitize_text_field(wp_unslash($_GET['season'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- lecture seule.
         $all = Parcs_HT_Defaults::all_settings();
         if ($year === '' || empty($all['seasons'][$year])) foreach ((array)($all['seasons'] ?? array()) as $candidate => $unused) { $year = (string)$candidate; break; }
         $season = ($year !== '' && isset($all['seasons'][$year]) && is_array($all['seasons'][$year])) ? $all['seasons'][$year] : array();
@@ -151,20 +139,37 @@ final class Parcs_HT_Public_Visibility {
     }
 
     /**
-     * Le moteur calendrier historique continue à lire `published`. On lui donne donc
-     * l'état effectif du module calendrier sans modifier la valeur enregistrée en base.
+     * Le calendrier historique lit encore `published`. On lui fournit l'état effectif
+     * calculé depuis la saison brute capturée avant les filtres de compatibilité.
      */
     public static function filter_calendar_window($value) {
         if (is_admin() || !is_array($value) || empty($value['seasons']) || !is_array($value['seasons'])) return $value;
         $today = self::today_from_settings($value);
-        foreach ($value['seasons'] as &$season) {
+        foreach ($value['seasons'] as $year => &$season) {
             if (!is_array($season)) continue;
-            $fallback = array_key_exists('calendar_visible', $season)
-                ? (string)$season['calendar_visible'] === '1'
-                : (string)($season['published'] ?? '0') === '1';
-            $season['published'] = self::module_visible_for_season($season, 'calendar_visible', $fallback, $today) ? '1' : '0';
+            $raw = class_exists('Parcs_HT_Display_Policy') ? Parcs_HT_Display_Policy::raw_season((string)$year) : $season;
+            if (!is_array($raw) || !$raw) $raw = $season;
+            $fallback = array_key_exists('calendar_visible', $raw)
+                ? (string)$raw['calendar_visible'] === '1'
+                : (string)($raw['published'] ?? '0') === '1';
+            $season['published'] = self::module_visible_for_season($raw, 'calendar_visible', $fallback, $today) ? '1' : '0';
+            $season['public_display_from'] = self::clean_date($raw['public_display_from'] ?? '');
+            $season['public_display_until'] = self::clean_date($raw['public_display_until'] ?? '');
         }
         unset($season);
+        return $value;
+    }
+
+    /** Applique la même règle aux devis, y compris pendant les requêtes AJAX CF7. */
+    public static function filter_quote_state($value) {
+        $doing_ajax = function_exists('wp_doing_ajax') && wp_doing_ajax();
+        if (is_admin() && !$doing_ajax) return $value;
+        if (!is_array($value)) $value = array();
+        if (!isset($value['years']) || !is_array($value['years'])) $value['years'] = array();
+        foreach (self::all_years() as $year) {
+            $fallback = isset($value['years'][$year]['enabled']) && (string)$value['years'][$year]['enabled'] === '1';
+            $value['years'][$year] = array('enabled'=>self::module_visible($year, 'group_quotes_enabled', $fallback) ? '1' : '0');
+        }
         return $value;
     }
 
