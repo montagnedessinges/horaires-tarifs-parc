@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.16.2
+Stable tag: 1.16.3
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes et outils du parc.
 
@@ -19,6 +19,12 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.16.3 =
+* Rétablit le sélecteur d’années dans le shortcode des tarifs groupes : les années publiques disponibles comme 2026, 2027 et 2028 apparaissent de nouveau sous forme d’onglets, avec l’année courante prioritaire.
+* Force l’affichage des tarifs réduits en « Sur place » uniquement ; une ancienne valeur rangée dans la cellule En ligne est réutilisée uniquement pour l’affichage Sur place sans modifier les données enregistrées.
+* Remplace les libellés de canal des tarifs groupes par le libellé générique « Tarif » / « Price » / « Preis ».
+* Conserve l’architecture 1.16.2 : les shortcodes composés continuent d’assembler les shortcodes autonomes existants et le moteur de calendrier n’est pas modifié.
 
 = 1.16.2 =
 * Simplifie les shortcodes composés : Horaires & Tarifs assemble désormais directement les shortcodes autonomes de l’état du jour, du calendrier et des tarifs.
