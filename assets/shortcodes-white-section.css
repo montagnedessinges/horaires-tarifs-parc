@@ -1,0 +1,32 @@
+/* Contexte d'intégration public des shortcodes
+ * Les blocs restent transparents et sont prévus pour une section WordPress à fond blanc.
+ * Les titres utilisent le noir par défaut, tout en respectant une variable de couleur configurée.
+ */
+.parcs-ht-page,
+.parcs-ht-calendar,
+.parcs-ht-tariffs,
+.parcs-ht-group-portal,
+.parcs-ht-group-schedule,
+.parcs-ht-guides,
+.parcs-ht-quote,
+.parcs-ht-tariff-ui,
+.parcs-ht-tariff-years-ui {
+  background:transparent!important;
+}
+
+.parcs-ht-calendar .parcs-ht-heading h2,
+.parcs-ht-calendar .parcs-ht-title,
+.parcs-ht-group-schedule h3,
+.parcs-ht-quote-title {
+  color:var(--htp-heading-text,#111111)!important;
+}
+
+.parcs-ht-guides-label {
+  color:var(--htp-guide-title,var(--htp-heading-text,#111111))!important;
+}
+
+.parcs-ht-tariff-ui__title {
+  color:var(--htp-tariff-title,var(--htp-heading-text,#111111))!important;
+}
+
+/* Les statuts dynamiques (ouvert/fermé) ne sont volontairement pas forcés en noir. */
