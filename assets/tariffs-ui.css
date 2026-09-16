@@ -1,0 +1,451 @@
+/* MAJ 2 — nouveau composant Tarifs
+ * Rendu indépendant de l'ancien tableau tarifaire.
+ * Fond toujours transparent, pensé pour une section de page à fond blanc.
+ */
+
+.parcs-ht-tariff-ui,
+.parcs-ht-tariff-years-ui {
+  box-sizing:border-box;
+  width:100%;
+  color:#17211e;
+  background:transparent;
+  font-family:inherit;
+}
+.parcs-ht-tariff-ui *,
+.parcs-ht-tariff-years-ui * { box-sizing:border-box; }
+
+.parcs-ht-tariff-ui {
+  --htp-primary:#006757;
+  --htp-secondary:#31ad81;
+  --htp-accent:#ef7b5b;
+  --htp-highlight:#e7c55b;
+  --htp-tariff-title:#111111;
+  --htp-ui-border:#dce7e2;
+  --htp-ui-muted:#61706b;
+  --htp-ui-row-bg:transparent;
+  --htp-ui-row-border:#dce7e2;
+  --htp-ui-row-label:#17211e;
+  --htp-ui-row-detail:#61706b;
+  --htp-ui-row-note:#61706b;
+  --htp-ui-row-price:#17211e;
+  --htp-ui-payment-bg:var(--htp-secondary);
+  --htp-ui-payment-text:#fff;
+  --htp-ui-payment-icon:#fff;
+  --htp-ui-payment-border:transparent;
+  max-width:920px;
+  margin:0 auto;
+  padding:8px 0;
+}
+
+.parcs-ht-tariff-ui__header {
+  margin:0 0 10px;
+  padding:0;
+  text-align:center;
+}
+.parcs-ht-tariff-ui__title {
+  margin:0;
+  color:var(--htp-tariff-title,#111)!important;
+  font-size:clamp(28px,4vw,44px);
+  font-weight:800;
+  line-height:1.08;
+}
+.parcs-ht-tariff-ui__intro {
+  max-width:760px;
+  margin:7px auto 0;
+  color:#394742;
+  font-size:14px;
+  line-height:1.45;
+}
+
+.parcs-ht-tariff-year-tabs-ui,
+.parcs-ht-tariff-ui__tabs {
+  display:flex;
+  flex-wrap:nowrap;
+  align-items:center;
+  gap:6px;
+  width:100%;
+  max-width:920px;
+  margin:8px auto 10px;
+  padding:2px 1px 4px;
+  overflow-x:auto;
+  overflow-y:hidden;
+  scrollbar-width:thin;
+  -webkit-overflow-scrolling:touch;
+}
+.parcs-ht-tariff-year-tabs-ui { justify-content:center; }
+.parcs-ht-tariff-ui__tabs { justify-content:center; }
+.parcs-ht-tariff-year-tab-ui,
+.parcs-ht-tariff-ui__tab {
+  appearance:none;
+  flex:1 0 auto;
+  min-width:max-content;
+  min-height:38px;
+  margin:0;
+  padding:7px 13px;
+  border:1px solid var(--htp-primary,#006757);
+  border-radius:999px;
+  background:transparent;
+  color:var(--htp-primary,#006757);
+  font:inherit;
+  font-size:14px;
+  font-weight:800;
+  line-height:1.15;
+  white-space:nowrap;
+  cursor:pointer;
+}
+.parcs-ht-tariff-year-tab-ui.is-active,
+.parcs-ht-tariff-year-tab-ui[aria-selected="true"],
+.parcs-ht-tariff-ui__tab.is-active,
+.parcs-ht-tariff-ui__tab[aria-selected="true"] {
+  border-color:var(--htp-primary,#006757);
+  background:var(--htp-primary,#006757);
+  color:#fff;
+}
+.parcs-ht-tariff-year-tab-ui:focus-visible,
+.parcs-ht-tariff-ui__tab:focus-visible,
+.parcs-ht-tariff-ui a:focus-visible {
+  outline:3px solid var(--htp-highlight,#e7c55b);
+  outline-offset:2px;
+}
+
+.parcs-ht-tariff-ui__payments {
+  width:100%;
+  margin:7px auto 9px;
+  padding:0;
+  background:transparent;
+}
+.parcs-ht-tariff-ui__payments>strong {
+  display:block;
+  margin:0 0 5px;
+  color:#111;
+  font-size:12px;
+  font-weight:800;
+  line-height:1.2;
+}
+.parcs-ht-tariff-ui__payment-track {
+  display:flex;
+  flex-wrap:nowrap;
+  align-items:center;
+  gap:6px;
+  width:100%;
+  overflow-x:auto;
+  overflow-y:hidden;
+  padding:1px 0 4px;
+  scrollbar-width:thin;
+  -webkit-overflow-scrolling:touch;
+}
+.parcs-ht-tariff-ui__payment-chip {
+  display:inline-flex;
+  flex:0 0 auto;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  min-width:max-content;
+  min-height:34px;
+  padding:5px 9px;
+  border:1px solid var(--htp-ui-payment-border,transparent);
+  border-radius:999px;
+  background:var(--htp-ui-payment-bg,var(--htp-secondary,#31ad81));
+  color:var(--htp-ui-payment-text,#fff);
+  font-size:12px;
+  font-weight:750;
+  line-height:1.1;
+  white-space:nowrap;
+}
+.parcs-ht-tariff-ui__payment-icon {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+  color:var(--htp-ui-payment-icon,currentColor);
+}
+.parcs-ht-tariff-ui__payment-icon svg {
+  display:block;
+  width:17px;
+  height:17px;
+  color:inherit;
+  stroke:currentColor;
+}
+
+.parcs-ht-tariff-ui__panel {
+  margin:0;
+  padding:2px 0 0;
+  background:transparent;
+}
+.parcs-ht-tariff-ui__panel[hidden],
+.parcs-ht-tariff-year-panel-ui[hidden] { display:none!important; }
+
+.parcs-ht-tariff-ui__list {
+  display:grid;
+  gap:0;
+  width:100%;
+  border-top:1px solid var(--htp-ui-border,#dce7e2);
+}
+.parcs-ht-tariff-ui__row {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+  margin:0;
+  padding:9px 0;
+  border:0;
+  border-bottom:1px solid var(--htp-ui-row-border,#dce7e2);
+  background:var(--htp-ui-row-bg,transparent);
+}
+.parcs-ht-tariff-ui__identity {
+  display:grid;
+  gap:2px;
+  min-width:0;
+}
+.parcs-ht-tariff-ui__label-line {
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:5px;
+  min-width:0;
+}
+.parcs-ht-tariff-ui__label-line strong {
+  min-width:0;
+  color:var(--htp-ui-row-label,#17211e);
+  font-size:15px;
+  font-weight:800;
+  line-height:1.2;
+}
+.parcs-ht-tariff-ui__subtitle,
+.parcs-ht-tariff-ui__row-note,
+.parcs-ht-tariff-ui__meta {
+  display:block;
+  margin:0;
+  font-size:11.5px;
+  line-height:1.3;
+}
+.parcs-ht-tariff-ui__subtitle { color:var(--htp-ui-row-detail,#61706b); }
+.parcs-ht-tariff-ui__row-note { color:var(--htp-ui-row-note,#61706b); }
+.parcs-ht-tariff-ui__meta { color:#6b7773; }
+.parcs-ht-tariff-ui__badge {
+  display:inline-flex;
+  align-items:center;
+  min-height:20px;
+  padding:2px 7px;
+  border-radius:999px;
+  background:var(--htp-highlight,#e7c55b);
+  color:#2f321d;
+  font-size:10px;
+  font-weight:850;
+  line-height:1.1;
+}
+.parcs-ht-tariff-ui__special-dot {
+  width:7px;
+  height:7px;
+  flex:0 0 7px;
+  border-radius:50%;
+  background:var(--htp-accent,#ef7b5b);
+}
+
+.parcs-ht-tariff-ui__values {
+  display:grid;
+  grid-template-columns:repeat(var(--htp-ui-value-count,1),minmax(78px,92px));
+  align-items:stretch;
+  justify-content:end;
+  gap:6px;
+  min-width:0;
+}
+.parcs-ht-tariff-ui__price {
+  display:flex;
+  min-width:0;
+  min-height:42px;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:5px 6px;
+  border:1px solid var(--htp-ui-border,#dce7e2);
+  border-radius:10px;
+  background:transparent;
+  color:var(--htp-ui-row-price,#17211e);
+  text-align:center;
+  text-decoration:none!important;
+}
+.parcs-ht-tariff-ui__price.is-online {
+  border-color:var(--htp-secondary,#31ad81);
+  background:color-mix(in srgb,var(--htp-secondary,#31ad81) 10%,transparent);
+}
+.parcs-ht-tariff-ui__price.is-clickable {
+  cursor:pointer;
+  transition:background-color .16s ease,border-color .16s ease,transform .16s ease;
+}
+@media (hover:hover) and (pointer:fine) {
+  .parcs-ht-tariff-ui__price.is-clickable:hover {
+    border-color:var(--htp-primary,#006757);
+    background:color-mix(in srgb,var(--htp-secondary,#31ad81) 16%,transparent);
+  }
+}
+.parcs-ht-tariff-ui__channel {
+  display:block;
+  margin:0 0 2px;
+  color:#5c6b66;
+  font-size:9.5px;
+  font-weight:750;
+  line-height:1.05;
+  white-space:nowrap;
+}
+.parcs-ht-tariff-ui__price b {
+  color:var(--htp-ui-row-price,#17211e);
+  font-size:17px;
+  font-weight:850;
+  line-height:1.08;
+  white-space:nowrap;
+}
+.parcs-ht-tariff-ui__price del {
+  margin-bottom:1px;
+  color:#7a8682;
+  font-size:10px;
+}
+
+.parcs-ht-tariff-ui__note,
+.parcs-ht-tariff-ui__info {
+  margin:9px 0 0;
+  padding:9px 11px;
+  border-left:3px solid var(--htp-accent,#ef7b5b);
+  background:transparent;
+  color:#35423e;
+  font-size:12.5px;
+  line-height:1.45;
+}
+.parcs-ht-tariff-ui__info { border-left-color:var(--htp-primary,#006757); }
+.parcs-ht-tariff-ui__info-card {
+  margin:8px 0 0;
+  padding:9px 11px;
+  border:1px solid var(--htp-ui-border,#dce7e2);
+  border-radius:10px;
+  background:transparent;
+  color:#293631;
+}
+.parcs-ht-tariff-ui__info-card strong {
+  display:block;
+  color:#111;
+  font-size:13px;
+}
+.parcs-ht-tariff-ui__info-card p {
+  margin:3px 0 0;
+  font-size:12.5px;
+  line-height:1.4;
+}
+
+.parcs-ht-tariff-ui__actions {
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:8px;
+  margin:10px 0 0;
+}
+.parcs-ht-tariff-ui__button {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:40px;
+  padding:8px 15px;
+  border:1px solid var(--htp-primary,#006757);
+  border-radius:999px;
+  background:var(--htp-primary,#006757);
+  color:#fff!important;
+  font-size:13px;
+  font-weight:800;
+  line-height:1.15;
+  text-align:center;
+  text-decoration:none!important;
+}
+.parcs-ht-tariff-ui__button.is-primary {
+  border-color:var(--htp-accent,#ef7b5b);
+  background:var(--htp-accent,#ef7b5b);
+}
+
+.parcs-ht-tariff-ui__export {
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:10px 14px;
+  margin:10px 0 0;
+  font-size:11.5px;
+}
+.parcs-ht-tariff-ui__export a {
+  color:var(--htp-primary,#006757);
+  font-weight:700;
+  text-decoration:underline;
+  text-underline-offset:2px;
+}
+.parcs-ht-tariff-ui__empty {
+  margin:8px 0;
+  color:#4f5d58;
+  font-size:14px;
+}
+
+/* Le shortcode est transparent ; les titres restent noirs sur le fond blanc recommandé. */
+.parcs-ht-tariff-ui,
+.parcs-ht-tariff-ui__panel,
+.parcs-ht-tariff-ui__payments,
+.parcs-ht-tariff-years-ui { background:transparent!important; }
+.parcs-ht-tariff-ui__title,
+.parcs-ht-tariff-ui__payments>strong,
+.parcs-ht-tariff-ui__info-card strong { color:#111!important; }
+
+@media (max-width:600px) {
+  .parcs-ht-tariff-ui { padding:5px 0; }
+  .parcs-ht-tariff-ui__header { margin-bottom:7px; }
+  .parcs-ht-tariff-ui__title { font-size:26px; }
+  .parcs-ht-tariff-year-tabs-ui,
+  .parcs-ht-tariff-ui__tabs {
+    justify-content:flex-start;
+    gap:5px;
+    margin-top:6px;
+    margin-bottom:7px;
+  }
+  .parcs-ht-tariff-year-tab-ui,
+  .parcs-ht-tariff-ui__tab {
+    min-height:35px;
+    padding:6px 9px;
+    font-size:12px;
+  }
+  .parcs-ht-tariff-ui__payments { margin:5px 0 7px; }
+  .parcs-ht-tariff-ui__payment-chip {
+    min-height:32px;
+    padding:5px 8px;
+    font-size:11px;
+  }
+  .parcs-ht-tariff-ui__payment-icon svg { width:16px;height:16px; }
+  .parcs-ht-tariff-ui__row {
+    gap:6px;
+    padding:7px 0;
+  }
+  .parcs-ht-tariff-ui__label-line strong { font-size:13.5px; }
+  .parcs-ht-tariff-ui__subtitle,
+  .parcs-ht-tariff-ui__row-note,
+  .parcs-ht-tariff-ui__meta { font-size:10.5px; }
+  .parcs-ht-tariff-ui__values {
+    grid-template-columns:repeat(var(--htp-ui-value-count,1),minmax(64px,72px));
+    gap:4px;
+  }
+  .parcs-ht-tariff-ui__price {
+    min-height:38px;
+    padding:4px;
+    border-radius:8px;
+  }
+  .parcs-ht-tariff-ui__channel { font-size:8.5px; }
+  .parcs-ht-tariff-ui__price b { font-size:15px; }
+  .parcs-ht-tariff-ui__note,
+  .parcs-ht-tariff-ui__info { padding:7px 9px;font-size:11.5px; }
+  .parcs-ht-tariff-ui__info-card { padding:8px 9px; }
+  .parcs-ht-tariff-ui__button { min-height:38px;padding:7px 12px;font-size:12px; }
+}
+
+@media (max-width:360px) {
+  .parcs-ht-tariff-ui__row { gap:5px; }
+  .parcs-ht-tariff-ui__values {
+    grid-template-columns:repeat(var(--htp-ui-value-count,1),minmax(58px,66px));
+  }
+  .parcs-ht-tariff-ui__price b { font-size:14px; }
+}
+
+@media (prefers-reduced-motion:reduce) {
+  .parcs-ht-tariff-ui__price.is-clickable { transition:none; }
+}
