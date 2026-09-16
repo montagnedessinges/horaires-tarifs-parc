@@ -92,3 +92,4 @@ release_contract_transition(
 );
 
 echo "Quote gate language contract OK for {$version}\n";
+require __DIR__ . '/quote-gate-fail-closed-runtime.php';
