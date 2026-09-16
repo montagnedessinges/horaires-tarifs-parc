@@ -62,3 +62,8 @@ $isolation_test = __DIR__ . '/group-quote-year-isolation-runtime.php';
 $command = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($isolation_test);
 passthru($command, $isolation_exit);
 if ($isolation_exit !== 0) exit($isolation_exit);
+
+$migration_test = __DIR__ . '/quote-activation-migration-runtime.php';
+$command = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($migration_test);
+passthru($command, $migration_exit);
+if ($migration_exit !== 0) exit($migration_exit);
