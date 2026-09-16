@@ -20,7 +20,6 @@ group_publication_check(strpos($settings, "'display_from'=>''") !== false && str
 group_publication_check(strpos($settings, 'public static function is_published') !== false, 'group publication exposes an explicit per-year status');
 group_publication_check(strpos($seasons, 'hide_unpublished_groups') !== false && strpos($seasons, "\$tariffs['groups'] = array();") !== false, 'general public tariff rendering cannot expose unpublished group rates');
 
-// Nouveau moteur devis 1.15.18 : état et grille strictement locaux à l'année.
 group_publication_check(strpos($quotes, "const STATE_OPTION = 'parcs_ht_group_quote_years_v2'") !== false, 'quote activation owns a dedicated annual state store');
 group_publication_check(strpos($quotes, 'const STATE_VERSION = 1') !== false, 'quote annual state is explicitly versioned');
 group_publication_check(strpos($quotes, 'public static function quote_enabled_for_year') !== false, 'quote engine exposes a canonical annual activation accessor');
@@ -29,9 +28,9 @@ group_publication_check(strpos($quotes, 'derive_binding_for_year') !== false, 'm
 group_publication_check(strpos($quotes, 'krsort($previous') === false && strpos($quotes, 'ksort($future') === false, 'quote engine contains no previous/future year binding fallback');
 group_publication_check(strpos($quotes, 'Parcs_HT_Group_Tariff_Settings::quote_enabled') === false, 'quote availability is independent from commercial group publication');
 group_publication_check(strpos($quotes, "(string)(\$season['published']") === false, 'quote availability no longer reads the legacy published status');
-group_publication_check(strpos($quotes, 'sync_admin_year_activation') !== false, 'admin saves synchronize only the selected year activation');
-group_publication_check(strpos($quotes, "if (\$action !== 'parcs_ht_save') return") !== false, 'unrelated option updates cannot alter quote activation');
-group_publication_check(strpos($quotes, "\$year = isset(\$_POST['season_year'])") !== false, 'quote activation synchronization is scoped to the posted season year');
+group_publication_check(strpos($quotes, 'sync_admin_year_activation') !== false, 'persisted annual controls synchronize the dedicated quote state');
+group_publication_check(strpos($quotes, "\$_POST") === false, 'quote-state synchronization does not parse request data or depend on a second nonce path');
+group_publication_check(strpos($quotes, "\$new_seasons") !== false && strpos($quotes, "\$old_seasons") !== false, 'quote-state synchronization compares persisted old and new seasons');
 group_publication_check(strpos($quotes, 'legacy_year_evidence') !== false && strpos($quotes, 'migrate_state') !== false, 'legacy quote evidence is consumed only by the one-time state migration');
 group_publication_check(strpos($quotes, 'public static function season_for_year') !== false, 'quote engine exposes one canonical per-year pricing accessor');
 group_publication_check(strpos($quotes, 'integer_value') !== false, 'participant quantities are normalized as integers server-side');
