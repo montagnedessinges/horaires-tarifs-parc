@@ -63,8 +63,8 @@ $tariffs = array(
     'groups'=>$groupRows,
 );
 $settings = array('timezone'=>'Europe/Paris','seasons'=>array(
-    '2026'=>array('published'=>'1','season_start'=>'2026-03-01','season_end'=>'2026-11-30','tariffs'=>$tariffs),
-    '2027'=>array('published'=>'0','season_start'=>'2027-03-01','season_end'=>'2027-11-30','tariffs'=>$tariffs),
+    '2026'=>array('published'=>'1','group_quotes_enabled'=>'1','season_start'=>'2026-03-01','season_end'=>'2026-11-30','tariffs'=>$tariffs),
+    '2027'=>array('published'=>'0','group_quotes_enabled'=>'0','season_start'=>'2027-03-01','season_end'=>'2027-11-30','tariffs'=>$tariffs),
 ));
 $GLOBALS['public_settings'] = $settings;
 $GLOBALS['options'][Parcs_HT_Defaults::OPTION] = $settings;
@@ -92,35 +92,36 @@ $GLOBALS['options'][Parcs_HT_Group_Quotes::OPTION] = array(
 );
 $saved = $GLOBALS['options'];
 $quotes = Parcs_HT_Group_Quotes::settings();
-verify($quotes['seasons']['2027']['published'] === '0', 'Draft season and unpublished group rates disable quote availability');
-verify($quotes['seasons']['2026']['published'] === '1', 'Published season with published group rates remains available');
+verify($quotes['seasons']['2027']['published'] === '0', 'Explicit 2027 quote switch keeps the draft quote unavailable');
+verify($quotes['seasons']['2026']['published'] === '1', 'Explicit 2026 quote switch keeps the current quote available');
 verify(Parcs_HT_Group_Quotes::settings(false)['seasons']['2027']['published'] === '1', 'Legacy quote metadata remains stored for rollback only');
 verify($GLOBALS['options'] === $saved, 'Reading public settings does not modify saved options');
 Parcs_HT_Group_Quotes::assets();
 $payload = $GLOBALS['inline']['parcs-ht-group-quotes'];
-verify(strpos($payload, '2027') === false && strpos($payload, 'PRIVATE_NOTE') === false && strpos($payload, '99') === false, 'Draft and legacy quote rates stay out of JavaScript');
-verify(strpos($payload, '2026') !== false && strpos($payload, '8.5') !== false, 'Published shared group tariffs feed JavaScript');
+verify(strpos($payload, '2027') === false && strpos($payload, 'PRIVATE_NOTE') === false && strpos($payload, '99') === false, 'Disabled quote year and legacy quote rates stay out of JavaScript');
+verify(strpos($payload, '2026') !== false && strpos($payload, '8.5') !== false, 'Enabled 2026 quote tariffs feed JavaScript');
 
 $GLOBALS['public_settings']['seasons']['2027']['published'] = '1';
 $GLOBALS['options'][Parcs_HT_Defaults::OPTION]['seasons']['2027']['published'] = '1';
-verify(Parcs_HT_Group_Quotes::settings()['seasons']['2027']['published'] === '0', 'Publishing the season alone does not publish group tariffs');
-$GLOBALS['options'][Parcs_HT_Group_Tariff_Settings::OPTION]['seasons']['2027']['published'] = '1';
-verify(Parcs_HT_Group_Quotes::settings()['seasons']['2027']['published'] === '1', 'Group tariffs require their own explicit publication status');
+verify(Parcs_HT_Group_Quotes::settings()['seasons']['2027']['published'] === '0', 'Publishing the general season alone does not enable the 2027 quote');
+$GLOBALS['public_settings']['seasons']['2027']['group_quotes_enabled'] = '1';
+$GLOBALS['options'][Parcs_HT_Defaults::OPTION]['seasons']['2027']['group_quotes_enabled'] = '1';
+verify(Parcs_HT_Group_Quotes::settings()['seasons']['2027']['published'] === '1', 'The dedicated annual quote switch enables 2027 independently from tariff publication');
 $GLOBALS['public_settings'] = $settings;
 $GLOBALS['options'][Parcs_HT_Defaults::OPTION] = $settings;
 $GLOBALS['options'][Parcs_HT_Group_Tariff_Settings::OPTION]['seasons']['2027']['published'] = '0';
 
 $input = array('visite'=>'2027-09-01','groupedevis'=>'Groupe','nbrenfants'=>'20','nbradultes'=>'3','totalprixscolaire'=>'1,00 €');
-verify(Parcs_HT_Group_Quotes::canonicalize_posted_data($input)['totalprixscolaire'] === '', 'Server refuses a year whose group tariffs are not published');
+verify(Parcs_HT_Group_Quotes::canonicalize_posted_data($input)['totalprixscolaire'] === '', 'Server refuses a year whose dedicated quote switch is disabled');
 $GLOBALS['submission'] = $input;
 $validation = new Quote_Validation_Result();
 Parcs_HT_Group_Quotes::validate_quote($validation, array((object)array('name'=>'visite')));
-verify(isset($validation->invalid['visite']), 'CF7 validation blocks sending a quote without published group tariffs');
+verify(isset($validation->invalid['visite']), 'CF7 validation blocks sending a quote when the annual quote switch is disabled');
 $gate = new ReflectionMethod('Parcs_HT_Quote_Gate', 'tariff_available');
 $gate->setAccessible(true);
-verify(!$gate->invoke(null, '2027') && $gate->invoke(null, '2026'), 'Date gate shares season and group publication rules');
+verify(!$gate->invoke(null, '2027') && $gate->invoke(null, '2026'), 'Date gate follows independent annual quote activation');
 $input['visite'] = '2026-09-01';
-verify(Parcs_HT_Group_Quotes::canonicalize_posted_data($input)['totalprixscolaire'] === '128,50 €', 'Published quote recalculates from Groupes → Tarifs through permanent IDs');
+verify(Parcs_HT_Group_Quotes::canonicalize_posted_data($input)['totalprixscolaire'] === '128,50 €', 'Enabled quote recalculates from Groupes → Tarifs through permanent IDs');
 $GLOBALS['options'][Parcs_HT_Defaults::OPTION]['seasons']['2026']['tariffs']['groups'][0]['cells'][$priceColumn]['value'] = '9 €';
 verify(Parcs_HT_Group_Quotes::canonicalize_posted_data($input)['totalprixscolaire'] === '129,00 €', 'Changing the shared group tariff changes the quote calculation without changing its ID');
 $GLOBALS['options'][Parcs_HT_Defaults::OPTION]['seasons']['2026']['tariffs']['groups'] = array();
