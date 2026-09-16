@@ -14,8 +14,8 @@
         item.setAttribute('aria-selected',active?'true':'false');
         item.tabIndex=active?0:-1;
         var panelId=item.getAttribute('aria-controls');
-        var panel=panelId?root.querySelector('#'+CSS.escape(panelId)):null;
-        if(panel)panel.hidden=!active;
+        var panel=panelId?document.getElementById(panelId):null;
+        if(panel&&root.contains(panel))panel.hidden=!active;
       });
       if(focus&&tab)tab.focus();
     }
