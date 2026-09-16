@@ -41,6 +41,7 @@ final class Parcs_HT_Shortcode_Registry {
         $language = in_array($language, self::languages(), true) ? $language : 'fr';
 
         if ($base === 'parc_horaires_tarifs' && class_exists('Parcs_HT_Tariff_Display')) {
+            require_once PARCS_HT_DIR . 'includes/class-parcs-ht-shortcodes.php';
             return Parcs_HT_Tariff_Display::render_page($language, array());
         }
         if ($base === 'parc_tableau_tarifs' && class_exists('Parcs_HT_Tariff_Display')) {
