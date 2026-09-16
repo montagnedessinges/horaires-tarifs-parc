@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.16.3
+Stable tag: 1.16.4
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes et outils du parc.
 
@@ -19,6 +19,13 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.16.4 =
+* Remplace l’ancienne logique de fenêtre par deux dates maîtresses : avant la date d’apparition les interrupteurs restent manuels, à partir de la date d’apparition tous les modules de l’année sont actifs, et à partir de la date de disparition tous les modules sont inactifs.
+* Applique cette bascule au calendrier public, aux tarifs visiteurs, aux horaires groupes, aux devis groupes et aux tarifs groupes sans modifier les données préparées pour les années futures.
+* Affiche ensemble les deux dates automatiques dans le bloc « Activation de l’année » et retire le réglage de forçage devenu inutile.
+* Corrige le shortcode Groupes : les années autorisées aux groupes sont indépendantes du calendrier visiteurs et un sélecteur annuel commun synchronise les tarifs groupes et le calendrier existant.
+* Permet donc d’afficher manuellement les horaires et tarifs groupes 2027 avant la date de bascule, puis de laisser le passage 2026 → 2027 s’effectuer automatiquement à la date choisie.
 
 = 1.16.3 =
 * Rétablit le sélecteur d’années dans le shortcode des tarifs groupes : les années publiques disponibles comme 2026, 2027 et 2028 apparaissent de nouveau sous forme d’onglets, avec l’année courante prioritaire.
