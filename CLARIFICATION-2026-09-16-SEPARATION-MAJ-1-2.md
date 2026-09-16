@@ -26,10 +26,10 @@ Pour les fonctions concernées par cette mise à jour, **ne pas utiliser une log
 L’objectif est volontairement simple : chaque contenu / année dispose d’un interrupteur de visibilité **Afficher : OUI / NON**.
 
 - `OUI` = on affiche dans l’emplacement concerné ;
-- `NON` = on n’affiche pas, sauf si une planification automatique définie ci-dessous rend temporairement le contenu visible ;
+- `NON` = on n’affiche pas ;
 - **la valeur par défaut doit être NON** lorsqu’un nouveau réglage / une nouvelle saison est créé(e) ;
 - il ne doit pas être nécessaire de “publier” une saison ou de la sortir d’un “brouillon” pour que ces interrupteurs fonctionnent ;
-- les interrupteurs de visibilité, complétés éventuellement par leur planification automatique, sont la source de vérité pour l’affichage des modules concernés.
+- les interrupteurs de visibilité, complétés éventuellement par la planification automatique définie ci-dessous, sont la source de vérité pour l’affichage des modules concernés.
 
 Si une ancienne notion `published` / brouillon doit être conservée temporairement pour compatibilité interne ou migration, elle ne doit plus piloter ces affichages publics lorsque les nouveaux interrupteurs existent.
 
@@ -56,60 +56,66 @@ Clarifier et fiabiliser les interrupteurs par saison :
 - afficher les tarifs groupes sur le site ;
 - activer les tarifs groupes pour les devis.
 
-Ces commandes sont indépendantes et doivent être **NON par défaut** pour une nouvelle année / saison tant que l’utilisateur ne les active pas explicitement.
+Ces commandes sont indépendantes et doivent être **NON par défaut** pour une nouvelle année / saison tant que l’utilisateur ne les active pas explicitement ou qu’une planification automatique ne les fait pas changer d’état.
 
 Il ne faut pas ajouter une étape séparée “Publier la saison”. L’utilisateur choisit seulement si chaque bloc doit être affiché ou non.
 
-## 3 bis. Planification automatique de la visibilité
+## 3 bis. Planification automatique de la visibilité — dates qui pilotent OUI / NON
 
-Pour chaque interrupteur d’affichage concerné, ajouter deux dates facultatives :
+Ajouter pour les affichages concernés deux dates facultatives :
 
 - **Afficher automatiquement à partir du** ;
 - **Ne plus afficher à partir du**.
 
-L’objectif est de pouvoir préparer une année à l’avance sans revenir manuellement dans l’administration le jour du changement.
+Ces dates doivent permettre de préparer une année à l’avance et de faire évoluer automatiquement l’état d’affichage.
 
-### Priorité du réglage manuel
+### Règle prioritaire corrigée
 
-Le réglage manuel `OUI` est prioritaire :
+La date de fin doit pouvoir arrêter un affichage même si celui-ci est actuellement sur **OUI**.
 
-- si l’utilisateur met **OUI**, le contenu reste affiché ;
-- les dates automatiques ne doivent pas repasser un réglage manuel `OUI` à `NON` ;
-- l’utilisateur peut donc forcer l’affichage à tout moment.
+Il ne faut donc pas considérer `OUI` comme un forçage permanent qui annulerait la date de fin.
 
-Le mode automatique intervient lorsque le réglage manuel est sur **NON**.
+Le comportement attendu est :
 
-### Comportement lorsque le réglage manuel est sur NON
+- avant la date de début : état prévu / effectif `NON` si l’affichage n’a pas été activé manuellement ;
+- à la date de début : l’affichage concerné passe automatiquement à `OUI` ;
+- entre la date de début et la date de fin : il reste sur `OUI` ;
+- à la date de fin : il passe automatiquement à `NON`, **même s’il était encore sur OUI juste avant** ;
+- sans date de fin : après activation, il reste sur `OUI` jusqu’à une action manuelle ou une autre règle explicitement définie.
 
-- sans date de début : le contenu reste masqué ;
-- avec une date de début future : le contenu reste masqué avant cette date ;
-- à partir de la date de début, il devient automatiquement visible ;
-- si aucune date de fin n’est définie, il reste ensuite visible automatiquement ;
-- si une date de fin est définie, il redevient automatiquement masqué **à partir de cette date**.
+Exemple pour 2027 :
 
-Exemple pour les tarifs visiteurs 2027 :
+- date d’affichage automatique : `01/12/2026` ;
+- date de fin d’affichage : `01/12/2027`.
 
-- `Afficher les tarifs visiteurs 2027 = NON`
-- `Afficher automatiquement à partir du = 01/12/2026`
-- `Ne plus afficher à partir du = 01/12/2027`
+Résultat attendu :
 
-Résultat :
+- jusqu’au 30/11/2026 : `NON` ;
+- le 01/12/2026 : passage automatique à `OUI` ;
+- du 01/12/2026 au 30/11/2027 : `OUI` ;
+- le 01/12/2027 : passage automatique à `NON`.
 
-- jusqu’au 30/11/2026 : masqué ;
-- du 01/12/2026 au 30/11/2027 : affiché automatiquement ;
-- à partir du 01/12/2027 : masqué automatiquement.
+### Interaction avec une action manuelle
 
-Si l’utilisateur passe manuellement le réglage à `OUI` pendant cette période, **OUI reste prioritaire** et le contenu continue d’être affiché, même après la date de fin, jusqu’à ce que l’utilisateur remette le réglage sur `NON`.
+L’utilisateur doit toujours pouvoir modifier un interrupteur manuellement entre les échéances.
 
-### Validation des dates
+Cependant, une échéance future programmée garde son rôle :
+
+- si une date de début est encore à venir, elle pourra remettre l’affichage sur `OUI` à cette date ;
+- si une date de fin est encore à venir, elle pourra remettre l’affichage sur `NON` à cette date, même si l’utilisateur l’avait laissé sur `OUI`.
+
+L’objectif est que les dates jouent le rôle de **changements d’état programmés**, et non de simples indications visuelles.
+
+### Validation et implémentation
 
 - les deux dates sont facultatives ;
 - si les deux sont renseignées, la date de fin ne doit pas précéder la date de début ;
 - les calculs doivent utiliser le fuseau horaire configuré par l’extension ;
-- l’état effectif doit être calculé au rendu / à la lecture et ne doit pas nécessiter un cron pour modifier physiquement la valeur enregistrée de `OUI/NON` ;
-- l’administration doit pouvoir indiquer clairement l’état effectif : `Affiché manuellement`, `Planifié`, `Affiché automatiquement`, `Masqué` ou équivalent, sans transformer cette information en nouvelle logique de publication/brouillon.
+- l’administration doit montrer clairement l’état actuel et les prochaines transitions programmées ;
+- le développeur peut choisir une implémentation robuste par calcul d’état effectif, synchronisation paresseuse ou tâche planifiée WordPress, mais **le résultat visible et administratif doit être équivalent : à la date de début OUI, à la date de fin NON** ;
+- aucun système “publié / brouillon” supplémentaire ne doit être réintroduit.
 
-Cette planification doit être disponible pour les affichages publics concernés. Elle reste indépendante pour chaque bloc : calendrier, tarifs visiteurs, horaires Groupes et tarifs groupes. Pour le moteur de devis, ne l’appliquer que si le développeur confirme qu’une activation planifiée est souhaitable et sans risque ; sinon conserver `Activer les tarifs groupes pour les devis` comme interrupteur manuel indépendant.
+Cette planification doit être disponible pour les affichages publics concernés : calendrier, tarifs visiteurs, horaires Groupes et tarifs groupes. Le réglage des devis reste indépendant, sauf décision explicite ultérieure de lui appliquer aussi une planification.
 
 ## 4. Horaires Groupes : une seule source de données
 
@@ -150,7 +156,9 @@ Quand `Afficher les tarifs groupes sur le site [année] = OUI`, et qu’une gril
 - dans l’onglet Groupes du tableau public général des tarifs ;
 - dans le shortcode / module public dédié aux tarifs groupes.
 
-Quand ce réglage est sur `NON`, cette année ne doit pas apparaître dans ces affichages, sauf pendant une fenêtre de planification automatique active définie au point 3 bis.
+Quand ce réglage est sur `NON`, cette année ne doit pas apparaître dans ces affichages, sauf si une date d’activation automatique vient de la faire passer sur `OUI`.
+
+Une date de fin programmée doit ensuite pouvoir faire repasser cet affichage sur `NON` automatiquement.
 
 Ce réglage reste indépendant de `Activer les tarifs groupes pour les devis`.
 
