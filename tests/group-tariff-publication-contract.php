@@ -14,6 +14,15 @@ function group_publication_check($condition, $message) {
     echo '[OK] ' . $message . PHP_EOL;
 }
 
+function group_publication_function_source($source, $name) {
+    $needle = 'public static function ' . $name . '(';
+    $start = strpos($source, $needle);
+    if ($start === false) return '';
+    $next = strpos($source, '\n    public static function ', $start + strlen($needle));
+    if ($next === false) $next = strlen($source);
+    return substr($source, $start, $next - $start);
+}
+
 group_publication_check(strpos($settings, "const OPTION = 'parcs_ht_group_tariff_settings'") !== false, 'group publication and presentation keep their own settings store');
 group_publication_check(strpos($settings, 'const STORE_VERSION = 4') !== false, 'group display settings store remains versioned');
 group_publication_check(strpos($settings, "'display_from'=>''") !== false && strpos($settings, 'save_display_from') !== false, 'each group year can own a commercial display date');
@@ -29,8 +38,9 @@ group_publication_check(strpos($quotes, 'krsort($previous') === false && strpos(
 group_publication_check(strpos($quotes, 'Parcs_HT_Group_Tariff_Settings::quote_enabled') === false, 'quote availability is independent from commercial group publication');
 group_publication_check(strpos($quotes, "(string)(\$season['published']") === false, 'quote availability no longer reads the legacy published status');
 group_publication_check(strpos($quotes, 'sync_admin_year_activation') !== false, 'persisted annual controls synchronize the dedicated quote state');
-group_publication_check(strpos($quotes, "\$_POST") === false, 'quote-state synchronization does not parse request data or depend on a second nonce path');
-group_publication_check(strpos($quotes, "\$new_seasons") !== false && strpos($quotes, "\$old_seasons") !== false, 'quote-state synchronization compares persisted old and new seasons');
+$sync_source = group_publication_function_source($quotes, 'sync_admin_year_activation');
+group_publication_check($sync_source !== '' && strpos($sync_source, '$_POST') === false, 'quote-state synchronization does not parse request data or depend on a second nonce path');
+group_publication_check(strpos($sync_source, '$new_seasons') !== false && strpos($sync_source, '$old_seasons') !== false, 'quote-state synchronization compares persisted old and new seasons');
 group_publication_check(strpos($quotes, 'legacy_year_evidence') !== false && strpos($quotes, 'migrate_state') !== false, 'legacy quote evidence is consumed only by the one-time state migration');
 group_publication_check(strpos($quotes, 'public static function season_for_year') !== false, 'quote engine exposes one canonical per-year pricing accessor');
 group_publication_check(strpos($quotes, 'integer_value') !== false, 'participant quantities are normalized as integers server-side');
