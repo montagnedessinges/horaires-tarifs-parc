@@ -45,12 +45,12 @@ final class Parcs_HT_Season_Status {
         if (!preg_match('/^20\d{2}$/', $year) || !isset($new_value['seasons'][$year]) || !is_array($new_value['seasons'][$year])) return $new_value;
 
         $old_status = isset($old_value['seasons'][$year]['published']) && (string)$old_value['seasons'][$year]['published'] === '1' ? '1' : '0';
-        $posted_general = isset($_POST['settings']['general']) && is_array($_POST['settings']['general']) ? wp_unslash($_POST['settings']['general']) : array();
+        $calendar_visible = isset($_POST['settings']['general']['calendar_visible']) ? sanitize_text_field(wp_unslash($_POST['settings']['general']['calendar_visible'])) : null;
 
         // Le vieux champ `published` reste seulement pour compatibilité interne.
         // Sa valeur suit désormais la commande annuelle « Afficher le calendrier ».
-        if (array_key_exists('calendar_visible', $posted_general)) {
-            $new_status = (string)$posted_general['calendar_visible'] === '1' ? '1' : '0';
+        if ($calendar_visible !== null) {
+            $new_status = $calendar_visible === '1' ? '1' : '0';
         } else {
             $new_status = $old_status;
         }
