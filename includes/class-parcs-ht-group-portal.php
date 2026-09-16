@@ -113,9 +113,9 @@ final class Parcs_HT_Group_Portal {
                 <div data-group-main-panel="tariffs" <?php if ($default_tab !== 'tariffs') echo 'hidden'; ?>>
                     <?php echo self::year_tabs($tariff_years, 'tariffs', $tariff_active, $language); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- construit et échappé localement. ?>
                     <?php foreach ($tariff_years as $year) :
-                        Parcs_HT_Display_Policy::begin_group_tariff_year($year);
-                        $tariff_html = Parcs_HT_Group_Tariffs::render($language, array());
-                        Parcs_HT_Display_Policy::end_group_tariff_year();
+                        $tariff_html = class_exists('Parcs_HT_Tariff_Display')
+                            ? Parcs_HT_Tariff_Display::render_group($language, array(), $year)
+                            : Parcs_HT_Group_Tariffs::render($language, array());
                     ?><div data-group-year-panel="<?php echo esc_attr('tariffs-' . $year); ?>" <?php if ($year !== $tariff_active) echo 'hidden'; ?>><?php echo $tariff_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- rendu interne du shortcode groupes. ?></div><?php endforeach; ?>
                 </div>
             <?php endif; ?>
