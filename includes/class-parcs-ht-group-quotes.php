@@ -206,9 +206,13 @@ final class Parcs_HT_Group_Quotes {
         if (!is_array($season)) return false;
         if (array_key_exists('group_quotes_enabled', $season)) return (string)$season['group_quotes_enabled'] === '1';
 
+        // Anciennes données uniquement : un brouillon explicite reste fermé. Les saisons
+        // modernes utilisent group_quotes_enabled et ne dépendent donc jamais de ce champ.
+        if (array_key_exists('published', $season) && (string)$season['published'] !== '1') return false;
+
         // Compatibilité des installations créées avant les interrupteurs annuels :
         // l'état du devis est déduit uniquement du stockage du devis et d'une liaison
-        // réellement compatible avec la grille cible, jamais du statut de publication publique.
+        // réellement compatible avec la grille cible, jamais du statut de publication des tarifs groupes.
         $saved = get_option(self::OPTION, array());
         if (!is_array($saved)) $saved = array();
         if (isset($saved['tariff_bindings'][$year]) && self::stable_binding($saved['tariff_bindings'][$year]) && self::binding_matches_year($year, $saved['tariff_bindings'][$year])) return true;
