@@ -1,0 +1,98 @@
+/* MAJ 2 visuelle — charte et contexte d'intégration
+ * Les shortcodes restent transparents : ils sont conçus pour être intégrés
+ * dans une section du site à fond blanc.
+ * Les couleurs configurées dans l'extension restent prioritaires ; les valeurs
+ * ci-dessous ne servent que de valeurs de repli cohérentes avec la charte.
+ */
+
+.parcs-ht-tariffs,
+.parcs-ht-tariff-panel,
+.parcs-ht-price-list,
+.parcs-ht-group-portal,
+.parcs-ht-group-tariffs-only,
+.parcs-ht-group-payment-strip,
+.parcs-ht-payment-strip {
+  background:transparent !important;
+}
+
+/* Texte : valeur configurée si disponible, sinon teinte neutre de la charte. */
+.parcs-ht-tariffs,
+.parcs-ht-group-portal,
+.parcs-ht-group-tariffs-only {
+  color:var(--htp-body-text,#24312d);
+}
+
+/* Onglets et années : vert principal. */
+.parcs-ht-tariff-tabs button,
+.parcs-ht-retail-year-tab,
+.parcs-ht-group-portal .parcs-ht-group-portal-tabs button,
+.parcs-ht-group-portal .parcs-ht-group-portal-years button {
+  border-color:var(--htp-primary,#006757) !important;
+  color:var(--htp-primary,#006757) !important;
+  background:transparent !important;
+}
+
+.parcs-ht-tariff-tabs button[aria-selected="true"],
+.parcs-ht-retail-year-tab.is-active,
+.parcs-ht-retail-year-tab[aria-selected="true"],
+.parcs-ht-group-portal .parcs-ht-group-portal-tabs button.is-active,
+.parcs-ht-group-portal .parcs-ht-group-portal-tabs button[aria-selected="true"],
+.parcs-ht-group-portal .parcs-ht-group-portal-years button.is-active,
+.parcs-ht-group-portal .parcs-ht-group-portal-years button[aria-selected="true"] {
+  border-color:var(--htp-primary,#006757) !important;
+  background:var(--htp-primary,#006757) !important;
+  color:#fff !important;
+}
+
+/* Lignes tarifaires : transparentes, avec une bordure douce adaptée au fond blanc. */
+.parcs-ht-tariffs .parcs-ht-price-row,
+.parcs-ht-group-tariffs-only .parcs-ht-price-row {
+  background:var(--htp-row-bg,transparent) !important;
+  border-color:var(--htp-row-border,#dce7e2) !important;
+}
+
+/* Sur place : volontairement neutre. */
+.parcs-ht-tariffs .parcs-ht-price-cell:not([data-htp-channel="online"]):not([data-htp-channel="en_ligne"]):not([data-htp-channel="web"]),
+.parcs-ht-group-tariffs-only .parcs-ht-price-cell {
+  background:transparent !important;
+  border-color:var(--htp-row-border,#dce7e2) !important;
+}
+
+/* En ligne : vert secondaire de la charte, discret mais identifiable. */
+.parcs-ht-tariffs .parcs-ht-price-cell[data-htp-channel="online"],
+.parcs-ht-tariffs .parcs-ht-price-cell[data-htp-channel="en_ligne"],
+.parcs-ht-tariffs .parcs-ht-price-cell[data-htp-channel="web"],
+.parcs-ht-tariffs a.parcs-ht-price-cell[data-htp-channel="online"],
+.parcs-ht-tariffs a.parcs-ht-price-cell[data-htp-channel="en_ligne"],
+.parcs-ht-tariffs a.parcs-ht-price-cell[data-htp-channel="web"] {
+  border-color:var(--htp-secondary,#31ad81) !important;
+  background:rgba(49,173,129,.09) !important;
+  background:color-mix(in srgb,var(--htp-secondary,#31ad81) 10%,transparent) !important;
+}
+
+/* Moyens de paiement : vert secondaire, comme l'identité actuelle du parc. */
+.parcs-ht-payment-item,
+.parcs-ht-group-payment-strip .parcs-ht-payment-item {
+  background:var(--htp-payment-local-bg,var(--htp-payment-item-bg,var(--htp-secondary,#31ad81))) !important;
+  color:var(--htp-payment-local-text,var(--htp-payment-item-text,#fff)) !important;
+  border-color:var(--htp-payment-local-border,var(--htp-payment-border,transparent)) !important;
+}
+
+.parcs-ht-payment-item .parcs-ht-payment-icon,
+.parcs-ht-payment-item .parcs-ht-payment-icon svg {
+  color:var(--htp-payment-local-icon,var(--htp-payment-icon,currentColor)) !important;
+}
+
+/* Accents et focus : jaune de la charte, sans recolorer tout le tableau. */
+.parcs-ht-tariff-tabs button:focus-visible,
+.parcs-ht-retail-year-tab:focus-visible,
+.parcs-ht-group-portal button:focus-visible,
+.parcs-ht-tariffs a:focus-visible {
+  outline-color:var(--htp-highlight,#e7c55b) !important;
+}
+
+/* Corail réservé aux messages/accents déjà configurés. */
+.parcs-ht-tariff-note {
+  border-left-color:var(--htp-accent,#ef7b5b) !important;
+  background:transparent !important;
+}
