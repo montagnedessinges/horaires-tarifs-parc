@@ -35,6 +35,7 @@ require_once PARCS_HT_DIR . 'includes/class-parcs-ht-quote-gate.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-quote-page-save.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin-groups.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-group-tariffs.php';
+require_once PARCS_HT_DIR . 'includes/class-parcs-ht-tariff-display.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-display-policy.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-group-portal.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-guide-stats.php';
@@ -78,32 +79,6 @@ add_action('added_option', static function ($option, $value) {
         if (!wp_next_scheduled('parcs_ht_pregenerate_exports')) wp_schedule_single_event(time() + 10, 'parcs_ht_pregenerate_exports');
     }
 }, 10, 2);
-
-/*
- * MAJ 2 visuelle : couches CSS séparées du socle frontend.
- * Les shortcodes restent transparents et sont conçus pour être intégrés
- * dans une section du site à fond blanc. Les couleurs de la charte sont les
- * valeurs par défaut, tout en laissant les réglages existants prioritaires.
- */
-add_action('wp_enqueue_scripts', static function () {
-    if (is_admin()) return;
-    wp_enqueue_style(
-        'parcs-ht-tariffs-visual-v2',
-        PARCS_HT_URL . 'assets/tariffs-visual-v2.css',
-        array(),
-        PARCS_HT_VERSION
-    );
-    wp_enqueue_style(
-        'parcs-ht-tariffs-visual-v2-theme',
-        PARCS_HT_URL . 'assets/tariffs-visual-v2-theme.css',
-        array('parcs-ht-tariffs-visual-v2'),
-        PARCS_HT_VERSION
-    );
-    wp_add_inline_style(
-        'parcs-ht-tariffs-visual-v2-theme',
-        '.parcs-ht-tariff-heading .parcs-ht-kicker{display:none!important;}'
-    );
-}, 100);
 
 add_action('wp_footer', static function () {
     if (!wp_script_is('parcs-ht-frontend', 'enqueued')) return;
@@ -190,6 +165,7 @@ add_action('plugins_loaded', static function () {
     }
     Parcs_HT_Group_Tariffs::init();
     Parcs_HT_Group_Portal::init();
+    Parcs_HT_Tariff_Display::init();
     Parcs_HT_Guide_Stats::init();
     Parcs_HT_Pedagogical_Guides::init();
     Parcs_HT_Guide_Appearance::init();
