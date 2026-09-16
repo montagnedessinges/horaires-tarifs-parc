@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.16.0
+Stable tag: 1.16.1
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes et outils du parc.
 
@@ -20,6 +20,13 @@ Une sauvegarde du site et de la base de données reste recommandée avant toute 
 
 == Changelog ==
 
+= 1.16.1 =
+* Restaure le shortcode complet Horaires & Tarifs avec l’état du jour, le calendrier existant et le nouveau tableau de tarifs dans cet ordre.
+* Corrige les cellules En ligne vides, supprime les colonnes sans valeur et étend automatiquement une cellule tarifaire unique sur toute la zone disponible.
+* Place l’information des tarifs réduits avant les lignes, agrandit le rendu sur ordinateur et mobile et conserve « Tarifs » comme simple texte visuel interne.
+* Restaure dans l’espace Groupes le vrai calendrier public, avec Tarifs groupes en premier et une sélection d’année synchronisée entre tarifs et horaires.
+* Affiche l’année courante en premier et applique les dates de début / fin d’affichage aux modules publics concernés.
+
 = 1.16.0 =
 * Refonte complète du rendu public des tarifs, sans modifier le moteur des horaires ni le calendrier existant.
 * Nouveau composant compact et responsive pour les tarifs individuels, réduits et groupes, avec fond transparent conçu pour être intégré dans une section de page blanche.
@@ -33,7 +40,7 @@ Une sauvegarde du site et de la base de données reste recommandée avant toute 
 * Chaque année possède désormais un état d’activation devis indépendant et versionné ; activer 2027 ne peut plus modifier, masquer ou remplacer 2026.
 * Les prix du devis proviennent uniquement de la grille groupes canonique de l’année sélectionnée, même lorsque les identifiants de lignes et de colonnes diffèrent d’une année à l’autre.
 * Les anciennes données de devis servent uniquement à une migration initiale des saisons historiques réellement utilisées ; les années futures ne sont jamais activées par déduction.
-* Une normalisation unique aligne les anciens boutons d’administration avec le nouvel état annuel afin d’éviter un moteur actif avec un bouton affiché sur NON.
+* Une normalisation unique aligne les anciens boutons d’administration avec le nouvel état afin d’éviter un moteur actif avec un bouton affiché sur NON.
 * Les calculs Contact Form 7 restent recalculés côté serveur et les effectifs sont traités comme des nombres entiers.
 * Ajoute des tests de non-régression couvrant 2026/2027 simultanément, l’activation et la désactivation indépendante de chaque année ainsi que des grilles et identifiants différents.
 
