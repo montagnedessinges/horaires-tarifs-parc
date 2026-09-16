@@ -202,22 +202,26 @@ final class Parcs_HT_Group_Quotes {
         return preg_match('/^(20\d{2})-\d{2}-\d{2}$/', trim((string)$value), $match) ? $match[1] : '';
     }
 
-    private static function quote_enabled_for_year($year, $season) {
+    private static function quote_enabled_for_year($year, $season, $settings = null) {
         if (!is_array($season)) return false;
         if (array_key_exists('group_quotes_enabled', $season)) return (string)$season['group_quotes_enabled'] === '1';
 
         // Compatibilité des installations créées avant les interrupteurs annuels :
-        // l'état du devis est déduit uniquement de l'ancien stockage du devis lui-même,
-        // jamais du statut de publication des tarifs groupes.
+        // l'état du devis est déduit uniquement du stockage du devis et d'une liaison
+        // réellement compatible avec la grille cible, jamais du statut de publication publique.
         $saved = get_option(self::OPTION, array());
-        if (!is_array($saved)) return false;
-        if (isset($saved['tariff_bindings'][$year]) && self::stable_binding($saved['tariff_bindings'][$year])) return true;
+        if (!is_array($saved)) $saved = array();
+        if (isset($saved['tariff_bindings'][$year]) && self::stable_binding($saved['tariff_bindings'][$year]) && self::binding_matches_year($year, $saved['tariff_bindings'][$year])) return true;
         $legacy = isset($saved['seasons'][$year]) && is_array($saved['seasons'][$year]) ? $saved['seasons'][$year] : array();
-        if (!$legacy) return false;
-        foreach (array('child','adult','disability','companion') as $key) {
-            if (!array_key_exists($key, $legacy) || self::numeric_price($legacy[$key]) === null) return false;
+        if ($legacy) {
+            $valid = true;
+            foreach (array('child','adult','disability','companion') as $key) {
+                if (!array_key_exists($key, $legacy) || self::numeric_price($legacy[$key]) === null) { $valid = false; break; }
+            }
+            if ($valid) return true;
         }
-        return true;
+        if ($settings === null) $settings = self::settings(false);
+        return self::binding_for_year($year, $settings) !== null;
     }
 
     private static function published_season($year, $settings = null) {
@@ -226,7 +230,7 @@ final class Parcs_HT_Group_Quotes {
         $all = get_option(Parcs_HT_Defaults::OPTION, array());
         if (!is_array($all) || empty($all['seasons'][$year]) || !is_array($all['seasons'][$year])) return null;
         $season = $all['seasons'][$year];
-        if (!self::quote_enabled_for_year($year, $season)) return null;
+        if (!self::quote_enabled_for_year($year, $season, $settings)) return null;
         $tariffs = isset($season['tariffs']) && is_array($season['tariffs']) ? $season['tariffs'] : array();
         $rows = isset($tariffs['groups']) && is_array($tariffs['groups']) ? array_values($tariffs['groups']) : array();
         $columns = isset($tariffs['columns']['groups']) && is_array($tariffs['columns']['groups']) ? array_values($tariffs['columns']['groups']) : array();
