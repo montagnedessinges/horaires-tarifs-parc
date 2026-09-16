@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.15.14
+Stable tag: 1.15.15
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes et outils du parc.
 
@@ -19,6 +19,12 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.15.15 =
+* Corrige en urgence la coexistence des tarifs groupes 2026 et 2027 : publier une année future ne remplace plus automatiquement l’année en cours dans l’affichage standard.
+* Lorsque plusieurs années de tarifs groupes sont disponibles, l’année courante est sélectionnée par défaut et chaque année reste accessible via son sélecteur.
+* Une sélection explicite d’année continue de fonctionner, notamment dans le portail Groupes, sans modifier le moteur de devis par date de visite.
+* Ajoute un contrat de non-régression afin qu’une année future publiée ne puisse plus masquer silencieusement l’année courante.
 
 = 1.15.14 =
 * Ajoute une recherche instantanée et purement visuelle dans Périodes repères, Événements, Exceptions et Accès temporairement limité, avec compteur, effacement rapide et message lorsqu’aucune ligne ne correspond.
