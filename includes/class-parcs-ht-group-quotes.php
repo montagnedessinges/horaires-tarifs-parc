@@ -45,7 +45,6 @@ final class Parcs_HT_Group_Quotes {
             'school_value'=>'Groupe',
             'disability_value'=>'Groupe en situation de handicap',
             'binding_version'=>3,
-            // Conservés uniquement pour migration/compatibilité d'administration.
             'tariff_bindings'=>array(),
             'tariff_binding'=>self::legacy_binding_defaults(),
             'seasons'=>array(),
@@ -137,9 +136,7 @@ final class Parcs_HT_Group_Quotes {
         foreach ($rows as $row) {
             if (!is_array($row) || (string)($row['enabled'] ?? '1') !== '1') continue;
             $label = self::row_label($row);
-            foreach ($patterns as $pattern) {
-                if (preg_match($pattern, $label)) return $row;
-            }
+            foreach ($patterns as $pattern) if (preg_match($pattern, $label)) return $row;
         }
         return null;
     }
@@ -163,19 +160,14 @@ final class Parcs_HT_Group_Quotes {
         $columns = $grid['columns'];
         if (!$rows || !$columns || !class_exists('Parcs_HT_Tariff_Identities')) return null;
 
-        // Les rôles sont résolus uniquement dans la grille de l'année demandée.
         $roles = array();
         $roles['child'] = self::find_role_row($rows, array('/scolaire|extrascolaire|school|schul/', '/enfant|child|kind/'));
         $roles['adult'] = self::find_role_row($rows, array('/adulte|adult|erwachs/'));
         $roles['disability'] = self::find_role_row($rows, array('/handicap|disabil|behinder/'));
         $roles['companion'] = self::find_role_row($rows, array('/accompagn|companion|begleit/'));
 
-        // Compatibilité de structure : l'ancien mapping peut aider à retrouver les lignes,
-        // mais seulement dans CETTE année. Jamais dans une autre grille.
         $legacy = is_array($settings['tariff_binding'] ?? null) ? $settings['tariff_binding'] : self::legacy_binding_defaults();
-        foreach (array('child','adult','disability','companion') as $role) {
-            if (!$roles[$role]) $roles[$role] = self::row_from_legacy_target_year($rows, $legacy, $role);
-        }
+        foreach (array('child','adult','disability','companion') as $role) if (!$roles[$role]) $roles[$role] = self::row_from_legacy_target_year($rows, $legacy, $role);
         if (!$roles['companion'] && $roles['disability']) $roles['companion'] = $roles['disability'];
         foreach ($roles as $row) if (!is_array($row)) return null;
 
@@ -221,9 +213,7 @@ final class Parcs_HT_Group_Quotes {
         if ($exact && self::binding_matches_year($year, $exact)) return true;
         $legacy = is_array($legacy_settings['seasons'][$year] ?? null) ? $legacy_settings['seasons'][$year] : array();
         if (!$legacy) return false;
-        foreach (array('child','adult','disability','companion') as $key) {
-            if (!array_key_exists($key, $legacy) || self::numeric_price($legacy[$key]) === null) return false;
-        }
+        foreach (array('child','adult','disability','companion') as $key) if (!array_key_exists($key, $legacy) || self::numeric_price($legacy[$key]) === null) return false;
         return true;
     }
 
@@ -242,7 +232,6 @@ final class Parcs_HT_Group_Quotes {
             if ((string)($season['group_quotes_enabled'] ?? '0') === '1') {
                 $enabled = true;
             } elseif ((int)$year <= (int)$current_year && self::legacy_year_evidence($year, $legacy)) {
-                // Migration unique des saisons historiques réellement exploitées avant les interrupteurs annuels.
                 $enabled = true;
             }
             $state['years'][$year] = array('enabled'=>$enabled ? '1' : '0');
@@ -263,23 +252,33 @@ final class Parcs_HT_Group_Quotes {
     }
 
     /**
-     * Synchronise uniquement l'année réellement enregistrée dans l'administration.
-     * Sauvegarder 2027 ne peut donc jamais modifier l'état 2026.
+     * Synchronise l'état annuel à partir de la valeur réellement persistée dans l'option.
+     * Aucun accès à $_POST : le changement est détecté en comparant l'ancienne et la nouvelle option.
+     * Une mise à jour de 2027 ne peut donc jamais modifier 2026.
      */
     public static function sync_admin_year_activation($option, $old_value, $new_value) {
-        unset($old_value);
-        if ($option !== Parcs_HT_Defaults::OPTION || !is_admin() || !current_user_can('manage_options')) return;
-        $action = isset($_POST['action']) ? sanitize_key(wp_unslash($_POST['action'])) : '';
-        if ($action !== 'parcs_ht_save') return;
-        $year = isset($_POST['season_year']) ? self::valid_year(sanitize_text_field(wp_unslash($_POST['season_year']))) : '';
-        if ($year === '' || !is_array($new_value) || !isset($new_value['seasons'][$year]) || !is_array($new_value['seasons'][$year])) return;
-        $season = $new_value['seasons'][$year];
-        if (!array_key_exists('group_quotes_enabled', $season)) return;
+        if ($option !== Parcs_HT_Defaults::OPTION || !is_array($old_value) || !is_array($new_value)) return;
+        $new_seasons = is_array($new_value['seasons'] ?? null) ? $new_value['seasons'] : array();
+        $old_seasons = is_array($old_value['seasons'] ?? null) ? $old_value['seasons'] : array();
         $state = self::state();
-        if (!isset($state['years']) || !is_array($state['years'])) $state['years'] = array();
-        $state['years'][$year] = array('enabled'=>(string)$season['group_quotes_enabled'] === '1' ? '1' : '0');
-        $state['version'] = self::STATE_VERSION;
-        update_option(self::STATE_OPTION, $state, false);
+        $changed = false;
+
+        foreach ($new_seasons as $year => $season) {
+            $year = self::valid_year($year);
+            if ($year === '' || !is_array($season) || !array_key_exists('group_quotes_enabled', $season)) continue;
+            $new_enabled = (string)$season['group_quotes_enabled'] === '1' ? '1' : '0';
+            $old_season = isset($old_seasons[$year]) && is_array($old_seasons[$year]) ? $old_seasons[$year] : array();
+            $old_has_value = array_key_exists('group_quotes_enabled', $old_season);
+            $old_enabled = $old_has_value && (string)$old_season['group_quotes_enabled'] === '1' ? '1' : '0';
+            if ($old_has_value && $old_enabled === $new_enabled) continue;
+            $state['years'][$year] = array('enabled'=>$new_enabled);
+            $changed = true;
+        }
+
+        if ($changed) {
+            $state['version'] = self::STATE_VERSION;
+            update_option(self::STATE_OPTION, $state, false);
+        }
     }
 
     private static function resolved_season($year, $settings = null) {
