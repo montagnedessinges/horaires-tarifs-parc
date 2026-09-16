@@ -57,4 +57,8 @@ group_publication_check(strpos($switch_admin, "do_action('litespeed_purge_all')"
 echo "Group tariff publication contract: OK\n";
 
 require __DIR__ . '/group-quote-future-season-runtime.php';
-require __DIR__ . '/group-quote-year-isolation-runtime.php';
+
+$isolation_test = __DIR__ . '/group-quote-year-isolation-runtime.php';
+$command = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($isolation_test);
+passthru($command, $isolation_exit);
+if ($isolation_exit !== 0) exit($isolation_exit);
