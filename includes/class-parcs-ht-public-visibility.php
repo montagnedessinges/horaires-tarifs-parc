@@ -228,14 +228,32 @@ final class Parcs_HT_Public_Visibility {
         return self::order_years($years);
     }
 
+    /**
+     * Une grille groupes est exploitable dès qu'une ligne active contient un prix.
+     * Le rendu public groupes utilise une colonne générique « Tarif » : il ne doit donc
+     * pas dépendre de l'ancien état visible/masqué des colonnes commerciales.
+     */
+    public static function group_tariff_grid_ready($year) {
+        $season = self::raw_season($year);
+        if (!$season) return false;
+        foreach ((array)($season['tariffs']['groups'] ?? array()) as $row) {
+            if (!is_array($row) || (string)($row['enabled'] ?? '1') !== '1') continue;
+            if (trim((string)($row['price'] ?? '')) !== '') return true;
+            foreach ((array)($row['cells'] ?? array()) as $cell) {
+                if (is_array($cell) && trim((string)($cell['value'] ?? '')) !== '') return true;
+            }
+        }
+        return false;
+    }
+
     public static function group_tariff_years() {
         $years = array();
         foreach (self::all_years() as $year) {
-            if (!class_exists('Parcs_HT_Group_Tariff_Settings') || !Parcs_HT_Group_Tariff_Settings::has_grid($year)) continue;
+            if (!self::group_tariff_grid_ready($year)) continue;
             $season = self::raw_season($year);
             $fallback = array_key_exists('group_tariffs_visible', $season)
                 ? (string)$season['group_tariffs_visible'] === '1'
-                : (string)(Parcs_HT_Group_Tariff_Settings::settings($year)['published'] ?? '0') === '1';
+                : (class_exists('Parcs_HT_Group_Tariff_Settings') && (string)(Parcs_HT_Group_Tariff_Settings::settings($year)['published'] ?? '0') === '1');
             if (self::module_visible($year, 'group_tariffs_visible', $fallback)) $years[] = $year;
         }
         return self::order_years($years);
