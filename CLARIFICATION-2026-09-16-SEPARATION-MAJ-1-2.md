@@ -46,9 +46,39 @@ Recherche/filtre instantané dans :
 
 Faire évoluer le système CSV pour couvrir proprement les catégories concernées, y compris **Accès temporairement limité**, avec import/export cohérent des données réelles.
 
-## 3. Affichage par année
+## 3. Activation et affichage par année
 
-Clarifier et fiabiliser les interrupteurs par saison :
+### Centraliser toute l’activation dans « Parc & apparence »
+
+La gestion de l’activation des années ne doit plus être dispersée dans plusieurs onglets.
+
+Créer dans l’onglet **Parc & apparence** une zone claire du type **Gestion / activation des années**.
+
+Pour chaque année (ex. 2026, 2027), cette zone centralisée doit contenir les commandes principales :
+
+- **Année active : OUI / NON** ;
+- afficher le calendrier public ;
+- afficher les tarifs visiteurs publics ;
+- afficher les horaires sur la page Groupes ;
+- afficher les tarifs groupes sur le site ;
+- activer les tarifs groupes pour les devis ;
+- les dates automatiques associées lorsqu’elles s’appliquent.
+
+Les autres onglets (Horaires, Tarifs, Groupes, etc.) servent uniquement à **éditer le contenu de l’année sélectionnée**. Ils ne doivent pas répéter les mêmes interrupteurs d’activation / visibilité.
+
+### Rôle de « Année active »
+
+`Année active = NON` est un verrou global de sécurité : l’année peut être préparée dans l’administration, mais ses contenus ne doivent pas être exposés publiquement ni utilisés pour les devis.
+
+`Année active = OUI` autorise ensuite les sous-réglages indépendants (calendrier, tarifs visiteurs, horaires Groupes, tarifs groupes, devis) à fonctionner selon leur propre état.
+
+La valeur par défaut d’une nouvelle année doit être **NON**.
+
+Ce réglage est une **activation technique de l’année**, pas un statut « publié / brouillon ».
+
+### Sous-réglages indépendants
+
+Une fois l’année active, les commandes suivantes restent indépendantes :
 
 - afficher le calendrier public ;
 - afficher les tarifs visiteurs publics ;
@@ -56,9 +86,9 @@ Clarifier et fiabiliser les interrupteurs par saison :
 - afficher les tarifs groupes sur le site ;
 - activer les tarifs groupes pour les devis.
 
-Ces commandes sont indépendantes et doivent être **NON par défaut** pour une nouvelle année / saison tant que l’utilisateur ne les active pas explicitement ou qu’une planification automatique ne les fait pas changer d’état.
+Ces commandes doivent elles aussi être **NON par défaut** pour une nouvelle année / saison tant que l’utilisateur ne les active pas explicitement ou qu’une planification automatique ne les fait pas changer d’état.
 
-Il ne faut pas ajouter une étape séparée “Publier la saison”. L’utilisateur choisit seulement si chaque bloc doit être affiché ou non.
+Il ne faut pas ajouter une étape séparée “Publier la saison”.
 
 ## 3 bis. Planification automatique de la visibilité — dates qui pilotent OUI / NON
 
@@ -69,11 +99,7 @@ Ajouter pour les affichages concernés deux dates facultatives :
 
 Ces dates doivent permettre de préparer une année à l’avance et de faire évoluer automatiquement l’état d’affichage.
 
-### Règle prioritaire corrigée
-
 La date de fin doit pouvoir arrêter un affichage même si celui-ci est actuellement sur **OUI**.
-
-Il ne faut donc pas considérer `OUI` comme un forçage permanent qui annulerait la date de fin.
 
 Le comportement attendu est :
 
@@ -115,7 +141,7 @@ L’objectif est que les dates jouent le rôle de **changements d’état progra
 - le développeur peut choisir une implémentation robuste par calcul d’état effectif, synchronisation paresseuse ou tâche planifiée WordPress, mais **le résultat visible et administratif doit être équivalent : à la date de début OUI, à la date de fin NON** ;
 - aucun système “publié / brouillon” supplémentaire ne doit être réintroduit.
 
-Cette planification doit être disponible pour les affichages publics concernés : calendrier, tarifs visiteurs, horaires Groupes et tarifs groupes. Le réglage des devis reste indépendant, sauf décision explicite ultérieure de lui appliquer aussi une planification.
+Cette planification doit être gérée depuis **Parc & apparence**, avec l’activation de l’année et les autres commandes de visibilité, afin d’avoir un seul endroit de référence.
 
 ## 4. Horaires Groupes : une seule source de données
 
