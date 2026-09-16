@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.15.16
+Stable tag: 1.15.17
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes et outils du parc.
 
@@ -19,6 +19,12 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.15.17 =
+* Sépare définitivement l’activation du devis groupes de la publication commerciale des tarifs groupes : publier ou préparer 2027 ne peut plus désactiver un devis 2026 historique.
+* Lorsqu’une saison possède le nouvel interrupteur `group_quotes_enabled`, celui-ci reste la seule autorité pour cette année.
+* Pour les saisons historiques sans cet interrupteur, le moteur restaure l’état depuis les données réellement enregistrées du devis (liaison exacte ou ancienne grille de devis), et non depuis le statut public des tarifs groupes.
+* Renforce le test 2026/2027 afin de reproduire explicitement un statut commercial faux tout en exigeant que les devis 2026 et 2027 restent disponibles indépendamment.
 
 = 1.15.16 =
 * Corrige le devis groupes lorsqu’une année future comme 2027 possède une liaison tarifaire différente : cette liaison ne peut plus rendre les tarifs 2026 indisponibles.
