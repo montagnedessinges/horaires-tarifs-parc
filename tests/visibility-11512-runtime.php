@@ -4,6 +4,7 @@ define('ABSPATH', __DIR__);
 $GLOBALS['options'] = array();
 $GLOBALS['admin'] = false;
 function get_option($key, $fallback = array()) { return $GLOBALS['options'][$key] ?? $fallback; }
+function update_option($key, $value, $autoload = null) { $GLOBALS['options'][$key] = $value; return true; }
 function map_deep($value, $callback) { return is_array($value) ? array_map(static function ($v) use ($callback) { return map_deep($v, $callback); }, $value) : $callback($value); }
 function is_admin() { return $GLOBALS['admin']; }
 function current_user_can($cap) { return true; }
@@ -12,6 +13,7 @@ function wp_unslash($value) { return $value; }
 function sanitize_text_field($value) { return trim((string)$value); }
 function sanitize_key($value) { return preg_replace('/[^a-z0-9_-]/', '', strtolower($value)); }
 function wp_date($format, $stamp = null, $zone = null) { return $format === 'Y' ? '2026' : '2026-09-15'; }
+function remove_accents($value) { return strtr((string)$value, array('é'=>'e','è'=>'e','ê'=>'e','à'=>'a','ù'=>'u','ô'=>'o','î'=>'i')); }
 function esc_url_raw($value) { return $value; }
 function esc_attr($value) { return htmlspecialchars((string)$value, ENT_QUOTES); }
 function esc_html($value) { return htmlspecialchars((string)$value, ENT_QUOTES); }
@@ -33,8 +35,11 @@ $fixed = Parcs_HT_Display_Policy::normalize_tariffs($legacy);
 check11512($fixed['individual'][0]['cells']['online']['value'] === '11 €' && $fixed['columns']['individual'][1]['visible'] === '1', 'two real channels: onsite first, online second');
 $fixed['individual'][0]['cells']['online']['value'] = '';
 check11512(Parcs_HT_Display_Policy::normalize_tariffs($fixed)['individual'][0]['cells']['online']['value'] === '', 'intentional empty value is not resurrected from legacy cells');
-$rows = array();
-foreach (array('6,50 €','9 €','6,50 €') as $i=>$price) $rows[] = array('id'=>'tariff_row_00000'.($i+1),'enabled'=>'1','cells'=>array('tariff_col_000001'=>array('value'=>$price)));
+$rows = array(
+ array('id'=>'tariff_row_000001','enabled'=>'1','label'=>array('fr'=>'Scolaire / extrascolaire'),'cells'=>array('tariff_col_000001'=>array('value'=>'6,50 €'))),
+ array('id'=>'tariff_row_000002','enabled'=>'1','label'=>array('fr'=>'Adulte'),'cells'=>array('tariff_col_000001'=>array('value'=>'9 €'))),
+ array('id'=>'tariff_row_000003','enabled'=>'1','label'=>array('fr'=>'Personne en situation de handicap et accompagnateur'),'cells'=>array('tariff_col_000001'=>array('value'=>'6,50 €'))),
+);
 $season = array('published'=>'0','tariffs'=>array('groups'=>$rows,'columns'=>array('groups'=>array(array('id'=>'tariff_col_000001')))));
 $GLOBALS['options'][Parcs_HT_Group_Tariff_Settings::OPTION] = array('version'=>4,'seasons'=>array('2027'=>array('published'=>'0','display_from'=>'2099-01-01')));
 $GLOBALS['options'][Parcs_HT_Group_Quotes::OPTION] = array('tariff_bindings'=>array('2027'=>array('column_id'=>'tariff_col_000001','child_row_id'=>'tariff_row_000001','adult_row_id'=>'tariff_row_000002','disability_row_id'=>'tariff_row_000003','companion_row_id'=>'tariff_row_000003')));
@@ -42,10 +47,12 @@ foreach (range(0,15) as $mask) {
  $v=$season;
  foreach (array('calendar_visible','retail_tariffs_visible','group_quotes_enabled','group_tariffs_visible') as $i=>$key) $v[$key]=($mask & (1 << $i)) ? '1' : '0';
  $GLOBALS['options']['main']=array('seasons'=>array('2027'=>$v));
+ // Le nouveau moteur devis possède son propre état annuel ; le test le synchronise comme le ferait une sauvegarde admin réelle.
+ $GLOBALS['options'][Parcs_HT_Group_Quotes::STATE_OPTION]=array('version'=>Parcs_HT_Group_Quotes::STATE_VERSION,'years'=>array('2027'=>array('enabled'=>($mask&4)?'1':'0')));
  $filtered=Parcs_HT_Display_Policy::filter_main_option($GLOBALS['options']['main']);
  check11512(($filtered['seasons']['2027']['published']==='1') === (bool)($mask&1), "calendar independent mask $mask");
  check11512(in_array('2027',Parcs_HT_Display_Policy::retail_years(),true) === (bool)($mask&2), "retail independent mask $mask");
- check11512(Parcs_HT_Group_Tariff_Settings::quote_enabled('2027') === (bool)($mask&4), "quote independent mask $mask");
+ check11512(Parcs_HT_Group_Tariff_Settings::quote_enabled('2027') === (bool)($mask&4), "quote control independent mask $mask");
  check11512(in_array('2027',Parcs_HT_Group_Tariff_Settings::public_years(),true) === (bool)($mask&8), "group site independent mask $mask");
  $quote=Parcs_HT_Group_Quotes::settings(true);
  check11512(((string)($quote['seasons']['2027']['published']??'0')==='1') === (bool)($mask&4), "real quote engine permission mask $mask");
