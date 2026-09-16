@@ -80,9 +80,10 @@ add_action('added_option', static function ($option, $value) {
 }, 10, 2);
 
 /*
- * MAJ 2 visuelle : couche CSS volontairement séparée du socle frontend.
- * Elle ne modifie aucune donnée ni logique métier et pourra être réadaptée
- * facilement lorsque le correctif urgent en cours aura rejoint main.
+ * MAJ 2 visuelle : couches CSS séparées du socle frontend.
+ * Les shortcodes restent transparents et sont conçus pour être intégrés
+ * dans une section du site à fond blanc. Les couleurs de la charte sont les
+ * valeurs par défaut, tout en laissant les réglages existants prioritaires.
  */
 add_action('wp_enqueue_scripts', static function () {
     if (is_admin()) return;
@@ -92,8 +93,14 @@ add_action('wp_enqueue_scripts', static function () {
         array(),
         PARCS_HT_VERSION
     );
+    wp_enqueue_style(
+        'parcs-ht-tariffs-visual-v2-theme',
+        PARCS_HT_URL . 'assets/tariffs-visual-v2-theme.css',
+        array('parcs-ht-tariffs-visual-v2'),
+        PARCS_HT_VERSION
+    );
     wp_add_inline_style(
-        'parcs-ht-tariffs-visual-v2',
+        'parcs-ht-tariffs-visual-v2-theme',
         '.parcs-ht-tariff-heading .parcs-ht-kicker{display:none!important;}'
     );
 }, 100);
