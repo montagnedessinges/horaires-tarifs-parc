@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.15.18
+Stable tag: 1.16.0
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes et outils du parc.
 
@@ -19,6 +19,14 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.16.0 =
+* Refonte complète du rendu public des tarifs, sans modifier le moteur des horaires ni le calendrier existant.
+* Nouveau composant compact et responsive pour les tarifs individuels, réduits et groupes, avec fond transparent conçu pour être intégré dans une section de page blanche.
+* Les onglets, années et moyens de paiement restent sur une ligne et utilisent un défilement horizontal local sur les petits écrans, sans provoquer de débordement global de la page.
+* Les cellules tarifaires vides ne sont plus rendues ; « Sur place » reste neutre et « En ligne » est visuellement distinct et cliquable lorsqu’un lien d’achat est disponible.
+* Le shortcode Groupes ouvre les tarifs en premier puis les horaires, tout en conservant des moyens de paiement et des réglages visuels distincts entre visiteurs et groupes.
+* Les couleurs de la charte du parc servent de valeurs par défaut, les titres sont noirs sur les blocs transparents et les réglages de couleurs existants restent personnalisables.
 
 = 1.15.18 =
 * Refonte complète du moteur des devis groupes : une date utilise exclusivement l’année correspondante, sans aucun repli vers une année précédente ou future.
