@@ -30,11 +30,11 @@ verify_1167(strpos($fixes, 'Parcs_HT_Public_Visibility::tariff_years()') !== fal
 verify_1167(strpos($fixes, 'group_redirect($language, $year, $general)') !== false, 'Une année groupes sans tarifs visiteurs utilise le renvoi vers l’espace Groupes');
 verify_1167(strpos($fixes, 'render_group_body($language, $year)') !== false, 'Le tableau public réutilise le corps canonique des tarifs groupes');
 verify_1167(strpos($portal, 'Parcs_HT_Tariff_Public_Fixes::render_group_year($language, $year)') !== false, 'Le portail Groupes réutilise le même renderer groupes');
-verify_1167(strpos($fixes, "if ($key === 'individual')") !== false && strpos($fixes, 'Acheter vos billets') !== false, 'Le bouton d’achat est rattaché au panneau Individuels');
-verify_1167(strpos($fixes, "visitor_payment_strip($tariffs, $language, 'reduced'") !== false, 'Les tarifs réduits disposent de leur paiement de catégorie');
-verify_1167(strpos($fixes, "$category === 'individual'") !== false, 'Le canal En ligne des paiements visiteurs est réservé à Individuels');
+verify_1167(strpos($fixes, "if (\$key === 'individual')") !== false && strpos($fixes, 'Acheter vos billets') !== false, 'Le bouton d’achat est rattaché au panneau Individuels');
+verify_1167(strpos($fixes, "visitor_payment_strip(\$tariffs, \$language, 'reduced'") !== false, 'Les tarifs réduits disposent de leur paiement de catégorie');
+verify_1167(strpos($fixes, "\$category === 'individual'") !== false, 'Le canal En ligne des paiements visiteurs est réservé à Individuels');
 verify_1167(strpos($fixes, 'Moyens de paiement') !== false && strpos($fixes, "' — '") !== false, 'Le titre des moyens de paiement répète la catégorie');
 verify_1167(strpos($admin_js, '[channels][onsite]') !== false && strpos($admin_js, '[channels][online]') !== false, 'L’administration expose deux cases indépendantes Sur place / En ligne');
-verify_1167(strpos($plugin, "Version: 1.16.7") !== false && strpos($plugin, "PARCS_HT_VERSION', '1.16.7") !== false, 'La version 1.16.7 est cohérente dans le bootstrap');
+verify_1167(strpos($plugin, 'Version: 1.16.7') !== false && strpos($plugin, "PARCS_HT_VERSION', '1.16.7") !== false, 'La version 1.16.7 est cohérente dans le bootstrap');
 
 echo "Public tariff 1.16.7 contract: OK\n";
