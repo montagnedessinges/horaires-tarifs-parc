@@ -27,10 +27,14 @@ htp_1170_assert(isset($defaults['texts']['groups.portal.tariffs_unavailable']['f
 htp_1170_assert(isset($defaults['texts']['groups.redirect.text']['en']), 'texte de renvoi groupes EN absent');
 htp_1170_assert(isset($defaults['texts']['guides.download']['de']), 'texte guides DE absent');
 htp_1170_assert(isset($defaults['texts']['schedule.notAvailable']['fr']), 'texte calendrier indisponible absent');
+htp_1170_assert(isset($defaults['texts']['schedule.prev_month']['fr']) && isset($defaults['texts']['schedule.next_month']['de']), 'navigation mensuelle modifiable absente');
+htp_1170_assert(isset($defaults['texts']['schedule.download_pdf']['en']), 'bouton PDF horaires modifiable absent');
+htp_1170_assert(isset($defaults['texts']['tariffs.download_pdf']['de']), 'bouton PDF tarifs modifiable absent');
+htp_1170_assert(isset($defaults['texts']['groups.special.buy']['fr']), 'microcopies des offres groupes absentes');
 htp_1170_assert(isset($defaults['urls']['groups.redirect.url']['fr']), 'URL de renvoi groupes absente');
 
 $GLOBALS['parcs_ht_test_options'][Parcs_HT_Public_Content::OPTION] = array(
-    'version'=>1,
+    'version'=>2,
     'texts'=>array(
         'groups.portal.tariffs_unavailable'=>array('fr'=>'Tarifs bientôt disponibles','en'=>'','de'=>''),
         'groups.redirect.text'=>array('fr'=>'Tarifs groupes {year} : consultez notre espace dédié.','en'=>'','de'=>''),
@@ -63,9 +67,11 @@ htp_1170_assert(strpos($main, "class-parcs-ht-public-content.php") !== false, 'c
 htp_1170_assert(strpos($main, "Parcs_HT_Public_Content::init();") !== false, 'classe de contenus non initialisée');
 
 $class = file_get_contents($root . '/includes/class-parcs-ht-public-content.php');
-htp_1170_assert(strpos($class, 'parcs-ht-group-year-unavailable[hidden]') !== false, 'garde-fou hidden du portail groupes absent');
 htp_1170_assert(strpos($class, "Contenus & traductions") !== false, 'écran de contenus et traductions absent');
-htp_1170_assert(strpos($class, "do_shortcode_tag") !== false, 'intégration des textes dans les shortcodes absente');
+htp_1170_assert(strpos($class, "do_shortcode_tag") !== false, 'pont de compatibilité des anciens shortcodes absent');
+htp_1170_assert(strpos($class, "private static function catalog()") !== false, 'le catalogue éditorial unique est absent');
+htp_1170_assert(strpos($class, "frontend_guard") === false, 'l’ancien garde-fou JavaScript Groupes n’a pas été retiré');
+htp_1170_assert(strpos($class, "'parc_calendrier'") !== false, 'les libellés statiques du calendrier ne sont pas couverts');
 
 $portal = file_get_contents($root . '/includes/class-parcs-ht-group-portal.php');
 htp_1170_assert(strpos($portal, "Parcs_HT_Public_Content::text") !== false, 'le portail Groupes ne lit pas directement les contenus éditables');
