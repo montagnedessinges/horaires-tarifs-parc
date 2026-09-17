@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.16.6
+Stable tag: 1.16.7
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes et outils du parc.
 
@@ -19,6 +19,14 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.16.7 =
+* Place les moyens de paiement sous les onglets tarifaires et adapte leur contenu à Individuels, Tarifs réduits et Groupes.
+* Ajoute pour chaque moyen de paiement visiteurs deux canaux indépendants et cumulables : Sur place et En ligne.
+* Réserve le bouton « Acheter vos billets » à l’onglet Individuels ; les tarifs réduits restent uniquement sur place et Groupes n’affiche jamais ce bouton.
+* Réutilise le même rendu canonique des tarifs groupes dans le tableau public et dans l’espace Groupes lorsque les tarifs visiteurs de l’année sont publiés.
+* Lorsqu’une année est déjà ouverte aux groupes mais pas encore aux tarifs visiteurs, le tableau public affiche un message de renvoi vers l’espace Groupes au lieu d’exposer les prix groupes.
+* Conserve la logique annuelle générique, les dates automatiques d’apparition/disparition et le moteur des devis groupes existant.
 
 = 1.16.6 =
 * Affiche la gratuité des enfants de moins de 5 ans uniquement sur place, dans un encadré unique au même format que les tarifs réduits et sans lien vers la billetterie.
@@ -54,7 +62,7 @@ Une sauvegarde du site et de la base de données reste recommandée avant toute 
 * Restaure le shortcode complet Horaires & Tarifs avec l’état du jour, le calendrier existant et le nouveau tableau de tarifs dans cet ordre.
 * Corrige les cellules En ligne vides, supprime les colonnes sans valeur et étend automatiquement une cellule tarifaire unique sur toute la zone disponible.
 * Place l’information des tarifs réduits avant les lignes, agrandit le rendu sur ordinateur et mobile et conserve « Tarifs » comme simple texte visuel interne.
-* Restaure dans l’espace Groupes le vrai calendrier public, avec Tarifs groupes en premier et une sélection d’année synchronisée entre tarifs et horaires.
+* Restaure dans l’espace Groupes le vrai calendrier public, avec Tarifs groupes en premier et une sélection d’année synchronisée entre tarifs et horaires groupes.
 * Affiche l’année courante en premier et applique les dates de début / fin d’affichage aux modules publics concernés.
 
 = 1.16.0 =
@@ -124,4 +132,3 @@ Une sauvegarde du site et de la base de données reste recommandée avant toute 
 * Archives indépendantes pour les éditions du Calendrier de l’Avent.
 * Import CSV des horaires et du calendrier par saison : périodes habituelles, exceptions, fermetures, jours fériés, périodes repères, vacances scolaires et événements.
 * Modèle CSV téléchargeable et révision de sécurité automatique avant import.
-
