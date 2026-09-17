@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.16.6
+Stable tag: 1.16.8
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes et outils du parc.
 
@@ -19,6 +19,14 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.16.8 =
+* Ajoute pour chaque moyen de paiement visiteurs deux canaux indépendants et cumulables : Sur place et En ligne.
+* Place les moyens de paiement juste sous l’onglet tarifaire actif et rappelle la catégorie affichée.
+* Les tarifs réduits utilisent uniquement les moyens de paiement Sur place et ne proposent aucun achat en ligne.
+* Le bouton « Acheter vos billets » est affiché uniquement dans l’onglet Individuels.
+* Les moyens historiques restent compatibles : carte bancaire Sur place + En ligne, autres moyens Sur place tant qu’ils ne sont pas modifiés dans l’administration.
+* Cette étape ne modifie pas le moteur du portail Groupes, le calendrier Groupes ni le moteur des devis.
 
 = 1.16.6 =
 * Affiche la gratuité des enfants de moins de 5 ans uniquement sur place, dans un encadré unique au même format que les tarifs réduits et sans lien vers la billetterie.
