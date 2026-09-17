@@ -18,7 +18,7 @@ final class Parcs_HT_Payment_Channels {
     /**
      * Retourne les deux canaux d'un moyen de paiement.
      *
-     * Compatibilité historique : avant 1.16.8, aucun canal n'était enregistré.
+     * Compatibilité historique : avant 1.16.7, aucun canal n'était enregistré.
      * Tous les moyens restent alors disponibles sur place et une carte bancaire
      * est également considérée disponible en ligne jusqu'au premier enregistrement
      * explicite dans l'administration.
