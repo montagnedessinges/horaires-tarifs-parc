@@ -1,6 +1,7 @@
 <?php
 
 if (!defined('ABSPATH')) define('ABSPATH', __DIR__ . '/');
+$root = getenv('PLUGIN_ROOT') ?: dirname(__DIR__);
 
 $GLOBALS['parcs_ht_test_options'] = array();
 if (!function_exists('get_option')) {
@@ -12,7 +13,7 @@ if (!function_exists('esc_html')) {
     function esc_html($value) { return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8'); }
 }
 
-require_once dirname(__DIR__) . '/includes/class-parcs-ht-public-content.php';
+require_once $root . '/includes/class-parcs-ht-public-content.php';
 
 function htp_1170_assert($condition, $message) {
     if (!$condition) {
@@ -56,12 +57,12 @@ htp_1170_assert(
     'le remplacement des variables ne fonctionne pas'
 );
 
-$main = file_get_contents(dirname(__DIR__) . '/horaires-tarifs-parc.php');
+$main = file_get_contents($root . '/horaires-tarifs-parc.php');
 htp_1170_assert(strpos($main, "Version: 1.17.0") !== false, 'version 1.17.0 absente du plugin');
 htp_1170_assert(strpos($main, "class-parcs-ht-public-content.php") !== false, 'classe de contenus non chargée');
 htp_1170_assert(strpos($main, "Parcs_HT_Public_Content::init();") !== false, 'classe de contenus non initialisée');
 
-$class = file_get_contents(dirname(__DIR__) . '/includes/class-parcs-ht-public-content.php');
+$class = file_get_contents($root . '/includes/class-parcs-ht-public-content.php');
 htp_1170_assert(strpos($class, 'parcs-ht-group-year-unavailable[hidden]') !== false, 'garde-fou hidden du portail groupes absent');
 htp_1170_assert(strpos($class, "Contenus & traductions") !== false, 'écran de contenus et traductions absent');
 htp_1170_assert(strpos($class, "do_shortcode_tag") !== false, 'intégration des textes dans les shortcodes absente');
