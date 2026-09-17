@@ -1,4 +1,4 @@
-/* Gestion du parc 1.16.1 — composant Tarifs
+/* Gestion du parc 1.16.8 — composant Tarifs
  * Fond transparent, pensé pour une section de page blanche.
  */
 .parcs-ht-tariff-ui,
@@ -33,6 +33,7 @@
 .parcs-ht-tariff-ui__payments{width:100%;margin:0 0 14px;padding:0;background:transparent}
 .parcs-ht-tariff-ui__payments>strong{display:block;margin:0 0 7px;color:#111!important;font-size:14px;font-weight:800;line-height:1.25}
 .parcs-ht-tariff-ui__payment-track{display:flex;flex-wrap:nowrap;align-items:center;gap:8px;width:100%;overflow-x:auto;overflow-y:hidden;padding:1px 0 5px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.parcs-ht-tariff-ui__payment-channel{display:inline-flex;flex:0 0 auto;align-items:center;min-height:39px;padding:0 3px;color:#475550;font-size:12px;font-weight:850;white-space:nowrap}
 .parcs-ht-tariff-ui__payment-chip{display:inline-flex;flex:0 0 auto;align-items:center;justify-content:center;gap:7px;min-width:max-content;min-height:39px;padding:7px 11px;border:1px solid var(--htp-ui-payment-border,transparent);border-radius:999px;background:var(--htp-ui-payment-bg,var(--htp-secondary,#31ad81));color:var(--htp-ui-payment-text,#fff);font-size:13px;font-weight:750;line-height:1.15;white-space:nowrap}
 .parcs-ht-tariff-ui__payment-icon{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;color:var(--htp-ui-payment-icon,currentColor)}
 .parcs-ht-tariff-ui__payment-icon svg{display:block;width:18px;height:18px;color:inherit;stroke:currentColor}
@@ -90,6 +91,7 @@
   .parcs-ht-tariff-year-tab-ui,.parcs-ht-tariff-ui__tab{min-height:44px;padding:9px 13px;font-size:14px}
   .parcs-ht-tariff-ui__payments{margin-bottom:12px}
   .parcs-ht-tariff-ui__payments>strong{font-size:13px}
+  .parcs-ht-tariff-ui__payment-channel{font-size:11.5px}
   .parcs-ht-tariff-ui__payment-chip{min-height:38px;padding:7px 10px;font-size:12.5px}
   .parcs-ht-tariff-ui__column-row,.parcs-ht-tariff-ui__row{grid-template-columns:minmax(0,1fr) minmax(166px,46%);gap:9px}
   .parcs-ht-tariff-ui__column-heads{gap:5px;font-size:10.5px}
