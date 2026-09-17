@@ -1,3 +1,12 @@
+## 1.17.0
+
+- Ajoute une vue d’ensemble légère dans l’administration pour accéder rapidement aux réglages canoniques sans dupliquer les données ni les moteurs existants.
+- Ajoute un espace « Contenus & traductions » centralisant les principaux textes publics FR / EN / DE : tarifs, boutons, calendrier, statuts d’ouverture, messages Groupes et libellés génériques des guides pédagogiques.
+- Permet de personnaliser par langue le lien de renvoi vers l’espace Groupes, tout en conservant la détection automatique et les réglages historiques comme repli.
+- Corrige le message parasite « Les tarifs groupes ne sont pas disponibles pour cette année » lorsqu’un panneau tarifaire existe réellement pour l’année sélectionnée.
+- Conserve les moteurs horaires, calendrier, tarifs, devis, guides, exports, Calendrier de l’Avent, migrations et données annuelles existants.
+- Préserve la compatibilité PHP 7.4 / 8.1 / 8.2 / 8.3 et renforce les contrats de non-régression des versions 1.16.7 et 1.16.8 pour les versions ultérieures.
+
 ## 1.16.8
 
 - Réutilise le même renderer canonique des tarifs groupes dans le portail Groupes et dans l’onglet Groupes du tableau public lorsque les tarifs visiteurs de l’année sont publiés.
