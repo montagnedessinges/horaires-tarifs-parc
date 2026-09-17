@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) { exit; }
 final class Parcs_HT_Public_Content {
     const OPTION = 'parcs_ht_public_content';
     const PAGE = 'parcs-ht-public-content';
-    const STORE_VERSION = 2;
+    const STORE_VERSION = 3;
 
     public static function init() {
         add_action('admin_menu', array(__CLASS__, 'menu'), 35);
@@ -120,6 +120,19 @@ final class Parcs_HT_Public_Content {
             'guides.read'=>self::field('Guides pédagogiques','Guides — Consulter','Consulter','View','Ansehen'),
             'guides.download'=>self::field('Guides pédagogiques','Guides — Télécharger le PDF','Télécharger le PDF','Download PDF','PDF herunterladen'),
             'guides.info'=>self::field('Guides pédagogiques','Guides — Plus d’informations','Plus d’informations','More information','Mehr Informationen'),
+            'guides.cycle1.label'=>self::field('Guides pédagogiques','Cycle 1 — libellé','Cycle 1','Ages 3–6','3–6 Jahre'),
+            'guides.cycle1.detail'=>self::field('Guides pédagogiques','Cycle 1 — détail','Maternelle – 3 à 6 ans','Preschool – Ages 3–6','Kindergarten / Vorschule – 3–6 Jahre'),
+            'guides.cycle2.label'=>self::field('Guides pédagogiques','Cycle 2 — libellé','Cycle 2','Ages 6–9','6–9 Jahre'),
+            'guides.cycle2.detail'=>self::field('Guides pédagogiques','Cycle 2 — détail','CP au CE2 – 6 à 9 ans','Primary School – Ages 6–9','Grundschule – 6–9 Jahre'),
+            'guides.cycle3.label'=>self::field('Guides pédagogiques','Cycle 3 — libellé','Cycle 3','Ages 9–12','9–12 Jahre'),
+            'guides.cycle3.detail'=>self::field('Guides pédagogiques','Cycle 3 — détail','CM1 à la 6e – 9 à 12 ans','Primary / Lower Secondary – Ages 9–12','Grundschule / Sekundarstufe I – 9–12 Jahre'),
+            'guides.cycle4.label'=>self::field('Guides pédagogiques','Cycle 4 — libellé','Cycle 4','Ages 12–15','12–15 Jahre'),
+            'guides.cycle4.detail'=>self::field('Guides pédagogiques','Cycle 4 — détail','5e à la 3e – 12 à 15 ans','Lower Secondary School – Ages 12–15','Sekundarstufe I – 12–15 Jahre'),
+            'guides.multi.label'=>self::field('Guides pédagogiques','Multiniveaux — libellé','Multiniveaux','Multi-level','Mehrere Stufen'),
+            'guides.multi.detail'=>self::field('Guides pédagogiques','Multiniveaux — détail','Dossier adaptable à plusieurs niveaux','Resource adaptable to several age groups','Material für mehrere Altersstufen'),
+            'guides.language.fr'=>self::field('Guides pédagogiques','Langue française','Français','French','Französisch'),
+            'guides.language.de'=>self::field('Guides pédagogiques','Langue allemande','Allemand','German','Deutsch'),
+            'guides.language.en'=>self::field('Guides pédagogiques','Langue anglaise','Anglais','English','Englisch'),
         );
     }
 
@@ -203,22 +216,29 @@ final class Parcs_HT_Public_Content {
         ?>
         <div class="wrap htp-public-content-admin">
             <h1>Contenus & traductions</h1>
-            <p>Modifiez ici les textes publics de l’extension sans modifier le code. Les variables entre accolades, comme <code>{year}</code>, <code>{date}</code>, <code>{time}</code>, <code>{open}</code>, <code>{close}</code>, <code>{from}</code>, <code>{to}</code>, <code>{hours}</code> ou <code>{days}</code>, doivent être conservées lorsqu’elles sont présentes.</p>
+            <p>Modifiez ici les textes publics de l’extension sans modifier le code. Une traduction EN ou DE laissée vide reprend automatiquement le texte FR. Les variables entre accolades, comme <code>{year}</code>, <code>{date}</code>, <code>{time}</code>, <code>{open}</code>, <code>{close}</code>, <code>{from}</code>, <code>{to}</code>, <code>{hours}</code> ou <code>{days}</code>, doivent être conservées lorsqu’elles sont présentes.</p>
             <?php if (isset($_GET['updated'])) : /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- message de confirmation uniquement */ ?>
                 <div class="notice notice-success is-dismissible"><p>Les contenus publics ont été enregistrés.</p></div>
             <?php endif; ?>
-            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+            <div class="card" style="max-width:none;margin:18px 0;padding:14px 18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                <label for="htp-content-search"><strong>Rechercher un texte</strong></label>
+                <input id="htp-content-search" type="search" class="regular-text" placeholder="Ex. tarifs, bouton, calendrier, allemand…">
+                <button type="button" class="button" data-htp-content-open>Tout ouvrir</button>
+                <button type="button" class="button" data-htp-content-close>Tout fermer</button>
+                <span class="description" data-htp-content-count></span>
+            </div>
+            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" data-htp-content-form>
                 <input type="hidden" name="action" value="parcs_ht_save_public_content">
                 <?php wp_nonce_field('parcs_ht_save_public_content'); ?>
                 <?php foreach (self::grouped_catalog() as $title=>$fields) : ?>
-                    <details class="card" style="max-width:none;margin:18px 0;padding:0 18px;" open>
+                    <details class="card" style="max-width:none;margin:18px 0;padding:0 18px;" data-htp-content-section>
                         <summary style="cursor:pointer;padding:16px 0;font-size:1.2em;font-weight:600;"><?php echo esc_html($title); ?></summary>
                         <table class="widefat striped" style="table-layout:fixed;margin-bottom:18px;">
                             <thead><tr><th style="width:22%">Élément</th><th>FR</th><th>EN</th><th>DE</th></tr></thead>
                             <tbody>
                             <?php foreach ($fields as $key=>$field) : ?>
-                                <tr>
-                                    <th scope="row"><?php echo esc_html($field['label']); ?></th>
+                                <tr data-htp-content-row>
+                                    <th scope="row"><?php echo esc_html($field['label']); ?><br><code style="font-size:11px;font-weight:400"><?php echo esc_html($key); ?></code></th>
                                     <?php foreach (array('fr','en','de') as $lang) : $value = $settings['texts'][$key][$lang] ?? ''; ?>
                                         <td>
                                         <?php if (!empty($field['long'])) : ?>
@@ -235,14 +255,14 @@ final class Parcs_HT_Public_Content {
                     </details>
                 <?php endforeach; ?>
 
-                <details class="card" style="max-width:none;margin:18px 0;padding:0 18px;" open>
+                <details class="card" style="max-width:none;margin:18px 0;padding:0 18px;" data-htp-content-section>
                     <summary style="cursor:pointer;padding:16px 0;font-size:1.2em;font-weight:600;">Liens publics</summary>
                     <p class="description">Laissez vide pour conserver le lien déterminé automatiquement par l’extension ou par les réglages existants.</p>
                     <table class="widefat striped" style="table-layout:fixed;margin-bottom:18px;">
                         <thead><tr><th style="width:22%">Élément</th><th>FR</th><th>EN</th><th>DE</th></tr></thead>
                         <tbody>
                         <?php foreach (self::link_catalog() as $key=>$field) : ?>
-                            <tr><th scope="row"><?php echo esc_html($field['label']); ?></th>
+                            <tr data-htp-content-row><th scope="row"><?php echo esc_html($field['label']); ?><br><code style="font-size:11px;font-weight:400"><?php echo esc_html($key); ?></code></th>
                             <?php foreach (array('fr','en','de') as $lang) : ?>
                                 <td><input type="url" style="width:100%" name="content[urls][<?php echo esc_attr($key); ?>][<?php echo esc_attr($lang); ?>]" value="<?php echo esc_attr($settings['urls'][$key][$lang] ?? ''); ?>"></td>
                             <?php endforeach; ?>
@@ -254,6 +274,29 @@ final class Parcs_HT_Public_Content {
                 <?php submit_button('Enregistrer les contenus'); ?>
             </form>
         </div>
+        <script>
+        (function(){
+            var root=document.querySelector('.htp-public-content-admin');
+            if(!root)return;
+            var input=root.querySelector('#htp-content-search'),rows=Array.prototype.slice.call(root.querySelectorAll('[data-htp-content-row]')),count=root.querySelector('[data-htp-content-count]');
+            function refresh(){
+                var q=(input&&input.value?input.value:'').toLowerCase().trim(),visible=0;
+                rows.forEach(function(row){
+                    var text=(row.textContent+' '+Array.prototype.map.call(row.querySelectorAll('input,textarea'),function(field){return field.value||'';}).join(' ')).toLowerCase();
+                    var show=!q||text.indexOf(q)!==-1;row.hidden=!show;if(show)visible++;
+                });
+                root.querySelectorAll('[data-htp-content-section]').forEach(function(section){
+                    var any=!!section.querySelector('[data-htp-content-row]:not([hidden])');section.hidden=!any;if(q&&any)section.open=true;
+                });
+                if(count)count.textContent=visible+' élément'+(visible>1?'s':'')+' affiché'+(visible>1?'s':'');
+            }
+            if(input)input.addEventListener('input',refresh);
+            var open=root.querySelector('[data-htp-content-open]'),close=root.querySelector('[data-htp-content-close]');
+            if(open)open.addEventListener('click',function(){root.querySelectorAll('[data-htp-content-section]:not([hidden])').forEach(function(section){section.open=true;});});
+            if(close)close.addEventListener('click',function(){root.querySelectorAll('[data-htp-content-section]:not([hidden])').forEach(function(section){section.open=false;});});
+            refresh();
+        }());
+        </script>
         <?php
     }
 
@@ -288,19 +331,81 @@ final class Parcs_HT_Public_Content {
         return class_exists('Parcs_HT_Schedule') ? Parcs_HT_Schedule::language() : 'fr';
     }
 
-    /**
-     * Remplacement transitoire des libellés statiques de renderers historiques.
-     * Les textes dynamiques passent par le dictionnaire JS ou par un appel direct à text().
-     */
+    /** Remplacement transitoire des libellés statiques de renderers historiques. */
     private static function replacement_map($language) {
         $map = array();
         foreach (self::catalog() as $key=>$field) {
+            if (strpos($key, 'guides.') === 0) continue;
             $from = (string)($field['values'][$language] ?? '');
             if ($from === '' || strpos($from, '{') !== false) continue;
             $to = self::text($key, $language, $from);
             if ($from !== $to) $map[esc_html($from)] = esc_html($to);
         }
         return $map;
+    }
+
+    private static function replace_guide_content($output, $language) {
+        $catalog = self::catalog();
+        $targeted = array(
+            'guides.all_cycles'=>'data-guide-cycle="all"',
+            'guides.all_languages'=>'data-guide-language="all"',
+        );
+        foreach ($targeted as $key=>$attribute) {
+            $field = $catalog[$key] ?? null;
+            if (!$field) continue;
+            $from = (string)($field['values'][$language] ?? '');
+            $to = self::text($key, $language, $from);
+            if ($from === $to) continue;
+            $pattern = '/(' . preg_quote($attribute, '/') . '[^>]*>)' . preg_quote(esc_html($from), '/') . '(<\/button>)/u';
+            $output = preg_replace($pattern, '$1' . esc_html($to) . '$2', $output);
+        }
+
+        $map = array();
+        foreach ($catalog as $key=>$field) {
+            if (strpos($key, 'guides.') !== 0 || isset($targeted[$key])) continue;
+            $from = (string)($field['values'][$language] ?? '');
+            if ($from === '' || strpos($from, '{') !== false) continue;
+            $to = self::text($key, $language, $from);
+            if ($from !== $to) $map[esc_html($from)] = esc_html($to);
+        }
+        return $map ? strtr($output, $map) : $output;
+    }
+
+    private static function replace_dynamic_group_specials($output, $language) {
+        $defaults = array(
+            'fr'=>array(
+                'between'=>array('/Valable du ([^<]+?) au ([^<]+?)(?=<|$)/u','groups.special.valid_between','Valable du {from} au {to}'),
+                'from'=>array('/Valable à partir du ([^<]+?)(?=<|$)/u','groups.special.valid_from','Valable à partir du {from}'),
+                'until'=>array('/Valable jusqu’au ([^<]+?)(?=<|$)/u','groups.special.valid_until','Valable jusqu’au {to}'),
+            ),
+            'en'=>array(
+                'between'=>array('/Valid from ([^<]+?) to ([^<]+?)(?=<|$)/u','groups.special.valid_between','Valid from {from} to {to}'),
+                'from'=>array('/Valid from ([^<]+?)(?=<|$)/u','groups.special.valid_from','Valid from {from}'),
+                'until'=>array('/Valid until ([^<]+?)(?=<|$)/u','groups.special.valid_until','Valid until {to}'),
+            ),
+            'de'=>array(
+                'between'=>array('/Gültig vom ([^<]+?) bis ([^<]+?)(?=<|$)/u','groups.special.valid_between','Gültig vom {from} bis {to}'),
+                'from'=>array('/Gültig ab ([^<]+?)(?=<|$)/u','groups.special.valid_from','Gültig ab {from}'),
+                'until'=>array('/Gültig bis ([^<]+?)(?=<|$)/u','groups.special.valid_until','Gültig bis {to}'),
+            ),
+        );
+        foreach ($defaults[$language] ?? array() as $kind=>$rule) {
+            list($pattern,$key,$fallback)=$rule;
+            $template=self::text($key,$language,$fallback);
+            $output=preg_replace_callback($pattern, static function($match) use ($kind,$template) {
+                $vars=array();
+                if ($kind === 'between') {
+                    $vars['from']=html_entity_decode($match[1], ENT_QUOTES, 'UTF-8');
+                    $vars['to']=html_entity_decode($match[2], ENT_QUOTES, 'UTF-8');
+                } elseif ($kind === 'from') {
+                    $vars['from']=html_entity_decode($match[1], ENT_QUOTES, 'UTF-8');
+                } else {
+                    $vars['to']=html_entity_decode($match[1], ENT_QUOTES, 'UTF-8');
+                }
+                return esc_html(Parcs_HT_Public_Content::format($template,$vars));
+            }, $output);
+        }
+        return $output;
     }
 
     public static function filter_shortcode_output($output, $tag, $attr, $m) {
@@ -312,6 +417,8 @@ final class Parcs_HT_Public_Content {
         );
         if (!in_array($base, $allowed, true) || !is_string($output) || $output === '') return $output;
         $language = self::language_from_tag($tag);
+        if ($base === 'parc_guides_pedagogiques') $output = self::replace_guide_content($output, $language);
+        $output = self::replace_dynamic_group_specials($output, $language);
         $map = self::replacement_map($language);
         return $map ? strtr($output, $map) : $output;
     }
