@@ -1,3 +1,12 @@
+## 1.16.7
+
+- Les moyens de paiement visiteurs sont désormais affichés juste sous l’onglet tarifaire actif, avec un titre rappelant la catégorie.
+- Chaque moyen de paiement visiteurs possède deux canaux indépendants et cumulables : Sur place et En ligne ; les tarifs réduits utilisent uniquement le canal Sur place.
+- Le bouton « Acheter vos billets » est limité à l’onglet Individuels et n’apparaît jamais dans Tarifs réduits ou Groupes.
+- Le rendu des tarifs groupes est partagé entre le tableau public et l’espace Groupes afin de conserver les mêmes prix, moyens de paiement, informations et bouton de devis.
+- Une année ouverte aux groupes avant les tarifs visiteurs reste sélectionnable dans le tableau public, mais affiche seulement un renvoi vers l’espace Groupes au lieu d’exposer les prix groupes.
+- La logique reste générique pour toutes les années et conserve les dates automatiques de visibilité ainsi que le moteur des devis groupes existant.
+
 ## 1.16.6
 
 - Gratuité des enfants de moins de 5 ans affichée uniquement sur place, sans lien d’achat ni doublon en ligne.
