@@ -58,6 +58,7 @@ final class Parcs_HT_Group_Portal {
     }
 
     private static function group_tariffs($year, $language) {
+        if (class_exists('Parcs_HT_Tariff_Public_Fixes')) return Parcs_HT_Tariff_Public_Fixes::render_group_year($language, $year);
         if (class_exists('Parcs_HT_Tariff_Display')) return Parcs_HT_Tariff_Display::render_group($language, array(), $year);
         Parcs_HT_Display_Policy::begin_group_tariff_year($year);
         $html = Parcs_HT_Group_Tariffs::render($language, array());
