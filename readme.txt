@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.16.7
+Stable tag: 1.16.8
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes et outils du parc.
 
@@ -19,6 +19,13 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.16.8 =
+* Réutilise le même tableau Tarifs groupes dans le portail Groupes et dans le tableau public lorsqu’une année visiteurs est publiée.
+* Les moyens de paiement, informations, styles et bouton de devis restent ceux de la configuration Groupes ; aucun moyen visiteurs ni bouton « Acheter vos billets » n’est injecté dans Groupes.
+* Si une année est déjà disponible pour les groupes mais pas encore pour les visiteurs, l’onglet Groupes public affiche seulement un renvoi vers l’espace Groupes et précise que les tarifs Individuels et Réduits ne sont pas encore disponibles.
+* Le lien de renvoi détecte la page du portail Groupes sans slug codé en dur, avec le lien Groupes historique en secours.
+* Préserve le calendrier canonique, la synchronisation annuelle du portail Groupes, les dates automatiques et le moteur de devis.
 
 = 1.16.7 =
 * Ajoute pour chaque moyen de paiement visiteurs deux canaux indépendants et cumulables : Sur place et En ligne.

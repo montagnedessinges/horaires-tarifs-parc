@@ -1,3 +1,12 @@
+## 1.16.8
+
+- Réutilise le même renderer canonique des tarifs groupes dans le portail Groupes et dans l’onglet Groupes du tableau public lorsque les tarifs visiteurs de l’année sont publiés.
+- Les moyens de paiement, informations pratiques, styles et bouton de devis des groupes restent ceux de la configuration Groupes, sans fuite des moyens visiteurs ni bouton « Acheter vos billets ».
+- Lorsqu’une année est déjà publiée pour les groupes mais pas encore pour les visiteurs, le tableau public n’expose aucun prix : l’onglet Groupes affiche un message dédié et un lien vers l’espace Groupes.
+- Indique explicitement que les tarifs Individuels et Réduits de cette année ne sont pas encore disponibles.
+- Détecte la page contenant le portail Groupes sans figer de slug ; le lien Groupes historique reste utilisé en secours.
+- Conserve le sélecteur annuel Groupes, le calendrier canonique existant, la logique des dates automatiques et le moteur de devis sans changement.
+
 ## 1.16.7
 
 - Ajoute deux canaux indépendants et cumulables pour chaque moyen de paiement visiteurs : Sur place et En ligne.
@@ -112,5 +121,5 @@
 - Ajout d'un rappel « Devis et réservation » : réservation obligatoire, devis généré automatiquement et envoyé par e-mail, retour signé avec la mention « Bon pour accord » et présentation du devis imprimé le jour de la visite.
 - Les informations spécifiques à la Montagne des Singes sont conditionnées au `site_type=mds` et ne sont pas appliquées automatiquement à la Forêt des Singes.
 - Les tarifs restent lus exclusivement depuis la grille Groupes canonique de la saison publique ; aucun tarif ni moyen de paiement individuel n'est copié dans une seconde grille.
-- Extension du test d'exécution du shortcode pour vérifier l'ordre moyens de paiement → tarifs → informations → bouton, ainsi que l'absence de fuite des règles MDS vers FDS.
+- Extension du test d’exécution du shortcode pour vérifier l’ordre moyens de paiement → tarifs → informations → bouton, ainsi que l’absence de fuite des règles MDS vers FDS.
 ## 1.13.5

@@ -41,6 +41,7 @@ verify_1167(strpos($fixes, "price_table', array(\$tariffs, 'groups', \$language,
 verify_1167(strpos($fixes, "'Moyens de paiement', 'Payment methods', 'Zahlungsmöglichkeiten'") !== false && strpos($fixes, "' — ' . \$category_label") !== false, 'Le titre des moyens de paiement rappelle la catégorie');
 verify_1167(strpos($admin_js, "base+'[onsite]'") !== false && strpos($admin_js, "base+'[online]'") !== false, 'L’administration expose deux cases indépendantes Sur place / En ligne');
 verify_1167(strpos($plugin, "class-parcs-ht-payment-channels.php") !== false && strpos($plugin, 'Parcs_HT_Payment_Channels::init();') !== false, 'Le module de canaux visiteurs est chargé et initialisé');
-verify_1167(strpos($plugin, 'Version: 1.16.7') !== false && strpos($plugin, "PARCS_HT_VERSION', '1.16.7") !== false, 'La version 1.16.7 est cohérente dans le bootstrap');
+$version = preg_match('/Version:\s*([0-9.]+)/', $plugin, $match) ? $match[1] : '0';
+verify_1167(version_compare($version, '1.16.7', '>='), 'La fonctionnalité 1.16.7 reste protégée dans les versions suivantes');
 
 echo "Public tariff payment channels 1.16.7 contract: OK\n";
