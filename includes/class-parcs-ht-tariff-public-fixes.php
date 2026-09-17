@@ -9,7 +9,9 @@ if (!defined('ABSPATH')) { exit; }
  * - remet le sélecteur annuel sur le shortcode tarifs groupes ;
  * - impose l'affichage des tarifs réduits en « Sur place » uniquement ;
  * - rend les tarifs groupes sur une colonne générique « Tarif », y compris pour
- *   les années futures préparées avec d'anciennes structures de colonnes.
+ *   les années futures préparées avec d'anciennes structures de colonnes ;
+ * - place les moyens de paiement visiteurs sous la catégorie active et réserve
+ *   l'achat en ligne à l'onglet Individuels.
  */
 final class Parcs_HT_Tariff_Public_Fixes {
     private static $instance = 0;
@@ -48,9 +50,18 @@ final class Parcs_HT_Tariff_Public_Fixes {
         return Parcs_HT_Schedule::translation(is_array($value) ? $value : array(), $language, $fallback);
     }
 
+    private static function translated_url($value, $language) {
+        if (is_array($value)) {
+            $url = trim((string)($value[$language] ?? ''));
+            if ($url === '') $url = trim((string)($value['fr'] ?? ''));
+            return $url;
+        }
+        return trim((string)$value);
+    }
+
     /**
      * Appelle une méthode privée du moteur de rendu existant afin de ne pas dupliquer
-     * sa logique HTML/CSS. Le correctif reste ainsi limité à la préparation des données.
+     * sa logique HTML/CSS. Le correctif reste ainsi limité à l'organisation publique.
      */
     private static function display_call($method, $args = array()) {
         $reflection = new ReflectionMethod('Parcs_HT_Tariff_Display', $method);
@@ -94,20 +105,115 @@ final class Parcs_HT_Tariff_Public_Fixes {
             ? $season['tariffs']
             : (isset($settings['tariffs']) && is_array($settings['tariffs']) ? $settings['tariffs'] : array());
 
-        $settings['tariffs'] = self::display_call('normalize_for_display', array($source_tariffs));
-        if (!isset($settings['general']) || !is_array($settings['general'])) $settings['general'] = array();
-        $settings['general']['year'] = $year;
+        $tariffs = self::display_call('normalize_for_display', array($source_tariffs));
+        $tariffs = self::fix_tariff_data($tariffs);
+        $general = isset($settings['general']) && is_array($settings['general']) ? $settings['general'] : array();
+        $general['year'] = $year;
 
         if (!in_array($year, Parcs_HT_Public_Visibility::retail_years(), true)) {
-            $settings['tariffs']['individual'] = array();
-            $settings['tariffs']['reduced'] = array();
+            $tariffs['individual'] = array();
+            $tariffs['reduced'] = array();
         }
         if (!in_array($year, Parcs_HT_Public_Visibility::group_tariff_years(), true)) {
-            $settings['tariffs']['groups'] = array();
+            $tariffs['groups'] = array();
         }
 
-        $settings['tariffs'] = self::fix_tariff_data($settings['tariffs']);
-        return self::display_call('render_public_settings', array($language, $settings));
+        $dicts = Parcs_HT_Schedule::dictionaries();
+        $d = isset($dicts[$language]) ? $dicts[$language] : $dicts['fr'];
+        $labels = array(
+            'individual'=>$d['individual'] ?? self::t($language, 'Individuels', 'Individuals', 'Einzelpreise'),
+            'reduced'=>$d['reduced'] ?? self::t($language, 'Tarifs réduits', 'Reduced rates', 'Ermäßigt'),
+            'groups'=>$d['groups'] ?? self::t($language, 'Groupes', 'Groups', 'Gruppen'),
+        );
+        $order = isset($tariffs['group_order']) && is_array($tariffs['group_order']) ? $tariffs['group_order'] : array_keys($labels);
+        $groups = array();
+        foreach ($order as $key) {
+            if (isset($labels[$key]) && !isset($groups[$key]) && self::display_call('visible_rows', array($tariffs[$key] ?? array()))) {
+                $groups[$key] = $labels[$key];
+            }
+        }
+        foreach ($labels as $key=>$label) {
+            if (!isset($groups[$key]) && self::display_call('visible_rows', array($tariffs[$key] ?? array()))) {
+                $groups[$key] = $label;
+            }
+        }
+        if (!$groups) return '';
+
+        self::$instance++;
+        $id = 'parcs-ht-tariff-table-fix-' . self::$instance;
+        $tickets_url = self::translated_url($general['tickets_url'] ?? array(), $language);
+        $style = self::display_call('style_variables', array($general));
+
+        $html = '<section id="' . esc_attr($id) . '" class="parcs-ht-tariff-ui" data-htp-ui-tariffs style="' . esc_attr($style) . '">';
+        $html .= '<div class="parcs-ht-tariff-ui__header"><div class="parcs-ht-tariff-ui__title">' . esc_html($d['prices'] ?? self::t($language, 'Tarifs', 'Prices', 'Preise')) . '</div></div>';
+        $html .= self::display_call('category_tabs', array($id, $groups));
+
+        $first = true;
+        foreach ($groups as $key=>$label) {
+            $html .= '<div id="' . esc_attr($id . '-panel-' . $key) . '" class="parcs-ht-tariff-ui__panel" role="tabpanel" aria-labelledby="' . esc_attr($id . '-tab-' . $key) . '" data-htp-ui-panel="' . esc_attr($key) . '"' . (!$first ? ' hidden' : '') . '>';
+
+            if ($key === 'individual') {
+                $html .= self::visitor_payment_strip($tariffs, $language, 'individual', $label);
+                $html .= self::display_call('price_table', array($tariffs, 'individual', $language, array('tickets_url'=>$tickets_url)));
+                if ($tickets_url !== '') {
+                    $html .= '<div class="parcs-ht-tariff-ui__actions"><a class="parcs-ht-tariff-ui__button is-primary" href="' . esc_url($tickets_url) . '">' . esc_html($d['tickets'] ?? self::t($language, 'Acheter vos billets', 'Buy tickets', 'Tickets kaufen')) . '</a></div>';
+                }
+            } elseif ($key === 'reduced') {
+                $html .= self::visitor_payment_strip($tariffs, $language, 'reduced', $label);
+                $note = self::tr($tariffs['notes'] ?? array(), $language, '');
+                if ($note !== '') $html .= '<p class="parcs-ht-tariff-ui__note is-before-table">' . esc_html($note) . '</p>';
+                $html .= self::display_call('price_table', array($tariffs, 'reduced', $language, array()));
+            } else {
+                $html .= self::display_call('price_table', array($tariffs, 'groups', $language, array()));
+                $html .= self::display_call('public_group_extras', array($general, $language, $d));
+            }
+
+            $html .= '</div>';
+            $first = false;
+        }
+
+        $html .= self::display_call('export_actions', array($tariffs, $language, $year));
+        return $html . '</section>';
+    }
+
+    private static function visitor_payment_strip($tariffs, $language, $category, $category_label) {
+        if (!class_exists('Parcs_HT_Payment_Channels')) return '';
+
+        $onsite = Parcs_HT_Payment_Channels::items_for_channel($tariffs, $language, 'onsite');
+        $online = $category === 'individual'
+            ? Parcs_HT_Payment_Channels::items_for_channel($tariffs, $language, 'online')
+            : array();
+        if (!$onsite && !$online) return '';
+
+        $title = self::t($language, 'Moyens de paiement', 'Payment methods', 'Zahlungsmöglichkeiten') . ' — ' . $category_label;
+        $html = '<div class="parcs-ht-tariff-ui__payments parcs-ht-tariff-ui__payments--category" aria-label="' . esc_attr($title) . '">';
+        $html .= '<strong>' . esc_html($title) . '</strong><div class="parcs-ht-tariff-ui__payment-track">';
+
+        if ($onsite) {
+            $html .= '<span class="parcs-ht-tariff-ui__payment-channel">' . esc_html(self::t($language, 'Sur place', 'On site', 'Vor Ort')) . '</span>';
+            $html .= self::visitor_payment_chips($onsite, $language);
+        }
+        if ($online) {
+            $html .= '<span class="parcs-ht-tariff-ui__payment-channel">' . esc_html(self::t($language, 'En ligne', 'Online', 'Online')) . '</span>';
+            $html .= self::visitor_payment_chips($online, $language);
+        }
+
+        return $html . '</div></div>';
+    }
+
+    private static function visitor_payment_chips($items, $language) {
+        $html = '';
+        foreach ((array)$items as $item) {
+            if (!is_array($item)) continue;
+            $label = self::tr($item['label'] ?? array(), $language, '');
+            if ($label === '') continue;
+            $style = self::display_call('payment_item_style', array($item));
+            $icon = self::display_call('payment_icon', array($item['icon'] ?? 'other', $item['custom_svg'] ?? ''));
+            $html .= '<span class="parcs-ht-tariff-ui__payment-chip"' . ($style !== '' ? ' style="' . esc_attr($style) . '"' : '') . '>';
+            $html .= '<span class="parcs-ht-tariff-ui__payment-icon" aria-hidden="true">' . wp_kses($icon, Parcs_HT_Defaults::svg_allowed_tags()) . '</span>';
+            $html .= '<span>' . esc_html($label) . '</span></span>';
+        }
+        return $html;
     }
 
     /**
@@ -122,7 +228,6 @@ final class Parcs_HT_Tariff_Public_Fixes {
         $onsite_label = array('fr'=>'Sur place','en'=>'On site','de'=>'Vor Ort');
         $generic_label = array('fr'=>'Tarif','en'=>'Price','de'=>'Preis');
 
-        // La gratuité des moins de cinq ans se présente comme un tarif sur place.
         $has_free_child = false;
         foreach ((array)($tariffs['individual'] ?? array()) as $index => $row) {
             if (!is_array($row) || !self::is_under_five($row)) continue;
