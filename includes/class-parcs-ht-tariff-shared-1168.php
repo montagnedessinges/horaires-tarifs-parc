@@ -35,6 +35,16 @@ final class Parcs_HT_Tariff_Shared_1168 {
         return $language === 'en' ? $en : ($language === 'de' ? $de : $fr);
     }
 
+    private static function content($language, $key, $fr, $en, $de, $vars = array()) {
+        $fallback = self::t($language, $fr, $en, $de);
+        $value = class_exists('Parcs_HT_Public_Content')
+            ? Parcs_HT_Public_Content::text($key, $language, $fallback)
+            : $fallback;
+        return class_exists('Parcs_HT_Public_Content') && $vars
+            ? Parcs_HT_Public_Content::format($value, $vars)
+            : ($vars ? strtr($value, array_combine(array_map(static function ($key) { return '{' . $key . '}'; }, array_keys($vars)), array_values($vars))) : $value);
+    }
+
     private static function tr($value, $language, $fallback = '') {
         return Parcs_HT_Schedule::translation(is_array($value) ? $value : array(), $language, $fallback);
     }
@@ -125,9 +135,9 @@ final class Parcs_HT_Tariff_Shared_1168 {
         $dicts = Parcs_HT_Schedule::dictionaries();
         $d = isset($dicts[$language]) ? $dicts[$language] : $dicts['fr'];
         $labels = array(
-            'individual'=>$d['individual'] ?? self::t($language, 'Individuels', 'Individuals', 'Einzelpreise'),
-            'reduced'=>$d['reduced'] ?? self::t($language, 'Tarifs réduits', 'Reduced rates', 'Ermäßigt'),
-            'groups'=>$d['groups'] ?? self::t($language, 'Groupes', 'Groups', 'Gruppen'),
+            'individual'=>self::content($language, 'common.individual', $d['individual'] ?? 'Individuels', $d['individual'] ?? 'Individuals', $d['individual'] ?? 'Einzelbesucher'),
+            'reduced'=>self::content($language, 'common.reduced', $d['reduced'] ?? 'Tarifs réduits', $d['reduced'] ?? 'Reduced rates', $d['reduced'] ?? 'Ermäßigte Tarife'),
+            'groups'=>self::content($language, 'common.groups', $d['groups'] ?? 'Groupes', $d['groups'] ?? 'Groups', $d['groups'] ?? 'Gruppen'),
         );
 
         $order = isset($tariffs['group_order']) && is_array($tariffs['group_order']) ? $tariffs['group_order'] : array_keys($labels);
@@ -156,9 +166,10 @@ final class Parcs_HT_Tariff_Shared_1168 {
         $id = 'parcs-ht-tariff-shared-' . self::$instance;
         $tickets_url = self::translated_url($general['tickets_url'] ?? array(), $language);
         $style = self::display_call('style_variables', array($general));
+        $prices_title = self::content($language, 'common.prices', $d['prices'] ?? 'Tarifs', $d['prices'] ?? 'Prices', $d['prices'] ?? 'Preise');
 
         $html = '<section id="' . esc_attr($id) . '" class="parcs-ht-tariff-ui" data-htp-ui-tariffs style="' . esc_attr($style) . '">';
-        $html .= '<div class="parcs-ht-tariff-ui__header"><div class="parcs-ht-tariff-ui__title">' . esc_html($d['prices'] ?? self::t($language, 'Tarifs', 'Prices', 'Preise')) . '</div></div>';
+        $html .= '<div class="parcs-ht-tariff-ui__header"><div class="parcs-ht-tariff-ui__title">' . esc_html($prices_title) . '</div></div>';
         $html .= self::display_call('category_tabs', array($id, $groups));
 
         $first = true;
@@ -169,7 +180,8 @@ final class Parcs_HT_Tariff_Shared_1168 {
                 $html .= self::fixes_call('visitor_payment_strip', array($tariffs, $language, 'individual', $label));
                 $html .= self::display_call('price_table', array($tariffs, 'individual', $language, array('tickets_url'=>$tickets_url)));
                 if ($tickets_url !== '') {
-                    $html .= '<div class="parcs-ht-tariff-ui__actions"><a class="parcs-ht-tariff-ui__button is-primary" href="' . esc_url($tickets_url) . '">' . esc_html($d['tickets'] ?? self::t($language, 'Acheter vos billets', 'Buy tickets', 'Tickets kaufen')) . '</a></div>';
+                    $tickets_label = self::content($language, 'common.tickets', $d['tickets'] ?? 'Acheter vos billets', $d['tickets'] ?? 'Buy tickets', $d['tickets'] ?? 'Tickets kaufen');
+                    $html .= '<div class="parcs-ht-tariff-ui__actions"><a class="parcs-ht-tariff-ui__button is-primary" href="' . esc_url($tickets_url) . '">' . esc_html($tickets_label) . '</a></div>';
                 }
             } elseif ($key === 'reduced') {
                 $html .= self::fixes_call('visitor_payment_strip', array($tariffs, $language, 'reduced', $label));
@@ -194,20 +206,25 @@ final class Parcs_HT_Tariff_Shared_1168 {
     }
 
     private static function group_redirect($language, $year, $general) {
-        $title = self::t($language, 'Vous venez en groupe ?', 'Visiting as a group?', 'Sie kommen als Gruppe?');
-        $text = self::t(
+        $vars = array('year'=>$year);
+        $title = self::content($language, 'groups.redirect.title', 'Vous venez en groupe ?', 'Visiting as a group?', 'Sie kommen als Gruppe?');
+        $text = self::content(
             $language,
-            'Retrouvez les tarifs groupes ' . $year . ', les horaires d’ouverture et toutes les informations pour organiser votre visite sur notre espace dédié.',
-            'Find the ' . $year . ' group rates, opening hours and all the information you need to organise your visit in our dedicated group area.',
-            'Die Gruppentarife ' . $year . ', Öffnungszeiten und alle Informationen zur Organisation Ihres Besuchs finden Sie in unserem Gruppenbereich.'
+            'groups.redirect.text',
+            'Retrouvez les tarifs groupes {year}, les horaires d’ouverture et toutes les informations pour organiser votre visite sur notre espace dédié.',
+            'Find the {year} group rates, opening hours and all the information you need to organise your visit in our dedicated group area.',
+            'Die Gruppentarife {year}, Öffnungszeiten und alle Informationen zur Organisation Ihres Besuchs finden Sie in unserem Gruppenbereich.',
+            $vars
         );
-        $visitor_notice = self::t(
+        $visitor_notice = self::content(
             $language,
-            'Les tarifs individuels et réduits ' . $year . ' ne sont pas encore disponibles.',
-            'Individual and reduced rates for ' . $year . ' are not available yet.',
-            'Einzel- und ermäßigte Tarife für ' . $year . ' sind noch nicht verfügbar.'
+            'groups.redirect.visitor_notice',
+            'Les tarifs individuels et réduits {year} ne sont pas encore disponibles.',
+            'Individual and reduced rates for {year} are not available yet.',
+            'Einzel- und ermäßigte Tarife für {year} sind noch nicht verfügbar.',
+            $vars
         );
-        $button = self::t($language, 'Voir les tarifs et horaires groupes', 'View group rates and opening hours', 'Gruppentarife und Öffnungszeiten ansehen');
+        $button = self::content($language, 'groups.redirect.button', 'Voir les tarifs et horaires groupes', 'View group rates and opening hours', 'Gruppentarife und Öffnungszeiten ansehen');
         $url = self::group_portal_url($language, $general);
 
         $html = '<div class="parcs-ht-tariff-ui__info-card parcs-ht-group-redirect">';
@@ -226,6 +243,12 @@ final class Parcs_HT_Tariff_Shared_1168 {
      */
     private static function group_portal_url($language, $general) {
         if (array_key_exists($language, self::$portal_url_cache)) return self::$portal_url_cache[$language];
+
+        $configured = class_exists('Parcs_HT_Public_Content') ? Parcs_HT_Public_Content::url('groups.redirect.url', $language, '') : '';
+        if ($configured !== '') {
+            self::$portal_url_cache[$language] = $configured;
+            return $configured;
+        }
 
         $wanted = array('parc_groupes_horaires_tarifs_' . $language, 'parc_groupes_horaires_tarifs');
         $url = '';
