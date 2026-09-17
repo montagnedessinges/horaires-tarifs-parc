@@ -47,7 +47,7 @@ jobs:
       - name: Run blocking business and regression tests
         run: |
           php tests/under-five-onsite-runtime.php
-          php tests/public-tariff-1168-payments-contract.php
+          php tests/public-tariff-1167-payments-contract.php
           php tests/visibility-11512-runtime.php
           php tests/stability-11511-contract.php
           php tests/group-quote-future-season-runtime.php
@@ -89,7 +89,7 @@ jobs:
           find /tmp/htp-production-test -type f -name '*.php' -print0 | xargs -0 -n1 php -l
           find /tmp/htp-production-test/assets -type f -name '*.js' -print0 | xargs -0 -n1 node --check
           PLUGIN_ROOT=/tmp/htp-production-test node tests/public-ui-regressions.js
-          PLUGIN_ROOT=/tmp/htp-production-test php tests/public-tariff-1168-payments-contract.php
+          PLUGIN_ROOT=/tmp/htp-production-test php tests/public-tariff-1167-payments-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/public-data-regressions.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/updater-metadata-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/schedule-csv-contract.php
