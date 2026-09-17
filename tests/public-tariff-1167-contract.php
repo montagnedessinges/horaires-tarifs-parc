@@ -34,7 +34,7 @@ verify_1167(strpos($fixes, "if (\$key === 'individual')") !== false && strpos($f
 verify_1167(strpos($fixes, "visitor_payment_strip(\$tariffs, \$language, 'reduced'") !== false, 'Les tarifs réduits disposent de leur paiement de catégorie');
 verify_1167(strpos($fixes, "\$category === 'individual'") !== false, 'Le canal En ligne des paiements visiteurs est réservé à Individuels');
 verify_1167(strpos($fixes, 'Moyens de paiement') !== false && strpos($fixes, "' — '") !== false, 'Le titre des moyens de paiement répète la catégorie');
-verify_1167(strpos($admin_js, '[channels][onsite]') !== false && strpos($admin_js, '[channels][online]') !== false, 'L’administration expose deux cases indépendantes Sur place / En ligne');
+verify_1167(strpos($admin_js, "base+'[onsite]'") !== false && strpos($admin_js, "base+'[online]'") !== false, 'L’administration expose deux cases indépendantes Sur place / En ligne');
 verify_1167(strpos($plugin, 'Version: 1.16.7') !== false && strpos($plugin, "PARCS_HT_VERSION', '1.16.7") !== false, 'La version 1.16.7 est cohérente dans le bootstrap');
 
 echo "Public tariff 1.16.7 contract: OK\n";
