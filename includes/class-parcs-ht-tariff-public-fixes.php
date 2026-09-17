@@ -122,6 +122,39 @@ final class Parcs_HT_Tariff_Public_Fixes {
         $onsite_label = array('fr'=>'Sur place','en'=>'On site','de'=>'Vor Ort');
         $generic_label = array('fr'=>'Tarif','en'=>'Price','de'=>'Preis');
 
+        // La gratuité des moins de cinq ans se présente comme un tarif sur place.
+        $has_free_child = false;
+        foreach ((array)($tariffs['individual'] ?? array()) as $index => $row) {
+            if (!is_array($row) || !self::is_under_five($row)) continue;
+            $free = array();
+            foreach ((array)($row['cells'] ?? array()) as $cell) {
+                if (is_array($cell) && self::is_free_value($cell['value'] ?? '')) {
+                    $free = $cell;
+                    break;
+                }
+            }
+            if (!$free && self::is_free_value($row['price'] ?? '')) {
+                $free = array('value'=>(string)$row['price']);
+            }
+            if (!$free) continue;
+            unset($free['url'], $free['purchase_url']);
+            $free['old_value'] = '';
+            $row['cells'] = array('onsite'=>$free, 'online'=>array('value'=>'','old_value'=>''));
+            $row['sale_channel'] = 'onsite';
+            $row['purchase_url'] = array();
+            $tariffs['individual'][$index] = $row;
+            $has_free_child = true;
+        }
+        if ($has_free_child) {
+            $columns = (array)($tariffs['columns']['individual'] ?? array());
+            $has_onsite = false;
+            foreach ($columns as $column) {
+                if (is_array($column) && ($column['id'] ?? '') === 'onsite') $has_onsite = true;
+            }
+            if (!$has_onsite) array_unshift($columns, array('id'=>'onsite','label'=>$onsite_label,'visible'=>'1'));
+            $tariffs['columns']['individual'] = $columns;
+        }
+
         if (isset($tariffs['reduced']) && is_array($tariffs['reduced'])) {
             foreach ($tariffs['reduced'] as &$row) {
                 if (!is_array($row)) continue;
@@ -166,6 +199,22 @@ final class Parcs_HT_Tariff_Public_Fixes {
         }
 
         return $tariffs;
+    }
+
+    private static function is_under_five($row) {
+        foreach (array('label', 'subtitle', 'detail') as $key) {
+            foreach ((array)($row[$key] ?? array()) as $text) {
+                if (!is_scalar($text)) continue;
+                $text = strtolower(remove_accents(wp_strip_all_tags((string)$text)));
+                if (preg_match('/\b(?:moins\s+de|under|unter)\s*5\b/u', $text)) return true;
+            }
+        }
+        return false;
+    }
+
+    private static function is_free_value($value) {
+        $value = trim(strtolower(remove_accents(wp_strip_all_tags((string)$value))));
+        return (bool)preg_match('/^(?:gratuit(?:e)?|free|kostenlos|frei|0(?:[.,]0{1,2})?\s*(?:€|eur)?)$/u', $value);
     }
 
     /**

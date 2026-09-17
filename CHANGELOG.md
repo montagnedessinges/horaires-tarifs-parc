@@ -1,3 +1,10 @@
+## 1.16.6
+
+- Gratuité des enfants de moins de 5 ans affichée uniquement sur place, sans lien d’achat ni doublon en ligne.
+- Encadré unique utilisant la même présentation que les tarifs réduits.
+- Correction du rendu des anciennes données sans migration ni modification des autres tarifs.
+- Test de rendu couvrant 48 variantes de données et trois exclusions.
+
 ## 1.16.0
 
 - Refonte complète du rendu public des tarifs sans modifier le moteur des horaires ni le calendrier existant.

@@ -46,6 +46,7 @@ jobs:
         run: find . -type f -name '*.php' -not -path './vendor/*' -not -path './.git/*' -print0 | xargs -0 -n1 php -l
       - name: Run blocking business and regression tests
         run: |
+          php tests/under-five-onsite-runtime.php
           php tests/visibility-11512-runtime.php
           php tests/stability-11511-contract.php
           php tests/group-quote-future-season-runtime.php

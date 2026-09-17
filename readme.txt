@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.16.5
+Stable tag: 1.16.6
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes et outils du parc.
 
@@ -19,6 +19,10 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.16.6 =
+* Affiche la gratuité des enfants de moins de 5 ans uniquement sur place, dans un encadré unique au même format que les tarifs réduits et sans lien vers la billetterie.
+* Préserve les autres tarifs et les données enregistrées de chaque saison.
 
 = 1.16.5 =
 * Corrige l’affichage des tarifs groupes des années futures comme 2027 lorsque l’année est activée dans le shortcode Groupes.
@@ -120,3 +124,4 @@ Une sauvegarde du site et de la base de données reste recommandée avant toute 
 * Archives indépendantes pour les éditions du Calendrier de l’Avent.
 * Import CSV des horaires et du calendrier par saison : périodes habituelles, exceptions, fermetures, jours fériés, périodes repères, vacances scolaires et événements.
 * Modèle CSV téléchargeable et révision de sécurité automatique avant import.
+
