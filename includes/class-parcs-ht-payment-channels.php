@@ -87,10 +87,10 @@ final class Parcs_HT_Payment_Channels {
 
         $year = isset($_POST['season_year']) ? sanitize_text_field(wp_unslash($_POST['season_year'])) : '';
         if (!preg_match('/^20\d{2}$/', $year)) return $new_value;
-        $raw_settings = isset($_POST['settings']) && is_array($_POST['settings']) ? wp_unslash($_POST['settings']) : array();
-        $raw_tariffs = isset($raw_settings['tariffs']) && is_array($raw_settings['tariffs']) ? $raw_settings['tariffs'] : array();
-        if (!array_key_exists('payment_items', $raw_tariffs) || !is_array($raw_tariffs['payment_items'])) return $new_value;
-        $posted_items = $raw_tariffs['payment_items'];
+        $posted_items = isset($_POST['settings']['tariffs']['payment_items']) && is_array($_POST['settings']['tariffs']['payment_items'])
+            ? map_deep(wp_unslash($_POST['settings']['tariffs']['payment_items']), 'sanitize_text_field')
+            : array();
+        if (!$posted_items) return $new_value;
 
         if (isset($new_value['seasons'][$year]['tariffs']['payment_items']) && is_array($new_value['seasons'][$year]['tariffs']['payment_items'])) {
             $new_value['seasons'][$year]['tariffs']['payment_items'] = self::apply_posted_channels($new_value['seasons'][$year]['tariffs']['payment_items'], $posted_items);
