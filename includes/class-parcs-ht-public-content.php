@@ -3,107 +3,141 @@
 if (!defined('ABSPATH')) { exit; }
 
 /**
- * Référentiel central des textes publics modifiables.
+ * Référentiel central des contenus publics modifiables.
  *
- * Cette classe ne remplace aucun moteur métier. Elle fournit uniquement une source
- * de vérité éditoriale FR / EN / DE et une interface d'administration dédiée.
+ * Une seule définition décrit à la fois la valeur par défaut, la rubrique
+ * d'administration, le libellé du champ et le type de saisie. Les moteurs métier
+ * restent indépendants : cette classe ne gère que l'éditorial FR / EN / DE.
  */
 final class Parcs_HT_Public_Content {
     const OPTION = 'parcs_ht_public_content';
     const PAGE = 'parcs-ht-public-content';
-    const STORE_VERSION = 1;
+    const STORE_VERSION = 2;
 
     public static function init() {
         add_action('admin_menu', array(__CLASS__, 'menu'), 35);
         add_action('admin_post_parcs_ht_save_public_content', array(__CLASS__, 'save'));
         add_action('wp_footer', array(__CLASS__, 'inject_runtime_dictionary'), 4);
+        // Pont de compatibilité pour les anciens renderers qui ne lisent pas encore
+        // directement le référentiel. Les nouveaux renderers doivent appeler text().
         add_filter('do_shortcode_tag', array(__CLASS__, 'filter_shortcode_output'), 100, 4);
-        add_action('wp_enqueue_scripts', array(__CLASS__, 'frontend_guard'), 120);
-    }
-
-    public static function defaults() {
-        return array(
-            'version' => self::STORE_VERSION,
-            'texts' => array(
-                'common.prices' => self::triple('Tarifs', 'Prices', 'Preise'),
-                'common.individual' => self::triple('Individuels', 'Individuals', 'Einzelbesucher'),
-                'common.reduced' => self::triple('Tarifs réduits', 'Reduced rates', 'Ermäßigte Tarife'),
-                'common.groups' => self::triple('Groupes', 'Groups', 'Gruppen'),
-                'common.payments' => self::triple('Moyens de paiement', 'Payment methods', 'Zahlungsmittel'),
-                'common.onsite' => self::triple('Sur place', 'On site', 'Vor Ort'),
-                'common.online' => self::triple('En ligne', 'Online', 'Online'),
-                'common.tickets' => self::triple('Acheter vos billets', 'Buy tickets', 'Tickets kaufen'),
-                'common.quote' => self::triple('Faire une demande de devis', 'Request a quote', 'Angebot anfordern'),
-                'common.print_rates' => self::triple('Imprimer les tarifs', 'Print rates', 'Tarife drucken'),
-                'common.download_pdf' => self::triple('Télécharger en PDF', 'Download PDF', 'PDF herunterladen'),
-                'common.rate_year' => self::triple('Année des tarifs', 'Rate year', 'Tarifjahr'),
-
-                'schedule.today' => self::triple('Aujourd’hui', 'Today', 'Heute'),
-                'schedule.openNow' => self::triple('OUVERT', 'OPEN', 'GEÖFFNET'),
-                'schedule.opensToday' => self::triple('Ouverture aujourd’hui à {open}', 'Opens today at {open}', 'Öffnet heute um {open}'),
-                'schedule.reopensToday' => self::triple('Réouverture aujourd’hui à {open}', 'Reopens today at {open}', 'Öffnet heute wieder um {open}'),
-                'schedule.openToday' => self::triple('Ouvert aujourd’hui de {open} à {close}', 'Open today from {open} to {close}', 'Heute geöffnet von {open} bis {close}'),
-                'schedule.closedToday' => self::triple('Fermé aujourd’hui', 'Closed today', 'Heute geschlossen'),
-                'schedule.closedForToday' => self::triple('Fermé pour aujourd’hui', 'Closed for today', 'Für heute geschlossen'),
-                'schedule.opensTomorrowAt' => self::triple('Ouverture demain à {time}', 'Open tomorrow at {time}', 'Morgen ab {time} geöffnet'),
-                'schedule.opensOnAt' => self::triple('Ouverture le {date} à {time}', 'Open on {date} at {time}', 'Geöffnet am {date} ab {time}'),
-                'schedule.lastEntry' => self::triple('Dernière entrée à {time}', 'Last admission at {time}', 'Letzter Einlass um {time}'),
-                'schedule.lastEntryCompact' => self::triple('Dernière entrée : {time}', 'Last admission: {time}', 'Letzter Einlass: {time}'),
-                'schedule.fromTime' => self::triple('À partir de {time}', 'From {time}', 'Ab {time}'),
-                'schedule.openingAt' => self::triple('Ouverture à {time}', 'Opens at {time}', 'Öffnung um {time}'),
-                'schedule.seeYouTomorrow' => self::triple('À demain !', 'See you tomorrow!', 'Bis morgen!'),
-                'schedule.nextOpeningLabel' => self::triple('Prochaine ouverture', 'Next opening', 'Nächste Öffnung'),
-                'schedule.nextOpeningCompact' => self::triple('{date} à {time}', '{date} at {time}', '{date} um {time}'),
-                'schedule.openTodayCompact' => self::triple('Ouvert aujourd’hui', 'Open today', 'Heute geöffnet'),
-                'schedule.nextOpening' => self::triple('Prochaine ouverture : {date} à {time}', 'Next opening: {date} at {time}', 'Nächste Öffnung: {date} um {time}'),
-                'schedule.calendar' => self::triple('Calendrier', 'Calendar', 'Kalender'),
-                'schedule.monthHours' => self::triple('Horaires du mois : {hours}', 'Opening hours this month: {hours}', 'Öffnungszeiten in diesem Monat: {hours}'),
-                'schedule.closed' => self::triple('Fermé', 'Closed', 'Geschlossen'),
-                'schedule.exceptionalHours' => self::triple('Horaires exceptionnels', 'Exceptional opening hours', 'Außergewöhnliche Öffnungszeiten'),
-                'schedule.exceptionalClosure' => self::triple('Fermeture exceptionnelle', 'Exceptional closure', 'Außergewöhnliche Schließung'),
-                'schedule.selectDate' => self::triple('Sélectionnez une journée pour afficher ses horaires.', 'Select a day to view its opening hours.', 'Wählen Sie einen Tag, um die Öffnungszeiten anzuzeigen.'),
-                'schedule.publicHoliday' => self::triple('Jour férié', 'Public holiday', 'Feiertag'),
-                'schedule.schoolHoliday' => self::triple('Vacances scolaires', 'School holidays', 'Schulferien'),
-                'schedule.event' => self::triple('Événement', 'Event', 'Veranstaltung'),
-                'schedule.closedShort' => self::triple('Fermé', 'Closed', 'Geschlossen'),
-                'schedule.exceptionallyClosedShort' => self::triple('Fermé exceptionnellement', 'Exceptionally closed', 'Ausnahmsweise geschlossen'),
-                'schedule.reopensOn' => self::triple('Réouverture le {date}', 'Reopens on {date}', 'Wiedereröffnung am {date}'),
-                'schedule.reopensIn' => self::triple('Réouverture dans {days} jours', 'Reopens in {days} days', 'Wiedereröffnung in {days} Tagen'),
-                'schedule.reopensTomorrow' => self::triple('Réouverture demain', 'Reopens tomorrow', 'Wiedereröffnung morgen'),
-                'schedule.closePopup' => self::triple('Fermer', 'Close', 'Schließen'),
-                'schedule.notAvailable' => self::triple('Les dates et horaires ne sont pas encore disponibles.', 'Dates and opening hours are not available yet.', 'Termine und Öffnungszeiten sind noch nicht verfügbar.'),
-
-                'groups.portal.tariffs_tab' => self::triple('Tarifs groupes', 'Group rates', 'Gruppentarife'),
-                'groups.portal.hours_tab' => self::triple('Horaires d’ouverture', 'Opening hours', 'Öffnungszeiten'),
-                'groups.portal.year_label' => self::triple('Année', 'Year', 'Jahr'),
-                'groups.portal.tariffs_unavailable' => self::triple('Les tarifs groupes ne sont pas disponibles pour cette année.', 'Group rates are not available for this year.', 'Für dieses Jahr sind keine Gruppentarife verfügbar.'),
-                'groups.portal.hours_unavailable' => self::triple('Les horaires d’ouverture ne sont pas disponibles pour cette année.', 'Opening hours are not available for this year.', 'Für dieses Jahr sind keine Öffnungszeiten verfügbar.'),
-                'groups.portal.empty' => self::triple('Aucun tarif groupe ni horaire disponible pour le moment.', 'No group rates or opening hours are available at the moment.', 'Derzeit sind keine Gruppentarife oder Öffnungszeiten verfügbar.'),
-                'groups.tariffs.empty' => self::triple('Les tarifs groupes ne sont pas disponibles pour le moment.', 'Group rates are not available at the moment.', 'Die Gruppentarife sind derzeit nicht verfügbar.'),
-                'groups.redirect.title' => self::triple('Vous venez en groupe ?', 'Visiting as a group?', 'Sie kommen als Gruppe?'),
-                'groups.redirect.text' => self::triple('Retrouvez les tarifs groupes {year}, les horaires d’ouverture et toutes les informations pour organiser votre visite sur notre espace dédié.', 'Find the {year} group rates, opening hours and all the information you need to organise your visit in our dedicated group area.', 'Die Gruppentarife {year}, Öffnungszeiten und alle Informationen zur Organisation Ihres Besuchs finden Sie in unserem Gruppenbereich.'),
-                'groups.redirect.visitor_notice' => self::triple('Les tarifs individuels et réduits {year} ne sont pas encore disponibles.', 'Individual and reduced rates for {year} are not available yet.', 'Einzel- und ermäßigte Tarife für {year} sind noch nicht verfügbar.'),
-                'groups.redirect.button' => self::triple('Voir les tarifs et horaires groupes', 'View group rates and opening hours', 'Gruppentarife und Öffnungszeiten ansehen'),
-
-                'guides.resources' => self::triple('Dossiers pédagogiques', 'Teaching resources', 'Pädagogische Materialien'),
-                'guides.categories' => self::triple('Cycles / niveaux', 'Age groups / levels', 'Altersgruppen / Niveaus'),
-                'guides.all_cycles' => self::triple('Tous', 'All', 'Alle'),
-                'guides.languages' => self::triple('Langues', 'Languages', 'Sprachen'),
-                'guides.all_languages' => self::triple('Toutes', 'All', 'Alle'),
-                'guides.new' => self::triple('Nouveau', 'New', 'Neu'),
-                'guides.coming' => self::triple('À venir', 'Coming soon', 'Demnächst'),
-                'guides.read' => self::triple('Consulter', 'View', 'Ansehen'),
-                'guides.download' => self::triple('Télécharger le PDF', 'Download PDF', 'PDF herunterladen'),
-                'guides.info' => self::triple('Plus d’informations', 'More information', 'Mehr Informationen'),
-            ),
-            'urls' => array(
-                'groups.redirect.url' => self::triple('', '', ''),
-            ),
-        );
     }
 
     private static function triple($fr, $en, $de) {
         return array('fr'=>(string)$fr, 'en'=>(string)$en, 'de'=>(string)$de);
+    }
+
+    private static function field($section, $label, $fr, $en, $de, $long = false) {
+        return array(
+            'section'=>(string)$section,
+            'label'=>(string)$label,
+            'values'=>self::triple($fr, $en, $de),
+            'long'=>(bool)$long,
+        );
+    }
+
+    /** Source unique des textes éditables. */
+    private static function catalog() {
+        return array(
+            'common.prices'=>self::field('Textes généraux et tarifs','Titre Tarifs','Tarifs','Prices','Preise'),
+            'common.individual'=>self::field('Textes généraux et tarifs','Onglet Individuels','Individuels','Individuals','Einzelbesucher'),
+            'common.reduced'=>self::field('Textes généraux et tarifs','Onglet Tarifs réduits','Tarifs réduits','Reduced rates','Ermäßigte Tarife'),
+            'common.groups'=>self::field('Textes généraux et tarifs','Onglet Groupes','Groupes','Groups','Gruppen'),
+            'common.payments'=>self::field('Textes généraux et tarifs','Moyens de paiement','Moyens de paiement','Payment methods','Zahlungsmittel'),
+            'common.onsite'=>self::field('Textes généraux et tarifs','Sur place','Sur place','On site','Vor Ort'),
+            'common.online'=>self::field('Textes généraux et tarifs','En ligne','En ligne','Online','Online'),
+            'common.tickets'=>self::field('Textes généraux et tarifs','Bouton Acheter vos billets','Acheter vos billets','Buy tickets','Tickets kaufen'),
+            'common.quote'=>self::field('Textes généraux et tarifs','Bouton Demande de devis','Faire une demande de devis','Request a quote','Angebot anfordern'),
+            'common.print_rates'=>self::field('Textes généraux et tarifs','Lien Imprimer les tarifs','Imprimer les tarifs','Print rates','Tarife drucken'),
+            'common.download_pdf'=>self::field('Textes généraux et tarifs','Lien Télécharger en PDF','Télécharger en PDF','Download PDF','PDF herunterladen'),
+            'common.rate_year'=>self::field('Textes généraux et tarifs','Libellé Année des tarifs','Année des tarifs','Rate year','Tarifjahr'),
+            'common.useful_links'=>self::field('Textes généraux et tarifs','Libellé Liens utiles','Liens utiles','Useful links','Nützliche Links'),
+            'tariffs.download_pdf'=>self::field('Textes généraux et tarifs','Bouton PDF des tarifs','Télécharger les tarifs en PDF','Download prices as PDF','Preise als PDF herunterladen'),
+
+            'schedule.today'=>self::field('Horaires et calendrier','Aujourd’hui','Aujourd’hui','Today','Heute'),
+            'schedule.openNow'=>self::field('Horaires et calendrier','Ouvert maintenant','OUVERT','OPEN','GEÖFFNET'),
+            'schedule.opensToday'=>self::field('Horaires et calendrier','Ouverture aujourd’hui','Ouverture aujourd’hui à {open}','Opens today at {open}','Öffnet heute um {open}'),
+            'schedule.reopensToday'=>self::field('Horaires et calendrier','Réouverture aujourd’hui','Réouverture aujourd’hui à {open}','Reopens today at {open}','Öffnet heute wieder um {open}'),
+            'schedule.openToday'=>self::field('Horaires et calendrier','Ouvert aujourd’hui','Ouvert aujourd’hui de {open} à {close}','Open today from {open} to {close}','Heute geöffnet von {open} bis {close}'),
+            'schedule.closedToday'=>self::field('Horaires et calendrier','Fermé aujourd’hui','Fermé aujourd’hui','Closed today','Heute geschlossen'),
+            'schedule.closedForToday'=>self::field('Horaires et calendrier','Fermé pour aujourd’hui','Fermé pour aujourd’hui','Closed for today','Für heute geschlossen'),
+            'schedule.opensTomorrowAt'=>self::field('Horaires et calendrier','Ouverture demain','Ouverture demain à {time}','Open tomorrow at {time}','Morgen ab {time} geöffnet'),
+            'schedule.opensOnAt'=>self::field('Horaires et calendrier','Ouverture à une date','Ouverture le {date} à {time}','Open on {date} at {time}','Geöffnet am {date} ab {time}'),
+            'schedule.lastEntry'=>self::field('Horaires et calendrier','Dernière entrée','Dernière entrée à {time}','Last admission at {time}','Letzter Einlass um {time}'),
+            'schedule.lastEntryCompact'=>self::field('Horaires et calendrier','Dernière entrée — format court','Dernière entrée : {time}','Last admission: {time}','Letzter Einlass: {time}'),
+            'schedule.fromTime'=>self::field('Horaires et calendrier','À partir de','À partir de {time}','From {time}','Ab {time}'),
+            'schedule.openingAt'=>self::field('Horaires et calendrier','Ouverture à','Ouverture à {time}','Opens at {time}','Öffnung um {time}'),
+            'schedule.seeYouTomorrow'=>self::field('Horaires et calendrier','À demain','À demain !','See you tomorrow!','Bis morgen!'),
+            'schedule.nextOpeningLabel'=>self::field('Horaires et calendrier','Titre prochaine ouverture','Prochaine ouverture','Next opening','Nächste Öffnung'),
+            'schedule.nextOpeningCompact'=>self::field('Horaires et calendrier','Prochaine ouverture — format court','{date} à {time}','{date} at {time}','{date} um {time}'),
+            'schedule.openTodayCompact'=>self::field('Horaires et calendrier','Ouvert aujourd’hui — format court','Ouvert aujourd’hui','Open today','Heute geöffnet'),
+            'schedule.nextOpening'=>self::field('Horaires et calendrier','Prochaine ouverture','Prochaine ouverture : {date} à {time}','Next opening: {date} at {time}','Nächste Öffnung: {date} um {time}'),
+            'schedule.calendar'=>self::field('Horaires et calendrier','Calendrier','Calendrier','Calendar','Kalender'),
+            'schedule.monthHours'=>self::field('Horaires et calendrier','Horaires du mois','Horaires du mois : {hours}','Opening hours this month: {hours}','Öffnungszeiten in diesem Monat: {hours}'),
+            'schedule.closed'=>self::field('Horaires et calendrier','Fermé','Fermé','Closed','Geschlossen'),
+            'schedule.exceptionalHours'=>self::field('Horaires et calendrier','Horaires exceptionnels','Horaires exceptionnels','Exceptional opening hours','Außergewöhnliche Öffnungszeiten'),
+            'schedule.exceptionalClosure'=>self::field('Horaires et calendrier','Fermeture exceptionnelle','Fermeture exceptionnelle','Exceptional closure','Außergewöhnliche Schließung'),
+            'schedule.selectDate'=>self::field('Horaires et calendrier','Invitation à sélectionner une journée','Sélectionnez une journée pour afficher ses horaires.','Select a day to view its opening hours.','Wählen Sie einen Tag, um die Öffnungszeiten anzuzeigen.',true),
+            'schedule.publicHoliday'=>self::field('Horaires et calendrier','Jour férié','Jour férié','Public holiday','Feiertag'),
+            'schedule.schoolHoliday'=>self::field('Horaires et calendrier','Vacances scolaires','Vacances scolaires','School holidays','Schulferien'),
+            'schedule.event'=>self::field('Horaires et calendrier','Événement','Événement','Event','Veranstaltung'),
+            'schedule.closedShort'=>self::field('Horaires et calendrier','Fermé — court','Fermé','Closed','Geschlossen'),
+            'schedule.exceptionallyClosedShort'=>self::field('Horaires et calendrier','Fermé exceptionnellement','Fermé exceptionnellement','Exceptionally closed','Ausnahmsweise geschlossen'),
+            'schedule.reopensOn'=>self::field('Horaires et calendrier','Réouverture le','Réouverture le {date}','Reopens on {date}','Wiedereröffnung am {date}'),
+            'schedule.reopensIn'=>self::field('Horaires et calendrier','Réouverture dans X jours','Réouverture dans {days} jours','Reopens in {days} days','Wiedereröffnung in {days} Tagen'),
+            'schedule.reopensTomorrow'=>self::field('Horaires et calendrier','Réouverture demain','Réouverture demain','Reopens tomorrow','Wiedereröffnung morgen'),
+            'schedule.closePopup'=>self::field('Horaires et calendrier','Fermer le pop-up','Fermer','Close','Schließen'),
+            'schedule.notAvailable'=>self::field('Horaires et calendrier','Dates / horaires indisponibles','Les dates et horaires ne sont pas encore disponibles.','Dates and opening hours are not available yet.','Termine und Öffnungszeiten sind noch nicht verfügbar.',true),
+            'schedule.prev_month'=>self::field('Horaires et calendrier','Navigation — mois précédent','Mois précédent','Previous month','Vorheriger Monat'),
+            'schedule.next_month'=>self::field('Horaires et calendrier','Navigation — mois suivant','Mois suivant','Next month','Nächster Monat'),
+            'schedule.download_pdf'=>self::field('Horaires et calendrier','Bouton PDF des horaires','Télécharger le planning des horaires','Download opening-hours schedule','Öffnungszeitenplan herunterladen'),
+
+            'groups.portal.tariffs_tab'=>self::field('Espace groupes','Onglet Tarifs groupes','Tarifs groupes','Group rates','Gruppentarife'),
+            'groups.portal.hours_tab'=>self::field('Espace groupes','Onglet Horaires d’ouverture','Horaires d’ouverture','Opening hours','Öffnungszeiten'),
+            'groups.portal.year_label'=>self::field('Espace groupes','Libellé année','Année','Year','Jahr'),
+            'groups.portal.tariffs_unavailable'=>self::field('Espace groupes','Tarifs groupes indisponibles pour une année','Les tarifs groupes ne sont pas disponibles pour cette année.','Group rates are not available for this year.','Für dieses Jahr sind keine Gruppentarife verfügbar.',true),
+            'groups.portal.hours_unavailable'=>self::field('Espace groupes','Horaires indisponibles pour une année','Les horaires d’ouverture ne sont pas disponibles pour cette année.','Opening hours are not available for this year.','Für dieses Jahr sind keine Öffnungszeiten verfügbar.',true),
+            'groups.portal.empty'=>self::field('Espace groupes','Aucune donnée groupes disponible','Aucun tarif groupe ni horaire disponible pour le moment.','No group rates or opening hours are available at the moment.','Derzeit sind keine Gruppentarife oder Öffnungszeiten verfügbar.',true),
+            'groups.tariffs.empty'=>self::field('Espace groupes','Aucun tarif groupe disponible','Les tarifs groupes ne sont pas disponibles pour le moment.','Group rates are not available at the moment.','Die Gruppentarife sind derzeit nicht verfügbar.',true),
+            'groups.redirect.title'=>self::field('Espace groupes','Renvoi groupes — titre','Vous venez en groupe ?','Visiting as a group?','Sie kommen als Gruppe?'),
+            'groups.redirect.text'=>self::field('Espace groupes','Renvoi groupes — texte','Retrouvez les tarifs groupes {year}, les horaires d’ouverture et toutes les informations pour organiser votre visite sur notre espace dédié.','Find the {year} group rates, opening hours and all the information you need to organise your visit in our dedicated group area.','Die Gruppentarife {year}, Öffnungszeiten und alle Informationen zur Organisation Ihres Besuchs finden Sie in unserem Gruppenbereich.',true),
+            'groups.redirect.visitor_notice'=>self::field('Espace groupes','Renvoi groupes — mention tarifs visiteurs','Les tarifs individuels et réduits {year} ne sont pas encore disponibles.','Individual and reduced rates for {year} are not available yet.','Einzel- und ermäßigte Tarife für {year} sind noch nicht verfügbar.',true),
+            'groups.redirect.button'=>self::field('Espace groupes','Renvoi groupes — bouton','Voir les tarifs et horaires groupes','View group rates and opening hours','Gruppentarife und Öffnungszeiten ansehen'),
+            'groups.special.buy'=>self::field('Espace groupes','Offre spéciale — bouton Acheter','Acheter','Buy','Kaufen'),
+            'groups.special.online_only'=>self::field('Espace groupes','Offre spéciale — uniquement en ligne','Uniquement en ligne','Online only','Nur online'),
+            'groups.special.onsite_only'=>self::field('Espace groupes','Offre spéciale — uniquement sur place','Uniquement sur place','On-site only','Nur vor Ort'),
+            'groups.special.valid_between'=>self::field('Espace groupes','Offre spéciale — validité entre deux dates','Valable du {from} au {to}','Valid from {from} to {to}','Gültig vom {from} bis {to}'),
+            'groups.special.valid_from'=>self::field('Espace groupes','Offre spéciale — valide à partir du','Valable à partir du {from}','Valid from {from}','Gültig ab {from}'),
+            'groups.special.valid_until'=>self::field('Espace groupes','Offre spéciale — valide jusqu’au','Valable jusqu’au {to}','Valid until {to}','Gültig bis {to}'),
+
+            'guides.resources'=>self::field('Guides pédagogiques','Guides — titre','Dossiers pédagogiques','Teaching resources','Pädagogische Materialien'),
+            'guides.categories'=>self::field('Guides pédagogiques','Guides — catégories','Cycles / niveaux','Age groups / levels','Altersgruppen / Niveaus'),
+            'guides.all_cycles'=>self::field('Guides pédagogiques','Guides — tous les cycles','Tous','All','Alle'),
+            'guides.languages'=>self::field('Guides pédagogiques','Guides — langues','Langues','Languages','Sprachen'),
+            'guides.all_languages'=>self::field('Guides pédagogiques','Guides — toutes les langues','Toutes','All','Alle'),
+            'guides.new'=>self::field('Guides pédagogiques','Guides — Nouveau','Nouveau','New','Neu'),
+            'guides.coming'=>self::field('Guides pédagogiques','Guides — À venir','À venir','Coming soon','Demnächst'),
+            'guides.read'=>self::field('Guides pédagogiques','Guides — Consulter','Consulter','View','Ansehen'),
+            'guides.download'=>self::field('Guides pédagogiques','Guides — Télécharger le PDF','Télécharger le PDF','Download PDF','PDF herunterladen'),
+            'guides.info'=>self::field('Guides pédagogiques','Guides — Plus d’informations','Plus d’informations','More information','Mehr Informationen'),
+        );
+    }
+
+    private static function link_catalog() {
+        return array(
+            'groups.redirect.url'=>array(
+                'label'=>'Renvoi vers l’espace Groupes',
+                'values'=>self::triple('', '', ''),
+            ),
+        );
+    }
+
+    public static function defaults() {
+        $texts = array();
+        foreach (self::catalog() as $key=>$field) $texts[$key] = $field['values'];
+        $urls = array();
+        foreach (self::link_catalog() as $key=>$field) $urls[$key] = $field['values'];
+        return array('version'=>self::STORE_VERSION, 'texts'=>$texts, 'urls'=>$urls);
     }
 
     public static function settings() {
@@ -112,7 +146,7 @@ final class Parcs_HT_Public_Content {
         if (!is_array($saved)) return $defaults;
         $out = $defaults;
         foreach (array('texts','urls') as $section) {
-            foreach ((array)($saved[$section] ?? array()) as $key => $translations) {
+            foreach ((array)($saved[$section] ?? array()) as $key=>$translations) {
                 if (!isset($out[$section][$key]) || !is_array($translations)) continue;
                 foreach (array('fr','en','de') as $lang) {
                     if (array_key_exists($lang, $translations)) $out[$section][$key][$lang] = (string)$translations[$lang];
@@ -141,7 +175,7 @@ final class Parcs_HT_Public_Content {
 
     public static function format($text, $vars = array()) {
         $replace = array();
-        foreach ((array)$vars as $key => $value) $replace['{' . $key . '}'] = (string)$value;
+        foreach ((array)$vars as $key=>$value) $replace['{' . $key . '}'] = (string)$value;
         return strtr((string)$text, $replace);
     }
 
@@ -157,37 +191,10 @@ final class Parcs_HT_Public_Content {
         );
     }
 
-    private static function groups() {
-        return array(
-            'Textes généraux et tarifs' => array(
-                'common.prices','common.individual','common.reduced','common.groups','common.payments','common.onsite','common.online','common.tickets','common.quote','common.print_rates','common.download_pdf','common.rate_year'
-            ),
-            'Horaires et calendrier' => array(
-                'schedule.today','schedule.openNow','schedule.opensToday','schedule.reopensToday','schedule.openToday','schedule.closedToday','schedule.closedForToday','schedule.opensTomorrowAt','schedule.opensOnAt','schedule.lastEntry','schedule.lastEntryCompact','schedule.fromTime','schedule.openingAt','schedule.seeYouTomorrow','schedule.nextOpeningLabel','schedule.nextOpeningCompact','schedule.openTodayCompact','schedule.nextOpening','schedule.calendar','schedule.monthHours','schedule.closed','schedule.exceptionalHours','schedule.exceptionalClosure','schedule.selectDate','schedule.publicHoliday','schedule.schoolHoliday','schedule.event','schedule.closedShort','schedule.exceptionallyClosedShort','schedule.reopensOn','schedule.reopensIn','schedule.reopensTomorrow','schedule.closePopup','schedule.notAvailable'
-            ),
-            'Espace groupes' => array(
-                'groups.portal.tariffs_tab','groups.portal.hours_tab','groups.portal.year_label','groups.portal.tariffs_unavailable','groups.portal.hours_unavailable','groups.portal.empty','groups.tariffs.empty','groups.redirect.title','groups.redirect.text','groups.redirect.visitor_notice','groups.redirect.button'
-            ),
-            'Guides pédagogiques' => array(
-                'guides.resources','guides.categories','guides.all_cycles','guides.languages','guides.all_languages','guides.new','guides.coming','guides.read','guides.download','guides.info'
-            ),
-        );
-    }
-
-    private static function label($key) {
-        $labels = array(
-            'common.prices'=>'Titre Tarifs','common.individual'=>'Onglet Individuels','common.reduced'=>'Onglet Tarifs réduits','common.groups'=>'Onglet Groupes','common.payments'=>'Moyens de paiement','common.onsite'=>'Sur place','common.online'=>'En ligne','common.tickets'=>'Bouton Acheter vos billets','common.quote'=>'Bouton Demande de devis','common.print_rates'=>'Lien Imprimer les tarifs','common.download_pdf'=>'Lien Télécharger en PDF','common.rate_year'=>'Libellé Année des tarifs',
-            'schedule.today'=>'Aujourd’hui','schedule.openNow'=>'Ouvert maintenant','schedule.opensToday'=>'Ouverture aujourd’hui','schedule.reopensToday'=>'Réouverture aujourd’hui','schedule.openToday'=>'Ouvert aujourd’hui','schedule.closedToday'=>'Fermé aujourd’hui','schedule.closedForToday'=>'Fermé pour aujourd’hui','schedule.opensTomorrowAt'=>'Ouverture demain','schedule.opensOnAt'=>'Ouverture à une date','schedule.lastEntry'=>'Dernière entrée','schedule.lastEntryCompact'=>'Dernière entrée — format court','schedule.fromTime'=>'À partir de','schedule.openingAt'=>'Ouverture à','schedule.seeYouTomorrow'=>'À demain','schedule.nextOpeningLabel'=>'Titre prochaine ouverture','schedule.nextOpeningCompact'=>'Prochaine ouverture — format court','schedule.openTodayCompact'=>'Ouvert aujourd’hui — format court','schedule.nextOpening'=>'Prochaine ouverture','schedule.calendar'=>'Calendrier','schedule.monthHours'=>'Horaires du mois','schedule.closed'=>'Fermé','schedule.exceptionalHours'=>'Horaires exceptionnels','schedule.exceptionalClosure'=>'Fermeture exceptionnelle','schedule.selectDate'=>'Invitation à sélectionner une journée','schedule.publicHoliday'=>'Jour férié','schedule.schoolHoliday'=>'Vacances scolaires','schedule.event'=>'Événement','schedule.closedShort'=>'Fermé — court','schedule.exceptionallyClosedShort'=>'Fermé exceptionnellement','schedule.reopensOn'=>'Réouverture le','schedule.reopensIn'=>'Réouverture dans X jours','schedule.reopensTomorrow'=>'Réouverture demain','schedule.closePopup'=>'Fermer le pop-up','schedule.notAvailable'=>'Dates / horaires indisponibles',
-            'groups.portal.tariffs_tab'=>'Onglet Tarifs groupes','groups.portal.hours_tab'=>'Onglet Horaires d’ouverture','groups.portal.year_label'=>'Libellé année','groups.portal.tariffs_unavailable'=>'Tarifs groupes indisponibles pour une année','groups.portal.hours_unavailable'=>'Horaires indisponibles pour une année','groups.portal.empty'=>'Aucune donnée groupes disponible','groups.tariffs.empty'=>'Aucun tarif groupe disponible','groups.redirect.title'=>'Renvoi groupes — titre','groups.redirect.text'=>'Renvoi groupes — texte','groups.redirect.visitor_notice'=>'Renvoi groupes — mention tarifs visiteurs','groups.redirect.button'=>'Renvoi groupes — bouton',
-            'guides.resources'=>'Guides — titre','guides.categories'=>'Guides — catégories','guides.all_cycles'=>'Guides — tous les cycles','guides.languages'=>'Guides — langues','guides.all_languages'=>'Guides — toutes les langues','guides.new'=>'Guides — Nouveau','guides.coming'=>'Guides — À venir','guides.read'=>'Guides — Consulter','guides.download'=>'Guides — Télécharger le PDF','guides.info'=>'Guides — Plus d’informations',
-        );
-        return isset($labels[$key]) ? $labels[$key] : $key;
-    }
-
-    private static function is_long($key) {
-        return in_array($key, array(
-            'schedule.selectDate','schedule.notAvailable','groups.portal.tariffs_unavailable','groups.portal.hours_unavailable','groups.portal.empty','groups.tariffs.empty','groups.redirect.text','groups.redirect.visitor_notice'
-        ), true);
+    private static function grouped_catalog() {
+        $groups = array();
+        foreach (self::catalog() as $key=>$field) $groups[$field['section']][$key] = $field;
+        return $groups;
     }
 
     public static function page() {
@@ -196,25 +203,25 @@ final class Parcs_HT_Public_Content {
         ?>
         <div class="wrap htp-public-content-admin">
             <h1>Contenus & traductions</h1>
-            <p>Modifiez ici les textes publics de l’extension sans modifier le code. Les variables entre accolades, comme <code>{year}</code>, <code>{date}</code>, <code>{time}</code>, <code>{open}</code>, <code>{close}</code>, <code>{hours}</code> ou <code>{days}</code>, doivent être conservées lorsqu’elles sont présentes.</p>
+            <p>Modifiez ici les textes publics de l’extension sans modifier le code. Les variables entre accolades, comme <code>{year}</code>, <code>{date}</code>, <code>{time}</code>, <code>{open}</code>, <code>{close}</code>, <code>{from}</code>, <code>{to}</code>, <code>{hours}</code> ou <code>{days}</code>, doivent être conservées lorsqu’elles sont présentes.</p>
             <?php if (isset($_GET['updated'])) : /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- message de confirmation uniquement */ ?>
                 <div class="notice notice-success is-dismissible"><p>Les contenus publics ont été enregistrés.</p></div>
             <?php endif; ?>
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                 <input type="hidden" name="action" value="parcs_ht_save_public_content">
                 <?php wp_nonce_field('parcs_ht_save_public_content'); ?>
-                <?php foreach (self::groups() as $title => $keys) : ?>
-                    <section class="card" style="max-width:none;margin:18px 0;padding:18px;">
-                        <h2><?php echo esc_html($title); ?></h2>
-                        <table class="widefat striped" style="table-layout:fixed;">
+                <?php foreach (self::grouped_catalog() as $title=>$fields) : ?>
+                    <details class="card" style="max-width:none;margin:18px 0;padding:0 18px;" open>
+                        <summary style="cursor:pointer;padding:16px 0;font-size:1.2em;font-weight:600;"><?php echo esc_html($title); ?></summary>
+                        <table class="widefat striped" style="table-layout:fixed;margin-bottom:18px;">
                             <thead><tr><th style="width:22%">Élément</th><th>FR</th><th>EN</th><th>DE</th></tr></thead>
                             <tbody>
-                            <?php foreach ($keys as $key) : ?>
+                            <?php foreach ($fields as $key=>$field) : ?>
                                 <tr>
-                                    <th scope="row"><?php echo esc_html(self::label($key)); ?></th>
+                                    <th scope="row"><?php echo esc_html($field['label']); ?></th>
                                     <?php foreach (array('fr','en','de') as $lang) : $value = $settings['texts'][$key][$lang] ?? ''; ?>
                                         <td>
-                                        <?php if (self::is_long($key)) : ?>
+                                        <?php if (!empty($field['long'])) : ?>
                                             <textarea rows="3" style="width:100%" name="content[texts][<?php echo esc_attr($key); ?>][<?php echo esc_attr($lang); ?>]"><?php echo esc_textarea($value); ?></textarea>
                                         <?php else : ?>
                                             <input type="text" style="width:100%" name="content[texts][<?php echo esc_attr($key); ?>][<?php echo esc_attr($lang); ?>]" value="<?php echo esc_attr($value); ?>">
@@ -225,21 +232,25 @@ final class Parcs_HT_Public_Content {
                             <?php endforeach; ?>
                             </tbody>
                         </table>
-                    </section>
+                    </details>
                 <?php endforeach; ?>
 
-                <section class="card" style="max-width:none;margin:18px 0;padding:18px;">
-                    <h2>Liens publics</h2>
+                <details class="card" style="max-width:none;margin:18px 0;padding:0 18px;" open>
+                    <summary style="cursor:pointer;padding:16px 0;font-size:1.2em;font-weight:600;">Liens publics</summary>
                     <p class="description">Laissez vide pour conserver le lien déterminé automatiquement par l’extension ou par les réglages existants.</p>
-                    <table class="widefat striped" style="table-layout:fixed;">
+                    <table class="widefat striped" style="table-layout:fixed;margin-bottom:18px;">
                         <thead><tr><th style="width:22%">Élément</th><th>FR</th><th>EN</th><th>DE</th></tr></thead>
-                        <tbody><tr><th scope="row">Renvoi vers l’espace Groupes</th>
-                        <?php foreach (array('fr','en','de') as $lang) : ?>
-                            <td><input type="url" style="width:100%" name="content[urls][groups.redirect.url][<?php echo esc_attr($lang); ?>]" value="<?php echo esc_attr($settings['urls']['groups.redirect.url'][$lang] ?? ''); ?>"></td>
+                        <tbody>
+                        <?php foreach (self::link_catalog() as $key=>$field) : ?>
+                            <tr><th scope="row"><?php echo esc_html($field['label']); ?></th>
+                            <?php foreach (array('fr','en','de') as $lang) : ?>
+                                <td><input type="url" style="width:100%" name="content[urls][<?php echo esc_attr($key); ?>][<?php echo esc_attr($lang); ?>]" value="<?php echo esc_attr($settings['urls'][$key][$lang] ?? ''); ?>"></td>
+                            <?php endforeach; ?>
+                            </tr>
                         <?php endforeach; ?>
-                        </tr></tbody>
+                        </tbody>
                     </table>
-                </section>
+                </details>
                 <?php submit_button('Enregistrer les contenus'); ?>
             </form>
         </div>
@@ -250,15 +261,16 @@ final class Parcs_HT_Public_Content {
         if (!current_user_can('manage_options')) wp_die('Accès refusé.');
         check_admin_referer('parcs_ht_save_public_content');
         $defaults = self::defaults();
+        $catalog = self::catalog();
         $raw = isset($_POST['content']) && is_array($_POST['content']) ? wp_unslash($_POST['content']) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- nettoyé champ par champ ci-dessous.
         $out = $defaults;
-        foreach ($defaults['texts'] as $key => $translations) {
+        foreach ($defaults['texts'] as $key=>$translations) {
             foreach (array('fr','en','de') as $lang) {
                 $value = isset($raw['texts'][$key][$lang]) ? (string)$raw['texts'][$key][$lang] : (string)$translations[$lang];
-                $out['texts'][$key][$lang] = self::is_long($key) ? sanitize_textarea_field($value) : sanitize_text_field($value);
+                $out['texts'][$key][$lang] = !empty($catalog[$key]['long']) ? sanitize_textarea_field($value) : sanitize_text_field($value);
             }
         }
-        foreach ($defaults['urls'] as $key => $translations) {
+        foreach ($defaults['urls'] as $key=>$translations) {
             foreach (array('fr','en','de') as $lang) {
                 $value = isset($raw['urls'][$key][$lang]) ? (string)$raw['urls'][$key][$lang] : '';
                 $out['urls'][$key][$lang] = esc_url_raw($value);
@@ -276,70 +288,32 @@ final class Parcs_HT_Public_Content {
         return class_exists('Parcs_HT_Schedule') ? Parcs_HT_Schedule::language() : 'fr';
     }
 
+    /**
+     * Remplacement transitoire des libellés statiques de renderers historiques.
+     * Les textes dynamiques passent par le dictionnaire JS ou par un appel direct à text().
+     */
     private static function replacement_map($language) {
-        $defaults = self::defaults();
-        $keys = array(
-            'common.prices','common.individual','common.reduced','common.groups','common.payments','common.onsite','common.online','common.tickets','common.quote','common.print_rates','common.download_pdf','common.rate_year',
-            'groups.portal.tariffs_tab','groups.portal.hours_tab','groups.portal.year_label','groups.portal.tariffs_unavailable','groups.portal.hours_unavailable','groups.portal.empty','groups.tariffs.empty',
-            'groups.redirect.title','groups.redirect.button',
-            'guides.resources','guides.categories','guides.all_cycles','guides.languages','guides.all_languages','guides.new','guides.coming','guides.read','guides.download','guides.info'
-        );
         $map = array();
-        foreach ($keys as $key) {
-            $from = (string)($defaults['texts'][$key][$language] ?? '');
+        foreach (self::catalog() as $key=>$field) {
+            $from = (string)($field['values'][$language] ?? '');
+            if ($from === '' || strpos($from, '{') !== false) continue;
             $to = self::text($key, $language, $from);
-            if ($from !== '' && $from !== $to) $map[esc_html($from)] = esc_html($to);
+            if ($from !== $to) $map[esc_html($from)] = esc_html($to);
         }
         return $map;
-    }
-
-    private static function replace_dynamic_group_redirect($output, $language) {
-        $patterns = array(
-            'fr'=>array(
-                'text'=>'~Retrouvez les tarifs groupes (20\\d{2}), les horaires d’ouverture et toutes les informations pour organiser votre visite sur notre espace dédié\\.~u',
-                'notice'=>'~Les tarifs individuels et réduits (20\\d{2}) ne sont pas encore disponibles\\.~u',
-            ),
-            'en'=>array(
-                'text'=>'~Find the (20\\d{2}) group rates, opening hours and all the information you need to organise your visit in our dedicated group area\\.~u',
-                'notice'=>'~Individual and reduced rates for (20\\d{2}) are not available yet\\.~u',
-            ),
-            'de'=>array(
-                'text'=>'~Die Gruppentarife (20\\d{2}), Öffnungszeiten und alle Informationen zur Organisation Ihres Besuchs finden Sie in unserem Gruppenbereich\\.~u',
-                'notice'=>'~Einzel- und ermäßigte Tarife für (20\\d{2}) sind noch nicht verfügbar\\.~u',
-            ),
-        );
-        foreach ($patterns[$language] as $kind => $pattern) {
-            $key = $kind === 'text' ? 'groups.redirect.text' : 'groups.redirect.visitor_notice';
-            $output = preg_replace_callback($pattern, static function ($match) use ($key, $language) {
-                $value = Parcs_HT_Public_Content::text($key, $language, $match[0]);
-                return esc_html(Parcs_HT_Public_Content::format($value, array('year'=>$match[1])));
-            }, $output);
-        }
-        return $output;
-    }
-
-    private static function replace_group_redirect_url($output, $language) {
-        $url = self::url('groups.redirect.url', $language, '');
-        if ($url === '' || strpos($output, 'parcs-ht-group-redirect') === false) return $output;
-        return preg_replace(
-            '~(<div class="parcs-ht-tariff-ui__actions"><a class="parcs-ht-tariff-ui__button" href=")[^"]*(">)~',
-            '$1' . esc_url($url) . '$2',
-            $output,
-            1
-        );
     }
 
     public static function filter_shortcode_output($output, $tag, $attr, $m) {
         unset($attr, $m);
         $base = preg_replace('/_(fr|en|de)$/', '', (string)$tag);
-        $allowed = array('parc_horaires_tarifs','parc_tableau_tarifs','parc_tarifs_groupes','parc_groupes_horaires_tarifs','parc_guides_pedagogiques');
+        $allowed = array(
+            'parc_horaires_tarifs','parc_calendrier','parc_tableau_tarifs','parc_tarifs_groupes',
+            'parc_groupes_horaires_tarifs','parc_guides_pedagogiques','parc_devis','parc_devis_groupe'
+        );
         if (!in_array($base, $allowed, true) || !is_string($output) || $output === '') return $output;
         $language = self::language_from_tag($tag);
         $map = self::replacement_map($language);
-        if ($map) $output = strtr($output, $map);
-        $output = self::replace_dynamic_group_redirect($output, $language);
-        $output = self::replace_group_redirect_url($output, $language);
-        return $output;
+        return $map ? strtr($output, $map) : $output;
     }
 
     private static function dictionary_overrides() {
@@ -347,8 +321,8 @@ final class Parcs_HT_Public_Content {
             'today'=>'schedule.today','openNow'=>'schedule.openNow','opensToday'=>'schedule.opensToday','reopensToday'=>'schedule.reopensToday','openToday'=>'schedule.openToday','closedToday'=>'schedule.closedToday','closedForToday'=>'schedule.closedForToday','opensTomorrowAt'=>'schedule.opensTomorrowAt','opensOnAt'=>'schedule.opensOnAt','lastEntry'=>'schedule.lastEntry','lastEntryCompact'=>'schedule.lastEntryCompact','fromTime'=>'schedule.fromTime','openingAt'=>'schedule.openingAt','seeYouTomorrow'=>'schedule.seeYouTomorrow','nextOpeningLabel'=>'schedule.nextOpeningLabel','nextOpeningCompact'=>'schedule.nextOpeningCompact','openTodayCompact'=>'schedule.openTodayCompact','nextOpening'=>'schedule.nextOpening','calendar'=>'schedule.calendar','monthHours'=>'schedule.monthHours','closed'=>'schedule.closed','exceptionalHours'=>'schedule.exceptionalHours','exceptionalClosure'=>'schedule.exceptionalClosure','selectDate'=>'schedule.selectDate','individual'=>'common.individual','reduced'=>'common.reduced','groups'=>'common.groups','prices'=>'common.prices','tickets'=>'common.tickets','quote'=>'common.quote','payments'=>'common.payments','publicHoliday'=>'schedule.publicHoliday','schoolHoliday'=>'schedule.schoolHoliday','event'=>'schedule.event','closedShort'=>'schedule.closedShort','exceptionallyClosedShort'=>'schedule.exceptionallyClosedShort','reopensOn'=>'schedule.reopensOn','reopensIn'=>'schedule.reopensIn','reopensTomorrow'=>'schedule.reopensTomorrow','closePopup'=>'schedule.closePopup','notAvailable'=>'schedule.notAvailable'
         );
         $out = array('fr'=>array(),'en'=>array(),'de'=>array());
-        foreach ($out as $lang => $unused) {
-            foreach ($mapping as $dictionary_key => $content_key) $out[$lang][$dictionary_key] = self::text($content_key, $lang, '');
+        foreach ($out as $lang=>$unused) {
+            foreach ($mapping as $dictionary_key=>$content_key) $out[$lang][$dictionary_key] = self::text($content_key, $lang, '');
         }
         return $out;
     }
@@ -358,40 +332,5 @@ final class Parcs_HT_Public_Content {
         $payload = self::dictionary_overrides();
         $js = '(function(){if(!window.ParcsHTPData)return;window.ParcsHTPData.dictionary=window.ParcsHTPData.dictionary||{};var p=' . wp_json_encode($payload) . ';Object.keys(p).forEach(function(lang){window.ParcsHTPData.dictionary[lang]=Object.assign({},window.ParcsHTPData.dictionary[lang]||{},p[lang]);});}());';
         wp_add_inline_script('parcs-ht-frontend', $js, 'after');
-    }
-
-    /**
-     * Garde-fou du portail Groupes : le message d'indisponibilité ne doit jamais rester
-     * visible lorsqu'un panneau tarifaire existe pour l'année sélectionnée.
-     */
-    public static function frontend_guard() {
-        wp_register_style('parcs-ht-public-content-guard', false, array(), PARCS_HT_VERSION);
-        wp_enqueue_style('parcs-ht-public-content-guard');
-        wp_add_inline_style('parcs-ht-public-content-guard', '.parcs-ht-group-year-unavailable[hidden]{display:none!important}');
-        wp_register_script('parcs-ht-public-content-guard', false, array(), PARCS_HT_VERSION, true);
-        wp_enqueue_script('parcs-ht-public-content-guard');
-        $js = <<<'JS'
-(function(){
-  'use strict';
-  function sync(root){
-    if(!root)return;
-    var active=String(root.getAttribute('data-group-active-year')||root.getAttribute('data-group-selected-year')||'');
-    var selected=root.querySelector('[data-group-year].is-active');
-    if(selected)active=String(selected.getAttribute('data-group-year')||active);
-    var missing=root.querySelector('[data-group-tariff-unavailable],[data-group-tariff-empty]');
-    if(!missing||!active)return;
-    var panel=root.querySelector('[data-group-tariff-year="'+active+'"],[data-htp-ui-year-panel="'+active+'"]');
-    if(panel)missing.hidden=true;
-  }
-  function init(root){
-    sync(root);
-    root.addEventListener('click',function(event){if(event.target.closest('[data-group-year],[data-group-main-tab]'))window.setTimeout(function(){sync(root);},0);});
-    if(window.MutationObserver)new MutationObserver(function(){sync(root);}).observe(root,{attributes:true,subtree:true,attributeFilter:['hidden','class','data-group-active-year','data-group-selected-year']});
-  }
-  function boot(){document.querySelectorAll('[data-group-portal]').forEach(init);}
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
-}());
-JS;
-        wp_add_inline_script('parcs-ht-public-content-guard', $js, 'after');
     }
 }
