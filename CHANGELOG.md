@@ -1,3 +1,12 @@
+## 1.16.7
+
+- Ajoute deux canaux indépendants et cumulables pour chaque moyen de paiement visiteurs : Sur place et En ligne.
+- Place les moyens de paiement juste sous l’onglet tarifaire actif, avec rappel de la catégorie affichée.
+- Limite les tarifs réduits aux moyens de paiement Sur place et retire tout achat en ligne de cet onglet.
+- Affiche le bouton « Acheter vos billets » uniquement dans l’onglet Individuels.
+- Conserve la compatibilité des moyens historiques : carte bancaire Sur place + En ligne, autres moyens Sur place tant que l’administration n’est pas modifiée.
+- Ne modifie pas le moteur du portail Groupes, le calendrier Groupes ni le moteur des devis.
+
 ## 1.16.6
 
 - Gratuité des enfants de moins de 5 ans affichée uniquement sur place, sans lien d’achat ni doublon en ligne.
