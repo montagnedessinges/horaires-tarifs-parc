@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.16.8
+Stable tag: 1.17.0
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes et outils du parc.
 
@@ -19,6 +19,14 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.17.0 =
+* Ajoute un espace « Contenus & traductions » pour modifier les principaux textes publics FR / EN / DE sans modifier le code.
+* Centralise notamment les libellés des tarifs, boutons, calendrier, statuts d’ouverture, messages Groupes et textes génériques des guides pédagogiques.
+* Permet de personnaliser le lien de renvoi vers l’espace Groupes par langue, tout en conservant le lien automatique existant comme repli.
+* Corrige l’affichage parasite du message « tarifs groupes indisponibles » lorsqu’un panneau tarifaire existe réellement pour l’année sélectionnée.
+* Conserve les moteurs horaires, tarifs, devis, guides, exports, migrations et données annuelles existants.
+* Renforce les tests de non-régression de la 1.16.8 afin qu’ils protègent aussi les versions ultérieures.
 
 = 1.16.8 =
 * Réutilise le même tableau Tarifs groupes dans le portail Groupes et dans le tableau public lorsqu’une année visiteurs est publiée.
@@ -139,4 +147,3 @@ Une sauvegarde du site et de la base de données reste recommandée avant toute 
 * Archives indépendantes pour les éditions du Calendrier de l’Avent.
 * Import CSV des horaires et du calendrier par saison : périodes habituelles, exceptions, fermetures, jours fériés, périodes repères, vacances scolaires et événements.
 * Modèle CSV téléchargeable et révision de sécurité automatique avant import.
-
