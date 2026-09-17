@@ -49,6 +49,8 @@ jobs:
           php tests/under-five-onsite-runtime.php
           php tests/public-tariff-1167-payments-contract.php
           php tests/public-tariff-1168-groups-contract.php
+          php tests/public-content-1170-contract.php
+          php tests/admin-overview-1170-contract.php
           php tests/visibility-11512-runtime.php
           php tests/stability-11511-contract.php
           php tests/group-quote-future-season-runtime.php
@@ -92,6 +94,8 @@ jobs:
           PLUGIN_ROOT=/tmp/htp-production-test node tests/public-ui-regressions.js
           PLUGIN_ROOT=/tmp/htp-production-test php tests/public-tariff-1167-payments-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/public-tariff-1168-groups-contract.php
+          PLUGIN_ROOT=/tmp/htp-production-test php tests/public-content-1170-contract.php
+          PLUGIN_ROOT=/tmp/htp-production-test php tests/admin-overview-1170-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/public-data-regressions.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/updater-metadata-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/schedule-csv-contract.php

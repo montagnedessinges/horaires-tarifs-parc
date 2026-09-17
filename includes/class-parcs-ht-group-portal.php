@@ -19,8 +19,11 @@ final class Parcs_HT_Group_Portal {
         return self::render(Parcs_HT_Schedule::language(), is_array($atts) ? $atts : array());
     }
 
-    private static function text($language, $fr, $en, $de) {
-        return $language === 'en' ? $en : ($language === 'de' ? $de : $fr);
+    private static function text($language, $key, $fr, $en, $de) {
+        $fallback = $language === 'en' ? $en : ($language === 'de' ? $de : $fr);
+        return class_exists('Parcs_HT_Public_Content')
+            ? Parcs_HT_Public_Content::text($key, $language, $fallback)
+            : $fallback;
     }
 
     private static function enabled_rows($rows) {
@@ -74,7 +77,8 @@ final class Parcs_HT_Group_Portal {
 
     private static function year_tabs($years, $active, $language) {
         if (count($years) < 2) return '';
-        $html = '<div class="parcs-ht-group-portal-years" role="tablist" aria-label="' . esc_attr(self::text($language, 'Année', 'Year', 'Jahr')) . '">';
+        $label = self::text($language, 'groups.portal.year_label', 'Année', 'Year', 'Jahr');
+        $html = '<div class="parcs-ht-group-portal-years" role="tablist" aria-label="' . esc_attr($label) . '">';
         foreach ($years as $year) {
             $on = (string)$year === (string)$active;
             $html .= '<button type="button" role="tab" data-group-year="' . esc_attr($year) . '" class="parcs-ht-year-tab' . ($on ? ' is-active' : '') . '" aria-selected="' . ($on ? 'true' : 'false') . '">' . esc_html($year) . '</button>';
@@ -108,13 +112,23 @@ final class Parcs_HT_Group_Portal {
         $calendar = $has_hours ? self::calendar($language, $schedule_years) : '';
         $schedule_map = array_fill_keys(array_map('strval', $schedule_years), true);
         $tariff_map = array_fill_keys(array_map('strval', $tariff_years), true);
+        $active_has_tariffs = isset($tariff_map[(string)$active_year]);
+        $active_has_hours = isset($schedule_map[(string)$active_year]);
+        $tariff_missing_possible = (bool)array_diff(array_map('strval', $years), array_map('strval', $tariff_years));
+        $hours_missing_possible = (bool)array_diff(array_map('strval', $years), array_map('strval', $schedule_years));
+
+        $tariffs_tab = self::text($language, 'groups.portal.tariffs_tab', 'Tarifs groupes', 'Group rates', 'Gruppentarife');
+        $hours_tab = self::text($language, 'groups.portal.hours_tab', 'Horaires d’ouverture', 'Opening hours', 'Öffnungszeiten');
+        $tariffs_unavailable = self::text($language, 'groups.portal.tariffs_unavailable', 'Les tarifs groupes ne sont pas disponibles pour cette année.', 'Group rates are not available for this year.', 'Für dieses Jahr sind keine Gruppentarife verfügbar.');
+        $hours_unavailable = self::text($language, 'groups.portal.hours_unavailable', 'Les horaires d’ouverture ne sont pas disponibles pour cette année.', 'Opening hours are not available for this year.', 'Für dieses Jahr sind keine Öffnungszeiten verfügbar.');
+        $empty = self::text($language, 'groups.portal.empty', 'Aucun tarif groupe ni horaire disponible pour le moment.', 'No group rates or opening hours are available at the moment.', 'Derzeit sind keine Gruppentarife oder Öffnungszeiten verfügbar.');
 
         ob_start(); ?>
         <div id="<?php echo esc_attr($id); ?>" class="parcs-ht-group-portal" data-group-portal data-group-active-year="<?php echo esc_attr($active_year); ?>">
             <?php if ($show_main_tabs) : ?>
                 <div class="parcs-ht-group-portal-tabs" role="tablist">
-                    <button type="button" class="is-active" data-group-main-tab="tariffs" aria-selected="true"><?php echo esc_html(self::text($language, 'Tarifs groupes', 'Group rates', 'Gruppentarife')); ?></button>
-                    <button type="button" data-group-main-tab="hours" aria-selected="false"><?php echo esc_html(self::text($language, 'Horaires d’ouverture', 'Opening hours', 'Öffnungszeiten')); ?></button>
+                    <button type="button" class="is-active" data-group-main-tab="tariffs" aria-selected="true"><?php echo esc_html($tariffs_tab); ?></button>
+                    <button type="button" data-group-main-tab="hours" aria-selected="false"><?php echo esc_html($hours_tab); ?></button>
                 </div>
             <?php endif; ?>
 
@@ -123,25 +137,30 @@ final class Parcs_HT_Group_Portal {
             <?php if ($has_tariffs) : ?>
                 <div data-group-main-panel="tariffs" <?php if ($default_tab !== 'tariffs') echo 'hidden'; ?>>
                     <?php foreach ($tariff_years as $year) : ?>
-                        <div data-group-tariff-year="<?php echo esc_attr($year); ?>" <?php if ($year !== $active_year) echo 'hidden'; ?>><?php echo self::group_tariffs($year, $language); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- rendu interne échappé. ?></div>
+                        <div data-group-tariff-year="<?php echo esc_attr($year); ?>" <?php if ((string)$year !== (string)$active_year) echo 'hidden'; ?>><?php echo self::group_tariffs($year, $language); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- rendu interne échappé. ?></div>
                     <?php endforeach; ?>
-                    <p class="parcs-ht-group-year-unavailable" data-group-tariff-unavailable hidden><?php echo esc_html(self::text($language, 'Les tarifs groupes ne sont pas disponibles pour cette année.', 'Group rates are not available for this year.', 'Für dieses Jahr sind keine Gruppentarife verfügbar.')); ?></p>
+                    <?php if ($tariff_missing_possible) : ?>
+                        <p class="parcs-ht-group-year-unavailable" data-group-tariff-unavailable<?php if ($active_has_tariffs) echo ' hidden'; ?>><?php echo esc_html($tariffs_unavailable); ?></p>
+                    <?php endif; ?>
                 </div>
             <?php endif; ?>
 
             <?php if ($has_hours) : ?>
                 <div data-group-main-panel="hours" <?php if ($default_tab !== 'hours') echo 'hidden'; ?>>
-                    <div data-group-calendar-wrap><?php echo $calendar; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- calendrier interne déjà échappé. ?></div>
-                    <p class="parcs-ht-group-year-unavailable" data-group-hours-unavailable hidden><?php echo esc_html(self::text($language, 'Les horaires d’ouverture ne sont pas disponibles pour cette année.', 'Opening hours are not available for this year.', 'Für dieses Jahr sind keine Öffnungszeiten verfügbar.')); ?></p>
+                    <div data-group-calendar-wrap<?php if (!$active_has_hours) echo ' hidden'; ?>><?php echo $calendar; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- calendrier interne déjà échappé. ?></div>
+                    <?php if ($hours_missing_possible) : ?>
+                        <p class="parcs-ht-group-year-unavailable" data-group-hours-unavailable<?php if ($active_has_hours) echo ' hidden'; ?>><?php echo esc_html($hours_unavailable); ?></p>
+                    <?php endif; ?>
                 </div>
             <?php endif; ?>
 
             <?php if (!$has_tariffs && !$has_hours) : ?>
-                <p><?php echo esc_html(self::text($language, 'Aucun tarif groupe ni horaire disponible pour le moment.', 'No group rates or opening hours are available at the moment.', 'Derzeit sind keine Gruppentarife oder Öffnungszeiten verfügbar.')); ?></p>
+                <p><?php echo esc_html($empty); ?></p>
             <?php endif; ?>
         </div>
         <style>
         #<?php echo esc_attr($id); ?>{--htp-primary:#006757;--htp-highlight:#e7c55b;background:transparent}
+        #<?php echo esc_attr($id); ?> [hidden]{display:none!important}
         #<?php echo esc_attr($id); ?> .parcs-ht-group-portal-tabs,
         #<?php echo esc_attr($id); ?> .parcs-ht-group-portal-years{display:flex;flex-wrap:nowrap;align-items:center;gap:8px;margin:0 0 14px;padding:2px 0 5px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
         #<?php echo esc_attr($id); ?> .parcs-ht-group-portal-tabs button,
