@@ -15,7 +15,8 @@ $composer = file_get_contents($root . '/includes/class-parcs-ht-shortcode-compos
 $fixes = file_get_contents($root . '/includes/class-parcs-ht-tariff-public-fixes.php');
 
 verify_1168_groups(is_string($shared) && $shared !== '', 'Le module 1.16.8 du tableau Groupes partagé existe');
-verify_1168_groups(strpos($bootstrap, "Version: 1.16.8") !== false && strpos($bootstrap, "PARCS_HT_VERSION', '1.16.8") !== false, 'La version 1.16.8 est cohérente dans le bootstrap');
+$version = preg_match('/Version:\s*([0-9.]+)/', $bootstrap, $match) ? $match[1] : '0';
+verify_1168_groups(version_compare($version, '1.16.8', '>='), 'La fonctionnalité 1.16.8 reste protégée dans les versions suivantes');
 verify_1168_groups(strpos($bootstrap, "class-parcs-ht-tariff-shared-1168.php") !== false, 'Le module 1.16.8 est chargé');
 verify_1168_groups(strpos($bootstrap, 'Parcs_HT_Tariff_Public_Fixes::init();') < strpos($bootstrap, 'Parcs_HT_Tariff_Shared_1168::init();'), 'Le renderer partagé est enregistré après les correctifs publics existants');
 
