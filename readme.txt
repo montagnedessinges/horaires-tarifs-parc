@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.16.8
+Stable tag: 1.16.7
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes et outils du parc.
 
@@ -20,7 +20,7 @@ Une sauvegarde du site et de la base de données reste recommandée avant toute 
 
 == Changelog ==
 
-= 1.16.8 =
+= 1.16.7 =
 * Ajoute pour chaque moyen de paiement visiteurs deux canaux indépendants et cumulables : Sur place et En ligne.
 * Place les moyens de paiement juste sous l’onglet tarifaire actif et rappelle la catégorie affichée.
 * Les tarifs réduits utilisent uniquement les moyens de paiement Sur place et ne proposent aucun achat en ligne.
