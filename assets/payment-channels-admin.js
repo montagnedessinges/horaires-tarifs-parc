@@ -2,7 +2,7 @@
   'use strict';
 
   function rowIndex(row){
-    var input=row.querySelector('[name*="settings[tariffs][payment_items]["]') || row.querySelector('[name*="payment_items"]');
+    var input=row.querySelector('[name*="payment_items"]');
     if(!input)return '';
     var match=String(input.name||'').match(/payment_items\]\[([^\]]+)\]/);
     return match?match[1]:'';
@@ -45,12 +45,21 @@
     var grid=row.querySelector('.htp-grid');if(grid)grid.appendChild(field);
   }
 
-  function boot(root){(root||document).querySelectorAll('.htp-payment-admin-row').forEach(enhance);}
+  function boot(root){
+    root=root||document;
+    if(root.matches&&root.matches('.htp-payment-admin-row'))enhance(root);
+    if(root.querySelectorAll)root.querySelectorAll('.htp-payment-admin-row').forEach(enhance);
+  }
+
   function start(){
     boot(document);
     var target=document.querySelector('.htp-payment-admin');
     if(!target||typeof MutationObserver==='undefined')return;
-    new MutationObserver(function(records){records.forEach(function(record){record.addedNodes.forEach(function(node){if(node.nodeType===1)boot(node.matches&&node.matches('.htp-payment-admin-row')?node:node);});});}).observe(target,{childList:true,subtree:true});
+    new MutationObserver(function(records){
+      records.forEach(function(record){
+        record.addedNodes.forEach(function(node){if(node.nodeType===1)boot(node);});
+      });
+    }).observe(target,{childList:true,subtree:true});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 }());
