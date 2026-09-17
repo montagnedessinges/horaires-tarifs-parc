@@ -61,10 +61,18 @@ $main = file_get_contents($root . '/horaires-tarifs-parc.php');
 htp_1170_assert(strpos($main, "Version: 1.17.0") !== false, 'version 1.17.0 absente du plugin');
 htp_1170_assert(strpos($main, "class-parcs-ht-public-content.php") !== false, 'classe de contenus non chargée');
 htp_1170_assert(strpos($main, "Parcs_HT_Public_Content::init();") !== false, 'classe de contenus non initialisée');
+htp_1170_assert(strpos($main, "class-parcs-ht-admin-overview.php") !== false, 'vue d’ensemble non chargée');
+htp_1170_assert(strpos($main, "Parcs_HT_Admin_Overview::init();") !== false, 'vue d’ensemble non initialisée');
 
 $class = file_get_contents($root . '/includes/class-parcs-ht-public-content.php');
 htp_1170_assert(strpos($class, 'parcs-ht-group-year-unavailable[hidden]') !== false, 'garde-fou hidden du portail groupes absent');
 htp_1170_assert(strpos($class, "Contenus & traductions") !== false, 'écran de contenus et traductions absent');
 htp_1170_assert(strpos($class, "do_shortcode_tag") !== false, 'intégration des textes dans les shortcodes absente');
+
+$overview = file_get_contents($root . '/includes/class-parcs-ht-admin-overview.php');
+htp_1170_assert(is_string($overview) && strpos($overview, 'Vue d’ensemble') !== false, 'écran de vue d’ensemble absent');
+htp_1170_assert(strpos($overview, "'htp-tariffs-groups'") !== false, 'accès rapide aux tarifs groupes absent');
+htp_1170_assert(strpos($overview, "Parcs_HT_Public_Content::PAGE") !== false, 'accès rapide aux contenus et traductions absent');
+htp_1170_assert(strpos($overview, 'update_option(') === false, 'la vue d’ensemble ne doit pas créer une seconde source de réglages');
 
 fwrite(STDOUT, "OK public-content-1170-contract\n");
