@@ -38,6 +38,10 @@ $GLOBALS['parcs_ht_test_options'][Parcs_HT_Public_Content::OPTION] = array(
     'texts'=>array(
         'groups.portal.tariffs_unavailable'=>array('fr'=>'Tarifs bientôt disponibles','en'=>'','de'=>''),
         'groups.redirect.text'=>array('fr'=>'Tarifs groupes {year} : consultez notre espace dédié.','en'=>'','de'=>''),
+        'schedule.prev_month'=>array('fr'=>'Mois avant','en'=>'','de'=>''),
+        'schedule.download_pdf'=>array('fr'=>'Planning PDF','en'=>'','de'=>''),
+        'tariffs.download_pdf'=>array('fr'=>'Tarifs PDF','en'=>'','de'=>''),
+        'groups.special.buy'=>array('fr'=>'Réserver','en'=>'','de'=>''),
     ),
     'urls'=>array(
         'groups.redirect.url'=>array('fr'=>'https://example.test/groupes','en'=>'','de'=>''),
@@ -60,6 +64,16 @@ htp_1170_assert(
     Parcs_HT_Public_Content::format('Tarifs groupes {year}', array('year'=>'2027')) === 'Tarifs groupes 2027',
     'le remplacement des variables ne fonctionne pas'
 );
+
+$calendar_sample = '<button aria-label="Mois précédent">‹</button><a>Télécharger le planning des horaires</a>';
+$calendar_filtered = Parcs_HT_Public_Content::filter_shortcode_output($calendar_sample, 'parc_calendrier_fr', array(), null);
+htp_1170_assert(strpos($calendar_filtered, 'aria-label="Mois avant"') !== false, 'la navigation calendrier historique n’utilise pas la surcharge');
+htp_1170_assert(strpos($calendar_filtered, '>Planning PDF<') !== false, 'le bouton PDF horaires historique n’utilise pas la surcharge');
+
+$tariff_sample = '<a>Télécharger les tarifs en PDF</a><a>Acheter</a>';
+$tariff_filtered = Parcs_HT_Public_Content::filter_shortcode_output($tariff_sample, 'parc_tarifs_groupes_fr', array(), null);
+htp_1170_assert(strpos($tariff_filtered, '>Tarifs PDF<') !== false, 'le bouton PDF tarifs historique n’utilise pas la surcharge');
+htp_1170_assert(strpos($tariff_filtered, '>Réserver<') !== false, 'le bouton offre historique n’utilise pas la surcharge');
 
 $main = file_get_contents($root . '/horaires-tarifs-parc.php');
 htp_1170_assert(strpos($main, "Version: 1.17.0") !== false, 'version 1.17.0 absente du plugin');
