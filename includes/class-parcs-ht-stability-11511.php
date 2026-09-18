@@ -15,8 +15,11 @@ final class Parcs_HT_Stability_11511 {
         add_filter('do_shortcode_tag', array(__CLASS__, 'stabilize_tariff_output'), 60, 4);
         add_action('wp_enqueue_scripts', array(__CLASS__, 'register_assets'), 40);
 
-        // 1.17.1 : l'Administration générale est chargée isolément afin de ne pas
-        // modifier le bootstrap principal ni les moteurs métier pendant la refonte.
+        // 1.17.1 : un seul référentiel d’apparence, stocké dans les réglages généraux.
+        require_once PARCS_HT_DIR . 'includes/class-parcs-ht-global-appearance.php';
+        Parcs_HT_Global_Appearance::init();
+
+        // L’Administration générale reste isolée des moteurs métier pendant la refonte.
         if (is_admin()) {
             require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin-general.php';
             Parcs_HT_Admin_General::init();
