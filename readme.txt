@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.17.2
+Stable tag: 1.17.3
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes et outils du parc.
 
@@ -19,6 +19,15 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.17.3 =
+* Remplace l’ancien onglet Horaires & calendrier par un écran métier dédié et plus léger, sans réécrire le moteur public.
+* Conserve les périodes d’ouverture existantes avec un ou deux créneaux, le second restant facultatif.
+* Replie les options avancées de chaque période pour alléger l’interface tout en conservant jours concernés, dernière entrée spécifique et couleur fonctionnelle.
+* Ajoute le sélecteur d’année commun directement sur l’écran Horaires & calendrier et préserve les anciens liens vers l’onglet historique.
+* Conserve les couleurs fonctionnelles des cases du calendrier et les réglages visuels existants sans les remplacer par l’apparence globale.
+* Renvoie les textes publics FR / EN / DE vers Contenus & traductions au lieu de les dupliquer dans l’écran métier.
+* Réutilise le moteur CSV existant et conserve les shortcodes, données historiques, événements, exceptions et accès limité inchangés.
 
 = 1.17.2 =
 * Fait de la Vue d’ensemble le point d’entrée principal de Gestion du parc et réorganise les sous-menus WordPress pour accéder directement aux grandes rubriques.
