@@ -43,7 +43,7 @@ htp_1174_assert(is_string($routing) && strpos($routing, "array('htp-holidays','h
 htp_1174_assert(strpos($routing, "array('Parcs_HT_Admin_Periods', 'page')") !== false, 'sous-menu Périodes non branché sur le nouvel écran');
 
 htp_1174_assert(is_string($schedule) && strpos($schedule, 'usort($exceptions') !== false, 'tri canonique des exceptions disparu');
-htp_1174_assert(strpos($schedule, '$a_type === $b_type') !== false && strpos($schedule, "$a_type === 'closed' ? -1 : 1") === false ? strpos($schedule, "return $a_type === 'closed' ? -1 : 1;") !== false : true, 'fermeture prioritaire à priorité égale disparue');
+htp_1174_assert(strpos($schedule, '$a_type === $b_type') !== false && strpos($schedule, "return \$a_type === 'closed' ? -1 : 1;") !== false, 'fermeture prioritaire à priorité égale disparue');
 htp_1174_assert(strpos($schedule, 'regular_periods') !== false, 'repli automatique vers horaires habituels absent');
 htp_1174_assert(strpos($schedule, 'domain_rules') !== false, 'moteur canonique Accès limité absent');
 
