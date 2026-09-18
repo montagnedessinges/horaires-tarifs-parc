@@ -22,7 +22,9 @@ final class Parcs_HT_Stability_11511 {
         // L’Administration générale reste isolée des moteurs métier pendant la refonte.
         if (is_admin()) {
             require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin-general.php';
+            require_once PARCS_HT_DIR . 'includes/class-parcs-ht-global-appearance-admin.php';
             Parcs_HT_Admin_General::init();
+            Parcs_HT_Global_Appearance_Admin::init();
         }
 
         // Le contrôle complet reste disponible manuellement, mais ne doit plus bloquer
