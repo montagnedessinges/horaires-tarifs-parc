@@ -89,6 +89,11 @@ final class Parcs_HT_Admin_Schedule {
         self::field('calendar[' . $key . ']', isset($general[$key]) ? $general[$key] : $fallback, $label, 'color');
     }
 
+    private static function optional_color_field($key, $general, $label, $fallback = '') {
+        $value = isset($general[$key]) ? $general[$key] : $fallback;
+        self::field('calendar[' . $key . ']', $value, $label . ' (vide = thème)', 'text', 'placeholder="#000000" pattern="^$|#[0-9A-Fa-f]{6}$"');
+    }
+
     public static function page() {
         if (!current_user_can('manage_options')) return;
         $all = Parcs_HT_Defaults::all_settings();
@@ -97,7 +102,6 @@ final class Parcs_HT_Admin_Schedule {
             echo '<div class="wrap"><h1>Horaires & calendrier</h1><div class="notice notice-warning"><p>Aucune saison disponible.</p></div></div>';
             return;
         }
-        $settings = Parcs_HT_Defaults::settings($year);
         $season = isset($all['seasons'][$year]) && is_array($all['seasons'][$year]) ? $all['seasons'][$year] : array();
         $general = isset($all['general']) && is_array($all['general']) ? $all['general'] : array();
         $periods = isset($season['regular_periods']) && is_array($season['regular_periods']) ? $season['regular_periods'] : array();
@@ -107,6 +111,7 @@ final class Parcs_HT_Admin_Schedule {
             <div class="htp-1173-title"><div><h1>Horaires & calendrier</h1><p class="description">Réglez ici uniquement les horaires habituels et la présentation du calendrier public. Les périodes, événements et exceptions restent dans leur rubrique dédiée.</p></div><span class="htp-1173-version">Interface 1.17.3</span></div>
             <?php if (class_exists('Parcs_HT_Admin_Navigation') && method_exists('Parcs_HT_Admin_Navigation', 'render_year_context')) Parcs_HT_Admin_Navigation::render_year_context(self::PAGE, $year); ?>
             <?php if (isset($_GET['updated'])) : /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- message visuel uniquement. */ ?><div class="notice notice-success is-dismissible"><p>Les horaires et réglages du calendrier ont été enregistrés.</p></div><?php endif; ?>
+            <?php if (isset($_GET['csv_imported'])) : /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- message visuel uniquement. */ ?><div class="notice notice-success is-dismissible"><p>Le CSV horaires & calendrier a été importé. Une révision de sécurité a été créée avant l’import.</p></div><?php endif; ?>
 
             <section class="htp-1173-summary">
                 <div><span>Année administrée</span><strong><?php echo esc_html($year); ?></strong></div>
@@ -136,18 +141,33 @@ final class Parcs_HT_Admin_Schedule {
                         <?php self::select('calendar[calendar_detail_preset]', $general['calendar_detail_preset'] ?? 'large', 'Détail de la date sélectionnée', array('standard'=>'Standard','large'=>'Grand','xlarge'=>'Très grand')); ?>
                     </div>
                     <details class="htp-1173-advanced">
-                        <summary>Apparence avancée du calendrier</summary>
-                        <p class="description">Ces couleurs existaient déjà avant 1.17.3. Elles restent locales car elles expriment un état du calendrier.</p>
+                        <summary>Apparence avancée des horaires et du calendrier</summary>
+                        <p class="description">Tous les réglages visuels de l’ancien écran Horaires sont conservés ici. Les couleurs d’état et de période restent locales au calendrier.</p>
+                        <h3>État du jour</h3>
                         <div class="htp-1173-grid htp-1173-grid-3">
+                            <?php self::optional_color_field('today_title_color', $general, 'Aujourd’hui — texte'); ?>
+                            <?php self::color_field('today_title_bg_color', $general, 'Aujourd’hui — fond', '#ffffff'); ?>
+                            <?php self::optional_color_field('today_status_color', $general, 'Statut OUVERT', '#16843d'); ?>
+                            <?php self::optional_color_field('today_closed_color', $general, 'Statut FERMÉ', '#9b2c2c'); ?>
+                            <?php self::optional_color_field('today_detail_color', $general, 'Dernière entrée / détail'); ?>
+                        </div>
+                        <div class="htp-1173-toggle-row"><?php self::toggle('calendar[today_title_bg_transparent]', $general['today_title_bg_transparent'] ?? '1', 'Fond Aujourd’hui transparent'); ?></div>
+
+                        <h3>Calendrier</h3>
+                        <div class="htp-1173-grid htp-1173-grid-3">
+                            <?php self::optional_color_field('calendar_title_color', $general, 'Calendrier — titre'); ?>
+                            <?php self::color_field('calendar_title_bg_color', $general, 'Calendrier — fond du titre', '#ffffff'); ?>
+                            <?php self::optional_color_field('calendar_weekday_color', $general, 'Jours de semaine'); ?>
                             <?php self::color_field('calendar_nav_bg_color', $general, 'Boutons des mois — fond', '#006757'); ?>
                             <?php self::color_field('calendar_nav_text_color', $general, 'Boutons des mois — texte', '#ffffff'); ?>
                             <?php self::color_field('calendar_nav_active_bg_color', $general, 'Mois actif — fond', '#e7c55b'); ?>
                             <?php self::color_field('calendar_nav_active_text_color', $general, 'Mois actif — texte', '#27342f'); ?>
                             <?php self::color_field('calendar_day_bg_color', $general, 'Jour ouvert — fond', '#ffffff'); ?>
+                            <?php self::optional_color_field('calendar_detail_text_color', $general, 'Détail journée — texte'); ?>
+                            <?php self::optional_color_field('calendar_detail_border_color', $general, 'Détail journée — bordure'); ?>
                             <?php self::color_field('calendar_closed_bg_color', $general, 'Jour fermé — fond', '#e3e5e4'); ?>
                             <?php self::color_field('calendar_closed_text_color', $general, 'Jour fermé — texte', '#616765'); ?>
                             <?php self::color_field('calendar_selected_color', $general, 'Jour sélectionné — contour', '#006757'); ?>
-                            <?php self::field('calendar[calendar_title_color]', $general['calendar_title_color'] ?? '', 'Titre du calendrier — couleur (vide = héritée)', 'text', 'placeholder="#000000" pattern="^$|#[0-9A-Fa-f]{6}$"'); ?>
                         </div>
                         <div class="htp-1173-toggle-row">
                             <?php self::toggle('calendar[calendar_title_bg_transparent]', $general['calendar_title_bg_transparent'] ?? '1', 'Fond du titre transparent'); ?>
@@ -234,12 +254,20 @@ final class Parcs_HT_Admin_Schedule {
         $calendar = isset($_POST['calendar']) && is_array($_POST['calendar']) ? wp_unslash($_POST['calendar']) : array();
         if (isset($calendar['calendar_mobile_size']) && in_array((string)$calendar['calendar_mobile_size'], array('small','medium','large'), true)) $all['general']['calendar_mobile_size'] = (string)$calendar['calendar_mobile_size'];
         if (isset($calendar['calendar_detail_preset']) && in_array((string)$calendar['calendar_detail_preset'], array('standard','large','xlarge'), true)) $all['general']['calendar_detail_preset'] = (string)$calendar['calendar_detail_preset'];
+
         foreach (array(
+            'today_title_bg_color'=>'#ffffff',
+            'calendar_title_bg_color'=>'#ffffff',
             'calendar_nav_bg_color'=>'#006757','calendar_nav_text_color'=>'#ffffff','calendar_nav_active_bg_color'=>'#e7c55b','calendar_nav_active_text_color'=>'#27342f',
             'calendar_day_bg_color'=>'#ffffff','calendar_closed_bg_color'=>'#e3e5e4','calendar_closed_text_color'=>'#616765','calendar_selected_color'=>'#006757',
         ) as $key=>$fallback) if (array_key_exists($key, $calendar)) $all['general'][$key] = self::clean_color($calendar[$key], $fallback);
-        if (array_key_exists('calendar_title_color', $calendar)) $all['general']['calendar_title_color'] = self::clean_color($calendar['calendar_title_color'], '');
-        foreach (array('calendar_title_bg_transparent','calendar_day_bg_transparent') as $key) if (array_key_exists($key, $calendar)) $all['general'][$key] = (string)$calendar[$key] === '1' ? '1' : '0';
+
+        foreach (array('today_title_color','today_status_color','today_closed_color','today_detail_color','calendar_title_color','calendar_weekday_color','calendar_detail_text_color','calendar_detail_border_color') as $key) {
+            if (array_key_exists($key, $calendar)) $all['general'][$key] = self::clean_color($calendar[$key], '');
+        }
+        foreach (array('today_title_bg_transparent','calendar_title_bg_transparent','calendar_day_bg_transparent') as $key) {
+            if (array_key_exists($key, $calendar)) $all['general'][$key] = (string)$calendar[$key] === '1' ? '1' : '0';
+        }
 
         update_option(Parcs_HT_Defaults::OPTION, $all, false);
         do_action('litespeed_purge_all');
