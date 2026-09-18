@@ -51,3 +51,8 @@ htp_admin_1170_assert(strpos($overview, "année désactivée automatiquement") !
 htp_admin_1170_assert(strpos($overview, "interrupteurs manuels") !== false, 'le mode manuel n’est pas expliqué');
 
 fwrite(STDOUT, "OK admin-overview-1170-contract\n");
+
+// Les contrats 1.17.1 sont chaînés ici afin d’être exécutés dans les deux passes
+// CI déjà prévues pour l’administration (sources et paquet de production).
+require __DIR__ . '/admin-general-1171-contract.php';
+require __DIR__ . '/global-appearance-1171-contract.php';
