@@ -15,6 +15,13 @@ final class Parcs_HT_Stability_11511 {
         add_filter('do_shortcode_tag', array(__CLASS__, 'stabilize_tariff_output'), 60, 4);
         add_action('wp_enqueue_scripts', array(__CLASS__, 'register_assets'), 40);
 
+        // 1.17.1 : l'Administration générale est chargée isolément afin de ne pas
+        // modifier le bootstrap principal ni les moteurs métier pendant la refonte.
+        if (is_admin()) {
+            require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin-general.php';
+            Parcs_HT_Admin_General::init();
+        }
+
         // Le contrôle complet reste disponible manuellement, mais ne doit plus bloquer
         // la première page d'administration après chaque mise à jour de l'extension.
         add_action('plugins_loaded', array(__CLASS__, 'disable_blocking_admin_verifier'), 999);
