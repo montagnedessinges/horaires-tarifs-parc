@@ -96,7 +96,11 @@ htp_1170_assert(strpos($guide_filtered, '>Petite enfance<') !== false, 'le libel
 htp_1170_assert(strpos($guide_filtered, '>Allemand / Deutsch<') !== false, 'le nom public de langue n’est pas modifiable');
 
 $main = file_get_contents($root . '/horaires-tarifs-parc.php');
-htp_1170_assert(strpos($main, "Version: 1.17.0") !== false, 'version 1.17.0 absente du plugin');
+$plugin_version = '';
+if (preg_match('/Version:\s*([0-9.]+)/', $main, $matches)) {
+    $plugin_version = isset($matches[1]) ? (string)$matches[1] : '';
+}
+htp_1170_assert($plugin_version !== '' && version_compare($plugin_version, '1.17.0', '>='), 'la fonctionnalité 1.17.0 doit rester protégée dans les versions suivantes');
 htp_1170_assert(strpos($main, "class-parcs-ht-public-content.php") !== false, 'classe de contenus non chargée');
 htp_1170_assert(strpos($main, "Parcs_HT_Public_Content::init();") !== false, 'classe de contenus non initialisée');
 
