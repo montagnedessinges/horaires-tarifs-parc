@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.17.1
+Stable tag: 1.17.2
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes et outils du parc.
 
@@ -19,6 +19,16 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.17.2 =
+* Fait de la Vue d’ensemble le point d’entrée principal de Gestion du parc et réorganise les sous-menus WordPress pour accéder directement aux grandes rubriques.
+* Regroupe Tarifs groupes, Devis groupes et Guides pédagogiques sous « Groupes », et Pop-up + Calendrier de l’Avent sous « Communication », sans mélanger leurs moteurs ni leurs données.
+* Transforme la Vue d’ensemble en tableau de bord : année administrée, état des cinq activations annuelles, dates automatiques, accès rapide aux modules et état des mises à jour.
+* Permet de modifier les cinq activations annuelles depuis la Vue d’ensemble en réutilisant l’action d’enregistrement canonique de l’Administration générale.
+* Adapte l’updater au dépôt GitHub public : détection et téléchargement sans clé, mise à jour automatique sans token, vérification forcée manuelle et contrôle SHA-256 conservé.
+* Conserve la compatibilité avec une clé GitHub facultative si le dépôt redevient privé.
+* Rend plus lisibles les libellés de l’Apparence globale sans raccorder prématurément tous les modules au nouveau socle visuel.
+* Le Calendrier de l’Avent reste indépendant : chaque campagne conserve ses propres données et son propre shortcode.
 
 = 1.17.1 =
 * Ajoute une nouvelle Administration générale comme entrée principale de l’extension, sans supprimer l’ancienne vue détaillée utilisée comme filet de sécurité.

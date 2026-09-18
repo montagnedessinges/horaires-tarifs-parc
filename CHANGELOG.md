@@ -1,3 +1,15 @@
+## 1.17.2
+
+- Fait de « Vue d’ensemble » l’entrée principale de « Gestion du parc » et stabilise l’ordre des sous-menus WordPress.
+- Ajoute une navigation directe vers Horaires & calendrier, Périodes & événements, Tarifs visiteurs, Groupes, Communication, Aperçu, Mises à jour et Shortcodes, sans obliger à revenir par le tableau de bord.
+- Regroupe visuellement « Tarifs groupes », « Devis groupes » et « Guides pédagogiques » sous la rubrique « Groupes », tout en conservant leurs moteurs et écrans techniques séparés.
+- Regroupe visuellement « Pop-up » et « Calendrier de l’Avent » sous « Communication » ; chaque campagne du Calendrier de l’Avent reste indépendante avec ses propres données et son propre shortcode.
+- Enrichit la Vue d’ensemble avec l’année administrée, les cinq activations annuelles, les dates automatiques, l’état effectif des modules, la version installée/disponible et les actions de mise à jour.
+- Permet de modifier les activations annuelles depuis la Vue d’ensemble en réutilisant la même action et les mêmes clés canoniques que l’Administration générale, sans second stockage.
+- Adapte l’updater au dépôt GitHub public : détection et téléchargement sans clé, mise à jour automatique sans token, vérification manuelle forcée et contrôle SHA-256 conservé ; une clé reste facultativement compatible si le dépôt redevient privé.
+- Rend les libellés de l’Apparence globale explicitement visibles sans brancher prématurément tous les modules sur le nouveau socle visuel.
+- Ne réécrit aucun moteur métier : la refonte interne des écrans Horaires, Tarifs, Groupes, Devis, Guides et Communication continue progressivement dans les versions 1.17.3 et suivantes.
+
 ## 1.17.1
 
 - Ajoute une nouvelle « Administration générale » comme entrée principale de l’extension, tout en conservant l’ancienne vue détaillée comme filet de sécurité pendant la refonte.

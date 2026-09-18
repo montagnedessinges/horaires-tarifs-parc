@@ -60,4 +60,30 @@ if (strpos($updater, "const ASSET_NAME = 'horaires-tarifs-parc.zip';") === false
     exit(1);
 }
 
+if (version_compare($header_match[1], '1.17.2', '>=')) {
+    foreach (array(
+        'browser_download_url',
+        'is_public_release_download_url',
+        'verify_download_checksum',
+        "if (\$token !== '') \$headers['Authorization'] = 'Bearer ' . \$token;",
+    ) as $needle) {
+        if (strpos($updater, $needle) === false) {
+            fwrite(STDERR, "Public updater contract missing: {$needle}.\n");
+            exit(1);
+        }
+    }
+
+    foreach (array(
+        "if (\$token === '') { self::\$release = false",
+        "!self::has_token()",
+        'parcs_ht_github_token_missing',
+        'mises à jour privées GitHub',
+    ) as $forbidden) {
+        if (strpos($updater, $forbidden) !== false) {
+            fwrite(STDERR, "Obsolete private-repository updater gate found: {$forbidden}.\n");
+            exit(1);
+        }
+    }
+}
+
 echo "Release metadata contract passed for version {$header_match[1]}.\n";
