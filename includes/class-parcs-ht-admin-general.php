@@ -40,17 +40,17 @@ final class Parcs_HT_Admin_General {
         if ($page !== self::PAGE) return;
         wp_enqueue_style('wp-color-picker');
         wp_enqueue_script('wp-color-picker');
-        wp_add_inline_script('wp-color-picker', "jQuery(function($){$('.htp-global-color').wpColorPicker({clear:true});});");
+        wp_add_inline_script('wp-color-picker', 'jQuery(function($){$(".htp-global-color").wpColorPicker({clear:true});});');
     }
 
     private static function selected_year($all) {
         $requested = isset($_GET['season']) ? sanitize_text_field(wp_unslash($_GET['season'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- sélection d'affichage uniquement.
-        if ($requested !== '' && preg_match('/^20\\d{2}$/', $requested) && isset($all['seasons'][$requested])) return $requested;
+        if ($requested !== '' && preg_match('/^20\d{2}$/', $requested) && isset($all['seasons'][$requested])) return $requested;
         $settings = Parcs_HT_Defaults::settings();
         $active = (string)($settings['active_season_year'] ?? '');
         if ($active !== '' && isset($all['seasons'][$active])) return $active;
         foreach (array_keys((array)($all['seasons'] ?? array())) as $year) {
-            if (preg_match('/^20\\d{2}$/', (string)$year)) return (string)$year;
+            if (preg_match('/^20\d{2}$/', (string)$year)) return (string)$year;
         }
         return '';
     }
@@ -100,7 +100,7 @@ final class Parcs_HT_Admin_General {
 
     private static function date_label($value) {
         $value = trim((string)$value);
-        if (!preg_match('/^(\\d{4})-(\\d{2})-(\\d{2})$/', $value, $m)) return 'non définie';
+        if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $value, $m)) return 'non définie';
         return $m[3] . '/' . $m[2] . '/' . $m[1];
     }
 
@@ -137,7 +137,7 @@ final class Parcs_HT_Admin_General {
 
         $year = isset($_POST['season_year']) ? sanitize_text_field(wp_unslash($_POST['season_year'])) : '';
         $args = array('page'=>self::PAGE, 'appearance_updated'=>'1');
-        if (preg_match('/^20\\d{2}$/', $year)) $args['season'] = $year;
+        if (preg_match('/^20\d{2}$/', $year)) $args['season'] = $year;
         wp_safe_redirect(add_query_arg($args, admin_url('admin.php')));
         exit;
     }
@@ -203,7 +203,7 @@ final class Parcs_HT_Admin_General {
                         <?php self::number_field('card_radius', $g['card_radius'], 'Arrondi des cartes', 0, 80); ?>
                         <?php self::number_field('block_spacing', $g['block_spacing'], 'Espacement entre blocs', 0, 60); ?>
                         <label class="htp-global-field"><span>Ombre des cartes</span><select name="appearance[card_shadow]"><option value="none" <?php selected($g['card_shadow'], 'none'); ?>>Aucune</option><option value="soft" <?php selected($g['card_shadow'], 'soft'); ?>>Légère</option><option value="medium" <?php selected($g['card_shadow'], 'medium'); ?>>Moyenne</option></select></label>
-                        <label class="htp-global-field htp-global-check"><span>Bordure autour des blocs publics</span><input type="hidden" name="appearance[block_border_enabled]" value="0"><label><input type="checkbox" name="appearance[block_border_enabled]" value="1" <?php checked($g['block_border_enabled'], '1'); ?>> Afficher la bordure générale</label></label>
+                        <div class="htp-global-field htp-global-check"><span>Bordure autour des blocs publics</span><input type="hidden" name="appearance[block_border_enabled]" value="0"><label><input type="checkbox" name="appearance[block_border_enabled]" value="1" <?php checked($g['block_border_enabled'], '1'); ?>> Afficher la bordure générale</label></div>
                     </div>
                 </details>
 
@@ -249,7 +249,7 @@ final class Parcs_HT_Admin_General {
         $settings = Parcs_HT_Defaults::settings($year);
         $general = isset($settings['general']) && is_array($settings['general']) ? $settings['general'] : array();
         $years = array();
-        foreach (array_keys((array)($all['seasons'] ?? array())) as $candidate) if (preg_match('/^20\\d{2}$/', (string)$candidate)) $years[] = (string)$candidate;
+        foreach (array_keys((array)($all['seasons'] ?? array())) as $candidate) if (preg_match('/^20\d{2}$/', (string)$candidate)) $years[] = (string)$candidate;
         sort($years, SORT_NUMERIC);
         $automatic = $year !== '' ? self::automatic_state($year) : 'manual';
         $park_name = self::translated_value($general['park_name'] ?? '');
