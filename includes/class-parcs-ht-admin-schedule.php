@@ -29,8 +29,13 @@ final class Parcs_HT_Admin_Schedule {
         wp_enqueue_script('parcs-ht-admin-schedule-1173', PARCS_HT_URL . 'assets/admin-schedule-1173.js', array(), PARCS_HT_VERSION, true);
     }
 
-    private static function field($name, $value, $label, $type = 'text', $attrs = '') {
-        echo '<label class="htp-1173-field"><span>' . esc_html($label) . '</span><input type="' . esc_attr($type) . '" name="' . esc_attr($name) . '" value="' . esc_attr((string)$value) . '" ' . $attrs . '></label>';
+    private static function field($name, $value, $label, $type = 'text', $attrs = array()) {
+        echo '<label class="htp-1173-field"><span>' . esc_html($label) . '</span><input type="' . esc_attr($type) . '" name="' . esc_attr($name) . '" value="' . esc_attr((string)$value) . '"';
+        foreach (is_array($attrs) ? $attrs : array() as $attr => $attr_value) {
+            if (!in_array($attr, array('min','max','step','placeholder','pattern'), true)) continue;
+            echo ' ' . esc_attr($attr) . '="' . esc_attr((string)$attr_value) . '"';
+        }
+        echo '></label>';
     }
 
     private static function select($name, $value, $label, $options) {
@@ -76,7 +81,7 @@ final class Parcs_HT_Admin_Schedule {
                 <summary>Options avancées de cette période</summary>
                 <?php self::weekdays($base, $row['weekdays']); ?>
                 <div class="htp-1173-grid htp-1173-grid-2">
-                    <?php self::field($base . '[last_entry_minutes]', $row['last_entry_minutes'], 'Dernière entrée spécifique — minutes avant fermeture', 'number', 'min="0" max="1440"'); ?>
+                    <?php self::field($base . '[last_entry_minutes]', $row['last_entry_minutes'], 'Dernière entrée spécifique — minutes avant fermeture', 'number', array('min'=>'0','max'=>'1440')); ?>
                     <?php self::field($base . '[color]', $row['color'], 'Couleur de la période dans le calendrier', 'color'); ?>
                 </div>
                 <p class="description">La couleur de période reste locale au calendrier : elle n’est pas remplacée par l’apparence globale.</p>
@@ -91,7 +96,7 @@ final class Parcs_HT_Admin_Schedule {
 
     private static function optional_color_field($key, $general, $label, $fallback = '') {
         $value = isset($general[$key]) ? $general[$key] : $fallback;
-        self::field('calendar[' . $key . ']', $value, $label . ' (vide = thème)', 'text', 'placeholder="#000000" pattern="^$|#[0-9A-Fa-f]{6}$"');
+        self::field('calendar[' . $key . ']', $value, $label . ' (vide = thème)', 'text', array('placeholder'=>'#000000','pattern'=>'^$|#[0-9A-Fa-f]{6}$'));
     }
 
     public static function page() {
@@ -247,11 +252,11 @@ final class Parcs_HT_Admin_Schedule {
 
         $all = Parcs_HT_Defaults::all_settings();
         if (!isset($all['seasons'][$year]) || !is_array($all['seasons'][$year])) wp_die('Saison introuvable.');
-        $raw_periods = isset($_POST['regular_periods']) && is_array($_POST['regular_periods']) ? wp_unslash($_POST['regular_periods']) : array();
+        $raw_periods = isset($_POST['regular_periods']) && is_array($_POST['regular_periods']) ? wp_unslash($_POST['regular_periods']) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- chaque champ est nettoyé dans clean_periods().
         $all['seasons'][$year]['regular_periods'] = self::clean_periods($raw_periods);
 
         if (!isset($all['general']) || !is_array($all['general'])) $all['general'] = array();
-        $calendar = isset($_POST['calendar']) && is_array($_POST['calendar']) ? wp_unslash($_POST['calendar']) : array();
+        $calendar = isset($_POST['calendar']) && is_array($_POST['calendar']) ? wp_unslash($_POST['calendar']) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- chaque clé autorisée est nettoyée ci-dessous.
         if (isset($calendar['calendar_mobile_size']) && in_array((string)$calendar['calendar_mobile_size'], array('small','medium','large'), true)) $all['general']['calendar_mobile_size'] = (string)$calendar['calendar_mobile_size'];
         if (isset($calendar['calendar_detail_preset']) && in_array((string)$calendar['calendar_detail_preset'], array('standard','large','xlarge'), true)) $all['general']['calendar_detail_preset'] = (string)$calendar['calendar_detail_preset'];
 
