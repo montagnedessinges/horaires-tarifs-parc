@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.17.0
+Stable tag: 1.17.1
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes et outils du parc.
 
@@ -19,6 +19,14 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.17.1 =
+* Ajoute une nouvelle Administration générale comme entrée principale de l’extension, sans supprimer l’ancienne vue détaillée utilisée comme filet de sécurité.
+* Regroupe les informations globales du parc, la gestion des saisons et la publication annuelle avec les cinq activations existantes et leurs dates automatiques.
+* Introduit un référentiel d’apparence globale non destructif pour les couleurs, textes, bordures, boutons, cartes, onglets, badges et espacements communs.
+* Prépare la cascade future apparence globale → personnalisation du module → personnalisation d’un élément, sans forcer de changement visuel aux modules métier dans cette version.
+* Supprime le message public global « tarifs groupes indisponibles » du portail Groupes lorsqu’il n’est pas pertinent et ajoute un test de non-régression dédié.
+* Conserve les données, clés historiques, moteurs horaires, tarifs, devis, guides, exports et compatibilité PHP 7.4 / 8.1 / 8.2 / 8.3.
 
 = 1.17.0 =
 * Ajoute un espace « Contenus & traductions » pour modifier les principaux textes publics FR / EN / DE sans modifier le code.
