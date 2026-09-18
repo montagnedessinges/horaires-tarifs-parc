@@ -13,8 +13,10 @@ $bootstrap = file_get_contents($root . '/horaires-tarifs-parc.php');
 $visibility = file_get_contents($root . '/includes/class-parcs-ht-public-visibility.php');
 $composer = file_get_contents($root . '/includes/class-parcs-ht-shortcode-composer.php');
 $fixes = file_get_contents($root . '/includes/class-parcs-ht-tariff-public-fixes.php');
+$portal = file_get_contents($root . '/includes/class-parcs-ht-group-portal.php');
 
 verify_1168_groups(is_string($shared) && $shared !== '', 'Le module 1.16.8 du tableau Groupes partagé existe');
+verify_1168_groups(is_string($portal) && $portal !== '', 'Le portail Groupes existe');
 $version = preg_match('/Version:\s*([0-9.]+)/', $bootstrap, $match) ? $match[1] : '0';
 verify_1168_groups(version_compare($version, '1.16.8', '>='), 'La fonctionnalité 1.16.8 reste protégée dans les versions suivantes');
 verify_1168_groups(strpos($bootstrap, "class-parcs-ht-tariff-shared-1168.php") !== false, 'Le module 1.16.8 est chargé');
@@ -42,5 +44,9 @@ verify_1168_groups(strpos($shared, 'parc_calendrier') === false && strpos($share
 verify_1168_groups(strpos($composer, "self::child('parc_calendrier', \$language)") !== false, 'Le portail Groupes continue de réutiliser le calendrier canonique');
 verify_1168_groups(strpos($shared, 'Group_Quotes') === false && strpos($shared, 'quote_binding') === false, 'Le moteur de devis n’est pas modifié par le nouveau rendu public');
 verify_1168_groups(strpos($shared, '2026') === false && strpos($shared, '2027') === false && strpos($shared, '2028') === false, 'Aucune année métier n’est codée en dur dans la logique 1.16.8');
+
+verify_1168_groups(strpos($portal, 'data-group-tariff-year=') !== false, 'Le portail conserve un panneau tarifaire distinct par année publiée');
+verify_1168_groups(strpos($portal, '<p class="parcs-ht-group-year-unavailable" data-group-tariff-unavailable') === false, 'Le portail ne rend plus de message global « tarifs groupes indisponibles »');
+verify_1168_groups(strpos($portal, 'data-group-hours-unavailable') !== false, 'Le message d’horaires indisponibles reste indépendant et conservé');
 
 echo "Public tariff shared groups 1.16.8 contract: OK\n";
