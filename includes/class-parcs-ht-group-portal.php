@@ -139,9 +139,6 @@ final class Parcs_HT_Group_Portal {
                     <?php foreach ($tariff_years as $year) : ?>
                         <div data-group-tariff-year="<?php echo esc_attr($year); ?>" <?php if ((string)$year !== (string)$active_year) echo 'hidden'; ?>><?php echo self::group_tariffs($year, $language); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- rendu interne échappé. ?></div>
                     <?php endforeach; ?>
-                    <?php if ($tariff_missing_possible) : ?>
-                        <p class="parcs-ht-group-year-unavailable" data-group-tariff-unavailable<?php if ($active_has_tariffs) echo ' hidden'; ?>><?php echo esc_html($tariffs_unavailable); ?></p>
-                    <?php endif; ?>
                 </div>
             <?php endif; ?>
 
