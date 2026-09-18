@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.17.3
+Stable tag: 1.17.4
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes et outils du parc.
 
@@ -20,6 +20,16 @@ Une sauvegarde du site et de la base de données reste recommandée avant toute 
 
 == Changelog ==
 
+= 1.17.4 =
+* Remplace l’ancien écran-pont Périodes & événements par un espace métier annuel dédié réunissant périodes repères, événements, exceptions et accès temporairement limité.
+* Sépare visuellement les périodes de contexte et les événements sans fusionner leurs règles métier ni leurs données.
+* Chaque événement peut conserver sa propre couleur et son propre pictogramme parmi les marqueurs déjà pris en charge par le calendrier public.
+* Les horaires exceptionnels conservent la priorité sur les horaires habituels, avec un ou deux créneaux et retour automatique au planning normal à la fin de l’exception.
+* Les pop-up d’exception réutilisent le contexte, le titre public et le message public comme source unique ; les dates et horaires peuvent être affichés indépendamment.
+* Les réglages d’un pop-up restent masqués tant que « Activer le pop-up » n’est pas coché.
+* Le module Accès temporairement limité et ses textes FR / EN / DE sont conservés, ainsi que le moteur CSV commun.
+* Les anciens liens Horaires → Périodes, Exceptions et Accès limité redirigent vers le nouvel espace sans modifier les shortcodes publics ni le moteur calendrier canonique.
+
 = 1.17.3 =
 * Remplace l’ancien onglet Horaires & calendrier par un écran métier dédié et plus léger, sans réécrire le moteur public.
 * Conserve les périodes d’ouverture existantes avec un ou deux créneaux, le second restant facultatif.
@@ -33,144 +43,15 @@ Une sauvegarde du site et de la base de données reste recommandée avant toute 
 * Fait de la Vue d’ensemble le point d’entrée principal de Gestion du parc et réorganise les sous-menus WordPress pour accéder directement aux grandes rubriques.
 * Regroupe Tarifs groupes, Devis groupes et Guides pédagogiques sous « Groupes », et Pop-up + Calendrier de l’Avent sous « Communication », sans mélanger leurs moteurs ni leurs données.
 * Transforme la Vue d’ensemble en tableau de bord : année administrée, état des cinq activations annuelles, dates automatiques, accès rapide aux modules et état des mises à jour.
-* Permet de modifier les cinq activations annuelles depuis la Vue d’ensemble en réutilisant l’action d’enregistrement canonique de l’Administration générale.
 * Adapte l’updater au dépôt GitHub public : détection et téléchargement sans clé, mise à jour automatique sans token, vérification forcée manuelle et contrôle SHA-256 conservé.
-* Conserve la compatibilité avec une clé GitHub facultative si le dépôt redevient privé.
-* Rend plus lisibles les libellés de l’Apparence globale sans raccorder prématurément tous les modules au nouveau socle visuel.
-* Le Calendrier de l’Avent reste indépendant : chaque campagne conserve ses propres données et son propre shortcode.
 
 = 1.17.1 =
-* Ajoute une nouvelle Administration générale comme entrée principale de l’extension, sans supprimer l’ancienne vue détaillée utilisée comme filet de sécurité.
-* Regroupe les informations globales du parc, la gestion des saisons et la publication annuelle avec les cinq activations existantes et leurs dates automatiques.
-* Introduit un référentiel d’apparence globale non destructif pour les couleurs, textes, bordures, boutons, cartes, onglets, badges et espacements communs.
-* Prépare la cascade future apparence globale → personnalisation du module → personnalisation d’un élément, sans forcer de changement visuel aux modules métier dans cette version.
-* Supprime le message public global « tarifs groupes indisponibles » du portail Groupes lorsqu’il n’est pas pertinent et ajoute un test de non-régression dédié.
-* Conserve les données, clés historiques, moteurs horaires, tarifs, devis, guides, exports et compatibilité PHP 7.4 / 8.1 / 8.2 / 8.3.
+* Ajoute une Administration générale et le référentiel d’apparence globale non destructif.
+* Regroupe les informations globales du parc, les saisons et les cinq activations annuelles existantes.
+* Conserve les données, moteurs horaires, tarifs, devis, guides et compatibilité PHP 7.4 / 8.1 / 8.2 / 8.3.
 
 = 1.17.0 =
-* Ajoute un espace « Contenus & traductions » pour modifier les principaux textes publics FR / EN / DE sans modifier le code.
-* Centralise notamment les libellés des tarifs, boutons, calendrier, statuts d’ouverture, messages Groupes et textes génériques des guides pédagogiques.
-* Permet de personnaliser le lien de renvoi vers l’espace Groupes par langue, tout en conservant le lien automatique existant comme repli.
-* Corrige l’affichage parasite du message « tarifs groupes indisponibles » lorsqu’un panneau tarifaire existe réellement pour l’année sélectionnée.
+* Ajoute Contenus & traductions pour centraliser les principaux textes publics FR / EN / DE.
 * Conserve les moteurs horaires, tarifs, devis, guides, exports, migrations et données annuelles existants.
-* Renforce les tests de non-régression de la 1.16.8 afin qu’ils protègent aussi les versions ultérieures.
 
-= 1.16.8 =
-* Réutilise le même tableau Tarifs groupes dans le portail Groupes et dans le tableau public lorsqu’une année visiteurs est publiée.
-* Les moyens de paiement, informations, styles et bouton de devis restent ceux de la configuration Groupes ; aucun moyen visiteurs ni bouton « Acheter vos billets » n’est injecté dans Groupes.
-* Si une année est déjà disponible pour les groupes mais pas encore pour les visiteurs, l’onglet Groupes public affiche seulement un renvoi vers l’espace Groupes et précise que les tarifs Individuels et Réduits ne sont pas encore disponibles.
-* Le lien de renvoi détecte la page du portail Groupes sans slug codé en dur, avec le lien Groupes historique en secours.
-* Préserve le calendrier canonique, la synchronisation annuelle du portail Groupes, les dates automatiques et le moteur de devis.
-
-= 1.16.7 =
-* Ajoute pour chaque moyen de paiement visiteurs deux canaux indépendants et cumulables : Sur place et En ligne.
-* Place les moyens de paiement juste sous l’onglet tarifaire actif et rappelle la catégorie affichée.
-* Les tarifs réduits utilisent uniquement les moyens de paiement Sur place et ne proposent aucun achat en ligne.
-* Le bouton « Acheter vos billets » est affiché uniquement dans l’onglet Individuels.
-* Les moyens historiques restent compatibles : carte bancaire Sur place + En ligne, autres moyens Sur place tant qu’ils ne sont pas modifiés dans l’administration.
-* Cette étape ne modifie pas le moteur du portail Groupes, le calendrier Groupes ni le moteur des devis.
-
-= 1.16.6 =
-* Affiche la gratuité des enfants de moins de 5 ans uniquement sur place, dans un encadré unique au même format que les tarifs réduits et sans lien vers la billetterie.
-* Préserve les autres tarifs et les données enregistrées de chaque saison.
-
-= 1.16.5 =
-* Corrige l’affichage des tarifs groupes des années futures comme 2027 lorsque l’année est activée dans le shortcode Groupes.
-* Une grille groupes est désormais considérée exploitable dès qu’une ligne active contient un tarif, sans dépendre de l’ancien état visible/masqué des colonnes commerciales.
-* Le rendu public des groupes projette les anciennes structures tarifaires dans une seule colonne canonique « Tarif » / « Price » / « Preis » sans modifier les données enregistrées.
-* Les anciennes lignes groupes dépourvues du champ technique `enabled` restent affichables, conformément au comportement historique des tarifs groupes.
-* Conserve la bascule annuelle automatique 1.16.4 et la synchronisation commune des années entre tarifs groupes et horaires groupes.
-
-= 1.16.4 =
-* Remplace l’ancienne logique de fenêtre par deux dates maîtresses : avant la date d’apparition les interrupteurs restent manuels, à partir de la date d’apparition tous les modules de l’année sont actifs, et à partir de la date de disparition tous les modules sont inactifs.
-* Applique cette bascule au calendrier public, aux tarifs visiteurs, aux horaires groupes, aux devis groupes et aux tarifs groupes sans modifier les données préparées pour les années futures.
-* Affiche ensemble les deux dates automatiques dans le bloc « Activation de l’année » et retire le réglage de forçage devenu inutile.
-* Corrige le shortcode Groupes : les années autorisées aux groupes sont indépendantes du calendrier visiteurs et un sélecteur annuel commun synchronise les tarifs groupes et le calendrier existant.
-* Permet donc d’afficher manuellement les horaires et tarifs groupes 2027 avant la date de bascule, puis de laisser le passage 2026 → 2027 s’effectuer automatiquement à la date choisie.
-
-= 1.16.3 =
-* Rétablit le sélecteur d’années dans le shortcode des tarifs groupes : les années publiques disponibles comme 2026, 2027 et 2028 apparaissent de nouveau sous forme d’onglets, avec l’année courante prioritaire.
-* Force l’affichage des tarifs réduits en « Sur place » uniquement ; une ancienne valeur rangée dans la cellule En ligne est réutilisée uniquement pour l’affichage Sur place sans modifier les données enregistrées.
-* Remplace les libellés de canal des tarifs groupes par le libellé générique « Tarif » / « Price » / « Preis ».
-* Conserve l’architecture 1.16.2 : les shortcodes composés continuent d’assembler les shortcodes autonomes existants et le moteur de calendrier n’est pas modifié.
-
-= 1.16.2 =
-* Simplifie les shortcodes composés : Horaires & Tarifs assemble désormais directement les shortcodes autonomes de l’état du jour, du calendrier et des tarifs.
-* Le shortcode Groupes assemble directement le shortcode des tarifs groupes et le shortcode calendrier existant, sans recréer ni réinjecter un second moteur d’horaires.
-* Supprime du chemin public composé les synchronisations JavaScript fragiles et les injections de données parallèles ; chaque bloc garde son propre moteur, ses données et son comportement éprouvé.
-* Conserve les shortcodes individuels utilisables séparément tout en gardant les shortcodes communs pour simplifier l’intégration dans les pages WordPress.
-
-= 1.16.1 =
-* Restaure le shortcode complet Horaires & Tarifs avec l’état du jour, le calendrier existant et le nouveau tableau de tarifs dans cet ordre.
-* Corrige les cellules En ligne vides, supprime les colonnes sans valeur et étend automatiquement une cellule tarifaire unique sur toute la zone disponible.
-* Place l’information des tarifs réduits avant les lignes, agrandit le rendu sur ordinateur et mobile et conserve « Tarifs » comme simple texte visuel interne.
-* Restaure dans l’espace Groupes le vrai calendrier public, avec Tarifs groupes en premier et une sélection d’année synchronisée entre tarifs et horaires.
-* Affiche l’année courante en premier et applique les dates de début / fin d’affichage aux modules publics concernés.
-
-= 1.16.0 =
-* Refonte complète du rendu public des tarifs, sans modifier le moteur des horaires ni le calendrier existant.
-* Nouveau composant compact et responsive pour les tarifs individuels, réduits et groupes, avec fond transparent conçu pour être intégré dans une section de page blanche.
-* Les onglets, années et moyens de paiement restent sur une ligne et utilisent un défilement horizontal local sur les petits écrans, sans provoquer de débordement global de la page.
-* Les cellules tarifaires vides ne sont plus rendues ; « Sur place » reste neutre et « En ligne » est visuellement distinct et cliquable lorsqu’un lien d’achat est disponible.
-* Le shortcode Groupes ouvre les tarifs en premier puis les horaires, tout en conservant des moyens de paiement et des réglages visuels distincts entre visiteurs et groupes.
-* Les couleurs de la charte du parc servent de valeurs par défaut, les titres sont noirs sur les blocs transparents et les réglages de couleurs existants restent personnalisables.
-
-= 1.15.18 =
-* Refonte complète du moteur des devis groupes : une date utilise exclusivement l’année correspondante, sans aucun repli vers une année précédente ou future.
-* Chaque année possède désormais un état d’activation devis indépendant et versionné ; activer 2027 ne peut plus modifier, masquer ou remplacer 2026.
-* Les prix du devis proviennent uniquement de la grille groupes canonique de l’année sélectionnée, même lorsque les identifiants de lignes et de colonnes diffèrent d’une année à l’autre.
-* Les anciennes données de devis servent uniquement à une migration initiale des saisons historiques réellement utilisées ; les années futures ne sont jamais activées par déduction.
-* Une normalisation unique aligne les anciens boutons d’administration avec le nouvel état afin d’éviter un moteur actif avec un bouton affiché sur NON.
-* Les calculs Contact Form 7 restent recalculés côté serveur et les effectifs sont traités comme des nombres entiers.
-* Ajoute des tests de non-régression couvrant 2026/2027 simultanément, l’activation et la désactivation indépendante de chaque année ainsi que des grilles et identifiants différents.
-
-= 1.15.17 =
-* Sépare définitivement l’activation du devis groupes de la publication commerciale des tarifs groupes : publier ou préparer 2027 ne peut plus désactiver un devis 2026 historique.
-* Lorsqu’une saison possède le nouvel interrupteur `group_quotes_enabled`, celui-ci reste la seule autorité pour cette année.
-* Pour les saisons historiques sans cet interrupteur, le moteur restaure l’état depuis les données réellement enregistrées du devis (liaison exacte ou ancienne grille de devis), et non depuis le statut public des tarifs groupes.
-* Renforce le test 2026/2027 afin de reproduire explicitement un statut commercial faux tout en exigeant que les devis 2026 et 2027 restent disponibles indépendamment.
-
-= 1.15.16 =
-* Corrige le devis groupes lorsqu’une année future comme 2027 possède une liaison tarifaire différente : cette liaison ne peut plus rendre les tarifs 2026 indisponibles.
-* Une liaison provenant d’une autre année n’est réutilisée que si tous ses identifiants et prix existent réellement dans la grille de l’année demandée.
-* Si une liaison stable manque pour une année historique, le moteur peut reconstruire la liaison de cette année à partir du mapping métier historique au lieu d’utiliser aveuglément une autre année.
-* Ajoute un test de non-régression reproduisant le cas 2026 disponible + 2027 configuré avec des identifiants différents.
-* Retire la modification d’affichage ajoutée en 1.15.15 : l’affichage public revient au comportement 1.15.14, qui fonctionnait déjà correctement. Le correctif est désormais limité au moteur de devis.
-
-= 1.15.15 =
-* Correctif d’affichage 2026/2027 ajouté en urgence puis retiré en 1.15.16 après vérification : le problème observé provenait du moteur de devis et non de l’affichage public.
-
-= 1.15.14 =
-* Ajoute une recherche instantanée et purement visuelle dans Périodes repères, Événements, Exceptions et Accès temporairement limité, avec compteur, effacement rapide et message lorsqu’aucune ligne ne correspond.
-* La recherche tient compte des libellés, titres, dates, types et contenus déjà présents dans les champs sans modifier, supprimer ni réordonner les données du formulaire.
-* Étend l’outil CSV avec un export de la saison et un type canonique `limited_access` pour les règles d’accès temporairement limité, traductions comprises.
-* L’import valide le fichier complet avant écriture, crée toujours une révision de sécurité et continue de préserver les catégories absentes du CSV.
-* Les quatre sections concernées indiquent clairement qu’elles sont couvertes par l’outil CSV commun.
-* Ajoute une documentation du format CSV et des contrats de non-régression dédiés.
-
-= 1.15.13 =
-* Stabilise la navigation de l’administration : les onglets Groupes et Horaires n’effacent plus les onglets canoniques après chargement et s’appuient sur un seul moteur d’affichage des panneaux.
-* Conserve le contexte Groupes → Tarifs après une sauvegarde et isole correctement l’écran Guides pédagogiques des commandes du formulaire principal.
-* Remplace l’ancien pilotage global Brouillon / Publié par cinq activations annuelles indépendantes : calendrier public, tarifs visiteurs, horaires groupes, devis groupes et tarifs groupes publics.
-* Une année dupliquée démarre avec toutes ses activations publiques désactivées afin de pouvoir être préparée sans publication involontaire.
-* Corrige le contrôle de date du devis groupes : une année ou une date sans horaire exploitable est considérée fermée par défaut, tout en laissant le devis possible lorsque les tarifs sont disponibles.
-* Rejette les dates calendaires impossibles dans le contrôle préalable du devis.
-* Ajoute des contrats de non-régression dédiés à la navigation d’administration, aux activations annuelles et au comportement fail-closed des dates de devis.
-
-= 1.15.12 =
-* Stabilisation du sélecteur annuel des tarifs visiteurs : les années affichées sont contrôlées explicitement et ne remplacent plus silencieusement l’année courante.
-* Les boutons d’année des tarifs fonctionnent comme des onglets sans rechargement complet de la page, tout en conservant un lien de secours accessible.
-* Le titre public reste « Tarifs » sans année ; les moyens de paiement restent communs au-dessus des années.
-* Correction du devis groupes pour les saisons futures publiées, notamment 2027, avec réutilisation sûre des liaisons tarifaires stables lorsqu’elles correspondent.
-* Le calendrier conserve son propre sélecteur d’année indépendant.
-* Le contrôle complet de l’extension n’est plus lancé automatiquement au chargement de l’administration ; il reste disponible manuellement.
-* Réduction des observateurs JavaScript globaux afin d’éviter des traitements inutiles sur les pages publiques et dans l’administration.
-
-= 1.15.10 =
-* Gestion multi-années des horaires et tarifs avec dates de visibilité et forçage manuel.
-* Tarifs individuels et réduits simplifiés en deux canaux : En ligne et Sur place.
-* Horaires futurs affichables aux groupes indépendamment du grand public.
-* Nouveau shortcode groupes réunissant horaires d’ouverture et tarifs groupes.
-* Archives indépendantes pour les éditions du Calendrier de l’Avent.
-* Import CSV des horaires et du calendrier par saison : périodes habituelles, exceptions, fermetures, jours fériés, périodes repères, vacances scolaires et événements.
-* Modèle CSV téléchargeable et révision de sécurité automatique avant import.
+Pour l’historique détaillé des versions antérieures, consultez CHANGELOG.md dans le dépôt GitHub.
