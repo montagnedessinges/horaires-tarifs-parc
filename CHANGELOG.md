@@ -1,3 +1,13 @@
+## 1.17.3
+
+- Remplace le pont historique « Horaires & calendrier » par un écran métier dédié, léger et directement accessible depuis le sous-menu WordPress.
+- Réorganise les horaires habituels autour d’un ou deux créneaux par période ; le second reste facultatif et les options avancées sont repliées.
+- Ajoute le sélecteur d’année commun directement sur l’écran et redirige les anciens liens `htp-regular` vers le nouvel écran sans casser les liens existants.
+- Réutilise exactement les données `regular_periods`, le moteur calendrier public canonique et le moteur CSV existant ; événements, exceptions et accès limité restent inchangés.
+- Conserve tous les réglages visuels historiques propres aux horaires et au calendrier, notamment les couleurs fonctionnelles des états et des cases, sans raccordement global imposé.
+- Renvoie les textes éditoriaux FR / EN / DE vers « Contenus & traductions » au lieu de les dupliquer dans le module.
+- Préserve les shortcodes et toutes les données historiques ; aucun second moteur de calendrier n’est introduit.
+
 ## 1.17.2
 
 - Fait de « Vue d’ensemble » l’entrée principale de « Gestion du parc » et stabilise l’ordre des sous-menus WordPress.
