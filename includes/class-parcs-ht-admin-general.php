@@ -130,7 +130,7 @@ final class Parcs_HT_Admin_General {
 
         $all = Parcs_HT_Defaults::all_settings();
         if (!isset($all['general']) || !is_array($all['general'])) $all['general'] = array();
-        $raw = isset($_POST['appearance']) && is_array($_POST['appearance']) ? wp_unslash($_POST['appearance']) : array();
+        $raw = isset($_POST['appearance']) && is_array($_POST['appearance']) ? map_deep(wp_unslash($_POST['appearance']), 'sanitize_text_field') : array();
         $all['general'] = Parcs_HT_Global_Appearance::merge_general($all['general'], $raw);
         update_option(Parcs_HT_Defaults::OPTION, $all, false);
         do_action('litespeed_purge_all');
