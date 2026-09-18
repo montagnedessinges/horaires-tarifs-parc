@@ -68,12 +68,6 @@ final class Parcs_HT_Admin_General {
         return add_query_arg($args, admin_url('admin.php'));
     }
 
-    private static function translated_value($value) {
-        if (!is_array($value)) return trim((string)$value);
-        foreach (array('fr','en','de') as $lang) if (!empty($value[$lang])) return trim((string)$value[$lang]);
-        return '';
-    }
-
     private static function clean_date($value) {
         $value = trim((string)$value);
         return preg_match('/^20\d{2}-\d{2}-\d{2}$/', $value) ? $value : '';
@@ -211,24 +205,17 @@ final class Parcs_HT_Admin_General {
         $all = Parcs_HT_Defaults::all_settings();
         $year = self::selected_year($all);
         $season = ($year !== '' && isset($all['seasons'][$year]) && is_array($all['seasons'][$year])) ? $all['seasons'][$year] : array();
-        $settings = Parcs_HT_Defaults::settings($year);
-        $general = isset($settings['general']) && is_array($settings['general']) ? $settings['general'] : array();
-        $park_name = self::translated_value($general['park_name'] ?? '');
-        $timezone = (string)($settings['timezone'] ?? 'Europe/Paris');
         ?>
         <div class="wrap htp-general-admin">
             <h1>Administration générale</h1>
             <p class="description">Gérez ici uniquement les éléments transversaux. Les horaires, tarifs, groupes, devis, guides, pop-up et Calendrier de l’Avent restent dans leurs catégories dédiées.</p>
 
+            <?php if (isset($_GET['park_updated'])) : /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- message visuel uniquement. */ ?><div class="notice notice-success is-dismissible"><p>Les informations générales du parc ont été enregistrées.</p></div><?php endif; ?>
             <?php if (isset($_GET['appearance_updated'])) : /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- message visuel uniquement. */ ?><div class="notice notice-success is-dismissible"><p>L’apparence globale a été enregistrée.</p></div><?php endif; ?>
             <?php if (isset($_GET['publication_updated'])) : /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- message visuel uniquement. */ ?><div class="notice notice-success is-dismissible"><p>La publication de l’année <?php echo esc_html($year); ?> a été enregistrée.</p></div><?php endif; ?>
             <?php if (isset($_GET['duplicated'])) : /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- message visuel uniquement. */ ?><div class="notice notice-success is-dismissible"><p>La nouvelle saison brouillon a été préparée. Ses cinq modules publics restent désactivés par défaut.</p></div><?php endif; ?>
 
-            <section class="htp-general-card">
-                <div class="htp-general-card-head"><div><h2>Parc</h2><p>Informations communes à l’installation.</p></div><a class="button" href="<?php echo esc_url(self::detailed_url($year, 'htp-general')); ?>">Modifier les informations du parc</a></div>
-                <dl class="htp-general-facts"><div><dt>Nom du parc</dt><dd><?php echo esc_html($park_name !== '' ? $park_name : 'Non renseigné'); ?></dd></div><div><dt>Fuseau horaire</dt><dd><?php echo esc_html($timezone); ?></dd></div><div><dt>Début de saison sélectionnée</dt><dd><?php echo esc_html(self::date_label($season['season_start'] ?? '')); ?></dd></div><div><dt>Fin de saison sélectionnée</dt><dd><?php echo esc_html(self::date_label($season['season_end'] ?? '')); ?></dd></div></dl>
-            </section>
-
+            <?php if (class_exists('Parcs_HT_Admin_General_Park')) Parcs_HT_Admin_General_Park::render($all, $year); ?>
             <?php self::render_seasons($all, $year); ?>
             <?php self::render_publication($year, $season); ?>
             <?php if (class_exists('Parcs_HT_Global_Appearance_Admin')) Parcs_HT_Global_Appearance_Admin::render($all, $year); ?>
@@ -236,7 +223,7 @@ final class Parcs_HT_Admin_General {
             <p class="htp-general-legacy"><a href="<?php echo esc_url(self::detailed_url($year, 'htp-general')); ?>">Ouvrir les réglages détaillés historiques</a> — conservés temporairement comme filet de sécurité pendant la refonte 1.17.x.</p>
         </div>
         <style>
-        .htp-general-admin{max-width:1240px}.htp-general-card{margin:16px 0;padding:20px;background:#fff;border:1px solid #dcdcde;border-radius:10px}.htp-general-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:16px}.htp-general-card-head h2{margin:0 0 6px}.htp-general-card-head p{margin:0;color:#646970}.htp-general-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0}.htp-general-facts div{padding:12px;background:#f6f7f7;border-radius:8px}.htp-general-facts dt{display:block;color:#646970;font-size:12px;margin-bottom:4px}.htp-general-facts dd{margin:0;font-weight:600}.htp-general-season-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}.htp-general-season{border:1px solid #dcdcde;border-radius:8px;padding:12px;background:#fff}.htp-general-season.is-current{border-color:#2271b1;box-shadow:0 0 0 1px #2271b1}.htp-general-season-main{display:flex;flex-direction:column;gap:3px;color:#1d2327;text-decoration:none}.htp-general-season-main span{font-size:12px;color:#646970}.htp-general-season-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px}.htp-general-season-actions form{margin:0}.htp-general-add-season{display:flex;align-items:end;gap:10px;flex-wrap:wrap;margin-top:16px;padding-top:16px;border-top:1px solid #dcdcde}.htp-general-add-season label{display:flex;flex-direction:column;gap:5px;font-weight:600}.htp-general-status-list{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}.htp-general-status{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;background:#f0f0f1;font-weight:600}.htp-general-status small{font-weight:400;opacity:.78}.htp-general-status i{width:9px;height:9px;border-radius:50%;background:#8c8f94}.htp-general-status.is-on{background:#edfaef;color:#176b2c}.htp-general-status.is-on i{background:#00a32a}.htp-general-publication-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.htp-general-publication-field{display:flex;flex-direction:column;gap:6px;padding:12px;background:#f6f7f7;border-radius:8px}.htp-general-publication-field>span{font-weight:600}.htp-general-publication-field small{color:#646970}.htp-general-legacy{text-align:right}.htp-general-legacy a{text-decoration:none}@media(max-width:900px){.htp-general-card-head{flex-direction:column}.htp-general-facts,.htp-general-publication-grid{grid-template-columns:1fr}}
+        .htp-general-admin{max-width:1240px}.htp-general-card{margin:16px 0;padding:20px;background:#fff;border:1px solid #dcdcde;border-radius:10px}.htp-general-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:16px}.htp-general-card-head h2{margin:0 0 6px}.htp-general-card-head p{margin:0;color:#646970}.htp-general-season-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}.htp-general-season{border:1px solid #dcdcde;border-radius:8px;padding:12px;background:#fff}.htp-general-season.is-current{border-color:#2271b1;box-shadow:0 0 0 1px #2271b1}.htp-general-season-main{display:flex;flex-direction:column;gap:3px;color:#1d2327;text-decoration:none}.htp-general-season-main span{font-size:12px;color:#646970}.htp-general-season-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px}.htp-general-season-actions form{margin:0}.htp-general-add-season{display:flex;align-items:end;gap:10px;flex-wrap:wrap;margin-top:16px;padding-top:16px;border-top:1px solid #dcdcde}.htp-general-add-season label{display:flex;flex-direction:column;gap:5px;font-weight:600}.htp-general-status-list{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}.htp-general-status{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;background:#f0f0f1;font-weight:600}.htp-general-status small{font-weight:400;opacity:.78}.htp-general-status i{width:9px;height:9px;border-radius:50%;background:#8c8f94}.htp-general-status.is-on{background:#edfaef;color:#176b2c}.htp-general-status.is-on i{background:#00a32a}.htp-general-publication-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.htp-general-publication-field{display:flex;flex-direction:column;gap:6px;padding:12px;background:#f6f7f7;border-radius:8px}.htp-general-publication-field>span{font-weight:600}.htp-general-publication-field small{color:#646970}.htp-general-legacy{text-align:right}.htp-general-legacy a{text-decoration:none}@media(max-width:900px){.htp-general-card-head{flex-direction:column}.htp-general-publication-grid{grid-template-columns:1fr}}
         </style>
         <?php
     }
