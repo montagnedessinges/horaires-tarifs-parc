@@ -15,7 +15,9 @@ $schedule = file_get_contents($root . '/includes/class-parcs-ht-admin-schedule.p
 $js = file_get_contents($root . '/assets/admin-schedule-1173.js');
 $css = file_get_contents($root . '/assets/admin-schedule-1173.css');
 
-htp_1173_assert(is_string($main) && strpos($main, "Version: 1.17.3") !== false, 'version 1.17.3 absente');
+$version = '';
+if (is_string($main) && preg_match('/Version:\s*([0-9.]+)/', $main, $match)) $version = $match[1];
+htp_1173_assert($version !== '' && version_compare($version, '1.17.3', '>='), 'version 1.17.3 ou supérieure absente');
 htp_1173_assert(strpos($main, "class-parcs-ht-admin-schedule.php") !== false, 'nouvel écran Horaires non chargé');
 htp_1173_assert(strpos($main, "Parcs_HT_Admin_Schedule::init();") !== false, 'nouvel écran Horaires non initialisé');
 
