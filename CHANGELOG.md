@@ -1,3 +1,12 @@
+## 1.17.1
+
+- Ajoute une nouvelle « Administration générale » comme entrée principale de l’extension, tout en conservant l’ancienne vue détaillée comme filet de sécurité pendant la refonte.
+- Regroupe les informations globales du parc, la gestion des saisons et la publication annuelle avec les cinq activations existantes et les dates automatiques d’activation / désactivation.
+- Introduit un référentiel d’apparence globale non destructif pour les couleurs, textes, bordures, liens, focus, boutons, cartes, onglets, badges et espacements communs.
+- Prépare la cascade future « apparence globale → personnalisation du module → personnalisation d’un élément », sans brancher encore les modules métier sur ces nouveaux jetons afin d’éviter tout changement visuel involontaire.
+- Supprime le message public global « Les tarifs groupes ne sont pas disponibles pour cette année » du portail Groupes et ajoute un test de non-régression dédié.
+- Ne supprime aucune clé historique, conserve les données et moteurs existants, et reste compatible avec PHP 7.4 / 8.1 / 8.2 / 8.3.
+
 ## 1.17.0
 
 - Ajoute une vue d’ensemble légère dans l’administration pour accéder rapidement aux réglages canoniques sans dupliquer les données ni les moteurs existants.
