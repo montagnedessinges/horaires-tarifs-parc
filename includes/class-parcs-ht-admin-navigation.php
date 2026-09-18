@@ -3,7 +3,7 @@
 if (!defined('ABSPATH')) { exit; }
 
 /**
- * Architecture d'administration 1.17.2.
+ * Architecture d'administration 1.17.2+.
  *
  * Cette couche organise la navigation sans remplacer les moteurs historiques.
  * Les écrans métier sont migrés progressivement dans les versions suivantes ;
@@ -16,7 +16,6 @@ final class Parcs_HT_Admin_Navigation {
     const UPDATES_PAGE = 'parcs-ht-updates';
 
     private static $bridges = array(
-        'parcs-ht-schedule'   => 'htp-regular',
         'parcs-ht-tariffs'    => 'htp-tariffs',
         'parcs-ht-preview'    => 'htp-preview',
         'parcs-ht-shortcodes' => 'htp-shortcodes',
@@ -48,6 +47,25 @@ final class Parcs_HT_Admin_Navigation {
         exit;
     }
 
+    /** Affiche le contexte de saison commun aux écrans métier annuels. */
+    public static function render_year_context($page, $current_year = '') {
+        if (!current_user_can('manage_options')) return;
+        $all = Parcs_HT_Defaults::all_settings();
+        $seasons = isset($all['seasons']) && is_array($all['seasons']) ? $all['seasons'] : array();
+        if (!$seasons) return;
+        echo '<nav class="htp-1173-year-context" aria-label="Année administrée"><strong>Année :</strong>';
+        foreach ($seasons as $year => $season) {
+            $year = (string)$year;
+            if (!preg_match('/^20\\d{2}$/', $year)) continue;
+            $args = array('page'=>(string)$page, 'season'=>$year);
+            $label = $year;
+            if (is_array($season) && (string)($season['published'] ?? '0') !== '1') $label .= ' · brouillon';
+            $class = $year === (string)$current_year ? 'button button-primary is-current' : 'button';
+            echo '<a class="' . esc_attr($class) . '" href="' . esc_url(add_query_arg($args, admin_url('admin.php'))) . '">' . esc_html($label) . '</a>';
+        }
+        echo '</nav>';
+    }
+
     /**
      * Priorité 1 : l'entrée principale ouvre toujours la Vue d'ensemble avant
      * les anciens redirects de compatibilité de l'Administration générale.
@@ -73,6 +91,14 @@ final class Parcs_HT_Admin_Navigation {
             self::redirect(add_query_arg($args, admin_url('admin.php')));
         }
 
+        // 1.17.3 : les anciens liens vers l'onglet Horaires arrivent sur le nouvel écran dédié.
+        if ($page === Parcs_HT_Admin::PAGE && $tab === 'htp-regular' && class_exists('Parcs_HT_Admin_Schedule')) {
+            $args = array('page'=>Parcs_HT_Admin_Schedule::PAGE);
+            if ($year !== '') $args['season'] = $year;
+            foreach (array('updated','csv_imported') as $notice) if (isset($_GET[$notice])) $args[$notice] = '1'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- indicateur visuel uniquement.
+            self::redirect(add_query_arg($args, admin_url('admin.php')));
+        }
+
         if ($page === Parcs_HT_Admin::PAGE && $tab === 'htp-updates') {
             self::redirect(add_query_arg(array('page'=>self::UPDATES_PAGE), admin_url('admin.php')));
         }
@@ -86,7 +112,7 @@ final class Parcs_HT_Admin_Navigation {
         if (!class_exists('Parcs_HT_Admin')) return;
         $parent = Parcs_HT_Admin::PAGE;
 
-        add_submenu_page($parent, 'Horaires & calendrier', 'Horaires & calendrier', 'manage_options', 'parcs-ht-schedule', array(__CLASS__, 'bridge_fallback'));
+        add_submenu_page($parent, 'Horaires & calendrier', 'Horaires & calendrier', 'manage_options', 'parcs-ht-schedule', class_exists('Parcs_HT_Admin_Schedule') ? array('Parcs_HT_Admin_Schedule', 'page') : array(__CLASS__, 'bridge_fallback'));
         add_submenu_page($parent, 'Périodes, événements et exceptions', 'Périodes & événements', 'manage_options', self::PERIODS_PAGE, array(__CLASS__, 'periods_page'));
         add_submenu_page($parent, 'Tarifs visiteurs', 'Tarifs visiteurs', 'manage_options', 'parcs-ht-tariffs', array(__CLASS__, 'bridge_fallback'));
         add_submenu_page($parent, 'Groupes', 'Groupes', 'manage_options', self::GROUPS_PAGE, array(__CLASS__, 'groups_page'));
@@ -96,14 +122,13 @@ final class Parcs_HT_Admin_Navigation {
         add_submenu_page($parent, 'Shortcodes', 'Shortcodes', 'manage_options', 'parcs-ht-shortcodes', array(__CLASS__, 'bridge_fallback'));
     }
 
-    /** Range le sous-menu dans l'ordre fonctionnel retenu pour 1.17.2. */
+    /** Range le sous-menu dans l'ordre fonctionnel retenu. */
     public static function order_menu() {
         if (!class_exists('Parcs_HT_Admin')) return;
         global $submenu;
         $parent = Parcs_HT_Admin::PAGE;
         if (empty($submenu[$parent]) || !is_array($submenu[$parent])) return;
 
-        // L'entrée automatique du menu principal ferait doublon avec Vue d'ensemble.
         $items = array();
         foreach ($submenu[$parent] as $item) {
             if (isset($item[2]) && $item[2] === $parent) continue;
