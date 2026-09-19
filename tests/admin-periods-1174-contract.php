@@ -16,7 +16,9 @@ $schedule = file_get_contents($root . '/includes/class-parcs-ht-schedule.php');
 $alerts = file_get_contents($root . '/includes/class-parcs-ht-alerts.php');
 $css = file_get_contents($root . '/assets/admin-periods-1174.css');
 
-htp_1174_assert(is_string($main) && strpos($main, 'Version: 1.17.4') !== false, 'version 1.17.4 absente');
+preg_match('/Version:\s*([0-9.]+)/', (string)$main, $version_match);
+$version = $version_match[1] ?? '0.0.0';
+htp_1174_assert(version_compare($version, '1.17.4', '>='), 'version 1.17.4 ou suivante absente');
 htp_1174_assert(strpos($main, 'class-parcs-ht-admin-periods.php') !== false && strpos($main, 'Parcs_HT_Admin_Periods::init();') !== false, 'écran Périodes 1.17.4 non chargé');
 htp_1174_assert(strpos($main, 'class-parcs-ht-admin-periods-routing.php') !== false && strpos($main, 'Parcs_HT_Admin_Periods_Routing::init();') !== false, 'routage 1.17.4 non chargé');
 
