@@ -1,3 +1,35 @@
+## 1.17.6
+
+- Remplace l’ancien passage par l’onglet historique des tarifs groupes par un écran métier annuel « Groupes » directement accessible depuis le sous-menu WordPress.
+- Conserve une seule grille tarifaire Groupes canonique : le portail Groupes et le tableau public partagé continuent d’utiliser les mêmes prix et le même renderer existant.
+- Isole strictement la sauvegarde Groupes : Individuels, Tarifs réduits, moyens de paiement visiteurs, impression/PDF et autres réglages tarifaires sont restaurés avant enregistrement et ne peuvent pas être écrasés par cet écran.
+- Regroupe sur la page Groupes le titre, l’introduction, les moyens de paiement, les informations pratiques, le bouton de devis, le message d’année future et l’apparence propres au bloc public Groupes.
+- Affiche l’état effectif de publication, l’état de préparation de la grille et la validité de la liaison avec le devis sans créer de second interrupteur annuel ; l’activation reste pilotée par les clés canoniques de la Vue d’ensemble / Administration générale.
+- Maintient « Devis groupes » et « Guides pédagogiques » dans la famille Groupes tout en conservant des pages techniques séparées afin de ne charger que les outils nécessaires.
+- Préserve le calendrier canonique Groupes, le moteur de devis et le comportement 1.16.8 lorsqu’une année Groupes est publiée avant les tarifs visiteurs.
+- Ajoute un contrat de non-régression 1.17.6 exécuté sur les sources et sur le paquet de production.
+
+## 1.17.5
+
+- Remplace l’ancien pont « Tarifs visiteurs » par une page métier dédiée aux catégories Individuels et Tarifs réduits.
+- Conserve les colonnes, lignes, identifiants permanents, offres spéciales, périodes de validité et canaux de vente déjà utilisés par le moteur public.
+- Conserve les moyens de paiement visiteurs avec les canaux indépendants Sur place / En ligne ; l’achat en ligne reste réservé à Individuels.
+- Isole strictement l’enregistrement des tarifs visiteurs : les prix, colonnes et réglages Groupes de la même année sont restaurés avant sauvegarde et ne sont jamais écrasés par cette page.
+- Réutilise les enrichissements existants des offres, des colonnes visibles et des moyens de paiement sans créer de second moteur tarifaire.
+- Ajoute le contexte d’année commun et un accès vers Contenus & traductions pour les textes éditoriaux FR / EN / DE.
+- Replie les réglages avancés d’apparence et d’impression tout en conservant les réglages historiques pour compatibilité.
+
+## 1.17.4
+
+- Remplace l’ancien écran-pont Périodes & événements par un espace métier annuel dédié réunissant périodes repères, événements, exceptions et accès temporairement limité.
+- Sépare visuellement les périodes de contexte et les événements sans fusionner leurs règles métier ni leurs données.
+- Chaque événement peut conserver sa propre couleur et son propre pictogramme parmi les marqueurs déjà pris en charge par le calendrier public.
+- Les horaires exceptionnels conservent la priorité sur les horaires habituels, avec un ou deux créneaux et retour automatique au planning normal à la fin de l’exception.
+- Les pop-up d’exception réutilisent le contexte, le titre public et le message public comme source unique ; les dates et horaires peuvent être affichés indépendamment.
+- Les réglages d’un pop-up restent masqués tant que « Activer le pop-up » n’est pas coché.
+- Le module Accès temporairement limité et ses textes FR / EN / DE sont conservés, ainsi que le moteur CSV commun.
+- Les anciens liens Horaires → Périodes, Exceptions et Accès limité redirigent vers le nouvel espace sans modifier les shortcodes publics ni le moteur calendrier canonique.
+
 ## 1.17.3
 
 - Remplace le pont historique « Horaires & calendrier » par un écran métier dédié, léger et directement accessible depuis le sous-menu WordPress.
