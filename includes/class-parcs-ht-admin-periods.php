@@ -90,7 +90,7 @@ final class Parcs_HT_Admin_Periods {
     }
 
     private static function input($name, $value, $label, $type = 'text', $attrs = '') {
-        echo '<label class="htp-field"><span>' . esc_html($label) . '</span><input type="' . esc_attr($type) . '" name="' . esc_attr($name) . '" value="' . esc_attr((string)$value) . '" ' . $attrs . '></label>';
+        echo '<label class="htp-field"><span>' . esc_html($label) . '</span><input type="' . esc_attr($type) . '" name="' . esc_attr($name) . '" value="' . esc_attr((string)$value) . '" ' . wp_kses_data($attrs) . '></label>';
     }
 
     private static function select($name, $value, $label, $options) {
