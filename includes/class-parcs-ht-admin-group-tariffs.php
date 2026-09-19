@@ -225,7 +225,7 @@ final class Parcs_HT_Admin_Group_Tariffs {
         <?php endforeach; if ($styled === 0) : ?><p class="description">Enregistrez d’abord la grille tarifaire pour attribuer ses identifiants permanents avant de personnaliser chaque ligne.</p><?php endif; ?></div></details><?php
     }
 
-    private static function family_nav($year) {
+    private static function groups_navigation($year) {
         $quote = add_query_arg(array('page'=>Parcs_HT_Admin::PAGE,'tab'=>'htp-quote','season'=>$year), admin_url('admin.php'));
         $guides = class_exists('Parcs_HT_Pedagogical_Guides') ? add_query_arg(array('page'=>Parcs_HT_Pedagogical_Guides::PAGE), admin_url('admin.php')) : add_query_arg(array('page'=>Parcs_HT_Admin::PAGE,'tab'=>'htp-guides','season'=>$year), admin_url('admin.php'));
         echo '<nav class="htp-1176-family" aria-label="Rubrique Groupes"><a class="button button-primary" href="' . esc_url(add_query_arg(array('page'=>self::PAGE,'season'=>$year), admin_url('admin.php'))) . '">Tarifs groupes</a><a class="button" href="' . esc_url($quote) . '">Devis groupes</a><a class="button" href="' . esc_url($guides) . '">Guides pédagogiques</a></nav>';
@@ -251,7 +251,7 @@ final class Parcs_HT_Admin_Group_Tariffs {
         ?>
         <div class="wrap htp-admin htp-1176-groups" id="htp-groups-tariffs">
             <div class="htp-1176-title"><div><h1>Groupes</h1><p class="description">Tarifs groupes <?php echo esc_html($year); ?> : une seule grille canonique, avec un affichage public et des moyens de paiement propres aux Groupes.</p></div><span>Interface 1.17.6</span></div>
-            <?php self::family_nav($year); ?>
+            <?php self::groups_navigation($year); ?>
             <?php if (class_exists('Parcs_HT_Admin_Navigation') && method_exists('Parcs_HT_Admin_Navigation', 'render_year_context')) Parcs_HT_Admin_Navigation::render_year_context(self::PAGE, $year); ?>
             <?php if (isset($_GET['updated'])) : /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- message visuel uniquement. */ ?><div class="notice notice-success is-dismissible"><p>La grille Groupes <?php echo esc_html($year); ?> a été enregistrée.</p></div><?php endif; ?>
             <?php if (isset($_GET['display_saved'])) : /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- message visuel uniquement. */ ?><div class="notice notice-success is-dismissible"><p>L’affichage public Groupes <?php echo esc_html($year); ?> a été enregistré.</p></div><?php endif; ?>
