@@ -46,7 +46,7 @@ htp_1176_assert(strpos($groups, 'name="group_display[published]"') === false, 'u
 
 htp_1176_assert(is_string($settings) && strpos($settings, "const OPTION = 'parcs_ht_group_tariff_settings';") !== false, 'stockage historique Groupes disparu');
 htp_1176_assert(is_string($visibility) && strpos($visibility, 'group_tariff_years') !== false, 'visibilité annuelle Groupes canonique absente');
-htp_1176_assert(is_string($shared) && strpos($shared, 'Renderer canonique groupes') !== false && strpos($shared, "fixes_call('render_group_year'") !== false, 'renderer Groupes partagé 1.16.8 non conservé');
+htp_1176_assert(is_string($shared) && strpos($shared, 'public static function render_group_year') !== false && strpos($shared, "return self::fixes_call('render_group_year'") !== false, 'renderer Groupes partagé 1.16.8 non conservé');
 htp_1176_assert(is_string($portal) && strpos($portal, 'calendar') !== false, 'portail Groupes ou calendrier canonique non conservé');
 htp_1176_assert(is_string($css) && strpos($css, '.htp-1176-groups') !== false, 'styles dédiés Groupes absents');
 
