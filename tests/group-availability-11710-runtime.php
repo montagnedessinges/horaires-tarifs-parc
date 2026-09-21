@@ -1,20 +1,24 @@
 <?php
 
-define('ABSPATH', __DIR__ . '/');
+if (!defined('ABSPATH')) define('ABSPATH', __DIR__ . '/');
 
 $GLOBALS['htp_11710_settings'] = array();
 
-function wp_date($format, $timestamp = null, $timezone = null) {
-    unset($timestamp, $timezone);
-    if ($format === 'Y-m-d') return '2026-09-21';
-    if ($format === 'Y') return '2026';
-    return '2026-09-21';
+if (!function_exists('wp_date')) {
+    function wp_date($format, $timestamp = null, $timezone = null) {
+        unset($timestamp, $timezone);
+        if ($format === 'Y-m-d') return '2026-09-21';
+        if ($format === 'Y') return '2026';
+        return '2026-09-21';
+    }
 }
 
-final class Parcs_HT_Defaults {
-    const OPTION = 'parcs_ht_settings';
-    public static function all_settings() {
-        return $GLOBALS['htp_11710_settings'];
+if (!class_exists('Parcs_HT_Defaults')) {
+    final class Parcs_HT_Defaults {
+        const OPTION = 'parcs_ht_settings';
+        public static function all_settings() {
+            return $GLOBALS['htp_11710_settings'];
+        }
     }
 }
 
