@@ -63,7 +63,7 @@ release_contract_require_all($guides, array(
     "add_shortcode('parc_guides_pedagogiques_fr'",
     "add_shortcode('parc_guides_pedagogiques_en'",
     "add_shortcode('parc_guides_pedagogiques_de'",
-    'Parcs_HT_Guide_Stats::tracking_payload',
+    'Parcs_HT_Guide_Stats::tracking_token',
 ), '1.17.8 historical guides engine preserved');
 
 release_contract_require_all($stats, array(
