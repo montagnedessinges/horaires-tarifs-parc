@@ -12,10 +12,12 @@ if (!release_contract_at_least($version, '1.17.11')) {
 $bootstrap = file_get_contents($root . '/includes/class-parcs-ht-bootstrap.php');
 $save = file_get_contents($root . '/includes/class-parcs-ht-admin-save-11711.php');
 $js = file_get_contents($root . '/assets/admin-save-11711.js');
+$legacyJs = file_get_contents($root . '/assets/admin.js');
 $year = file_get_contents($root . '/includes/class-parcs-ht-admin-year-context.php');
 $navigation = file_get_contents($root . '/includes/class-parcs-ht-admin-navigation.php');
+$periods = file_get_contents($root . '/includes/class-parcs-ht-admin-periods.php');
 
-foreach (array('bootstrap'=>$bootstrap,'save'=>$save,'save js'=>$js,'year context'=>$year,'navigation'=>$navigation) as $label=>$source) {
+foreach (array('bootstrap'=>$bootstrap,'save'=>$save,'save js'=>$js,'legacy admin js'=>$legacyJs,'year context'=>$year,'navigation'=>$navigation,'periods'=>$periods) as $label=>$source) {
     if (!is_string($source)) {
         fwrite(STDERR, "Unable to read {$label}.\n");
         exit(1);
@@ -63,13 +65,33 @@ release_contract_require_all($js, array(
     "form[data-htp-retail-tariffs-form]",
     "form[data-htp-group-tariffs-form]",
     "form[data-htp-popup-1179]",
-), '1.17.11 end-of-form marker');
+    'neutralizeLegacyScopedSave',
+    '[data-htp-active-tab-input]',
+    "submitter.name='submit'",
+    "appendHidden(form,'htp_save_active','1')",
+), '1.17.11 end-of-form marker and legacy scoped-save isolation');
 foreach (array('formdata','JSON.stringify','clearFormData','new FormData') as $forbidden) {
     if (strpos($js, $forbidden) !== false) {
         fwrite(STDERR, "1.17.11 JS must not rebuild the native form payload: {$forbidden}\n");
         exit(1);
     }
 }
+
+// Cause racine historique : admin.js désactive les autres sections quand le
+// bouton submit s'appelle htp_save_active. L'écran Périodes 1.17.4 utilise ce
+// nom sans le marqueur d'onglet actif ; la couche 1.17.11 doit donc neutraliser
+// ce comportement avant que le formulaire natif soit sérialisé.
+release_contract_require_all($legacyJs, array(
+    "submitter.name!=='htp_save_active'",
+    "form.querySelector('[data-htp-active-tab-input]')",
+    'control.disabled=true',
+), 'legacy scoped-save root cause remains documented');
+release_contract_require_all($periods, array(
+    'data-htp-1174-form',
+    'name="htp_save_active" value="1"',
+    'settings[_complete][exceptions]',
+    'settings[_complete][domain_rules]',
+), '1.17.4 form shape that triggered the regression');
 
 release_contract_require_all($year, array(
     "const USER_META = 'parcs_ht_admin_year'",
@@ -90,4 +112,4 @@ release_contract_require_all($navigation, array('Année administrée :'), '1.17.
 require __DIR__ . '/admin-save-11711-runtime.php';
 require __DIR__ . '/admin-year-context-11711-runtime.php';
 
-echo "OK: 1.17.11 restores native saves, direct returns and persistent administered-year context.\n";
+echo "OK: 1.17.11 restores native saves, blocks the legacy scoped-save wipe, returns directly and persists the administered-year context.\n";
