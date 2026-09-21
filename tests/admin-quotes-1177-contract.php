@@ -79,9 +79,5 @@ release_contract_forbid($portal, array(
 echo "OK: 1.17.7 quote admin, annual context and false-unavailable safeguards present.\n";
 
 if (release_contract_at_least($version, '1.17.8')) {
-    require __DIR__ . '/admin-guides-1178-contract.php';
-}
-
-if (release_contract_at_least($version, '1.17.9')) {
-    require __DIR__ . '/admin-communication-1179-contract.php';
+    require_once __DIR__ . '/admin-guides-1178-contract.php';
 }
