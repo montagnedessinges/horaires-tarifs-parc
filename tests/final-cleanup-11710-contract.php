@@ -108,4 +108,6 @@ release_contract_require_all($shared, array(
     "self::fixes_call('render_group_year'",
 ), '1.17.10 retained canonical compatibility renderer');
 
+require __DIR__ . '/group-availability-11710-runtime.php';
+
 echo "OK: 1.17.10 final cleanup keeps one group availability source, removes obsolete admin landings and preserves year isolation.\n";
