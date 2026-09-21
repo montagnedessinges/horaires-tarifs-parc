@@ -40,9 +40,13 @@ release_contract_require_all($bootstrap, array(
 
 release_contract_require_all($guard, array(
     "const FIELD = 'parcs_ht_11710_complete'",
+    "const SNAPSHOT_FIELD = 'parcs_ht_11710_snapshot'",
     'admin_init',
     'guard_admin_post',
     'request_complete',
+    'restore_snapshot',
+    'json_decode',
+    'wp_slash($decoded)',
     "'parcs_ht_save'",
     "'parcs_ht_save_schedule_1173'",
     "'parcs_ht_save_general_publication'",
@@ -71,10 +75,14 @@ release_contract_require_all($guard, array(
 release_contract_require_all($js, array(
     "document.addEventListener('submit'",
     "document.addEventListener('formdata'",
-    'event.formData.delete(field)',
-    'event.formData.append(field,action)',
+    'payloadFrom(formData)',
+    'clearFormData(formData)',
+    "formData.append('action',action)",
+    'formData.append(snapshotField,JSON.stringify(payload))',
+    'filesFrom(formData)',
+    'formData.append(field,action)',
     'form.appendChild(input)',
-), '1.17.10 end-of-payload marker');
+), '1.17.10 compact complete-payload transport');
 
 // L’audit garde les protections spécialisées déjà introduites par chaque étape.
 release_contract_require_all($schedule, array("['regular_periods']", 'clean_periods'), '1.17.10 schedule save audit');
