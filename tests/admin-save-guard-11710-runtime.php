@@ -1,7 +1,7 @@
 <?php
 
 $root = getenv('PLUGIN_ROOT') ?: dirname(__DIR__);
-define('ABSPATH', __DIR__ . '/');
+if (!defined('ABSPATH')) define('ABSPATH', __DIR__ . '/');
 
 if (!function_exists('sanitize_key')) {
     function sanitize_key($key) {
@@ -24,13 +24,15 @@ if (!function_exists('wp_slash')) {
 
 require_once $root . '/includes/class-parcs-ht-admin-save-guard-11710.php';
 
-function guard_assert($condition, $message) {
-    if ($condition) {
-        echo "[OK] {$message}\n";
-        return;
+if (!function_exists('guard_assert')) {
+    function guard_assert($condition, $message) {
+        if ($condition) {
+            echo "[OK] {$message}\n";
+            return;
+        }
+        fwrite(STDERR, "[FAIL] {$message}\n");
+        exit(1);
     }
-    fwrite(STDERR, "[FAIL] {$message}\n");
-    exit(1);
 }
 
 $field = Parcs_HT_Admin_Save_Guard_11710::FIELD;
@@ -54,16 +56,16 @@ guard_assert(
     'un marqueur de type inattendu est refusé'
 );
 
-$_POST = array($snapshotField=>json_encode(array(
+$post = array($snapshotField=>json_encode(array(
     'action'=>$action,
     '_wpnonce'=>'test-nonce',
     'season_year'=>'2027',
     'regular_periods'=>array(),
     'settings'=>array('general'=>array('year'=>'2027')),
 )));
-$_REQUEST = array();
+$_POST = $post;
 guard_assert(
-    Parcs_HT_Admin_Save_Guard_11710::restore_snapshot($action),
+    Parcs_HT_Admin_Save_Guard_11710::restore_snapshot($action, $post),
     'le snapshot JSON complet est restauré avant le handler métier'
 );
 guard_assert(
@@ -75,14 +77,14 @@ guard_assert(
     'le contexte annuel du snapshot est conservé'
 );
 guard_assert(
-    Parcs_HT_Admin_Save_Guard_11710::request_complete($action),
+    Parcs_HT_Admin_Save_Guard_11710::request_complete($action, $_POST),
     'la restauration ajoute le marqueur final attendu'
 );
 
-$_POST = array($snapshotField=>json_encode(array('action'=>'parcs_ht_save','season_year'=>'2027')));
-$_REQUEST = array();
+$post = array($snapshotField=>json_encode(array('action'=>'parcs_ht_save','season_year'=>'2027')));
+$_POST = $post;
 guard_assert(
-    !Parcs_HT_Admin_Save_Guard_11710::restore_snapshot($action),
+    !Parcs_HT_Admin_Save_Guard_11710::restore_snapshot($action, $post),
     'un snapshot destiné à une autre action est refusé'
 );
 
