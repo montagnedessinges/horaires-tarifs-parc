@@ -123,7 +123,7 @@ final class Parcs_HT_Admin_Guides_1178 {
         return $labels[$status] ?? $labels['available'];
     }
 
-    private static function family_navigation($year) {
+    private static function group_navigation($year) {
         $group_url = class_exists('Parcs_HT_Admin_Group_Tariffs')
             ? add_query_arg(array('page'=>Parcs_HT_Admin_Group_Tariffs::PAGE,'season'=>$year), admin_url('admin.php'))
             : admin_url('admin.php');
@@ -187,7 +187,7 @@ final class Parcs_HT_Admin_Guides_1178 {
         <div class="wrap htp-1178-guides">
             <h1>Guides pédagogiques</h1>
             <p class="description">Gérez les documents, leurs cycles, langues, badges et fichiers depuis un seul écran. Le stockage, les identifiants statistiques et les shortcodes publics existants sont conservés.</p>
-            <?php self::notice(); self::family_navigation($year); ?>
+            <?php self::notice(); self::group_navigation($year); ?>
             <?php if (class_exists('Parcs_HT_Admin_Navigation')) Parcs_HT_Admin_Navigation::render_year_context(self::PAGE, $year); ?>
 
             <section class="htp-1178-card">
