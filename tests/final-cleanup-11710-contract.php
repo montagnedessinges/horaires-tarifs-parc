@@ -101,10 +101,11 @@ release_contract_require_all($quotes, array(
     '$raw[\'seasons\'][$year][\'tariffs\']',
 ), '1.17.10 quote year isolation');
 
-// Les anciens correctifs publics restent conservés uniquement comme moteurs canoniques nécessaires.
+// Le renderer partagé doit appeler le renderer Groupes historique canonique,
+// y compris dans le paquet de production où les commentaires sont supprimés.
 release_contract_require_all($shared, array(
     "ReflectionMethod('Parcs_HT_Tariff_Public_Fixes'",
-    'Renderer canonique groupes',
-), '1.17.10 retained canonical compatibility layer documented');
+    "self::fixes_call('render_group_year'",
+), '1.17.10 retained canonical compatibility renderer');
 
 echo "OK: 1.17.10 final cleanup keeps one group availability source, removes obsolete admin landings and preserves year isolation.\n";
