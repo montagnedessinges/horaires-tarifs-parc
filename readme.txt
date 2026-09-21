@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.17.9
+Stable tag: 1.17.10
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes et outils du parc.
 
@@ -19,6 +19,15 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.17.10 =
+* Transforme la dernière étape 1.17.x en version corrective et d’audit des écrans refaits de 1.17.2 à 1.17.9.
+* Ajoute un garde d’intégrité commun aux sauvegardes d’administration afin qu’un POST tronqué par `max_input_vars`, `post_max_size` ou une requête incomplète ne puisse plus être interprété comme une suppression volontaire.
+* Annule l’enregistrement avant toute écriture lorsque le marqueur de fin de formulaire n’est pas reçu ; les réglages existants restent alors inchangés.
+* Protège les sauvegardes Horaires, Périodes/événements, Tarifs visiteurs, Groupes, Devis groupes, Guides pédagogiques, Pop-up, Calendrier de l’Avent, Administration générale, Contenus & traductions et import CSV.
+* Conserve les suppressions volontaires : un tableau réellement vidé reste enregistrable lorsque le formulaire complet a bien été reçu.
+* Corrige les contrats 1.17.8 et 1.17.9 afin qu’ils continuent à protéger leurs fonctionnalités dans les versions ultérieures au lieu d’exiger un numéro de version littéral.
+* Conserve les moteurs publics, les migrations, les shortcodes historiques et les protections d’isolation annuelle existantes.
 
 = 1.17.9 =
 * Sépare la rubrique Communication en deux pages techniques dédiées : Pop-up et Calendrier de l’Avent.
