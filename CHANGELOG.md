@@ -1,3 +1,45 @@
+## 1.17.10
+
+- Finalise le nettoyage de l’administration après les refontes 1.17.2 à 1.17.9 : les pages-ponts devenues inutiles ne constituent plus une seconde interface, tandis que les anciennes URLs restent compatibles par redirection.
+- Réoriente directement `parcs-ht-periods` vers l’écran métier Périodes & événements 1.17.4 et l’ancienne page d’atterrissage Communication vers l’écran Pop-up 1.17.9.
+- Audite les sources de vérité Groupes / Tarifs groupes / Devis groupes : le portail Groupes et le tableau public partagé utilisent la même liste annuelle canonique, tandis que la disponibilité du devis reste indépendante de la disponibilité des tarifs.
+- Verrouille l’absence du faux message « Les tarifs groupes ne sont pas disponibles pour cette année. » et de l’ancien marqueur `data-group-tariff-unavailable` lorsque la grille Groupes de l’année est réellement disponible.
+- Renforce les contrôles d’isolation annuelle : grilles, liaisons et calculs du devis restent strictement liés à l’année demandée, sans repli vers une autre saison.
+- Conserve les renderers, migrations, normaliseurs et shortcodes historiques encore nécessaires ; les couches de compatibilité publiques ne sont pas supprimées tant qu’elles restent la source canonique réellement utilisée.
+- Ajoute un garde transversal contre les sauvegardes d’administration tronquées : les formulaires protégés utilisent un snapshot JSON compact qui contourne `max_input_vars`, puis sont reconstruits côté serveur avant les handlers existants.
+- Refuse toute requête incomplète avant écriture, tout en conservant les suppressions volontaires et les tableaux explicitement vidés lorsque le formulaire complet a bien été reçu.
+- Protège Administration générale, Contenus & traductions, Horaires, Périodes/événements, Tarifs visiteurs, Groupes, Devis groupes, Guides pédagogiques, Pop-up, Calendrier de l’Avent et import CSV contre les pertes de données liées à un POST incomplet.
+- Ajoute un audit documenté `AUDIT-1.17.10.md` et des tests bloquants pour le nettoyage final, la source annuelle Groupes, l’indépendance Tarifs/Devis, le transport compact des sauvegardes et le paquet de production.
+
+## 1.17.9
+
+- Sépare la rubrique Communication en deux pages techniques dédiées : Pop-up et Calendrier de l’Avent.
+- Simplifie les alertes autonomes : les réglages détaillés restent masqués tant que le pop-up n’est pas activé, avec contenus FR / EN / DE, bouton facultatif et prévisualisation locale.
+- Laisse les pop-up d’événements et d’horaires exceptionnels dans leur module d’origine afin d’éviter les contenus dupliqués, tout en conservant le moteur public commun.
+- Conserve les réglages d’apparence historiques des pop-up et replie les options avancées sans forcer de raccordement au socle d’apparence globale.
+- Donne au Calendrier de l’Avent sa propre page sans contexte d’année de saison ; campagnes, contenus, partenaires, résultats, import CSV et apparence par campagne restent inchangés.
+- Affiche les shortcodes spécifiques de chaque campagne Avent avec l’attribut `campagne` et conserve tous les shortcodes publics historiques.
+- Charge les nouveaux assets d’administration uniquement sur les pages Communication concernées et préserve le chargement conditionnel des assets publics.
+
+## 1.17.8
+
+- Remplace l’ancien accès aux Guides pédagogiques par un écran métier annuel dédié, plus lisible et repliable.
+- Regroupe documents, cycles/niveaux, langues, badges, titres, descriptions, PDF et couvertures sans créer de nouveau stockage.
+- Conserve les identifiants permanents des guides, les statistiques anonymes, les mécanismes Consulter/Télécharger et les shortcodes publics existants.
+- Renvoie les libellés publics des guides, cycles/niveaux et langues vers Contenus & traductions FR / EN / DE tout en gardant les codes internes stables.
+- Conserve les réglages visuels historiques des guides et replie les options avancées ; aucun raccordement forcé à l’apparence globale n’est introduit.
+- Charge les nouveaux assets d’administration uniquement sur l’écran Guides pédagogiques.
+
+## 1.17.7
+
+- Ajoute un écran métier annuel « Devis groupes » séparé des Tarifs groupes et des Guides pédagogiques.
+- Fiabilise le contexte d’année des écrans Groupes et des écritures admin/AJAX afin qu’aucune grille tarifaire d’une autre année ne puisse être utilisée.
+- Réconcilie l’activation annuelle canonique des devis avec l’ancien stockage technique sans fallback inter-années.
+- Conserve le recalcul serveur et lie chaque devis uniquement aux identifiants permanents de la grille Groupes de l’année sélectionnée.
+- Supprime définitivement du renderer du portail Groupes la phrase parasite « Les tarifs groupes ne sont pas disponibles pour cette année. » et son ancien nœud d’affichage.
+- Purge le cache LiteSpeed lors de la mise à jour de l’extension afin d’éviter qu’un ancien HTML public conserve ce message après installation.
+- Regroupe les formulaires Contact Form 7 FR / EN / DE, l’accès au devis et les champs techniques ; les options avancées restent repliées.
+
 ## 1.17.6
 
 - Remplace l’ancien passage par l’onglet historique des tarifs groupes par un écran métier annuel « Groupes » directement accessible depuis le sous-menu WordPress.
