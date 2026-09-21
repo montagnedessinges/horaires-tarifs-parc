@@ -46,9 +46,9 @@ final class Parcs_HT_Admin_Save_Guard_11710 {
         );
     }
 
-    public static function request_complete($action, $post = null) {
+    public static function request_complete($action, $post) {
         $action = sanitize_key((string)$action);
-        $post = is_array($post) ? $post : $_POST;
+        $post = is_array($post) ? $post : array();
         if ($action === '' || !isset($post[self::FIELD]) || is_array($post[self::FIELD])) return false;
         $marker = sanitize_key(wp_unslash((string)$post[self::FIELD]));
         return $marker !== '' && hash_equals($action, $marker);
@@ -59,10 +59,13 @@ final class Parcs_HT_Admin_Save_Guard_11710 {
      * WordPress ajoute normalement des slashes à $_POST avant plugins_loaded ;
      * on reproduit donc ce format pour que les handlers historiques continuent
      * d'utiliser wp_unslash() sans changement.
+     *
+     * Cette méthode reçoit uniquement un tableau déjà autorisé par le contrôle
+     * de capacité et de nonce effectué dans guard_admin_post().
      */
-    public static function restore_snapshot($action, $post = null) {
+    public static function restore_snapshot($action, $post) {
         $action = sanitize_key((string)$action);
-        $post = is_array($post) ? $post : $_POST;
+        $post = is_array($post) ? $post : array();
         if ($action === '' || !isset($post[self::SNAPSHOT_FIELD]) || is_array($post[self::SNAPSHOT_FIELD])) return false;
 
         $json = wp_unslash((string)$post[self::SNAPSHOT_FIELD]);
@@ -75,30 +78,50 @@ final class Parcs_HT_Admin_Save_Guard_11710 {
             : '';
         if ($snapshot_action === '' || !hash_equals($action, $snapshot_action)) return false;
 
-        // La présence du nonce reste vérifiée par chaque handler métier. Le garde
-        // ne remplace jamais les contrôles de capacité/nonce existants.
         $_POST = wp_slash($decoded);
         $_POST[self::FIELD] = wp_slash($action);
-        $_REQUEST = array_merge($_REQUEST, $_POST);
         return true;
+    }
+
+    private static function nonce_action($action, $year = '') {
+        $action = sanitize_key((string)$action);
+        if ($action === 'parcs_ht_schedule_csv_import') {
+            $year = sanitize_text_field((string)$year);
+            return preg_match('/^20\d{2}$/', $year) ? $action . '_' . $year : '';
+        }
+        return $action;
     }
 
     public static function guard_admin_post() {
         if (!is_admin() || !current_user_can('manage_options')) return;
-        $method = isset($_SERVER['REQUEST_METHOD']) ? strtoupper((string)$_SERVER['REQUEST_METHOD']) : '';
+        $method = isset($_SERVER['REQUEST_METHOD'])
+            ? strtoupper(sanitize_text_field(wp_unslash((string)$_SERVER['REQUEST_METHOD'])))
+            : '';
         if ($method !== 'POST') return;
 
+        // Ces deux valeurs servent uniquement à sélectionner le nonce à vérifier.
+        // Aucune donnée métier n'est lue ou écrite avant check_admin_referer().
+        // phpcs:disable WordPress.Security.NonceVerification.Missing
         $action = isset($_POST['action']) && !is_array($_POST['action'])
             ? sanitize_key(wp_unslash((string)$_POST['action']))
             : '';
-        if ($action === '' || !in_array($action, self::protected_actions(), true)) return;
+        $year_for_nonce = isset($_POST['season_year']) && !is_array($_POST['season_year'])
+            ? sanitize_text_field(wp_unslash((string)$_POST['season_year']))
+            : '';
+        // phpcs:enable WordPress.Security.NonceVerification.Missing
 
-        if (isset($_POST[self::SNAPSHOT_FIELD])) {
-            if (self::restore_snapshot($action) && self::request_complete($action)) return;
+        if ($action === '' || !in_array($action, self::protected_actions(), true)) return;
+        $nonce_action = self::nonce_action($action, $year_for_nonce);
+        if ($nonce_action === '') self::abort_incomplete_request('Le contexte de sécurité du formulaire est incomplet.');
+        check_admin_referer($nonce_action);
+
+        $posted = $_POST;
+        if (isset($posted[self::SNAPSHOT_FIELD])) {
+            if (self::restore_snapshot($action, $posted) && self::request_complete($action, $_POST)) return;
             self::abort_incomplete_request('Le snapshot complet du formulaire n’a pas pu être relu.');
         }
 
-        if (self::request_complete($action)) return;
+        if (self::request_complete($action, $posted)) return;
         self::abort_incomplete_request('Le marqueur de fin du formulaire n’a pas été reçu.');
     }
 
