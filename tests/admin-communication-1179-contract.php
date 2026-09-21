@@ -27,9 +27,12 @@ foreach (array('main'=>$main,'communication admin'=>$admin,'alerts'=>$alerts,'de
     }
 }
 
+release_contract_require_regex($main, array(
+    'plugin version remains 1.17.9 or newer'=>'/Version:\s*([0-9.]+)/',
+    'PARCS_HT_VERSION constant remains defined'=>"/define\\('PARCS_HT_VERSION',\\s*'[0-9.]+'\\)/",
+), '1.17.9 plugin version');
+
 release_contract_require_all($main, array(
-    'Version: 1.17.9',
-    "define('PARCS_HT_VERSION', '1.17.9')",
     'class-parcs-ht-admin-communication-1179.php',
     'Parcs_HT_Admin_Communication_1179::init();',
     'Parcs_HT_Defaults::has_popup_source_fast()',
@@ -128,3 +131,7 @@ release_contract_require_all($adventJs, array(
 release_contract_require_all($css, array('.htp-1179-popup-details','.htp-1179-advent','.htp-1179-preview-modal'), '1.17.9 Communication page styles');
 
 echo "OK: 1.17.9 Communication separates Pop-up and Advent while preserving shared public engines and stores.\n";
+
+if (release_contract_at_least($version, '1.17.10')) {
+    require __DIR__ . '/admin-save-integrity-11710-contract.php';
+}
