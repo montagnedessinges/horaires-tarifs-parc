@@ -111,15 +111,11 @@ final class Parcs_HT_Group_Portal {
         $id = 'parcs-ht-group-portal-' . self::$instance;
         $calendar = $has_hours ? self::calendar($language, $schedule_years) : '';
         $schedule_map = array_fill_keys(array_map('strval', $schedule_years), true);
-        $tariff_map = array_fill_keys(array_map('strval', $tariff_years), true);
-        $active_has_tariffs = isset($tariff_map[(string)$active_year]);
         $active_has_hours = isset($schedule_map[(string)$active_year]);
-        $tariff_missing_possible = (bool)array_diff(array_map('strval', $years), array_map('strval', $tariff_years));
         $hours_missing_possible = (bool)array_diff(array_map('strval', $years), array_map('strval', $schedule_years));
 
         $tariffs_tab = self::text($language, 'groups.portal.tariffs_tab', 'Tarifs groupes', 'Group rates', 'Gruppentarife');
         $hours_tab = self::text($language, 'groups.portal.hours_tab', 'Horaires d’ouverture', 'Opening hours', 'Öffnungszeiten');
-        $tariffs_unavailable = self::text($language, 'groups.portal.tariffs_unavailable', 'Les tarifs groupes ne sont pas disponibles pour cette année.', 'Group rates are not available for this year.', 'Für dieses Jahr sind keine Gruppentarife verfügbar.');
         $hours_unavailable = self::text($language, 'groups.portal.hours_unavailable', 'Les horaires d’ouverture ne sont pas disponibles pour cette année.', 'Opening hours are not available for this year.', 'Für dieses Jahr sind keine Öffnungszeiten verfügbar.');
         $empty = self::text($language, 'groups.portal.empty', 'Aucun tarif groupe ni horaire disponible pour le moment.', 'No group rates or opening hours are available at the moment.', 'Derzeit sind keine Gruppentarife oder Öffnungszeiten verfügbar.');
 
@@ -172,7 +168,6 @@ final class Parcs_HT_Group_Portal {
         (function(){
             var root=document.getElementById(<?php echo wp_json_encode($id); ?>);if(!root)return;
             var scheduleYears=<?php echo wp_json_encode($schedule_map); ?>;
-            var tariffYears=<?php echo wp_json_encode($tariff_map); ?>;
             var active=<?php echo wp_json_encode($active_year); ?>;
             function syncCalendar(year){
                 var wrap=root.querySelector('[data-group-calendar-wrap]'),missing=root.querySelector('[data-group-hours-unavailable]');
@@ -184,8 +179,7 @@ final class Parcs_HT_Group_Portal {
             function selectYear(year){
                 active=String(year||'');root.setAttribute('data-group-active-year',active);
                 root.querySelectorAll('[data-group-year]').forEach(function(btn){var on=btn.getAttribute('data-group-year')===active;btn.classList.toggle('is-active',on);btn.setAttribute('aria-selected',on?'true':'false');});
-                var foundTariff=false;root.querySelectorAll('[data-group-tariff-year]').forEach(function(panel){var on=panel.getAttribute('data-group-tariff-year')===active;panel.hidden=!on;if(on)foundTariff=true;});
-                var tariffMissing=root.querySelector('[data-group-tariff-unavailable]');if(tariffMissing)tariffMissing.hidden=foundTariff||!!tariffYears[active];
+                root.querySelectorAll('[data-group-tariff-year]').forEach(function(panel){panel.hidden=panel.getAttribute('data-group-tariff-year')!==active;});
                 setTimeout(function(){syncCalendar(active);},0);
             }
             root.querySelectorAll('[data-group-main-tab]').forEach(function(btn){btn.addEventListener('click',function(){var key=btn.getAttribute('data-group-main-tab');root.querySelectorAll('[data-group-main-tab]').forEach(function(b){var on=b===btn;b.classList.toggle('is-active',on);b.setAttribute('aria-selected',on?'true':'false');});root.querySelectorAll('[data-group-main-panel]').forEach(function(p){p.hidden=p.getAttribute('data-group-main-panel')!==key;});if(key==='hours')setTimeout(function(){syncCalendar(active);},0);});});
