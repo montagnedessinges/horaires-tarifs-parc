@@ -98,7 +98,7 @@ release_contract_require_all($quotes, array(
     'binding_for_year($year',
     'season_for_year($year)',
     'canonical_tariffs($year)',
-    "['seasons'][$year]['tariffs']",
+    '$raw[\'seasons\'][$year][\'tariffs\']',
 ), '1.17.10 quote year isolation');
 
 // Les anciens correctifs publics restent conservés uniquement comme moteurs canoniques nécessaires.
