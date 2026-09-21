@@ -23,44 +23,44 @@ foreach (array('main'=>$main,'year context'=>$context,'quote admin'=>$quotes,'no
 }
 
 release_contract_require_all($main, array(
-    "Version: 1.17.7",
+    'Version: 1.17.7',
     "define('PARCS_HT_VERSION', '1.17.7')",
-    "class-parcs-ht-admin-year-context.php",
-    "class-parcs-ht-admin-group-quotes-1177.php",
+    'class-parcs-ht-admin-year-context.php',
+    'class-parcs-ht-admin-group-quotes-1177.php',
     'Parcs_HT_Admin_Year_Context::init();',
     'Parcs_HT_Admin_Group_Quotes_1177::init();',
-    "upgrader_process_complete",
-    "litespeed_purge_all",
+    'upgrader_process_complete',
+    'litespeed_purge_all',
 ), '1.17.7 plugin wiring');
 
 release_contract_require_all($context, array(
     "option_' . Parcs_HT_Defaults::OPTION",
-    "isset($value['seasons'][$year]['tariffs'])",
+    'isset($season[\'tariffs\'])',
     "$value['tariffs'] = $season['tariffs'];",
-    "parcs_ht_",
-    "season_year",
+    "strpos($action, 'parcs_ht_')",
+    'season_year',
 ), '1.17.7 exact year context');
 
 release_contract_require_all($quotes, array(
     "const PAGE = 'parcs-ht-group-quotes-1177'",
-    "Parcs_HT_Admin_Navigation::render_year_context",
-    "Parcs_HT_Group_Quotes::binding_for_year",
-    "Parcs_HT_Group_Quotes::season_for_year",
-    "Parcs_HT_Public_Visibility::group_tariff_grid_ready",
-    "get_option(Parcs_HT_Defaults::OPTION",
+    'Parcs_HT_Admin_Navigation::render_year_context',
+    'Parcs_HT_Group_Quotes::binding_for_year',
+    'Parcs_HT_Group_Quotes::season_for_year',
+    'Parcs_HT_Public_Visibility::group_tariff_grid_ready',
+    'get_option(Parcs_HT_Defaults::OPTION',
     "['seasons'][$year]['tariffs']",
-    "parcs_ht_save_quote_binding_1177",
-    "parcs_ht_save_quote_forms_1177",
-    "parcs_ht_save_quote_gate_1177",
-    "parcs_ht_save_quote_engine_1177",
-    "Les tarifs groupes sont bien disponibles.",
+    'parcs_ht_save_quote_binding_1177',
+    'parcs_ht_save_quote_forms_1177',
+    'parcs_ht_save_quote_gate_1177',
+    'parcs_ht_save_quote_engine_1177',
+    'Les tarifs groupes sont bien disponibles.',
 ), '1.17.7 quote admin');
 
 release_contract_require_all($normalizer, array(
-    "parcs_ht_group_quote_state_normalized_v2",
+    'parcs_ht_group_quote_state_normalized_v2',
     "array_key_exists('group_quotes_enabled', $season)",
-    "Parcs_HT_Group_Quotes::STATE_OPTION",
-    "update_option(Parcs_HT_Group_Quotes::STATE_OPTION",
+    'Parcs_HT_Group_Quotes::STATE_OPTION',
+    'update_option(Parcs_HT_Group_Quotes::STATE_OPTION',
 ), '1.17.7 quote state reconciliation');
 
 // Le bug visible en 1.17.0 était produit par un paragraphe public placé sous
