@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.17.9
+Stable tag: 1.17.10
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes et outils du parc.
 
@@ -19,6 +19,18 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.17.10 =
+* Finalise le nettoyage prévu de l’administration après les refontes 1.17.2 à 1.17.9, sans supprimer les compatibilités historiques encore nécessaires aux données, migrations et shortcodes existants.
+* Retire les pages-ponts devenues inutiles de la navigation active : Périodes & événements ouvre directement l’écran métier 1.17.4 et l’ancienne page d’atterrissage Communication renvoie vers l’écran Pop-up 1.17.9, tout en conservant les anciennes URLs comme redirections compatibles.
+* Audite Groupes / Tarifs groupes / Devis groupes : le portail Groupes et le tableau public partagé utilisent la même source annuelle canonique, tandis que l’état du devis reste indépendant de la disponibilité des tarifs.
+* Verrouille l’absence du faux message « Les tarifs groupes ne sont pas disponibles pour cette année. » lorsque la grille Groupes de l’année est réellement disponible, ainsi que l’absence de l’ancien marqueur d’indisponibilité.
+* Renforce l’isolation 2026 / 2027 et des saisons suivantes : grilles, liaisons et calculs du devis restent strictement liés à l’année demandée, sans fallback inter-années.
+* Ajoute en complément un garde d’intégrité commun aux sauvegardes d’administration : les formulaires protégés sont envoyés dans un snapshot JSON compact, ce qui contourne `max_input_vars`, puis reconstruits côté serveur avant les handlers existants.
+* Annule l’enregistrement avant toute écriture si la requête reste incomplète ; les réglages existants sont préservés, tandis qu’une suppression volontaire ou une liste explicitement vide reste enregistrable lorsque l’envoi complet est reçu.
+* Protège les sauvegardes Horaires, Périodes/événements, Tarifs visiteurs, Groupes, Devis groupes, Guides pédagogiques, Pop-up, Calendrier de l’Avent, Administration générale, Contenus & traductions et import CSV.
+* Conserve le chargement conditionnel des moteurs publics et n’ajoute aucun nouvel asset public ; les composants spécifiques 1.17.10 sont limités à l’administration.
+* Ajoute un audit documenté et des tests bloquants du nettoyage final, du renderer Groupes canonique, de l’indépendance Tarifs/Devis, du transport compact des sauvegardes et du paquet de production.
 
 = 1.17.9 =
 * Sépare la rubrique Communication en deux pages techniques dédiées : Pop-up et Calendrier de l’Avent.
