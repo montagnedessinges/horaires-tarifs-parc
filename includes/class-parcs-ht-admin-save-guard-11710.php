@@ -3,17 +3,17 @@
 if (!defined('ABSPATH')) { exit; }
 
 /**
- * Protection anti-troncature des formulaires d'administration.
+ * Protection des sauvegardes d'administration contre les POST tronqués.
  *
- * Plusieurs écrans métier utilisent volontairement l'absence d'une ligne comme
- * une suppression. Si PHP tronque le POST (max_input_vars/post_max_size), cette
- * absence ne doit jamais être confondue avec une suppression demandée.
- *
- * Le script admin ajoute donc un marqueur à la FIN des données du formulaire.
- * S'il n'arrive pas au serveur, l'écriture est annulée avant tout handler métier.
+ * Les formulaires métier peuvent utiliser l'absence d'une ligne comme une
+ * suppression volontaire. Une troncature PHP ne doit donc jamais être prise
+ * pour une suppression. Les navigateurs compatibles envoient un snapshot JSON
+ * compact qui contourne max_input_vars ; le marqueur final reste le filet de
+ * sécurité si le snapshot ou le POST est incomplet.
  */
 final class Parcs_HT_Admin_Save_Guard_11710 {
     const FIELD = 'parcs_ht_11710_complete';
+    const SNAPSHOT_FIELD = 'parcs_ht_11710_snapshot';
 
     public static function init() {
         add_action('admin_init', array(__CLASS__, 'guard_admin_post'), 0);
@@ -54,6 +54,35 @@ final class Parcs_HT_Admin_Save_Guard_11710 {
         return $marker !== '' && hash_equals($action, $marker);
     }
 
+    /**
+     * Restaure un POST complet envoyé dans une variable JSON unique.
+     * WordPress ajoute normalement des slashes à $_POST avant plugins_loaded ;
+     * on reproduit donc ce format pour que les handlers historiques continuent
+     * d'utiliser wp_unslash() sans changement.
+     */
+    public static function restore_snapshot($action, $post = null) {
+        $action = sanitize_key((string)$action);
+        $post = is_array($post) ? $post : $_POST;
+        if ($action === '' || !isset($post[self::SNAPSHOT_FIELD]) || is_array($post[self::SNAPSHOT_FIELD])) return false;
+
+        $json = wp_unslash((string)$post[self::SNAPSHOT_FIELD]);
+        if ($json === '') return false;
+        $decoded = json_decode($json, true);
+        if (!is_array($decoded)) return false;
+
+        $snapshot_action = isset($decoded['action']) && !is_array($decoded['action'])
+            ? sanitize_key((string)$decoded['action'])
+            : '';
+        if ($snapshot_action === '' || !hash_equals($action, $snapshot_action)) return false;
+
+        // La présence du nonce reste vérifiée par chaque handler métier. Le garde
+        // ne remplace jamais les contrôles de capacité/nonce existants.
+        $_POST = wp_slash($decoded);
+        $_POST[self::FIELD] = wp_slash($action);
+        $_REQUEST = array_merge($_REQUEST, $_POST);
+        return true;
+    }
+
     public static function guard_admin_post() {
         if (!is_admin() || !current_user_can('manage_options')) return;
         $method = isset($_SERVER['REQUEST_METHOD']) ? strtoupper((string)$_SERVER['REQUEST_METHOD']) : '';
@@ -63,8 +92,17 @@ final class Parcs_HT_Admin_Save_Guard_11710 {
             ? sanitize_key(wp_unslash((string)$_POST['action']))
             : '';
         if ($action === '' || !in_array($action, self::protected_actions(), true)) return;
-        if (self::request_complete($action)) return;
 
+        if (isset($_POST[self::SNAPSHOT_FIELD])) {
+            if (self::restore_snapshot($action) && self::request_complete($action)) return;
+            self::abort_incomplete_request('Le snapshot complet du formulaire n’a pas pu être relu.');
+        }
+
+        if (self::request_complete($action)) return;
+        self::abort_incomplete_request('Le marqueur de fin du formulaire n’a pas été reçu.');
+    }
+
+    private static function abort_incomplete_request($reason) {
         $max_vars = (string)ini_get('max_input_vars');
         $post_max = (string)ini_get('post_max_size');
         $details = array();
@@ -74,8 +112,8 @@ final class Parcs_HT_Admin_Save_Guard_11710 {
         status_header(400);
         wp_die(
             '<h1>Enregistrement annulé</h1>' .
-            '<p>Le formulaire reçu est incomplet. Aucune donnée n’a été modifiée afin d’éviter de supprimer ou remettre à zéro des réglages existants.</p>' .
-            '<p>Revenez à la page précédente et réessayez. Si le problème se répète, augmentez les limites PHP du formulaire' .
+            '<p>' . esc_html((string)$reason) . ' Aucune donnée n’a été modifiée afin d’éviter de supprimer ou remettre à zéro des réglages existants.</p>' .
+            '<p>Revenez à la page précédente et réessayez. Si le problème se répète, vérifiez les limites PHP du formulaire' .
             ($details ? ' (' . esc_html(implode(' · ', $details)) . ')' : '') . '.</p>',
             'Formulaire incomplet',
             array('response'=>400, 'back_link'=>true)
@@ -102,6 +140,7 @@ final class Parcs_HT_Admin_Save_Guard_11710 {
             'parcs-ht-admin-save-guard-11710',
             'window.ParcsHTSaveGuard11710=' . wp_json_encode(array(
                 'field'=>self::FIELD,
+                'snapshotField'=>self::SNAPSHOT_FIELD,
                 'actions'=>self::protected_actions(),
             )) . ';',
             'before'
