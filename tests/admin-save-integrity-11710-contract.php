@@ -94,5 +94,6 @@ release_contract_require_all($guides, array('parcs_ht_save_pedagogical_guides', 
 release_contract_require_all($communication, array('settings[_complete][alerts]', 'parcs_ht_save'), '1.17.10 popup save audit');
 
 require __DIR__ . '/admin-save-guard-11710-runtime.php';
+require __DIR__ . '/final-cleanup-11710-contract.php';
 
 echo "OK: 1.17.10 corrective audit protects refactored admin saves against truncated POST data.\n";
