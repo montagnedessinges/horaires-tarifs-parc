@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.17.7
+Stable tag: 1.17.8
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes et outils du parc.
 
@@ -19,6 +19,14 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.17.8 =
+* Remplace l’ancien accès aux Guides pédagogiques par un écran métier annuel dédié, plus lisible et repliable.
+* Regroupe documents, cycles/niveaux, langues, badges, titres, descriptions, PDF et couvertures sans créer de nouveau stockage.
+* Conserve les identifiants permanents des guides, les statistiques anonymes, les mécanismes Consulter/Télécharger et les shortcodes publics existants.
+* Renvoie les libellés publics des guides, cycles/niveaux et langues vers Contenus & traductions FR / EN / DE tout en gardant les codes internes stables.
+* Conserve les réglages visuels historiques des guides et replie les options avancées ; aucun raccordement forcé à l’apparence globale n’est introduit.
+* Charge les nouveaux assets d’administration uniquement sur l’écran Guides pédagogiques.
 
 = 1.17.7 =
 * Ajoute un écran métier annuel « Devis groupes » séparé des Tarifs groupes et des Guides pédagogiques.
