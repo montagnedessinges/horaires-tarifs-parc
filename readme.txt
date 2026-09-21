@@ -21,13 +21,16 @@ Une sauvegarde du site et de la base de données reste recommandée avant toute 
 == Changelog ==
 
 = 1.17.10 =
-* Transforme la dernière étape 1.17.x en version corrective et d’audit des écrans refaits de 1.17.2 à 1.17.9.
-* Ajoute un garde d’intégrité commun aux sauvegardes d’administration afin qu’un POST tronqué par `max_input_vars`, `post_max_size` ou une requête incomplète ne puisse plus être interprété comme une suppression volontaire.
-* Annule l’enregistrement avant toute écriture lorsque le marqueur de fin de formulaire n’est pas reçu ; les réglages existants restent alors inchangés.
+* Finalise le nettoyage prévu de l’administration après les refontes 1.17.2 à 1.17.9, sans supprimer les compatibilités historiques encore nécessaires aux données, migrations et shortcodes existants.
+* Retire les pages-ponts devenues inutiles de la navigation active : Périodes & événements ouvre directement l’écran métier 1.17.4 et l’ancienne page d’atterrissage Communication renvoie vers l’écran Pop-up 1.17.9, tout en conservant les anciennes URLs comme redirections compatibles.
+* Audite Groupes / Tarifs groupes / Devis groupes : le portail Groupes et le tableau public partagé utilisent la même source annuelle canonique, tandis que l’état du devis reste indépendant de la disponibilité des tarifs.
+* Verrouille l’absence du faux message « Les tarifs groupes ne sont pas disponibles pour cette année. » lorsque la grille Groupes de l’année est réellement disponible, ainsi que l’absence de l’ancien marqueur d’indisponibilité.
+* Renforce l’isolation 2026 / 2027 et des saisons suivantes : grilles, liaisons et calculs du devis restent strictement liés à l’année demandée, sans fallback inter-années.
+* Ajoute en complément un garde d’intégrité commun aux sauvegardes d’administration : les formulaires protégés sont envoyés dans un snapshot JSON compact, ce qui contourne `max_input_vars`, puis reconstruits côté serveur avant les handlers existants.
+* Annule l’enregistrement avant toute écriture si la requête reste incomplète ; les réglages existants sont préservés, tandis qu’une suppression volontaire ou une liste explicitement vide reste enregistrable lorsque l’envoi complet est reçu.
 * Protège les sauvegardes Horaires, Périodes/événements, Tarifs visiteurs, Groupes, Devis groupes, Guides pédagogiques, Pop-up, Calendrier de l’Avent, Administration générale, Contenus & traductions et import CSV.
-* Conserve les suppressions volontaires : un tableau réellement vidé reste enregistrable lorsque le formulaire complet a bien été reçu.
-* Corrige les contrats 1.17.8 et 1.17.9 afin qu’ils continuent à protéger leurs fonctionnalités dans les versions ultérieures au lieu d’exiger un numéro de version littéral.
-* Conserve les moteurs publics, les migrations, les shortcodes historiques et les protections d’isolation annuelle existantes.
+* Conserve le chargement conditionnel des moteurs publics et n’ajoute aucun nouvel asset public ; les composants spécifiques 1.17.10 sont limités à l’administration.
+* Ajoute un audit documenté et des tests bloquants du nettoyage final, du renderer Groupes canonique, de l’indépendance Tarifs/Devis, du transport compact des sauvegardes et du paquet de production.
 
 = 1.17.9 =
 * Sépare la rubrique Communication en deux pages techniques dédiées : Pop-up et Calendrier de l’Avent.
