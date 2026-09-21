@@ -33,13 +33,13 @@ final class Parcs_HT_Admin_Navigation {
     private static function legacy_url($tab, $year = '') {
         if (!class_exists('Parcs_HT_Admin')) return admin_url('admin.php');
         $args = array('page'=>Parcs_HT_Admin::PAGE, 'tab'=>$tab);
-        if (preg_match('/^20\\d{2}$/', (string)$year)) $args['season'] = (string)$year;
+        if (preg_match('/^20\d{2}$/', (string)$year)) $args['season'] = (string)$year;
         return add_query_arg($args, admin_url('admin.php'));
     }
 
     private static function requested_year() {
         $year = isset($_GET['season']) ? sanitize_text_field(wp_unslash($_GET['season'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- navigation en lecture seule.
-        return preg_match('/^20\\d{2}$/', $year) ? $year : '';
+        return preg_match('/^20\d{2}$/', $year) ? $year : '';
     }
 
     private static function redirect($url) {
@@ -47,21 +47,20 @@ final class Parcs_HT_Admin_Navigation {
         exit;
     }
 
-    /** Affiche le contexte de saison commun aux écrans métier annuels. */
+    /** Affiche le contexte d'année commun aux écrans métier annuels. */
     public static function render_year_context($page, $current_year = '') {
         if (!current_user_can('manage_options')) return;
         $all = Parcs_HT_Defaults::all_settings();
         $seasons = isset($all['seasons']) && is_array($all['seasons']) ? $all['seasons'] : array();
         if (!$seasons) return;
-        echo '<nav class="htp-1173-year-context" aria-label="Année administrée"><strong>Année :</strong>';
+        echo '<nav class="htp-1173-year-context" aria-label="Année administrée"><strong>Année administrée :</strong>';
         foreach ($seasons as $year => $season) {
+            unset($season);
             $year = (string)$year;
-            if (!preg_match('/^20\\d{2}$/', $year)) continue;
+            if (!preg_match('/^20\d{2}$/', $year)) continue;
             $args = array('page'=>(string)$page, 'season'=>$year);
-            $label = $year;
-            if (is_array($season) && (string)($season['published'] ?? '0') !== '1') $label .= ' · brouillon';
             $class = $year === (string)$current_year ? 'button button-primary is-current' : 'button';
-            echo '<a class="' . esc_attr($class) . '" href="' . esc_url(add_query_arg($args, admin_url('admin.php'))) . '">' . esc_html($label) . '</a>';
+            echo '<a class="' . esc_attr($class) . '" href="' . esc_url(add_query_arg($args, admin_url('admin.php'))) . '">' . esc_html($year) . '</a>';
         }
         echo '</nav>';
     }
