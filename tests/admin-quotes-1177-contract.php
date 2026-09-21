@@ -37,7 +37,7 @@ release_contract_require_all($context, array(
     "option_' . Parcs_HT_Defaults::OPTION",
     'isset($season[\'tariffs\'])',
     '$value[\'tariffs\'] = $season[\'tariffs\'];',
-    "strpos($action, 'parcs_ht_')",
+    'strpos($action, \'parcs_ht_\')',
     'season_year',
 ), '1.17.7 exact year context');
 
@@ -63,12 +63,13 @@ release_contract_require_all($normalizer, array(
     'update_option(Parcs_HT_Group_Quotes::STATE_OPTION',
 ), '1.17.7 quote state reconciliation');
 
-// Le bug visible en 1.17.0 était produit par un paragraphe public placé sous
-// le panneau Tarifs groupes. La chaîne peut rester au catalogue éditorial pour
-// compatibilité, mais le renderer 1.17.7 ne doit plus émettre ce paragraphe.
+// Le message historique ne doit plus pouvoir être émis par le portail Groupes.
+// Le catalogue éditorial global peut conserver d'anciennes traductions, mais le
+// renderer canonique ne garde ni la chaîne ni un nœud DOM susceptible de l'afficher.
 release_contract_forbid($portal, array(
-    'data-group-tariff-unavailable<?php',
-    '<p class="parcs-ht-group-year-unavailable" data-group-tariff-unavailable',
+    'Les tarifs groupes ne sont pas disponibles pour cette année.',
+    'data-group-tariff-unavailable',
+    '$tariffs_unavailable',
 ), '1.17.7 group portal false unavailable message');
 
 echo "OK: 1.17.7 quote admin, annual context and false-unavailable safeguards present.\n";
