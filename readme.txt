@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.17.10
+Stable tag: 1.17.11
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes et outils du parc.
 
@@ -19,6 +19,15 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.17.11 =
+* Corrige la régression de sauvegarde 1.17.10 en supprimant la reconstruction globale des formulaires en JSON : les écrans utilisent de nouveau le POST WordPress natif et leurs handlers métier existants.
+* Ajoute un garde de fin de formulaire non destructif pour les écrans encore branchés sur la sauvegarde canonique ; une requête tronquée est refusée avant écriture au lieu d’être interprétée comme une suppression.
+* Renvoie Périodes, Tarifs visiteurs, Groupes et Pop-up directement vers leur écran actuel après enregistrement, sans détour par un ancien onglet puis un routeur de compatibilité.
+* Mémorise l’année administrée par utilisateur : après sélection de 2027, les écrans annuels conservent 2027 lors de la navigation et des retours de sauvegarde, sans modifier la visibilité publique.
+* Retire le faux libellé global « brouillon » du sélecteur d’année ; les états publics restent pilotés module par module.
+* Conserve les sanitizers, moteurs publics, clés de données, historiques de sécurité et compatibilités encore nécessaires ; aucun nouveau moteur métier parallèle n’est introduit.
+* Ajoute des tests de non-régression pour les POST incomplets, les redirections directes, l’isolation 2026/2027 et le contexte d’année administrée.
 
 = 1.17.10 =
 * Finalise le nettoyage prévu de l’administration après les refontes 1.17.2 à 1.17.9, sans supprimer les compatibilités historiques encore nécessaires aux données, migrations et shortcodes existants.
