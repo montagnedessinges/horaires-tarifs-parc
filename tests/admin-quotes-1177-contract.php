@@ -77,3 +77,7 @@ release_contract_forbid($portal, array(
 ), '1.17.7 group portal false unavailable message');
 
 echo "OK: 1.17.7 quote admin, annual context and false-unavailable safeguards present.\n";
+
+if (release_contract_at_least($version, '1.17.8')) {
+    require __DIR__ . '/admin-guides-1178-contract.php';
+}
