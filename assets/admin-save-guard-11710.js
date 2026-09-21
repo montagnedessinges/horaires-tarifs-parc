@@ -115,11 +115,13 @@
     var files=filesFrom(formData);
     var nonce=scalar(formData,'_wpnonce');
     var referer=scalar(formData,'_wp_http_referer');
+    var seasonYear=scalar(formData,'season_year');
 
     clearFormData(formData);
     formData.append('action',action);
     if(nonce)formData.append('_wpnonce',nonce);
     if(referer)formData.append('_wp_http_referer',referer);
+    if(seasonYear)formData.append('season_year',seasonYear);
     formData.append(snapshotField,JSON.stringify(payload));
     files.forEach(function(item){formData.append(item[0],item[1]);});
     formData.append(field,action);
