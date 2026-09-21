@@ -36,7 +36,7 @@ release_contract_require_all($main, array(
 release_contract_require_all($context, array(
     "option_' . Parcs_HT_Defaults::OPTION",
     'isset($season[\'tariffs\'])',
-    "$value['tariffs'] = $season['tariffs'];",
+    '$value[\'tariffs\'] = $season[\'tariffs\'];',
     "strpos($action, 'parcs_ht_')",
     'season_year',
 ), '1.17.7 exact year context');
@@ -48,7 +48,7 @@ release_contract_require_all($quotes, array(
     'Parcs_HT_Group_Quotes::season_for_year',
     'Parcs_HT_Public_Visibility::group_tariff_grid_ready',
     'get_option(Parcs_HT_Defaults::OPTION',
-    "['seasons'][$year]['tariffs']",
+    '$raw[\'seasons\'][$year][\'tariffs\']',
     'parcs_ht_save_quote_binding_1177',
     'parcs_ht_save_quote_forms_1177',
     'parcs_ht_save_quote_gate_1177',
@@ -58,7 +58,7 @@ release_contract_require_all($quotes, array(
 
 release_contract_require_all($normalizer, array(
     'parcs_ht_group_quote_state_normalized_v2',
-    "array_key_exists('group_quotes_enabled', $season)",
+    'array_key_exists(\'group_quotes_enabled\', $season)',
     'Parcs_HT_Group_Quotes::STATE_OPTION',
     'update_option(Parcs_HT_Group_Quotes::STATE_OPTION',
 ), '1.17.7 quote state reconciliation');
