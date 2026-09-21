@@ -81,3 +81,7 @@ echo "OK: 1.17.7 quote admin, annual context and false-unavailable safeguards pr
 if (release_contract_at_least($version, '1.17.8')) {
     require __DIR__ . '/admin-guides-1178-contract.php';
 }
+
+if (release_contract_at_least($version, '1.17.9')) {
+    require __DIR__ . '/admin-communication-1179-contract.php';
+}

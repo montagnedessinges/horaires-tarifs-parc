@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.17.8
+Stable tag: 1.17.9
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes et outils du parc.
 
@@ -19,6 +19,15 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.17.9 =
+* Sépare la rubrique Communication en deux pages techniques dédiées : Pop-up et Calendrier de l’Avent.
+* Simplifie les alertes autonomes : leurs réglages détaillés restent masqués tant que le pop-up n’est pas activé, avec contenus FR / EN / DE, bouton facultatif et prévisualisation locale.
+* Laisse les pop-up d’événements et d’horaires exceptionnels dans leur module d’origine afin d’éviter les contenus dupliqués, tout en conservant le moteur public commun.
+* Conserve les réglages d’apparence historiques des pop-up et replie les options avancées sans forcer de raccordement au socle d’apparence globale.
+* Donne au Calendrier de l’Avent sa propre page sans contexte d’année de saison ; campagnes, contenus, partenaires, résultats, import CSV et apparence par campagne restent inchangés.
+* Affiche les shortcodes spécifiques de chaque campagne Avent avec l’attribut `campagne` et conserve tous les shortcodes publics historiques.
+* Charge les nouveaux assets d’administration uniquement sur les pages Communication concernées et préserve le chargement conditionnel des assets publics.
 
 = 1.17.8 =
 * Remplace l’ancien accès aux Guides pédagogiques par un écran métier annuel dédié, plus lisible et repliable.

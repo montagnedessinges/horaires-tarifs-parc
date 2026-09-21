@@ -25,9 +25,12 @@ foreach (array('main'=>$main,'guides admin'=>$admin,'guides engine'=>$guides,'gu
     }
 }
 
+release_contract_require_regex($main, array(
+    'plugin version remains 1.17.8 or newer'=>'/Version:\s*([0-9.]+)/',
+    'PARCS_HT_VERSION constant remains defined'=>"/define\\('PARCS_HT_VERSION',\\s*'[0-9.]+'\\)/",
+), '1.17.8 plugin version');
+
 release_contract_require_all($main, array(
-    'Version: 1.17.8',
-    "define('PARCS_HT_VERSION', '1.17.8')",
     'class-parcs-ht-admin-guides-1178.php',
     'Parcs_HT_Admin_Guides_1178::init();',
 ), '1.17.8 plugin wiring');
@@ -89,3 +92,7 @@ release_contract_require_all($css, array('.htp-1178-guides','.htp-1178-guide','.
 release_contract_require_all($js, array('[data-add-guide]','[data-remove-guide]','[data-media-field]','sortable'), '1.17.8 page-specific interactions');
 
 echo "OK: 1.17.8 pedagogical guides admin simplified without replacing historical engines.\n";
+
+if (release_contract_at_least($version, '1.17.9')) {
+    require __DIR__ . '/admin-communication-1179-contract.php';
+}
