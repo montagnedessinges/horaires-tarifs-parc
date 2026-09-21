@@ -1,5 +1,6 @@
 <?php
 
+$root = getenv('PLUGIN_ROOT') ?: dirname(__DIR__);
 define('ABSPATH', __DIR__ . '/');
 
 if (!function_exists('sanitize_key')) {
@@ -12,7 +13,7 @@ if (!function_exists('wp_unslash')) {
     function wp_unslash($value) { return $value; }
 }
 
-require_once dirname(__DIR__) . '/includes/class-parcs-ht-admin-save-guard-11710.php';
+require_once $root . '/includes/class-parcs-ht-admin-save-guard-11710.php';
 
 function guard_assert($condition, $message) {
     if ($condition) {
