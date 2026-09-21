@@ -12,6 +12,11 @@ final class Parcs_HT_Bootstrap {
     private static $tags = null;
 
     public static function init() {
+        if (is_admin()) {
+            require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin-save-guard-11710.php';
+            Parcs_HT_Admin_Save_Guard_11710::init();
+        }
+
         foreach (self::tags() as $tag => $config) {
             add_shortcode($tag, static function ($atts = array()) use ($config) {
                 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-shortcodes.php';
