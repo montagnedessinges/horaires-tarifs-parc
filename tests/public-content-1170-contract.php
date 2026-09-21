@@ -116,8 +116,15 @@ htp_1170_assert(strpos($class, "'parc_calendrier'") !== false, 'les libellés st
 
 $portal = file_get_contents($root . '/includes/class-parcs-ht-group-portal.php');
 htp_1170_assert(strpos($portal, "Parcs_HT_Public_Content::text") !== false, 'le portail Groupes ne lit pas directement les contenus éditables');
-htp_1170_assert(strpos($portal, "groups.portal.tariffs_unavailable") !== false, 'le message Groupes indisponible n’est pas branché sur le référentiel');
-htp_1170_assert(strpos($portal, "\$tariff_missing_possible") !== false, 'le message tarifs indisponibles n’est pas conditionné à une vraie année manquante');
+if (version_compare($plugin_version, '1.17.7', '<')) {
+    htp_1170_assert(strpos($portal, "groups.portal.tariffs_unavailable") !== false, 'le message Groupes indisponible n’est pas branché sur le référentiel');
+    htp_1170_assert(strpos($portal, "\$tariff_missing_possible") !== false, 'le message tarifs indisponibles n’est pas conditionné à une vraie année manquante');
+} else {
+    // Depuis 1.17.7 ce message a été retiré du renderer du portail : il pouvait
+    // rester visible sous des tarifs valides via un ancien HTML mis en cache.
+    htp_1170_assert(strpos($portal, "groups.portal.tariffs_unavailable") === false, 'le message Groupes indisponible obsolète est encore branché au portail');
+    htp_1170_assert(strpos($portal, "data-group-tariff-unavailable") === false, 'le nœud DOM du faux message Groupes indisponible existe encore');
+}
 htp_1170_assert(strpos($portal, "[hidden]{display:none!important}") !== false, 'la règle hidden locale du portail Groupes est absente');
 
 $shared = file_get_contents($root . '/includes/class-parcs-ht-tariff-shared-1168.php');
