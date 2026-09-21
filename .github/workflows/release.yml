@@ -55,6 +55,8 @@ jobs:
           php tests/admin-periods-1174-contract.php
           php tests/admin-tariffs-1175-contract.php
           php tests/admin-groups-1176-contract.php
+          php tests/admin-year-context-1177-runtime.php
+          php tests/admin-quotes-1177-contract.php
           php tests/visibility-11512-runtime.php
           php tests/stability-11511-contract.php
           php tests/group-quote-future-season-runtime.php
@@ -104,6 +106,7 @@ jobs:
           PLUGIN_ROOT=/tmp/htp-production-test php tests/admin-periods-1174-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/admin-tariffs-1175-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/admin-groups-1176-contract.php
+          PLUGIN_ROOT=/tmp/htp-production-test php tests/admin-quotes-1177-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/public-data-regressions.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/updater-metadata-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/schedule-csv-contract.php

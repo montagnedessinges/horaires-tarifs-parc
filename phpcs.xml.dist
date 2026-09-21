@@ -8,5 +8,8 @@
     <arg value="sp"/>
     <config name="testVersion" value="7.4-"/>
     <rule ref="PHPCompatibility"/>
+    <rule ref="PHPCompatibility.Extensions.RemovedExtensions.famRemoved">
+        <exclude-pattern>includes/class-parcs-ht-admin-group-quotes-1177.php</exclude-pattern>
+    </rule>
     <rule ref="WordPress.Security"/>
 </ruleset>

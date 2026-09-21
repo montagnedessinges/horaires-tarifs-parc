@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.17.6
+Stable tag: 1.17.7
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes et outils du parc.
 
@@ -19,6 +19,15 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.17.7 =
+* Ajoute un écran métier annuel « Devis groupes » séparé des Tarifs groupes et des Guides pédagogiques.
+* Fiabilise le contexte d’année des écrans Groupes et des écritures admin/AJAX afin qu’aucune grille tarifaire d’une autre année ne puisse être utilisée.
+* Réconcilie l’activation annuelle canonique des devis avec l’ancien stockage technique sans fallback inter-années.
+* Conserve le recalcul serveur et lie chaque devis uniquement aux identifiants permanents de la grille Groupes de l’année sélectionnée.
+* Supprime définitivement du renderer du portail Groupes la phrase parasite « Les tarifs groupes ne sont pas disponibles pour cette année. » et son ancien nœud d’affichage.
+* Purge le cache LiteSpeed lors de la mise à jour de l’extension afin d’éviter qu’un ancien HTML public conserve ce message après installation.
+* Regroupe les formulaires Contact Form 7 FR / EN / DE, l’accès au devis et les champs techniques ; les options avancées restent repliées.
 
 = 1.17.6 =
 * Remplace l’ancien passage par l’onglet historique des tarifs groupes par un écran métier annuel « Groupes » directement accessible dans WordPress.

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Gestion du parc
  * Description: Gestion centralisée des horaires, calendriers, tarifs, événements, devis et outils du parc.
- * Version: 1.17.6
+ * Version: 1.17.7
  * Update URI: https://github.com/montagnedessinges/horaires-tarifs-parc
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -12,7 +12,7 @@
 
 if (!defined('ABSPATH')) { exit; }
 
-define('PARCS_HT_VERSION', '1.17.6');
+define('PARCS_HT_VERSION', '1.17.7');
 define('PARCS_HT_FILE', __FILE__);
 define('PARCS_HT_DIR', plugin_dir_path(__FILE__));
 define('PARCS_HT_URL', plugin_dir_url(__FILE__));
@@ -43,11 +43,13 @@ require_once PARCS_HT_DIR . 'includes/class-parcs-ht-public-visibility.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-public-content.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin-overview.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin-navigation.php';
+require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin-year-context.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin-schedule.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin-periods.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin-periods-routing.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin-retail-tariffs.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin-group-tariffs.php';
+require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin-group-quotes-1177.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-group-portal.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-shortcode-composer.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-tariff-public-fixes.php';
@@ -77,11 +79,13 @@ Parcs_HT_Public_Visibility::init();
 Parcs_HT_Public_Content::init();
 Parcs_HT_Admin_Overview::init();
 Parcs_HT_Admin_Navigation::init();
+Parcs_HT_Admin_Year_Context::init();
 Parcs_HT_Admin_Schedule::init();
 Parcs_HT_Admin_Periods::init();
 Parcs_HT_Admin_Periods_Routing::init();
 Parcs_HT_Admin_Retail_Tariffs::init();
 Parcs_HT_Admin_Group_Tariffs::init();
+Parcs_HT_Admin_Group_Quotes_1177::init();
 Parcs_HT_Public_Seasons::init();
 Parcs_HT_Stability_11511::init();
 Parcs_HT_Save_Integrity::init();
@@ -103,6 +107,17 @@ add_action('added_option', static function ($option, $value) {
         update_option('parcs_ht_export_revision', 1, false);
         if (!wp_next_scheduled('parcs_ht_pregenerate_exports')) wp_schedule_single_event(time() + 10, 'parcs_ht_pregenerate_exports');
     }
+}, 10, 2);
+
+// Une mise à jour de l'extension doit invalider le HTML public mis en cache :
+// les anciennes versions du portail Groupes pouvaient encore contenir un message
+// d'indisponibilité qui n'existe plus dans le renderer actuel.
+add_action('upgrader_process_complete', static function ($upgrader, $options) {
+    unset($upgrader);
+    if (!is_array($options) || ($options['type'] ?? '') !== 'plugin' || ($options['action'] ?? '') !== 'update') return;
+    $plugins = isset($options['plugins']) && is_array($options['plugins']) ? $options['plugins'] : array();
+    if (!in_array(plugin_basename(PARCS_HT_FILE), $plugins, true)) return;
+    do_action('litespeed_purge_all');
 }, 10, 2);
 
 add_action('wp_enqueue_scripts', static function () {
