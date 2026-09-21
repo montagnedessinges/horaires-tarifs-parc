@@ -3,8 +3,9 @@
 
   var config=window.ParcsHTSaveGuard11710||{};
   var field=String(config.field||'');
+  var snapshotField=String(config.snapshotField||'');
   var actions=Array.isArray(config.actions)?config.actions.map(String):[];
-  if(!field||!actions.length)return;
+  if(!field||!snapshotField||!actions.length)return;
 
   function actionFor(form){
     if(!form||!form.elements)return'';
@@ -31,6 +32,73 @@
     form.appendChild(input);
   }
 
+  function nameParts(name){
+    var match=String(name||'').match(/^([^\[]+)((?:\[[^\]]*\])*)$/);
+    if(!match)return[];
+    var out=[match[1]];
+    var brackets=match[2]||'';
+    var regex=/\[([^\]]*)\]/g;
+    var part;
+    while((part=regex.exec(brackets))!==null)out.push(part[1]);
+    return out;
+  }
+
+  function assign(root,parts,value){
+    if(!parts.length)return;
+    var node=root;
+    for(var i=0;i<parts.length;i++){
+      var key=parts[i];
+      var last=i===parts.length-1;
+      if(key===''){
+        if(!Array.isArray(node))return;
+        if(last){node.push(value);return;}
+        var appended=parts[i+1]===''?[]:{};
+        node.push(appended);
+        node=appended;
+        continue;
+      }
+      if(last){node[key]=value;return;}
+      var shouldArray=parts[i+1]==='';
+      if(!node[key]||typeof node[key]!=='object'||(shouldArray&&!Array.isArray(node[key]))||(!shouldArray&&Array.isArray(node[key]))){
+        node[key]=shouldArray?[]:{};
+      }
+      node=node[key];
+    }
+  }
+
+  function payloadFrom(formData){
+    var payload={};
+    formData.forEach(function(value,name){
+      if(name===field||name===snapshotField)return;
+      if(typeof File!=='undefined'&&value instanceof File)return;
+      assign(payload,nameParts(name),String(value));
+    });
+    return payload;
+  }
+
+  function scalar(formData,name){
+    var value=formData.get(name);
+    return typeof value==='string'?value:'';
+  }
+
+  function filesFrom(formData){
+    var files=[];
+    formData.forEach(function(value,name){
+      if(typeof File!=='undefined'&&value instanceof File&&value.name){
+        files.push([name,value]);
+      }
+    });
+    return files;
+  }
+
+  function clearFormData(formData){
+    var keys=[];
+    formData.forEach(function(unused,name){
+      if(keys.indexOf(name)===-1)keys.push(name);
+    });
+    keys.forEach(function(name){formData.delete(name);});
+  }
+
   document.addEventListener('submit',function(event){
     var form=event.target;
     var action=protectedForm(form);
@@ -40,8 +108,20 @@
   document.addEventListener('formdata',function(event){
     var form=event.target;
     var action=protectedForm(form);
-    if(!action||!event.formData)return;
-    event.formData.delete(field);
-    event.formData.append(field,action);
+    var formData=event.formData;
+    if(!action||!formData)return;
+
+    var payload=payloadFrom(formData);
+    var files=filesFrom(formData);
+    var nonce=scalar(formData,'_wpnonce');
+    var referer=scalar(formData,'_wp_http_referer');
+
+    clearFormData(formData);
+    formData.append('action',action);
+    if(nonce)formData.append('_wpnonce',nonce);
+    if(referer)formData.append('_wp_http_referer',referer);
+    formData.append(snapshotField,JSON.stringify(payload));
+    files.forEach(function(item){formData.append(item[0],item[1]);});
+    formData.append(field,action);
   });
 }());
