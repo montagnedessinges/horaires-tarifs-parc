@@ -8,6 +8,10 @@ if (!release_contract_at_least($version, '1.17.10')) {
     echo "SKIP: contract 1.17.10 applies from 1.17.10.\n";
     exit(0);
 }
+if (release_contract_at_least($version, '1.17.11')) {
+    echo "SKIP: the 1.17.10 JSON save guard was replaced by the native 1.17.11 save layer.\n";
+    exit(0);
+}
 
 $main = file_get_contents($root . '/horaires-tarifs-parc.php');
 $bootstrap = file_get_contents($root . '/includes/class-parcs-ht-bootstrap.php');
