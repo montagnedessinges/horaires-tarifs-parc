@@ -22,9 +22,16 @@ foreach (array('main'=>$main,'year context'=>$context,'quote admin'=>$quotes,'no
     }
 }
 
+release_contract_require_regex($main, array(
+    'plugin version remains 1.17.7 or newer'=>'/Version:\s*([0-9.]+)/',
+    'PARCS_HT_VERSION constant remains defined'=>"/define\\('PARCS_HT_VERSION',\\s*'[0-9.]+'\\)/",
+), '1.17.7 plugin version');
+if (!release_contract_at_least($version, '1.17.7')) {
+    fwrite(STDERR, "1.17.7 plugin wiring: plugin version regressed.\n");
+    exit(1);
+}
+
 release_contract_require_all($main, array(
-    'Version: 1.17.7',
-    "define('PARCS_HT_VERSION', '1.17.7')",
     'class-parcs-ht-admin-year-context.php',
     'class-parcs-ht-admin-group-quotes-1177.php',
     'Parcs_HT_Admin_Year_Context::init();',
@@ -63,9 +70,6 @@ release_contract_require_all($normalizer, array(
     'update_option(Parcs_HT_Group_Quotes::STATE_OPTION',
 ), '1.17.7 quote state reconciliation');
 
-// Le message historique ne doit plus pouvoir être émis par le portail Groupes.
-// Le catalogue éditorial global peut conserver d'anciennes traductions, mais le
-// renderer canonique ne garde ni la chaîne ni un nœud DOM susceptible de l'afficher.
 release_contract_forbid($portal, array(
     'Les tarifs groupes ne sont pas disponibles pour cette année.',
     'data-group-tariff-unavailable',
@@ -73,3 +77,7 @@ release_contract_forbid($portal, array(
 ), '1.17.7 group portal false unavailable message');
 
 echo "OK: 1.17.7 quote admin, annual context and false-unavailable safeguards present.\n";
+
+if (release_contract_at_least($version, '1.17.8')) {
+    require __DIR__ . '/admin-guides-1178-contract.php';
+}
