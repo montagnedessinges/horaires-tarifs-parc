@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.17.11
+Stable tag: 1.17.12
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes et outils du parc.
 
@@ -19,6 +19,13 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.17.12 =
+* Ajoute dans l’écran Devis groupes un outil contrôlé pour appliquer le nouveau modèle du formulaire Contact Form 7 français.
+* Ajoute les champs tranche d’âge, heure d’arrivée, responsable du groupe, langues, moyen de paiement et informations Chorus Pro tout en conservant les noms historiques utilisés par le moteur de calcul.
+* Enregistre les cinq règles Conditional Fields nécessaires aux groupes standard/handicap, autre langue, paiement différé et Chorus Pro.
+* Crée une sauvegarde du formulaire CF7 et de ses conditions avant remplacement ; aucune modification n’est appliquée automatiquement lors de l’installation.
+* Ne modifie ni le modèle PDF existant, ni les réglages e-mail/messages de Contact Form 7, ni les calculs tarifaires actuels. L’évolution conditionnelle du PDF reste reportée séparément.
 
 = 1.17.11 =
 * Corrige la régression de sauvegarde 1.17.10 en supprimant la reconstruction globale des formulaires en JSON : les écrans utilisent de nouveau le POST WordPress natif et leurs handlers métier existants.
