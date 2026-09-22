@@ -13,9 +13,9 @@ final class Parcs_HT_Bootstrap {
 
     public static function init() {
         if (is_admin()) {
-            require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin-save-guard-11710.php';
+            require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin-save-11711.php';
             require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin-cleanup-11710.php';
-            Parcs_HT_Admin_Save_Guard_11710::init();
+            Parcs_HT_Admin_Save_11711::init();
             Parcs_HT_Admin_Cleanup_11710::init();
         }
 

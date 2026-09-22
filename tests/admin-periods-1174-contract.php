@@ -54,3 +54,7 @@ htp_1174_assert(strpos($alerts, 'popup_show_dates') !== false && strpos($alerts,
 htp_1174_assert(is_string($css) && strpos($css, '.htp-1174-periods') !== false, 'styles dédiés 1.17.4 absents');
 
 fwrite(STDOUT, "OK admin-periods-1174-contract\n");
+
+if (version_compare($version, '1.17.11', '>=')) {
+    require __DIR__ . '/admin-save-11711-contract.php';
+}
