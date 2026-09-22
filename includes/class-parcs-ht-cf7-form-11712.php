@@ -47,7 +47,10 @@ final class Parcs_HT_CF7_Form_11712 {
         if (!class_exists('WPCF7_ContactForm')) return null;
         $id = self::form_id_from_shortcode(self::fr_shortcode());
         if ($id === '') return null;
-        return WPCF7_ContactForm::get_instance(ctype_digit($id) ? (int)$id : $id);
+
+        if (ctype_digit($id)) return WPCF7_ContactForm::get_instance((int)$id);
+        if (function_exists('wpcf7_get_contact_form_by_hash')) return wpcf7_get_contact_form_by_hash($id);
+        return null;
     }
 
     private static function current_form_markup($form) {
@@ -66,6 +69,13 @@ final class Parcs_HT_CF7_Form_11712 {
             if (strpos($markup, $field) === false) return false;
         }
         return true;
+    }
+
+    private static function conditions_are_current($form_id) {
+        if (!class_exists('CF7CF') || !method_exists('CF7CF', 'parse_conditions') || !method_exists('CF7CF', 'getConditions')) return false;
+        $expected = CF7CF::parse_conditions(self::conditions_text());
+        $current = CF7CF::getConditions($form_id);
+        return is_array($expected) && is_array($current) && wp_json_encode($expected) === wp_json_encode($current);
     }
 
     public static function notice() {
@@ -100,8 +110,9 @@ final class Parcs_HT_CF7_Form_11712 {
             return;
         }
 
-        if (self::form_is_current($form)) {
-            echo '<div class="notice notice-success"><p><strong>Formulaire CF7 français :</strong> les champs du modèle 1.17.12 sont déjà présents. Aucune action n’est nécessaire.</p></div>';
+        $form_id = method_exists($form, 'id') ? $form->id() : 0;
+        if ($form_id && self::form_is_current($form) && self::conditions_are_current($form_id)) {
+            echo '<div class="notice notice-success"><p><strong>Formulaire CF7 français :</strong> le modèle et les règles conditionnelles 1.17.12 sont déjà en place. Aucune action n’est nécessaire.</p></div>';
             return;
         }
 
@@ -145,9 +156,20 @@ final class Parcs_HT_CF7_Form_11712 {
 
         $form->set_properties(array('form' => self::form_template()));
         $saved = $form->save();
-        if ($saved === false) wp_die('Contact Form 7 n’a pas confirmé l’enregistrement du nouveau formulaire. La sauvegarde précédente est conservée.');
+        if (!$saved) wp_die('Contact Form 7 n’a pas confirmé l’enregistrement du nouveau formulaire. La sauvegarde précédente est conservée.');
 
         CF7CF::setConditions($form_id, $conditions);
+
+        if (method_exists('CF7CF', 'getConditions')) {
+            $stored = CF7CF::getConditions($form_id);
+            if (!is_array($stored) || wp_json_encode($stored) !== wp_json_encode($conditions)) {
+                $form->set_properties(array('form' => (string)$backup['form']));
+                $form->save();
+                CF7CF::setConditions($form_id, is_array($backup['conditions']) ? $backup['conditions'] : array());
+                wp_die('Les règles conditionnelles n’ont pas été confirmées. Le formulaire précédent a été restauré.');
+            }
+        }
+
         do_action('litespeed_purge_all');
 
         // phpcs:ignore WordPress.Security.NonceVerification.Missing -- valeur issue du formulaire signé par nonce et utilisée uniquement comme contexte de redirection.
