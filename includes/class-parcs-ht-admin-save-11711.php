@@ -30,9 +30,18 @@ final class Parcs_HT_Admin_Save_11711 {
         return preg_match('/^20\d{2}$/', $year) ? $year : '';
     }
 
+    /**
+     * Lit uniquement les métadonnées scalaires nécessaires pour identifier le
+     * flux admin-post et sa destination. Le nonce canonique est vérifié dans
+     * guard_native_post() avant toute lecture des réglages ou toute écriture ;
+     * le filtre de redirection s'exécute ensuite dans ce même flux validé.
+     */
     private static function post_value($key) {
+        // phpcs:disable WordPress.Security.NonceVerification.Missing -- métadonnées de routage uniquement ; aucune donnée métier n'est lue ni écrite ici.
         if (!isset($_POST[$key]) || is_array($_POST[$key])) return '';
-        return sanitize_text_field(wp_unslash($_POST[$key]));
+        $value = sanitize_text_field(wp_unslash($_POST[$key]));
+        // phpcs:enable WordPress.Security.NonceVerification.Missing
+        return $value;
     }
 
     private static function request_is_canonical_save() {
