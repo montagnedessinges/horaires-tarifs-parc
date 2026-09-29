@@ -1,0 +1,1 @@
+La FAQ 1.19.2 conserve Contact Form 7 comme moteur d’envoi et ajoute un shortcode combiné pour afficher FAQ puis formulaire dans la même zone de page.
