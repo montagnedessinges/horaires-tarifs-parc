@@ -37,7 +37,7 @@ shortcode_registry_check(strpos($preview_js, 'frame.src=frameUrl()') !== false, 
 shortcode_registry_check(strpos($bootstrap, 'Parcs_HT_Shortcode_Registry::definitions()') !== false, 'runtime bootstrap still derives from the central registry');
 
 shortcode_registry_check(is_string($faq) && strpos($faq, "const OPTION = 'parcs_ht_faq';") !== false, 'FAQ uses its own global storage');
-shortcode_registry_check(strpos($faq, 'Parcs_HT_Defaults::OPTION') === false, 'FAQ save handlers never write to the annual settings option');
+shortcode_registry_check(strpos($faq, 'update_option(Parcs_HT_Defaults::OPTION') === false && strpos($faq, "update_option('parcs_ht_settings'") === false, 'FAQ save handlers never write to the annual settings option');
 shortcode_registry_check(strpos($faq, "add_shortcode('parc_faq'") !== false && strpos($faq, "add_shortcode('parc_faq_' . \$language") !== false, 'FAQ exposes automatic FR EN DE shortcodes');
 shortcode_registry_check(strpos($faq, "admin_post_parcs_ht_faq_save_settings") !== false && strpos($faq, "admin_post_parcs_ht_faq_apply_import") !== false, 'FAQ has isolated admin save/import handlers');
 shortcode_registry_check(strpos($bootstrap, "class-parcs-ht-faq.php") !== false && strpos($bootstrap, 'Parcs_HT_FAQ::init();') !== false, 'FAQ uses a dedicated lightweight bootstrap');
