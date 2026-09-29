@@ -2,15 +2,15 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.18.0
+Stable tag: 1.19.0
 
-Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes et outils du parc.
+Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes, FAQ et outils du parc.
 
 == Description ==
 
-Cette extension gère plusieurs saisons de parc, les horaires habituels et exceptionnels, le calendrier public, les périodes et événements, les tarifs individuels et groupes, les devis, les guides pédagogiques et le Calendrier de l’Avent.
+Cette extension gère plusieurs saisons de parc, les horaires habituels et exceptionnels, le calendrier public, les périodes et événements, les tarifs individuels et groupes, les devis, les guides pédagogiques, la FAQ globale et le Calendrier de l’Avent.
 
-Les données de chaque saison restent séparées. Les mises à jour sont conçues pour conserver les réglages déjà enregistrés.
+Les données de chaque saison restent séparées. La FAQ dispose de son propre stockage global, indépendant des saisons. Les mises à jour sont conçues pour conserver les réglages déjà enregistrés.
 
 == Mise à jour manuelle ==
 
@@ -19,6 +19,15 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.19.0 =
+* Ajoute un écran global « FAQ » indépendant des années et des saisons, avec son propre stockage et ses propres handlers afin de ne jamais écrire dans les réglages horaires, tarifs ou devis.
+* Ajoute les shortcodes `[parc_faq]`, `[parc_faq_fr]`, `[parc_faq_en]` et `[parc_faq_de]`, référencés avec les autres shortcodes publics et rendus côté serveur dans le HTML initial.
+* Ajoute une recherche et des filtres de catégories en amélioration progressive : les réponses restent présentes sans AJAX et les assets FAQ ne sont chargés que lorsqu’un shortcode FAQ est utilisé.
+* Ajoute une connexion contrôlée à un Google Sheet privé par Web App Apps Script en lecture seule : « Vérifier le Google Sheet » construit uniquement un aperçu et ne publie rien automatiquement.
+* Bloque la publication automatique des lignes non validées ou non destinées à la FAQ publique, conserve les fiches absentes du Sheet et crée une révision de sécurité avant chaque import ou restauration.
+* Prévoit les champs FR / EN / DE, les synonymes de recherche, les liens officiels et trois modes de réponse afin que les données très dynamiques puissent renvoyer vers leur source canonique sans dupliquer horaires ou tarifs saisonniers.
+* Conserve la FAQ désactivée par défaut après mise à jour et garde le formulaire de contact hors périmètre de cette étape.
 
 = 1.18.0 =
 * Ajoute un écran « IA & Google » dédié aux informations propres au parc, sans remplacer SEOPress ni dupliquer ses titres, métadonnées, réseaux sociaux ou sitemaps.
