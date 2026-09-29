@@ -2,7 +2,7 @@
 
 $root = getenv('PLUGIN_ROOT');
 if (!$root) $root = dirname(__DIR__);
-require_once $root . '/tests/release-contract.php';
+require_once __DIR__ . '/release-contract.php';
 
 $version = release_contract_plugin_version($root);
 if (!release_contract_at_least($version, '1.18.0')) {
