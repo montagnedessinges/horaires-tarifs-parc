@@ -12,4 +12,12 @@
         <exclude-pattern>includes/class-parcs-ht-admin-group-quotes-1177.php</exclude-pattern>
     </rule>
     <rule ref="WordPress.Security"/>
+    <!--
+      Le contrôleur CSV valide explicitement nonce/capacité, extension, taille,
+      is_uploaded_file(), parc, en-têtes et chaque champ après lecture. $_FILES
+      ne doit pas être wp_unslash() ni assaini globalement avant ces contrôles.
+    -->
+    <rule ref="WordPress.Security.ValidatedSanitizedInput">
+        <exclude-pattern>includes/class-parcs-ht-faq-csv-1191.php</exclude-pattern>
+    </rule>
 </ruleset>
