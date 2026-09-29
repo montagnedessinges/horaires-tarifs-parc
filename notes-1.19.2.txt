@@ -1,0 +1,6 @@
+Gestion du parc 1.19.2
+
+FAQ : rendu intégré au thème sans faux en-tête.
+FAQ + Contact : nouveaux shortcodes multilingues et configuration Contact Form 7 FR/EN/DE dans Gestion du parc > FAQ.
+Contact Form 7 reste le moteur d’envoi des e-mails.
+Stockage FAQ/Contact séparé des saisons, horaires, tarifs et devis.
