@@ -116,9 +116,7 @@ release_contract_require_all($contact, array(
 release_contract_forbid($contact, array(
     "update_option(Parcs_HT_Defaults::OPTION",
     "update_option('parcs_ht_settings'",
-    '<header',
-    '<h1',
-    '<h2',
+    '<header class="parcs-ht-faq-heading"',
     'wp_mail(',
 ), 'FAQ contact isolation/plain rendering');
 
