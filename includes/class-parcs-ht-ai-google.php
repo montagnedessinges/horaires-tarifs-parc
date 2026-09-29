@@ -116,7 +116,11 @@ final class Parcs_HT_AI_Google {
         check_admin_referer('parcs_ht_save_ai_google');
 
         $current = self::settings();
-        $raw = isset($_POST['ai_google']) && is_array($_POST['ai_google']) ? wp_unslash($_POST['ai_google']) : array();
+        $raw = array();
+        if (isset($_POST['ai_google']) && is_array($_POST['ai_google'])) {
+            // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Conteneur déslashé une seule fois ; chaque valeur est ensuite assainie avec son sanitizer adapté avant écriture.
+            $raw = wp_unslash($_POST['ai_google']);
+        }
         $identity_raw = isset($raw['identity']) && is_array($raw['identity']) ? $raw['identity'] : array();
 
         $identity = array(
@@ -453,7 +457,7 @@ final class Parcs_HT_AI_Google {
                     <label class="htp-ai-wide"><span>Mots-clés internes</span><textarea rows="2" name="ai_google[knowledge][0][keywords]"><?php echo esc_textarea(implode(', ', (array)($row['keywords'] ?? array()))); ?></textarea><small>Ex. popcorn, pop-corn, nourrir. Ils servent à la recherche interne future et ne sont pas injectés dans le HTML public.</small></label>
                     <label class="htp-ai-field"><span>Dernière vérification</span><input type="date" name="ai_google[knowledge][0][last_verified]" value="<?php echo esc_attr((string)($row['last_verified'] ?? wp_date('Y-m-d'))); ?>"></label>
                     <label class="htp-ai-toggle"><input type="checkbox" name="ai_google[rules_visible]" value="1" <?php checked((string)($settings['rules_visible'] ?? '1'), '1'); ?>> Afficher discrètement « Règles de visite » sous la page complète Horaires & Tarifs</label>
-                    <p class="description">Le contenu est rendu côté serveur dans le HTML initial, à l’intérieur d’un accordéon fermé par défaut. Il reste accessible à un visiteur qui choisit de l’ouvrir.</p>
+                    <p class="description">Le contenu est rendu côté serveur dans le HTML initial, à l’intérieur d’un accordéon fermé par défaut. Il reste accessible à un humain qui choisit de l’ouvrir.</p>
                 </section>
 
                 <section class="htp-ai-card">
