@@ -28,6 +28,8 @@ final class Parcs_HT_Bootstrap {
 
         require_once PARCS_HT_DIR . 'includes/class-parcs-ht-faq-contact-1192.php';
         Parcs_HT_FAQ_Contact_1192::init();
+        require_once PARCS_HT_DIR . 'includes/class-parcs-ht-faq-unified-1193.php';
+        Parcs_HT_FAQ_Unified_1193::init();
 
         foreach (self::tags() as $tag => $config) {
             add_shortcode($tag, static function ($atts = array()) use ($config) {
