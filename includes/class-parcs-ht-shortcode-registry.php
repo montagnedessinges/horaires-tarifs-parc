@@ -22,6 +22,7 @@ final class Parcs_HT_Shortcode_Registry {
             'parc_devis' => array('label'=>'Alias compatible du module Devis groupe','kind'=>'core','module'=>'quote_page','preview'=>true),
             'parc_guides_pedagogiques' => array('label'=>'Guides pédagogiques','kind'=>'guides','module'=>'guides','preview'=>true),
             'parc_faq' => array('label'=>'FAQ','kind'=>'faq','module'=>'faq','preview'=>true),
+            'parc_faq_contact' => array('label'=>'FAQ + formulaire de contact','kind'=>'faq_contact','module'=>'faq_contact','preview'=>true),
         );
     }
 
@@ -62,8 +63,12 @@ final class Parcs_HT_Shortcode_Registry {
         if ($definition['kind'] === 'guides') {
             return do_shortcode(self::shortcode($base, $language));
         }
-        if ($definition['kind'] === 'faq' && class_exists('Parcs_HT_FAQ')) {
-            return Parcs_HT_FAQ::render($language, array());
+        if ($definition['kind'] === 'faq') {
+            if (class_exists('Parcs_HT_FAQ_Contact_1192')) return Parcs_HT_FAQ_Contact_1192::render_faq($language, array());
+            if (class_exists('Parcs_HT_FAQ')) return Parcs_HT_FAQ::render($language, array('titre'=>'0'));
+        }
+        if ($definition['kind'] === 'faq_contact' && class_exists('Parcs_HT_FAQ_Contact_1192')) {
+            return Parcs_HT_FAQ_Contact_1192::render_combined($language, array());
         }
         if ($definition['kind'] === 'advent' && class_exists('Parcs_HT_Advent')) {
             if ($definition['module'] === 'rules') return Parcs_HT_Advent::render_rules($language, array());
