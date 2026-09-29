@@ -6,17 +6,19 @@ require_once __DIR__ . '/release-contract.php';
 
 $feature_path = $root . '/includes/class-parcs-ht-faq.php';
 $csv_path = $root . '/includes/class-parcs-ht-faq-csv-1191.php';
-if (!is_file($feature_path) || !is_file($csv_path)) {
+$contact_path = $root . '/includes/class-parcs-ht-faq-contact-1192.php';
+if (!is_file($feature_path) || !is_file($csv_path) || !is_file($contact_path)) {
     fwrite(STDERR, "FAQ contract files missing.\n");
     exit(1);
 }
 
 $feature = file_get_contents($feature_path);
 $csv = file_get_contents($csv_path);
+$contact = file_get_contents($contact_path);
 $bootstrap = file_get_contents($root . '/includes/class-parcs-ht-bootstrap.php');
 $registry = file_get_contents($root . '/includes/class-parcs-ht-shortcode-registry.php');
 $uninstall = file_get_contents($root . '/uninstall.php');
-if (!is_string($feature) || !is_string($csv) || !is_string($bootstrap) || !is_string($registry) || !is_string($uninstall)) {
+if (!is_string($feature) || !is_string($csv) || !is_string($contact) || !is_string($bootstrap) || !is_string($registry) || !is_string($uninstall)) {
     fwrite(STDERR, "Unable to read FAQ sources.\n");
     exit(1);
 }
@@ -90,19 +92,52 @@ release_contract_forbid($csv, array(
     'wp_ajax_',
 ), 'FAQ CSV isolation/no-Google contract');
 
+release_contract_require_all($contact, array(
+    'final class Parcs_HT_FAQ_Contact_1192',
+    "const OPTION = 'parcs_ht_faq_contact';",
+    "add_shortcode('parc_faq_contact'",
+    "add_shortcode('parc_faq_contact_' . \$language",
+    "add_shortcode('parc_faq'",
+    "\$atts['titre'] = '0';",
+    'parcs-ht-faq-intro',
+    '<p><strong>',
+    "shortcode_exists('contact-form-7')",
+    'do_shortcode($shortcode)',
+    "admin_post_parcs_ht_faq_contact_save",
+    "check_admin_referer('parcs_ht_faq_contact_save')",
+    "update_option(self::OPTION",
+    'Contact Form 7 envoie ensuite la demande par e-mail',
+    '[parc_faq_contact]',
+    '[parc_faq_contact_fr]',
+    '[parc_faq_contact_en]',
+    '[parc_faq_contact_de]',
+), 'FAQ contact 1.19.2 integration');
+
+release_contract_forbid($contact, array(
+    "update_option(Parcs_HT_Defaults::OPTION",
+    "update_option('parcs_ht_settings'",
+    '<header class="parcs-ht-faq-heading"',
+    'wp_mail(',
+), 'FAQ contact isolation/plain rendering');
+
 release_contract_require_all($bootstrap, array(
     "require_once PARCS_HT_DIR . 'includes/class-parcs-ht-faq.php';",
     'Parcs_HT_FAQ::init();',
     "require_once PARCS_HT_DIR . 'includes/class-parcs-ht-faq-csv-1191.php';",
     'Parcs_HT_FAQ_CSV_1191::init();',
+    "require_once PARCS_HT_DIR . 'includes/class-parcs-ht-faq-contact-1192.php';",
+    'Parcs_HT_FAQ_Contact_1192::init();',
 ), 'FAQ bootstrap');
 
 release_contract_require_all($registry, array(
     "'parc_faq' => array('label'=>'FAQ','kind'=>'faq'",
+    "'parc_faq_contact' => array('label'=>'FAQ + formulaire de contact','kind'=>'faq_contact'",
     "\$definition['kind'] === 'faq'",
-    'Parcs_HT_FAQ::render',
+    "\$definition['kind'] === 'faq_contact'",
+    'Parcs_HT_FAQ_Contact_1192::render_faq',
+    'Parcs_HT_FAQ_Contact_1192::render_combined',
 ), 'FAQ shortcode registry');
 
-release_contract_require_all($uninstall, array('parcs_ht_faq', 'parcs_ht_faq_revisions'), 'FAQ uninstall');
+release_contract_require_all($uninstall, array('parcs_ht_faq', 'parcs_ht_faq_revisions', 'parcs_ht_faq_contact'), 'FAQ uninstall');
 
-echo "FAQ 1.19.1 CSV contract OK.\n";
+echo "FAQ 1.19.2 contact contract OK.\n";
