@@ -10,7 +10,8 @@
 .parcs-ht-guides,
 .parcs-ht-quote,
 .parcs-ht-tariff-ui,
-.parcs-ht-tariff-years-ui {
+.parcs-ht-tariff-years-ui,
+.parcs-ht-official-info {
   background:transparent!important;
 }
 
@@ -27,6 +28,37 @@
 
 .parcs-ht-tariff-ui__title {
   color:var(--htp-tariff-title,var(--htp-heading-text,#111111))!important;
+}
+
+.parcs-ht-official-info {
+  margin-top:18px;
+  color:inherit;
+}
+
+.parcs-ht-official-info details {
+  border-top:1px solid currentColor;
+  border-bottom:1px solid currentColor;
+  padding:10px 0;
+}
+
+.parcs-ht-official-info summary {
+  cursor:pointer;
+  font-weight:600;
+  color:inherit;
+}
+
+.parcs-ht-official-info-content {
+  padding-top:8px;
+  color:inherit;
+}
+
+.parcs-ht-official-info-content article + article {
+  margin-top:12px;
+}
+
+.parcs-ht-official-info-content h3,
+.parcs-ht-official-info-content p {
+  color:inherit;
 }
 
 /* Les statuts dynamiques (ouvert/fermé) ne sont volontairement pas forcés en noir. */
