@@ -16,6 +16,7 @@
         var items = Array.prototype.slice.call(root.querySelectorAll('[data-htp-faq-item]'));
         var groups = Array.prototype.slice.call(root.querySelectorAll('[data-htp-faq-group]'));
         var empty = root.querySelector('[data-htp-faq-empty]');
+        var contact = root.nextElementSibling && root.nextElementSibling.matches('[data-htp-faq-contact]') ? root.nextElementSibling : null;
         var activeCategory = '';
 
         function refresh() {
@@ -38,6 +39,7 @@
             });
 
             if (empty) empty.hidden = visibleCount !== 0;
+            if (contact) contact.classList.toggle('is-search-fallback', query !== '' && visibleCount === 0);
         }
 
         categoryButtons.forEach(function (button) {
@@ -56,8 +58,29 @@
         refresh();
     }
 
+    function initContact(section) {
+        if (!section || section.dataset.htpFaqContactReady === '1') return;
+        section.dataset.htpFaqContactReady = '1';
+        var button = section.querySelector('[data-htp-faq-contact-toggle]');
+        var form = section.querySelector('[data-htp-faq-contact-form]');
+        if (!button || !form) return;
+
+        button.addEventListener('click', function () {
+            var open = button.getAttribute('aria-expanded') === 'true';
+            var nextOpen = !open;
+            button.setAttribute('aria-expanded', nextOpen ? 'true' : 'false');
+            form.hidden = !nextOpen;
+            button.textContent = nextOpen ? String(button.getAttribute('data-close-label') || '') : String(button.getAttribute('data-open-label') || '');
+            if (nextOpen) {
+                var firstField = form.querySelector('input:not([type="hidden"]), select, textarea, button');
+                if (firstField && typeof firstField.focus === 'function') firstField.focus();
+            }
+        });
+    }
+
     function boot() {
         document.querySelectorAll('[data-htp-faq]').forEach(init);
+        document.querySelectorAll('[data-htp-faq-contact]').forEach(initContact);
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);

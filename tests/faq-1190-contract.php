@@ -7,7 +7,9 @@ require_once __DIR__ . '/release-contract.php';
 $feature_path = $root . '/includes/class-parcs-ht-faq.php';
 $csv_path = $root . '/includes/class-parcs-ht-faq-csv-1191.php';
 $contact_path = $root . '/includes/class-parcs-ht-faq-contact-1192.php';
-if (!is_file($feature_path) || !is_file($csv_path) || !is_file($contact_path)) {
+$unified_path = $root . '/includes/class-parcs-ht-faq-unified-1193.php';
+$faq_js_path = $root . '/assets/faq.js';
+if (!is_file($feature_path) || !is_file($csv_path) || !is_file($contact_path) || !is_file($unified_path) || !is_file($faq_js_path)) {
     fwrite(STDERR, "FAQ contract files missing.\n");
     exit(1);
 }
@@ -15,10 +17,12 @@ if (!is_file($feature_path) || !is_file($csv_path) || !is_file($contact_path)) {
 $feature = file_get_contents($feature_path);
 $csv = file_get_contents($csv_path);
 $contact = file_get_contents($contact_path);
+$unified = file_get_contents($unified_path);
+$faq_js = file_get_contents($faq_js_path);
 $bootstrap = file_get_contents($root . '/includes/class-parcs-ht-bootstrap.php');
 $registry = file_get_contents($root . '/includes/class-parcs-ht-shortcode-registry.php');
 $uninstall = file_get_contents($root . '/uninstall.php');
-if (!is_string($feature) || !is_string($csv) || !is_string($contact) || !is_string($bootstrap) || !is_string($registry) || !is_string($uninstall)) {
+if (!is_string($feature) || !is_string($csv) || !is_string($contact) || !is_string($unified) || !is_string($faq_js) || !is_string($bootstrap) || !is_string($registry) || !is_string($uninstall)) {
     fwrite(STDERR, "Unable to read FAQ sources.\n");
     exit(1);
 }
@@ -111,7 +115,11 @@ release_contract_require_all($contact, array(
     '[parc_faq_contact_fr]',
     '[parc_faq_contact_en]',
     '[parc_faq_contact_de]',
-), 'FAQ contact 1.19.2 integration');
+    'data-htp-faq-contact',
+    'data-htp-faq-contact-toggle',
+    'data-htp-faq-contact-form',
+    'Nous écrire',
+), 'FAQ contact 1.19.3 integration');
 
 release_contract_forbid($contact, array(
     "update_option(Parcs_HT_Defaults::OPTION",
@@ -120,6 +128,30 @@ release_contract_forbid($contact, array(
     'wp_mail(',
 ), 'FAQ contact isolation/plain rendering');
 
+release_contract_require_all($unified, array(
+    'final class Parcs_HT_FAQ_Unified_1193',
+    "remove_filter('do_shortcode_tag'",
+    "array('Parcs_HT_AI_Google', 'append_visit_rules')",
+    'FAQ unifiée',
+    'Montagne des Singes',
+    'même CSV',
+    'Gestion du parc → FAQ',
+), 'FAQ unified source 1.19.3');
+
+release_contract_forbid($unified, array(
+    "update_option(Parcs_HT_Defaults::OPTION",
+    "update_option('parcs_ht_settings'",
+    'wp_mail(',
+), 'FAQ unified isolation');
+
+release_contract_require_all($faq_js, array(
+    '[data-htp-faq-contact]',
+    '[data-htp-faq-contact-toggle]',
+    '[data-htp-faq-contact-form]',
+    'aria-expanded',
+    'is-search-fallback',
+), 'FAQ contact JavaScript');
+
 release_contract_require_all($bootstrap, array(
     "require_once PARCS_HT_DIR . 'includes/class-parcs-ht-faq.php';",
     'Parcs_HT_FAQ::init();',
@@ -127,6 +159,8 @@ release_contract_require_all($bootstrap, array(
     'Parcs_HT_FAQ_CSV_1191::init();',
     "require_once PARCS_HT_DIR . 'includes/class-parcs-ht-faq-contact-1192.php';",
     'Parcs_HT_FAQ_Contact_1192::init();',
+    "require_once PARCS_HT_DIR . 'includes/class-parcs-ht-faq-unified-1193.php';",
+    'Parcs_HT_FAQ_Unified_1193::init();',
 ), 'FAQ bootstrap');
 
 release_contract_require_all($registry, array(
@@ -140,4 +174,4 @@ release_contract_require_all($registry, array(
 
 release_contract_require_all($uninstall, array('parcs_ht_faq', 'parcs_ht_faq_revisions', 'parcs_ht_faq_contact'), 'FAQ uninstall');
 
-echo "FAQ 1.19.2 contact contract OK.\n";
+echo "FAQ 1.19.3 unified contact contract OK.\n";

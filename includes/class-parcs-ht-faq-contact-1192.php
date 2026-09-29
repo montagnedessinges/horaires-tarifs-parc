@@ -3,15 +3,17 @@
 if (!defined('ABSPATH')) { exit; }
 
 /**
- * FAQ / Contact 1.19.2.
+ * FAQ / Contact 1.19.2, maintenance 1.19.3.
  *
  * Cette couche garde le moteur FAQ 1.19.x comme source de vérité et ajoute :
  * - un rendu public sans faux en-tête de page ;
  * - un shortcode combiné FAQ + Contact Form 7 ;
+ * - un bouton de contact qui ouvre le formulaire sans quitter la FAQ ;
  * - un stockage dédié au formulaire de contact, séparé des saisons.
  */
 final class Parcs_HT_FAQ_Contact_1192 {
     const OPTION = 'parcs_ht_faq_contact';
+    private static $contact_instance = 0;
 
     public static function init() {
         // Remplace uniquement l'enveloppe des shortcodes FAQ. Le moteur métier,
@@ -80,19 +82,25 @@ final class Parcs_HT_FAQ_Contact_1192 {
                 'title'=>'Questions fréquentes',
                 'intro'=>'Trouvez rapidement la réponse à votre question.',
                 'contact_title'=>'Vous n’avez pas trouvé votre réponse ?',
-                'contact_intro'=>'Envoyez-nous votre demande avec le formulaire ci-dessous. Elle sera transmise par e-mail à l’équipe du parc.',
+                'contact_intro'=>'Vous pouvez envoyer votre demande à l’équipe sans quitter cette page.',
+                'contact_button'=>'Nous écrire',
+                'contact_close'=>'Masquer le formulaire',
             ),
             'en'=>array(
                 'title'=>'Frequently asked questions',
                 'intro'=>'Quickly find the answer to your question.',
                 'contact_title'=>'Didn’t find your answer?',
-                'contact_intro'=>'Send us your request using the form below. It will be emailed to the park team.',
+                'contact_intro'=>'You can send your request to the team without leaving this page.',
+                'contact_button'=>'Contact us',
+                'contact_close'=>'Hide the form',
             ),
             'de'=>array(
                 'title'=>'Häufig gestellte Fragen',
                 'intro'=>'Finden Sie schnell die Antwort auf Ihre Frage.',
                 'contact_title'=>'Keine passende Antwort gefunden?',
-                'contact_intro'=>'Senden Sie uns Ihre Anfrage über das folgende Formular. Sie wird per E-Mail an das Parkteam weitergeleitet.',
+                'contact_intro'=>'Sie können Ihre Anfrage direkt auf dieser Seite an das Team senden.',
+                'contact_button'=>'Uns schreiben',
+                'contact_close'=>'Formular ausblenden',
             ),
         );
         return isset($texts[$language]) ? $texts[$language] : $texts['fr'];
@@ -128,11 +136,16 @@ final class Parcs_HT_FAQ_Contact_1192 {
         $form = do_shortcode($shortcode);
         if (trim((string)$form) === '' || trim((string)$form) === $shortcode) return '';
         $texts = self::texts($language);
+        self::$contact_instance++;
+        $form_id = 'parcs-ht-faq-contact-form-' . self::$contact_instance;
 
-        return '<section class="parcs-ht-faq-contact">'
+        return '<section class="parcs-ht-faq-contact" data-htp-faq-contact>'
             . '<p><strong>' . esc_html($texts['contact_title']) . '</strong></p>'
             . '<p>' . esc_html($texts['contact_intro']) . '</p>'
+            . '<p><button type="button" class="parcs-ht-faq-contact-toggle" data-htp-faq-contact-toggle aria-expanded="false" aria-controls="' . esc_attr($form_id) . '" data-open-label="' . esc_attr($texts['contact_button']) . '" data-close-label="' . esc_attr($texts['contact_close']) . '">' . esc_html($texts['contact_button']) . '</button></p>'
+            . '<div id="' . esc_attr($form_id) . '" class="parcs-ht-faq-contact-form" data-htp-faq-contact-form hidden>'
             . $form
+            . '</div>'
             . '</section>';
     }
 
@@ -197,14 +210,15 @@ final class Parcs_HT_FAQ_Contact_1192 {
             <?php endif; ?>
             <section class="postbox" style="padding:18px;margin-top:18px;">
                 <h2 style="margin-top:0;">Formulaire de contact</h2>
-                <p>Le visiteur remplit le formulaire sur la page ; <strong>Contact Form 7 envoie ensuite la demande par e-mail</strong> selon les destinataires configurés dans chaque formulaire. L’extension ne remplace pas le système d’envoi de mails.</p>
+                <p>Dans le shortcode FAQ + Contact, le visiteur voit d’abord un bouton <strong>« Nous écrire »</strong>. Un clic ouvre le formulaire sur la même page ; <strong>Contact Form 7 envoie ensuite la demande par e-mail</strong> selon les destinataires configurés dans chaque formulaire.</p>
                 <p><strong>Contact Form 7 :</strong> <?php echo $cf7_active ? 'détecté' : 'non détecté'; ?></p>
                 <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                     <input type="hidden" name="action" value="parcs_ht_faq_contact_save">
                     <?php wp_nonce_field('parcs_ht_faq_contact_save'); ?>
                     <p><label><input type="checkbox" name="contact[enabled]" value="1" <?php checked((string)$settings['enabled'], '1'); ?>> Activer le formulaire dans le shortcode FAQ + Contact</label></p>
                     <?php foreach (array('fr'=>'Français','en'=>'Anglais','de'=>'Allemand') as $language=>$label) : ?>
-                        <p><label><strong>Shortcode Contact Form 7 — <?php echo esc_html($label); ?></strong><br>
+                        <?php $configured = trim((string)$settings['forms'][$language]) !== ''; ?>
+                        <p><label><strong>Shortcode Contact Form 7 — <?php echo esc_html($label); ?></strong> <span class="description">(<?php echo $configured ? 'configuré' : 'à renseigner'; ?>)</span><br>
                             <input type="text" class="large-text code" name="contact[forms][<?php echo esc_attr($language); ?>]" value="<?php echo esc_attr((string)$settings['forms'][$language]); ?>" placeholder='[contact-form-7 id="123" title="Contact"]'>
                         </label></p>
                     <?php endforeach; ?>
@@ -213,6 +227,7 @@ final class Parcs_HT_FAQ_Contact_1192 {
                 <h3>Shortcodes à utiliser</h3>
                 <p><code>[parc_faq_contact]</code> utilise automatiquement la langue du site.</p>
                 <p><code>[parc_faq_contact_fr]</code> · <code>[parc_faq_contact_en]</code> · <code>[parc_faq_contact_de]</code></p>
+                <p class="description">Le bouton public n’apparaît que si l’option ci-dessus est activée, que Contact Form 7 est actif et qu’un shortcode CF7 est renseigné pour la langue affichée.</p>
                 <p class="description">Les shortcodes <code>[parc_faq]</code>, <code>[parc_faq_fr]</code>, <code>[parc_faq_en]</code> et <code>[parc_faq_de]</code> continuent d’afficher uniquement la FAQ.</p>
             </section>
         </div>
