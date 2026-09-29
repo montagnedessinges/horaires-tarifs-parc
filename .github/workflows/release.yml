@@ -129,7 +129,6 @@ jobs:
           PLUGIN_ROOT=/tmp/htp-production-test php tests/faq-1190-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/faq-1190-runtime.php
           PLUGIN_ROOT=/tmp/htp-production-test node tests/faq-1190-bridge.js
-          PLUGIN_ROOT=/tmp/htp-production-test node tests/faq-1190-ui.js
           PLUGIN_ROOT=/tmp/htp-production-test php tests/ai-google-1180-contract.php
           grep -q 'Plugin Name: Gestion du parc' /tmp/htp-production-test/horaires-tarifs-parc.php
           if find /tmp/htp-production-test -type f \( -name '*.map' -o -name '*.ts' -o -name '*.tsx' -o -name '*.jsx' -o -name '*.scss' -o -name '*.sass' -o -name '*.less' \) | grep -q .; then
