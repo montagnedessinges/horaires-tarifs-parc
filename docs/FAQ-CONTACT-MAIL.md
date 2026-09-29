@@ -1,0 +1,1 @@
+Le formulaire public reste un formulaire Contact Form 7. Lorsqu’un visiteur l’envoie, Contact Form 7 transmet la demande par e-mail vers les destinataires configurés dans le formulaire. Il n’y a pas de second système d’e-mail dans Gestion du parc.
