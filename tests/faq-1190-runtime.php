@@ -57,7 +57,7 @@ require $root . '/includes/class-parcs-ht-faq-csv-1191.php';
 function ensure($ok, $message) { if (!$ok) throw new Exception($message); }
 function call_static($class, $method, $post, $success = true) {
     $_POST = $post;
-    try { $class::$method(); throw new Exception('Missing redirect'); }
+    try { call_user_func(array($class, $method)); throw new Exception('Missing redirect'); }
     catch (FAQRedirect $e) {
         $failed = strpos($e->getMessage(), 'faq_csv_error=1') !== false || strpos($e->getMessage(), 'faq_error=1') !== false;
         ensure($failed !== $success, $class . '::' . $method . ': ' . $e->getMessage());
@@ -107,7 +107,7 @@ foreach (array(array('Parcs_HT_FAQ','save_settings'), array('Parcs_HT_FAQ_CSV_11
     foreach (array('allowed','nonce_ok') as $guard) {
         $GLOBALS[$guard] = false;
         $count = count($GLOBALS['writes']);
-        try { $target[0]::$target[1](); throw new Exception('Authorization accepted'); }
+        try { call_user_func($target); throw new Exception('Authorization accepted'); }
         catch (Throwable $e) { ensure(!($e instanceof FAQRedirect) && $e->getMessage() !== 'Authorization accepted', 'Authorization guard failed'); }
         ensure(count($GLOBALS['writes']) === $count, 'Unauthorized write');
         $GLOBALS[$guard] = true;
