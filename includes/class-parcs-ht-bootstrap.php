@@ -18,6 +18,8 @@ final class Parcs_HT_Bootstrap {
         Parcs_HT_FAQ::init();
 
         if (is_admin()) {
+            require_once PARCS_HT_DIR . 'includes/class-parcs-ht-faq-csv-1191.php';
+            Parcs_HT_FAQ_CSV_1191::init();
             require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin-save-11711.php';
             require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin-cleanup-11710.php';
             Parcs_HT_Admin_Save_11711::init();
