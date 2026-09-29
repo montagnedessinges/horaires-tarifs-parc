@@ -82,6 +82,10 @@ jobs:
           php tests/pedagogical-guide-stats-contract.php
           php tests/advent-contract.php
           php tests/advent-ux-contract.php
+          php tests/faq-1190-contract.php
+          php tests/faq-1190-runtime.php
+          php tests/admin-save-11711-runtime.php
+          php tests/admin-year-context-11711-runtime.php
           php tests/ai-google-1180-contract.php
           php tests/pdf-layout.php /tmp/htp-schedule-test.pdf
       - name: Check JavaScript and parity tests
@@ -122,6 +126,9 @@ jobs:
           PLUGIN_ROOT=/tmp/htp-production-test php tests/pedagogical-guide-stats-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/advent-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/advent-ux-contract.php
+          PLUGIN_ROOT=/tmp/htp-production-test php tests/faq-1190-contract.php
+          PLUGIN_ROOT=/tmp/htp-production-test php tests/faq-1190-runtime.php
+          PLUGIN_ROOT=/tmp/htp-production-test node tests/faq-1190-bridge.js
           PLUGIN_ROOT=/tmp/htp-production-test php tests/ai-google-1180-contract.php
           grep -q 'Plugin Name: Gestion du parc' /tmp/htp-production-test/horaires-tarifs-parc.php
           if find /tmp/htp-production-test -type f \( -name '*.map' -o -name '*.ts' -o -name '*.tsx' -o -name '*.jsx' -o -name '*.scss' -o -name '*.sass' -o -name '*.less' \) | grep -q .; then

@@ -21,6 +21,9 @@ Une sauvegarde du site et de la base de données reste recommandée avant toute 
 == Changelog ==
 
 = 1.19.0 =
+* Intègre le script Apps Script copiable, les instructions et le manifeste en lecture seule directement dans FAQ.
+* Permet de tester et changer la source Google Sheet sans redéploiement, en conservant la connexion actuelle en cas d’échec.
+* Sépare les sauvegardes d’affichage et de connexion, contrôle les redirections et invalide les aperçus périmés.
 * Ajoute un écran global « FAQ » indépendant des années et des saisons, avec son propre stockage et ses propres handlers afin de ne jamais écrire dans les réglages horaires, tarifs ou devis.
 * Ajoute les shortcodes `[parc_faq]`, `[parc_faq_fr]`, `[parc_faq_en]` et `[parc_faq_de]`, référencés avec les autres shortcodes publics et rendus côté serveur dans le HTML initial.
 * Ajoute une recherche et des filtres de catégories en amélioration progressive : les réponses restent présentes sans AJAX et les assets FAQ ne sont chargés que lorsqu’un shortcode FAQ est utilisé.

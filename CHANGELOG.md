@@ -1,3 +1,14 @@
+## 1.19.0
+
+- Ajoute une FAQ globale FR/EN/DE, désactivée par défaut, avec recherche, filtres et accordéons rendus côté serveur ; shortcodes `[parc_faq]`, `[parc_faq_fr]`, `[parc_faq_en]` et `[parc_faq_de]`.
+- Isole les réglages, fiches et révisions FAQ des saisons, horaires, tarifs et devis. Les formulaires de connexion et d’affichage ont leurs propres actions et nonces.
+- Intègre le script Google Apps Script, son bouton de copie, le manifeste limité à la lecture seule et le guide d’installation directement dans l’administration et le ZIP distribué.
+- Permet de changer de Google Sheet sans redéployer le script : test authentifié du fichier, de l’onglet et des fiches avant validation de la connexion. Un échec conserve la source précédente et la FAQ publique.
+- Sécurise les URL et redirections Google, contrôle la réponse et les identifiants, limite les colonnes exportées et invalide les anciens aperçus après un changement de source.
+- Préserve l’aperçu avant import, la sélection manuelle, le blocage des lignes non validées/non publiques, l’absence de suppression automatique et les révisions avant import/restauration. Une révision non enregistrée bloque l’opération.
+- Ajoute des tests exécutables du pont Google et des handlers WordPress, ainsi que les contrôles FAQ et de sauvegarde annuelle dans la CI ; vérifie aussi le paquet nettoyé.
+- Le formulaire Contact Form 7 reste hors périmètre. Le déploiement initial Google et l’activation sur WordPress restent à effectuer depuis les interfaces concernées.
+
 ## 1.17.10
 
 - Finalise le nettoyage de l’administration après les refontes 1.17.2 à 1.17.9 : les pages-ponts devenues inutiles ne constituent plus une seconde interface, tandis que les anciennes URLs restent compatibles par redirection.

@@ -21,6 +21,7 @@ final class Parcs_HT_FAQ {
     public static function init() {
         add_action('admin_menu', array(__CLASS__, 'menu'), 50);
         add_action('admin_post_parcs_ht_faq_save_settings', array(__CLASS__, 'save_settings'));
+        add_action('admin_post_parcs_ht_faq_save_connection', array(__CLASS__, 'save_connection'));
         add_action('admin_post_parcs_ht_faq_check_google', array(__CLASS__, 'check_google'));
         add_action('admin_post_parcs_ht_faq_apply_import', array(__CLASS__, 'apply_import'));
         add_action('admin_post_parcs_ht_faq_restore_revision', array(__CLASS__, 'restore_revision'));
@@ -356,73 +357,125 @@ final class Parcs_HT_FAQ {
             // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Conteneur déslashé puis chaque champ est assaini séparément.
             $raw = wp_unslash($_POST['faq']);
         }
-        $google_raw = isset($raw['google']) && is_array($raw['google']) ? $raw['google'] : array();
-        $park_code = strtoupper(sanitize_text_field((string)($google_raw['park_code'] ?? $settings['google']['park_code'])));
-        if (!in_array($park_code, array('MDS','FDS'), true)) $park_code = 'MDS';
-        $tab = sanitize_text_field((string)($google_raw['tab'] ?? $settings['google']['tab']));
-        if ($tab === '') $tab = $park_code === 'FDS' ? 'Forêt des Singes' : 'Montagne des Singes';
+        if (($raw['_complete'] ?? '') !== '1') self::error_redirect('Formulaire incomplet : aucun réglage modifié.');
+        foreach (array('enabled', 'show_search', 'show_categories') as $field) {
+            $settings[$field] = isset($raw[$field]) && (string)$raw[$field] === '1' ? '1' : '0';
+        }
 
-        $settings['store_version'] = self::STORE_VERSION;
-        $settings['enabled'] = isset($raw['enabled']) && (string)$raw['enabled'] === '1' ? '1' : '0';
-        $settings['show_search'] = isset($raw['show_search']) && (string)$raw['show_search'] === '1' ? '1' : '0';
-        $settings['show_categories'] = isset($raw['show_categories']) && (string)$raw['show_categories'] === '1' ? '1' : '0';
-        $settings['google']['sheet_url'] = esc_url_raw((string)($google_raw['sheet_url'] ?? ''));
-        $settings['google']['endpoint'] = esc_url_raw((string)($google_raw['endpoint'] ?? ''));
-        $settings['google']['tab'] = $tab;
-        $settings['google']['park_code'] = $park_code;
-        $new_secret = sanitize_text_field((string)($google_raw['secret'] ?? ''));
-        if ($new_secret !== '') $settings['google']['secret'] = $new_secret;
-        if (isset($google_raw['clear_secret']) && (string)$google_raw['clear_secret'] === '1') $settings['google']['secret'] = '';
-
-        update_option(self::OPTION, $settings, false);
+        self::persist($settings);
         do_action('litespeed_purge_all');
         self::redirect(array('updated'=>'1'));
     }
 
+    private static function persist($settings) {
+        update_option(self::OPTION, $settings, false);
+        if (get_option(self::OPTION) !== $settings) self::error_redirect('Échec de l’enregistrement FAQ. Réessayez.');
+    }
+
+    private static function sheet_id($url) {
+        return preg_match('#^https://docs\.google\.com/spreadsheets/d/([a-zA-Z0-9_-]{20,100})(?:/[^\s]*)?$#D', $url, $matches) ? $matches[1] : '';
+    }
+
     private static function valid_endpoint($url) {
-        if (!wp_http_validate_url($url)) return false;
-        $parts = wp_parse_url($url);
-        if (!is_array($parts) || strtolower((string)($parts['scheme'] ?? '')) !== 'https') return false;
-        $host = strtolower((string)($parts['host'] ?? ''));
-        return in_array($host, array('script.google.com','script.googleusercontent.com'), true);
+        return wp_http_validate_url($url) && preg_match('#^https://script\.google\.com/macros/s/[a-zA-Z0-9_-]+/exec$#D', $url);
+    }
+
+    private static function google_fingerprint($google) {
+        return hash('sha256', wp_json_encode($google));
+    }
+
+    public static function save_connection() {
+        if (!current_user_can('manage_options')) wp_die('Accès refusé.');
+        check_admin_referer('parcs_ht_faq_save_connection');
+        $before = self::raw_settings();
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Chaque champ scalaire est validé et assaini ci-dessous.
+        $raw = isset($_POST['google']) && is_array($_POST['google']) ? wp_unslash($_POST['google']) : array();
+        foreach (array('sheet_url', 'endpoint', 'secret', 'tab', 'park_code', '_complete') as $key) {
+            if (!isset($raw[$key]) || !is_string($raw[$key])) self::error_redirect('Connexion incomplète : source actuelle conservée.');
+        }
+        if ($raw['_complete'] !== '1') self::error_redirect('Connexion incomplète : source actuelle conservée.');
+        $google = array(
+            'sheet_url'=>esc_url_raw(trim($raw['sheet_url'])),
+            'endpoint'=>esc_url_raw(trim($raw['endpoint'])),
+            'secret'=>$raw['secret'] === '' ? $before['google']['secret'] : sanitize_text_field($raw['secret']),
+            'tab'=>sanitize_text_field($raw['tab']),
+            'park_code'=>sanitize_text_field($raw['park_code']),
+        );
+        // La source candidate est lue et validée avant toute écriture locale.
+        self::fetch_google($google);
+        $settings = self::raw_settings();
+        if ($settings['google'] !== $before['google']) self::error_redirect('La connexion a été modifiée pendant le test. Rechargez la page.');
+        $settings['google'] = $google;
+        self::persist($settings);
+        delete_transient(self::preview_key());
+        self::redirect(array('connected'=>'1'));
+    }
+
+    private static function fetch_google($google) {
+        $endpoint = (string)($google['endpoint'] ?? '');
+        $secret = (string)($google['secret'] ?? '');
+        $tab = (string)($google['tab'] ?? '');
+        $park_code = (string)($google['park_code'] ?? '');
+        $sheet_id = self::sheet_id((string)($google['sheet_url'] ?? ''));
+        if (!self::valid_endpoint($endpoint)) self::error_redirect('URL Apps Script invalide. Utilisez l’URL HTTPS /exec du déploiement Web App.');
+        if ($sheet_id === '') self::error_redirect('Lien Google Sheet invalide. Copiez son URL https://docs.google.com/spreadsheets/d/…/edit.');
+        if (strlen($secret) < 32) self::error_redirect('Configurez la clé secrète générée par le script (32 caractères minimum).');
+        $tabs = array('MDS'=>'Montagne des Singes', 'FDS'=>'Forêt des Singes');
+        if (!isset($tabs[$park_code]) || $tabs[$park_code] !== $tab) self::error_redirect('Le parc et l’onglet ne correspondent pas.');
+
+        $response = wp_safe_remote_post($endpoint, array(
+            'timeout'=>20,
+            'redirection'=>0,
+            'limit_response_size'=>2097152,
+            'headers'=>array('Content-Type'=>'application/json; charset=utf-8'),
+            'body'=>wp_json_encode(array(
+                'action'=>'faq_export',
+                'secret'=>$secret,
+                'spreadsheet_id'=>$sheet_id,
+                'tab'=>$tab,
+                'park_code'=>$park_code,
+                'schema_version'=>1,
+            )),
+        ));
+        if (is_wp_error($response)) self::error_redirect('Connexion Google impossible. La source actuelle est conservée.');
+        // ContentService redirige vers une URL temporaire : GET sans clé ni corps POST.
+        if (in_array((int)wp_remote_retrieve_response_code($response), array(302,303), true)) {
+            $location = (string)wp_remote_retrieve_header($response, 'location');
+            if (!wp_http_validate_url($location) || !preg_match('#^https://script\.googleusercontent\.com/macros/echo\?[^\s]+$#D', $location)) {
+                self::error_redirect('Redirection Google refusée. Vérifiez le déploiement Web App et son accès « Tout le monde ».');
+            }
+            $response = wp_safe_remote_get($location, array('timeout'=>20, 'redirection'=>0, 'limit_response_size'=>2097152));
+        }
+        if (is_wp_error($response)) self::error_redirect('Lecture Google impossible. La source actuelle est conservée.');
+        $code = (int)wp_remote_retrieve_response_code($response);
+        $data = json_decode((string)wp_remote_retrieve_body($response), true);
+        if ($code !== 200 || !is_array($data) || ($data['ok'] ?? false) !== true) {
+            self::error_redirect('Test Google échoué : vérifiez la clé, les autorisations du compte Google, l’onglet et ses colonnes. Source actuelle conservée.');
+        }
+        if (($data['schema_version'] ?? null) !== 1 || ($data['spreadsheet_id'] ?? '') !== $sheet_id || ($data['tab'] ?? '') !== $tab || ($data['park_code'] ?? '') !== $park_code || !isset($data['records']) || !is_array($data['records'])) {
+            self::error_redirect('La réponse ne correspond pas à la source demandée. Mettez à jour le script fourni et son déploiement.');
+        }
+        $seen = array();
+        $valid = 0;
+        foreach ($data['records'] as $record) {
+            $id = strtoupper(self::value_from($record, array('ID stable'), ''));
+            if (strpos($id, $park_code . '-') !== 0 || isset($seen[$id])) self::error_redirect('ID FAQ incorrect, dupliqué ou appartenant à un autre parc.');
+            $seen[$id] = true;
+            if (self::import_row($record)) $valid++;
+        }
+        if (!$valid) self::error_redirect('Aucune fiche FAQ valide : source actuelle conservée.');
+        return $data;
     }
 
     public static function check_google() {
         if (!current_user_can('manage_options')) wp_die('Accès refusé.');
         check_admin_referer('parcs_ht_faq_check_google');
+        delete_transient(self::preview_key());
         $settings = self::raw_settings();
-        $google = (array)$settings['google'];
-        $endpoint = (string)($google['endpoint'] ?? '');
-        $secret = (string)($google['secret'] ?? '');
-        $tab = (string)($google['tab'] ?? '');
-        $park_code = (string)($google['park_code'] ?? 'MDS');
-        if (!self::valid_endpoint($endpoint)) self::error_redirect('URL Apps Script invalide. Utilisez l’URL HTTPS /exec du déploiement Web App.');
-        if ($secret === '') self::error_redirect('La clé secrète Google Sheet n’est pas configurée.');
-        if ($tab === '') self::error_redirect('Le nom de l’onglet Google Sheet est manquant.');
-
-        $response = wp_safe_remote_post($endpoint, array(
-            'timeout'=>20,
-            'redirection'=>5,
-            'headers'=>array('Content-Type'=>'application/json; charset=utf-8'),
-            'body'=>wp_json_encode(array(
-                'action'=>'faq_export',
-                'secret'=>$secret,
-                'tab'=>$tab,
-                'park_code'=>$park_code,
-                'schema_version'=>1,
-            )),
-            'user-agent'=>'Gestion-du-parc/' . PARCS_HT_VERSION . '; ' . home_url('/'),
-        ));
-        if (is_wp_error($response)) self::error_redirect('Connexion Google impossible : ' . $response->get_error_message());
-        $code = (int)wp_remote_retrieve_response_code($response);
-        $body = (string)wp_remote_retrieve_body($response);
-        $data = json_decode($body, true);
-        if ($code < 200 || $code >= 300 || !is_array($data) || empty($data['ok'])) {
-            $message = is_array($data) && !empty($data['error']) ? (string)$data['error'] : 'Réponse Google invalide (HTTP ' . $code . ').';
-            self::error_redirect($message);
-        }
-        $records = isset($data['records']) && is_array($data['records']) ? $data['records'] : array();
-        if (!$records) self::error_redirect('Aucune fiche FAQ n’a été renvoyée par le Google Sheet.');
+        $google = $settings['google'];
+        $data = self::fetch_google($google);
+        $records = $data['records'];
+        $tab = $google['tab'];
 
         $current = self::settings();
         $current_index = array();
@@ -454,6 +507,7 @@ final class Parcs_HT_FAQ {
         }
 
         $preview = array(
+            'google_fingerprint'=>self::google_fingerprint($google),
             'created_at'=>time(),
             'remote_checked_at'=>sanitize_text_field((string)($data['checked_at'] ?? '')),
             'tab'=>sanitize_text_field((string)($data['tab'] ?? $tab)),
@@ -477,6 +531,7 @@ final class Parcs_HT_FAQ {
         ));
         $revisions = array_slice($revisions, 0, 10);
         update_option(self::REVISIONS_OPTION, $revisions, false);
+        if (get_option(self::REVISIONS_OPTION) !== $revisions) self::error_redirect('Sauvegarde de sécurité impossible : opération annulée.');
     }
 
     public static function apply_import() {
@@ -492,6 +547,7 @@ final class Parcs_HT_FAQ {
         if (!$selected) self::error_redirect('Aucune modification n’a été sélectionnée.');
 
         $settings = self::raw_settings();
+        if (($preview['google_fingerprint'] ?? '') !== self::google_fingerprint($settings['google'])) self::error_redirect('La source a changé. Relancez la vérification.');
         $index = array();
         foreach ((array)$settings['items'] as $item) {
             if (is_array($item) && !empty($item['id'])) $index[(string)$item['id']] = $item;
@@ -520,7 +576,7 @@ final class Parcs_HT_FAQ {
         $settings['has_import'] = '1';
         $settings['last_import'] = gmdate('c');
         $settings['store_version'] = self::STORE_VERSION;
-        update_option(self::OPTION, $settings, false);
+        self::persist($settings);
         delete_transient(self::preview_key());
         do_action('litespeed_purge_all');
         self::redirect(array('imported'=>(string)$applied));
@@ -543,7 +599,7 @@ final class Parcs_HT_FAQ {
         $settings['items'] = isset($target['items']) && is_array($target['items']) ? array_values($target['items']) : array();
         $settings['has_import'] = (string)($target['has_import'] ?? '1');
         $settings['last_import'] = (string)($target['last_import'] ?? '');
-        update_option(self::OPTION, $settings, false);
+        self::persist($settings);
         do_action('litespeed_purge_all');
         self::redirect(array('restored'=>'1'));
     }
@@ -699,6 +755,7 @@ final class Parcs_HT_FAQ {
         $preview = self::preview();
         $revisions = get_option(self::REVISIONS_OPTION, array());
         if (!is_array($revisions)) $revisions = array();
+        wp_enqueue_script('parcs-ht-faq-admin', PARCS_HT_URL . 'assets/faq-admin.js', array(), PARCS_HT_VERSION, true);
         $error = self::notice();
         $items = (array)$display_settings['items'];
         $enabled_count = 0;
@@ -708,6 +765,7 @@ final class Parcs_HT_FAQ {
             <h1>FAQ</h1>
             <p class="description">Base FAQ globale du parc. Elle n’est liée à aucune année ni saison et possède son propre système d’enregistrement.</p>
             <?php if ($error !== '') : ?><div class="notice notice-error is-dismissible"><p><?php echo esc_html($error); ?></p></div><?php endif; ?>
+            <?php if (isset($_GET['connected'])) : /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Message visuel uniquement. */ ?><div class="notice notice-success is-dismissible"><p>Connexion testée et enregistrée. Vous pouvez maintenant vérifier le Google Sheet pour préparer un import.</p></div><?php endif; ?>
             <?php if (isset($_GET['updated'])) : /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Message visuel uniquement. */ ?><div class="notice notice-success is-dismissible"><p>Les réglages FAQ ont été enregistrés.</p></div><?php endif; ?>
             <?php if (isset($_GET['imported'])) : /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Message visuel uniquement. */ ?><div class="notice notice-success is-dismissible"><p><?php echo esc_html((int)$_GET['imported']); ?> fiche(s) FAQ ont été appliquées. Les fiches absentes du Sheet n’ont pas été supprimées.</p></div><?php endif; ?>
             <?php if (isset($_GET['restored'])) : /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Message visuel uniquement. */ ?><div class="notice notice-success is-dismissible"><p>La révision FAQ a été restaurée.</p></div><?php endif; ?>
@@ -723,15 +781,22 @@ final class Parcs_HT_FAQ {
                         <label><input type="checkbox" name="faq[show_search]" value="1" <?php checked((string)$settings['show_search'], '1'); ?>> Afficher la recherche</label><br>
                         <label><input type="checkbox" name="faq[show_categories]" value="1" <?php checked((string)$settings['show_categories'], '1'); ?>> Afficher les filtres par catégorie</label>
 
+                        <input type="hidden" name="faq[_complete]" value="1">
+                        <p><button type="submit" class="button button-primary">Enregistrer l’affichage FAQ</button></p>
+                    </form>
+                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                        <input type="hidden" name="action" value="parcs_ht_faq_save_connection">
+                        <?php wp_nonce_field('parcs_ht_faq_save_connection'); ?>
                         <h3>Connexion Google Sheet</h3>
                         <p class="description">Le site ne lit jamais Google pour afficher la FAQ. Google sert uniquement à préparer un aperçu d’import dans l’administration.</p>
-                        <label class="htp-faq-field"><span>Lien du Google Sheet (repère admin)</span><input type="url" name="faq[google][sheet_url]" value="<?php echo esc_attr((string)$google['sheet_url']); ?>" placeholder="https://docs.google.com/spreadsheets/d/…"></label>
-                        <label class="htp-faq-field"><span>URL Web App Apps Script</span><input type="url" name="faq[google][endpoint]" value="<?php echo esc_attr((string)$google['endpoint']); ?>" placeholder="https://script.google.com/macros/s/…/exec"></label>
-                        <label class="htp-faq-field"><span>Clé secrète</span><input type="password" name="faq[google][secret]" value="" autocomplete="new-password" placeholder="Laisser vide pour conserver la clé actuelle"><small><?php echo !empty($google['secret']) ? 'Une clé est enregistrée.' : 'Aucune clé enregistrée.'; ?></small></label>
-                        <?php if (!empty($google['secret'])) : ?><label><input type="checkbox" name="faq[google][clear_secret]" value="1"> Effacer la clé enregistrée</label><?php endif; ?>
-                        <label class="htp-faq-field"><span>Parc</span><select name="faq[google][park_code]"><option value="MDS" <?php selected((string)$google['park_code'], 'MDS'); ?>>Montagne des Singes (MDS)</option><option value="FDS" <?php selected((string)$google['park_code'], 'FDS'); ?>>Forêt des Singes (FDS)</option></select></label>
-                        <label class="htp-faq-field"><span>Nom exact de l’onglet</span><input type="text" name="faq[google][tab]" value="<?php echo esc_attr((string)$google['tab']); ?>"></label>
-                        <p><button type="submit" class="button button-primary">Enregistrer les réglages FAQ</button></p>
+                        <label class="htp-faq-field"><span>Lien du Google Sheet à utiliser</span><input type="url" name="google[sheet_url]" value="<?php echo esc_attr((string)$google['sheet_url']); ?>" placeholder="https://docs.google.com/spreadsheets/d/…"></label>
+                        <label class="htp-faq-field"><span>URL Web App Apps Script</span><input type="url" name="google[endpoint]" value="<?php echo esc_attr((string)$google['endpoint']); ?>" placeholder="https://script.google.com/macros/s/…/exec"></label>
+                        <label class="htp-faq-field"><span>Clé secrète</span><input type="password" name="google[secret]" value="" autocomplete="new-password" placeholder="Laisser vide pour conserver la clé actuelle"><small><?php echo !empty($google['secret']) ? 'Une clé est enregistrée.' : 'Aucune clé enregistrée.'; ?></small></label>
+                        <label class="htp-faq-field"><span>Parc</span><select name="google[park_code]"><option value="MDS" <?php selected((string)$google['park_code'], 'MDS'); ?>>Montagne des Singes (MDS)</option><option value="FDS" <?php selected((string)$google['park_code'], 'FDS'); ?>>Forêt des Singes (FDS)</option></select></label>
+                        <label class="htp-faq-field"><span>Nom exact de l’onglet</span><input type="text" name="google[tab]" value="<?php echo esc_attr((string)$google['tab']); ?>"></label>
+                        <input type="hidden" name="google[_complete]" value="1">
+                        <p><button type="submit" class="button button-primary">Tester et utiliser ce Google Sheet</button></p>
+                        <p class="description">La nouvelle connexion n’est enregistrée que si le test réussit. Les fiches publiées restent inchangées ; leur import se fait séparément.</p>
                     </form>
 
                     <?php if (!empty($google['sheet_url'])) : ?><p><a class="button" href="<?php echo esc_url((string)$google['sheet_url']); ?>" target="_blank" rel="noopener noreferrer">Ouvrir le Google Sheet</a></p><?php endif; ?>
@@ -749,7 +814,7 @@ final class Parcs_HT_FAQ {
                     <p class="description">Exemple de filtre : <code>[parc_faq_fr categorie="billets"]</code>. Options : <code>recherche="0"</code>, <code>categories="0"</code>, <code>titre="0"</code>.</p>
                     <h3>Sécurité d’import</h3>
                     <ul>
-                        <li>aucune suppression automatique ;</li>
+                        <li>Aucune suppression automatique ;</li>
                         <li>seules les lignes au statut « Validé » et destinées à la « FAQ publique » peuvent être appliquées ;</li>
                         <li>une révision est créée avant chaque import ;</li>
                         <li>les données FAQ restent séparées des saisons, horaires, tarifs et devis.</li>
@@ -808,8 +873,26 @@ final class Parcs_HT_FAQ {
 
             <section class="htp-faq-card">
                 <h2>Mise en place du pont Google</h2>
-                <p>Le script fourni avec la version 1.19.0 se colle dans <strong>Extensions → Apps Script</strong> du Google Sheet. Il est en lecture seule et ne peut pas modifier la FAQ WordPress. Après déploiement en Web App, copiez son URL <code>/exec</code> et sa clé secrète dans les champs ci-dessus.</p>
-                <p class="description">Le fichier de référence du dépôt est <code>docs/FAQ-GOOGLE-SHEET-APPS-SCRIPT.gs</code>, accompagné du guide <code>docs/FAQ-GOOGLE-SHEET.md</code>.</p>
+                <p>Une seule installation Google est nécessaire. Ensuite, pour changer de fichier, renseignez son lien ci-dessus puis cliquez sur <strong>Tester et utiliser ce Google Sheet</strong>. Le compte qui déploie le script doit avoir accès au nouveau fichier. Conservez le projet Apps Script initial.</p>
+                <ol>
+                    <li>Dans votre Google Sheet, ouvrez <strong>Extensions → Apps Script</strong>. Collez le script ci-dessous dans <code>Code.gs</code> et enregistrez.</li>
+                    <li>Dans les paramètres du projet, cochez <strong>Afficher le fichier manifeste appsscript.json</strong>. Remplacez son contenu par le manifeste ci-dessous pour limiter les autorisations à la lecture des tableurs.</li>
+                    <li>Exécutez <code>installerConfiguration</code>, autorisez la lecture, puis copiez la propriété <code>FAQ_SHARED_SECRET</code> depuis <strong>Paramètres du projet → Propriétés du script</strong>.</li>
+                    <li>Choisissez <strong>Déployer → Nouveau déploiement → Application Web</strong>, exécution en tant que <strong>Moi</strong>, accès <strong>Tout le monde</strong>. Sans la clé, le script ne renvoie aucune donnée.</li>
+                    <li>Copiez l’URL <code>/exec</code>, la clé et le lien du Sheet dans la connexion ci-dessus. Choisissez le parc et son onglet, puis testez.</li>
+                    <li>Cliquez sur <strong>Vérifier le Google Sheet</strong>, relisez l’aperçu puis appliquez les fiches choisies. Activez la FAQ publique séparément.</li>
+                </ol>
+                <p>Onglets : <code>Montagne des Singes</code> (MDS) ou <code>Forêt des Singes</code> (FDS). Colonnes requises : <code>ID stable</code>, <code>Question canonique FR</code>, <code>Réponse courte FR</code>, <code>Statut</code>, <code>Usage / visibilité</code>. Au moins une fiche complète du parc choisi est nécessaire au test.</p>
+                <details><summary>Afficher le script à copier</summary>
+                    <p><button type="button" class="button" data-faq-copy="htp-faq-script">Copier le script</button></p>
+                    <textarea id="htp-faq-script" class="large-text code" rows="16" readonly aria-label="Script Google Apps Script"><?php echo esc_textarea((string)file_get_contents(PARCS_HT_DIR . 'assets/faq-google-sheet-apps-script.txt')); ?></textarea>
+                </details>
+                <details><summary>Afficher le manifeste en lecture seule</summary>
+                    <p><button type="button" class="button" data-faq-copy="htp-faq-manifest">Copier le manifeste</button></p>
+                    <textarea id="htp-faq-manifest" class="large-text code" rows="8" readonly aria-label="Manifeste appsscript.json"><?php echo esc_textarea((string)file_get_contents(PARCS_HT_DIR . 'assets/faq-google-sheet-manifest.txt')); ?></textarea>
+                </details>
+                <p data-faq-copy-status role="status" aria-live="polite"></p>
+                <p>Pour remplacer une ancienne version du script, collez le nouveau code et le manifeste puis choisissez <strong>Déployer → Gérer les déploiements → Modifier → Nouvelle version</strong>, afin de conserver la même URL. Pour changer la clé, exécutez <code>regenererCleSecrete</code>, copiez la nouvelle propriété dans WordPress et testez à nouveau. Une panne Google ne modifie pas la FAQ déjà importée.</p>
             </section>
         </div>
         <style>

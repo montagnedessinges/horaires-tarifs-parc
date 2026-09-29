@@ -7,14 +7,14 @@ require_once __DIR__ . '/release-contract.php';
 $feature_path = $root . '/includes/class-parcs-ht-faq.php';
 if (!is_file($feature_path)) {
     echo "FAQ 1.19.0 contract skipped: feature file absent.\n";
-    exit(0);
+    exit(1);
 }
 
 $feature = file_get_contents($feature_path);
 $bootstrap = file_get_contents($root . '/includes/class-parcs-ht-bootstrap.php');
 $registry = file_get_contents($root . '/includes/class-parcs-ht-shortcode-registry.php');
 $uninstall = file_get_contents($root . '/uninstall.php');
-$script = file_get_contents($root . '/docs/FAQ-GOOGLE-SHEET-APPS-SCRIPT.gs');
+$script = file_get_contents($root . '/assets/faq-google-sheet-apps-script.txt');
 if (!is_string($feature) || !is_string($bootstrap) || !is_string($registry) || !is_string($uninstall) || !is_string($script)) {
     fwrite(STDERR, "Unable to read FAQ 1.19.0 sources.\n");
     exit(1);

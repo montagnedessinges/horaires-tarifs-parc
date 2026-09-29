@@ -1,49 +1,27 @@
 /**
  * Gestion du parc 1.19.0 — pont FAQ Google Sheet -> WordPress.
- *
- * Installation :
- * 1. Ouvrir le Google Sheet > Extensions > Apps Script.
- * 2. Coller ce fichier dans Code.gs.
- * 3. Exécuter une fois installerConfiguration() depuis l'éditeur.
- * 4. Copier la clé affichée dans le journal d'exécution.
- * 5. Déployer > Nouveau déploiement > Application Web.
- *    - Exécuter en tant que : Moi
- *    - Qui a accès : Tout le monde
- * 6. Copier l'URL /exec et la clé dans Gestion du parc > FAQ.
- *
- * Le Web App est publiquement joignable, mais il ne renvoie aucune donnée sans
- * la clé secrète. Le script ne modifie jamais le tableur.
+ * Coller ce code dans Extensions > Apps Script du Google Sheet FAQ.
  */
 
 const FAQ_SCHEMA_VERSION = 1;
 const FAQ_ALLOWED_TABS = ['Montagne des Singes', 'Forêt des Singes'];
 
 function installerConfiguration() {
-  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  if (!spreadsheet) {
-    throw new Error('Ouvrez ce script depuis le Google Sheet avant de lancer installerConfiguration().');
-  }
-
   const properties = PropertiesService.getScriptProperties();
-  properties.setProperty('FAQ_SPREADSHEET_ID', spreadsheet.getId());
-
   let secret = properties.getProperty('FAQ_SHARED_SECRET');
   if (!secret) {
     secret = Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, '');
     properties.setProperty('FAQ_SHARED_SECRET', secret);
   }
 
-  console.log('FAQ_SPREADSHEET_ID=' + spreadsheet.getId());
-  console.log('FAQ_SHARED_SECRET=' + secret);
-  return { spreadsheetId: spreadsheet.getId(), secret: secret };
+  return 'Configuration prête. Copiez FAQ_SHARED_SECRET dans Paramètres du projet > Propriétés du script.';
 }
 
 function regenererCleSecrete() {
   const properties = PropertiesService.getScriptProperties();
   const secret = Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, '');
   properties.setProperty('FAQ_SHARED_SECRET', secret);
-  console.log('Nouvelle FAQ_SHARED_SECRET=' + secret);
-  return secret;
+  return 'Clé renouvelée. Copiez FAQ_SHARED_SECRET depuis les propriétés du script dans WordPress.';
 }
 
 function doGet() {
@@ -59,12 +37,16 @@ function doPost(event) {
 
     const properties = PropertiesService.getScriptProperties();
     const expectedSecret = String(properties.getProperty('FAQ_SHARED_SECRET') || '');
-    const spreadsheetId = String(properties.getProperty('FAQ_SPREADSHEET_ID') || '');
-    if (!expectedSecret || !spreadsheetId) {
+    const spreadsheetId = String(payload.spreadsheet_id || '');
+    if (!expectedSecret) {
       return jsonResponse_({ ok: false, error: 'Le script n’est pas configuré. Lancez installerConfiguration().' });
     }
     if (!safeEquals_(String(payload.secret || ''), expectedSecret)) {
       return jsonResponse_({ ok: false, error: 'Clé secrète invalide.' });
+    }
+
+    if (payload.schema_version !== FAQ_SCHEMA_VERSION || !/^[a-zA-Z0-9_-]{20,100}$/.test(spreadsheetId)) {
+      return jsonResponse_({ ok: false, error: 'Source ou version de protocole invalide.' });
     }
 
     const tab = String(payload.tab || '');
@@ -91,13 +73,22 @@ function doPost(event) {
     }
 
     const headers = values[headerIndex].map(function (value) { return String(value || '').trim(); });
+    const required = ['ID stable', 'Question canonique FR', 'Réponse courte FR', 'Statut', 'Usage / visibilité'];
+    if (required.some(function (header) { return headers.indexOf(header) === -1; }) || headers.some(function (header, index) { return header && headers.indexOf(header) !== index; })) {
+      return jsonResponse_({ ok: false, error: 'Colonnes requises manquantes ou dupliquées.' });
+    }
+    const allowed = required.concat(['Priorité', 'Catégorie', 'Donnée dynamique ?', 'Source principale', 'Vérifié le', 'Mode FAQ', 'Lien public']);
+    ['FR', 'EN', 'DE'].forEach(function (lang) {
+      ['Question canonique ', 'Réponse courte ', 'Variantes / formulations IA ', 'Catégorie ', 'Libellé du lien '].forEach(function (prefix) { allowed.push(prefix + lang); });
+    });
     const records = [];
+    const seen = Object.create(null);
     for (let rowIndex = headerIndex + 1; rowIndex < values.length; rowIndex++) {
       const row = values[rowIndex];
       const record = {};
       let hasValue = false;
       headers.forEach(function (header, columnIndex) {
-        if (!header) return;
+        if (!header || allowed.indexOf(header) === -1) return;
         const value = String(row[columnIndex] || '').trim();
         if (value) hasValue = true;
         record[header] = value;
@@ -105,6 +96,8 @@ function doPost(event) {
       if (!hasValue) continue;
       const stableId = String(record['ID stable'] || '').trim().toUpperCase();
       if (!stableId || stableId.indexOf(expectedParkCode + '-') !== 0) continue;
+      if (seen[stableId]) return jsonResponse_({ ok: false, error: 'ID stable dupliqué.' });
+      seen[stableId] = true;
       records.push(record);
     }
 
@@ -115,12 +108,11 @@ function doPost(event) {
       tab: tab,
       park_code: expectedParkCode,
       checked_at: new Date().toISOString(),
-      headers: headers,
+      headers: headers.filter(function (header) { return allowed.indexOf(header) !== -1; }),
       records: records
     });
   } catch (error) {
-    console.error(error);
-    return jsonResponse_({ ok: false, error: 'Erreur Apps Script : ' + String(error && error.message ? error.message : error) });
+    return jsonResponse_({ ok: false, error: 'Lecture impossible. Vérifiez l’accès du compte Google au fichier demandé.' });
   }
 }
 
