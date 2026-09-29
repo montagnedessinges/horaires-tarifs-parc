@@ -129,6 +129,7 @@ jobs:
           PLUGIN_ROOT=/tmp/htp-production-test php tests/faq-1190-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/faq-1190-runtime.php
           PLUGIN_ROOT=/tmp/htp-production-test node tests/faq-1190-bridge.js
+          PLUGIN_ROOT=/tmp/htp-production-test node tests/faq-1190-ui.js
           PLUGIN_ROOT=/tmp/htp-production-test php tests/ai-google-1180-contract.php
           grep -q 'Plugin Name: Gestion du parc' /tmp/htp-production-test/horaires-tarifs-parc.php
           if find /tmp/htp-production-test -type f \( -name '*.map' -o -name '*.ts' -o -name '*.tsx' -o -name '*.jsx' -o -name '*.scss' -o -name '*.sass' -o -name '*.less' \) | grep -q .; then
@@ -138,9 +139,29 @@ jobs:
       - name: Enforce WordPress security and PHP compatibility
         run: composer lint
 
+  plugin-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Stage plugin for official checks
+        run: |
+          mkdir -p build/horaires-tarifs-parc
+          cp horaires-tarifs-parc.php uninstall.php readme.txt build/horaires-tarifs-parc/
+          cp -R includes assets build/horaires-tarifs-parc/
+      - name: Run official WordPress Plugin Check
+        uses: wordpress/plugin-check-action@v1
+        with:
+          build-dir: './build/horaires-tarifs-parc'
+          categories: |
+            security
+            performance
+            accessibility
+          ignore-warnings: true
+          include-experimental: false
   release:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: quality
+    needs: [quality, plugin-check]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -177,17 +198,6 @@ jobs:
           mkdir -p build/horaires-tarifs-parc
           cp horaires-tarifs-parc.php uninstall.php build/horaires-tarifs-parc/
           cp -R includes assets build/horaires-tarifs-parc/
-      - name: Run official WordPress Plugin Check
-        if: steps.existing.outputs.exists != 'true'
-        uses: wordpress/plugin-check-action@v1
-        with:
-          build-dir: './build/horaires-tarifs-parc'
-          categories: |
-            security
-            performance
-            accessibility
-          ignore-warnings: true
-          include-experimental: false
       - name: Build production WordPress ZIP
         if: steps.existing.outputs.exists != 'true'
         shell: bash

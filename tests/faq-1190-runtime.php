@@ -2,6 +2,8 @@
 // Exercise real handlers with in-memory WordPress options and deterministic HTTP.
 define('ABSPATH', __DIR__ . '/');
 define('PARCS_HT_VERSION', '1.19.0');
+define('PARCS_HT_URL', 'https://example.org/plugin/');
+define('PARCS_HT_DIR', (getenv('PLUGIN_ROOT') ?: dirname(__DIR__)) . '/');
 class FAQRedirect extends Exception {}
 class WP_Error {}
 $GLOBALS['options'] = array('parcs_ht_settings'=>array('2026'=>array('tariffs'=>123), '2027'=>array('hours'=>'untouched')));
@@ -71,6 +73,19 @@ function wp_safe_remote_get($url, $args) {
     $GLOBALS['requests'][] = array('GET', $url, $args);
     return http_result($GLOBALS['response_args']);
 }
+function esc_html($v) { return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
+function esc_attr($v) { return esc_html($v); }
+function esc_textarea($v) { return esc_html($v); }
+function esc_url($v) { return esc_html($v); }
+function checked($a, $b) { if ($a === $b) echo 'checked'; }
+function selected($a, $b) { if ($a === $b) echo 'selected'; }
+function wp_nonce_field($v) { echo '<input type="hidden" name="_wpnonce" value="test">'; }
+function wp_enqueue_script($handle, $url, $deps, $version, $footer) { $GLOBALS['assets'][] = $handle; }
+function wp_enqueue_style($handle, $url, $deps, $version) { $GLOBALS['assets'][] = $handle; }
+function did_action($action) { return false; }
+function shortcode_atts($defaults, $atts, $tag) { return array_replace($defaults, $atts); }
+function wpautop($v) { return '<p>' . $v . '</p>'; }
+function wp_date($format, $time) { return date($format, $time); }
 $root = getenv('PLUGIN_ROOT') ?: dirname(__DIR__);
 require $root . '/includes/class-parcs-ht-faq.php';
 function ensure($ok, $message) { if (!$ok) throw new Exception($message); }
@@ -120,6 +135,15 @@ $GLOBALS['fail_write'] = '';
 call_handler('apply_import', array('selected'=>array('MDS-TEST-001')));
 ensure(count(get_option('parcs_ht_faq')['items']) === 1, 'Selected import failed');
 ensure(count(get_option('parcs_ht_faq_revisions')) === 1, 'Backup missing');
+$request_count = count($GLOBALS['requests']);
+ensure(strpos(Parcs_HT_FAQ::render('fr'), 'Réponse.') !== false, 'FR answer missing from initial HTML');
+ensure(Parcs_HT_FAQ::render('en') === '' && Parcs_HT_FAQ::render('de') === '', 'Missing translation fell back to French');
+ensure(count($GLOBALS['requests']) === $request_count, 'Public page contacted Google');
+ob_start(); Parcs_HT_FAQ::page(); $admin_html = ob_get_clean();
+ensure(strpos($admin_html, 'Copier le script') !== false && strpos($admin_html, 'spreadsheets.readonly') !== false, 'Bundled setup missing from admin');
+ensure(strpos($admin_html, $google['secret']) === false, 'Saved secret leaked in admin HTML');
+ensure(substr_count($admin_html, '<form ') === substr_count($admin_html, '</form>'), 'Unbalanced admin forms');
+
 $GLOBALS['http_mode'] = 'blocked';
 call_handler('check_google', array());
 call_handler('apply_import', array('selected'=>array('MDS-TEST-001')), false);
