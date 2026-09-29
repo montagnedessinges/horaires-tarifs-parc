@@ -12,6 +12,11 @@ final class Parcs_HT_Bootstrap {
     private static $tags = null;
 
     public static function init() {
+        if (!class_exists('Parcs_HT_FAQ')) {
+            require_once PARCS_HT_DIR . 'includes/class-parcs-ht-faq.php';
+        }
+        Parcs_HT_FAQ::init();
+
         if (is_admin()) {
             require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin-save-11711.php';
             require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin-cleanup-11710.php';
@@ -77,7 +82,7 @@ final class Parcs_HT_Bootstrap {
             return self::$tags;
         }
         foreach (Parcs_HT_Shortcode_Registry::definitions() as $base => $definition) {
-            // Les modules Groupes et Guides possèdent leur propre bootstrap léger.
+            // Les modules Groupes, Guides et FAQ possèdent leur propre bootstrap léger.
             if (($definition['kind'] ?? '') !== 'core') continue;
             $module = sanitize_key((string)($definition['module'] ?? ''));
             if ($module === '') continue;

@@ -33,6 +33,8 @@ foreach (array(
     'parcs_ht_advent_appearance',
     'parcs_ht_advent_ux',
     'parcs_ht_ai_google',
+    'parcs_ht_faq',
+    'parcs_ht_faq_revisions',
 ) as $option) {
     delete_option($option);
 }
