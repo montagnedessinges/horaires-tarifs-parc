@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.17.12
+Stable tag: 1.18.0
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes et outils du parc.
 
@@ -19,6 +19,15 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.18.0 =
+* Ajoute un écran « IA & Google » dédié aux informations propres au parc, sans remplacer SEOPress ni dupliquer ses titres, métadonnées, réseaux sociaux ou sitemaps.
+* Génère les données structurées du parc à partir des horaires déjà enregistrés : périodes saisonnières, jours, un ou deux créneaux et exceptions sont convertis sans aucune ressaisie.
+* Utilise le type TouristAttraction et n’ajoute LocalBusiness que lorsqu’une adresse exploitable est renseignée ; la sortie JSON-LD est suspendue automatiquement si SEOPress PRO est détecté afin d’éviter un doublon potentiel.
+* Ajoute une première base de connaissances officielle FR / EN / DE dans la catégorie « Règles de visite », rendue discrètement côté serveur dans un accordéon fermé par défaut sous la page complète Horaires & Tarifs.
+* Conserve les termes de recherche internes tels que « popcorn » et « pop-corn » hors du HTML public tout en fournissant une réponse officielle actuelle sur le nourrissage des singes.
+* Ajoute des diagnostics simples de visibilité WordPress, robots.txt et SEOPress PRO, sans modifier automatiquement robots.txt ni dépendre de llms.txt.
+* Purge LiteSpeed après enregistrement des réglages IA & Google et ajoute un contrat de non-régression dédié ; la refonte FAQ / Contact reste volontairement hors périmètre de cette version.
 
 = 1.17.12 =
 * Ajoute dans l’écran Devis groupes un outil contrôlé pour appliquer le nouveau modèle du formulaire Contact Form 7 français.
