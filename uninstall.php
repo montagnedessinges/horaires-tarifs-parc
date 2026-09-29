@@ -35,6 +35,7 @@ foreach (array(
     'parcs_ht_ai_google',
     'parcs_ht_faq',
     'parcs_ht_faq_revisions',
+    'parcs_ht_faq_contact',
 ) as $option) {
     delete_option($option);
 }
