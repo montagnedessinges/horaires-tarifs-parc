@@ -152,13 +152,15 @@ final class Parcs_HT_FAQ_Contact_1192 {
         if (!current_user_can('manage_options')) wp_die('Accès refusé.');
         check_admin_referer('parcs_ht_faq_contact_save');
 
-        $posted = isset($_POST['contact']) && is_array($_POST['contact']) ? wp_unslash($_POST['contact']) : array();
+        $form_fr = isset($_POST['contact']['forms']['fr']) ? sanitize_text_field(wp_unslash($_POST['contact']['forms']['fr'])) : '';
+        $form_en = isset($_POST['contact']['forms']['en']) ? sanitize_text_field(wp_unslash($_POST['contact']['forms']['en'])) : '';
+        $form_de = isset($_POST['contact']['forms']['de']) ? sanitize_text_field(wp_unslash($_POST['contact']['forms']['de'])) : '';
         $settings = array(
-            'enabled'=>isset($posted['enabled']) ? '1' : '0',
+            'enabled'=>isset($_POST['contact']['enabled']) ? '1' : '0',
             'forms'=>array(
-                'fr'=>self::sanitize_cf7_shortcode($posted['forms']['fr'] ?? ''),
-                'en'=>self::sanitize_cf7_shortcode($posted['forms']['en'] ?? ''),
-                'de'=>self::sanitize_cf7_shortcode($posted['forms']['de'] ?? ''),
+                'fr'=>self::sanitize_cf7_shortcode($form_fr),
+                'en'=>self::sanitize_cf7_shortcode($form_en),
+                'de'=>self::sanitize_cf7_shortcode($form_de),
             ),
         );
 
@@ -185,9 +187,12 @@ final class Parcs_HT_FAQ_Contact_1192 {
         if (!current_user_can('manage_options')) return;
         $settings = self::settings();
         $cf7_active = shortcode_exists('contact-form-7');
+        // phpcs:disable WordPress.Security.NonceVerification.Recommended -- Message de confirmation en lecture seule.
+        $contact_updated = isset($_GET['contact_updated']) ? sanitize_text_field(wp_unslash($_GET['contact_updated'])) : '';
+        // phpcs:enable WordPress.Security.NonceVerification.Recommended
         ?>
         <div class="wrap">
-            <?php if (isset($_GET['contact_updated'])) : /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- message visuel uniquement */ ?>
+            <?php if ($contact_updated === '1') : ?>
                 <div class="notice notice-success is-dismissible"><p>Le formulaire de contact FAQ a été enregistré.</p></div>
             <?php endif; ?>
             <section class="postbox" style="padding:18px;margin-top:18px;">
