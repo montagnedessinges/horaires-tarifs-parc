@@ -40,7 +40,8 @@ release_contract_require_all($guides, array(
     "'years'",
     'persist_admin_value',
     'canonical_id_map',
-    'Un guide ajouté plus tard ne doit pas apparaître rétroactivement',
+    "elseif ($year_is_configured)",
+    "$library['guides'][$index]['enabled'] = '0'",
 ), '1.19.4 permanent guide library');
 
 if (strpos($guides, "add_action('admin_menu'") !== false || strpos($guides, "add_action('admin_footer'") !== false) {
@@ -50,7 +51,7 @@ if (strpos($guides, "add_action('admin_menu'") !== false || strpos($guides, "add
 echo "[OK] Historical embedded guide admin stays disabled.\n";
 
 release_contract_require_all($stats, array(
-    'Les IDs permanents restent donc inchangés',
+    "return is_array($library) ? $library : array('guides'=>array());",
     'canonical_id_map()',
     "'canonical_id'",
     'season_year',
@@ -74,7 +75,7 @@ release_contract_require_all($navigation, array(
     "Parcs_HT_Admin_Group_Quotes_1177::PAGE",
     "Parcs_HT_Admin_Communication_1179::POPUP_PAGE",
     "Parcs_HT_Admin_Communication_1179::ADVENT_PAGE",
-    'Aucune URL d\'onglet historique inconnue ne doit afficher l\'ancien écran',
+    "if ($page === Parcs_HT_Admin::PAGE && $tab !== '')",
 ), '1.19.4 canonical admin routing');
 
 if (strpos($navigation, "'parcs-ht-preview'    => 'htp-preview'") !== false || strpos($navigation, "'parcs-ht-shortcodes' => 'htp-shortcodes'") !== false) {
