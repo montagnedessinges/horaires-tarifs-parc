@@ -117,32 +117,14 @@ final class Parcs_HT_Save_Integrity {
 
     private static function guides_store() {
         $saved = get_option(Parcs_HT_Pedagogical_Guides::OPTION, array());
-        if (is_array($saved) && isset($saved['seasons']) && is_array($saved['seasons'])) {
-            return array('version'=>3, 'seasons'=>$saved['seasons']);
-        }
-
-        $store = array('version'=>3, 'seasons'=>array());
-        $all = Parcs_HT_Defaults::all_settings();
-        foreach (array_keys((array)($all['seasons'] ?? array())) as $year) {
-            $store['seasons'][(string)$year] = Parcs_HT_Pedagogical_Guides::settings((string)$year);
-        }
-        return $store;
+        return is_array($saved) ? $saved : array();
     }
 
     public static function persist_guides_value($year, $raw) {
         $year = (string)$year;
         if (!preg_match('/^20\d{2}$/', $year)) return false;
-
-        $clean = self::sanitize_guides_value($raw);
-        $store = self::guides_store();
-        $store['seasons'][$year] = $clean;
-        update_option(Parcs_HT_Pedagogical_Guides::OPTION, $store, false);
-
-        $stored = get_option(Parcs_HT_Pedagogical_Guides::OPTION, array());
-        $stored_year = is_array($stored) && isset($stored['seasons'][$year]) && is_array($stored['seasons'][$year])
-            ? $stored['seasons'][$year]
-            : null;
-        return is_array($stored_year) && self::same_value($clean, $stored_year);
+        if (!method_exists('Parcs_HT_Pedagogical_Guides', 'persist_admin_value')) return false;
+        return Parcs_HT_Pedagogical_Guides::persist_admin_value($year, is_array($raw) ? $raw : array());
     }
 
     public static function save_guides() {
@@ -160,7 +142,10 @@ final class Parcs_HT_Save_Integrity {
 
         self::store_daily_snapshot($year, 'Guides pédagogiques');
         do_action('litespeed_purge_all');
-        wp_safe_redirect(add_query_arg(array('page'=>Parcs_HT_Admin::PAGE,'season'=>$year,'tab'=>'htp-guides','guides-updated'=>'1'), admin_url('admin.php')));
+        $page = class_exists('Parcs_HT_Admin_Guides_1178') ? Parcs_HT_Admin_Guides_1178::PAGE : Parcs_HT_Admin::PAGE;
+        $args = array('page'=>$page,'season'=>$year,'guides-updated'=>'1');
+        if ($page === Parcs_HT_Admin::PAGE) $args['tab'] = 'htp-guides';
+        wp_safe_redirect(add_query_arg($args, admin_url('admin.php')));
         exit;
     }
 
@@ -214,7 +199,10 @@ final class Parcs_HT_Save_Integrity {
         $year = isset($_POST['season_year']) ? sanitize_text_field(wp_unslash($_POST['season_year'])) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Libellé de redirection uniquement.
         self::store_daily_snapshot($year, 'Apparence des guides');
         do_action('litespeed_purge_all');
-        wp_safe_redirect(add_query_arg(array('page'=>Parcs_HT_Admin::PAGE,'season'=>$year,'tab'=>'htp-guides','guide-appearance-updated'=>'1'), admin_url('admin.php')));
+        $page = class_exists('Parcs_HT_Admin_Guides_1178') ? Parcs_HT_Admin_Guides_1178::PAGE : Parcs_HT_Admin::PAGE;
+        $args = array('page'=>$page,'season'=>$year,'guide-appearance-updated'=>'1');
+        if ($page === Parcs_HT_Admin::PAGE) $args['tab'] = 'htp-guides';
+        wp_safe_redirect(add_query_arg($args, admin_url('admin.php')));
         exit;
     }
 
