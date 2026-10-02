@@ -51,9 +51,7 @@ final class Parcs_HT_Admin_Group_Quotes_1177 {
         // phpcs:disable WordPress.Security.NonceVerification.Recommended -- routage en lecture seule.
         $page = isset($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : '';
         $tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : '';
-        $legacy = isset($_GET['legacy_quote']) && sanitize_text_field(wp_unslash($_GET['legacy_quote'])) === '1';
         // phpcs:enable WordPress.Security.NonceVerification.Recommended
-        if ($legacy) return;
 
         $is_old_tab = class_exists('Parcs_HT_Admin') && $page === Parcs_HT_Admin::PAGE && $tab === 'htp-quote';
         $is_old_page = class_exists('Parcs_HT_Group_Quotes') && $page === Parcs_HT_Group_Quotes::PAGE;
@@ -167,7 +165,6 @@ final class Parcs_HT_Admin_Group_Quotes_1177 {
         $overview = class_exists('Parcs_HT_Admin_Overview')
             ? add_query_arg(array('page'=>Parcs_HT_Admin_Overview::PAGE, 'season'=>$year), admin_url('admin.php'))
             : admin_url('admin.php');
-        $legacy = add_query_arg(array('page'=>Parcs_HT_Admin::PAGE, 'tab'=>'htp-quote', 'season'=>$year, 'legacy_quote'=>'1'), admin_url('admin.php'));
         $content = class_exists('Parcs_HT_Public_Content')
             ? add_query_arg(array('page'=>Parcs_HT_Public_Content::PAGE), admin_url('admin.php'))
             : admin_url('admin.php');
@@ -196,8 +193,8 @@ final class Parcs_HT_Admin_Group_Quotes_1177 {
 
             <section class="htp-1177-card">
                 <h2>Contenu et présentation</h2>
-                <p>Les textes publics communs FR / EN / DE restent centralisés dans « Contenus & traductions ». Les blocs historiques avancés de la page de devis sont conservés pendant la refonte afin de ne perdre aucune donnée.</p>
-                <p><a class="button" href="<?php echo esc_url($content); ?>">Contenus & traductions</a> <a class="button" href="<?php echo esc_url($legacy); ?>">Éditeur avancé historique</a></p>
+                <p>Les textes publics communs FR / EN / DE restent centralisés dans « Contenus & traductions ». Les anciennes données techniques restent conservées en base pour compatibilité, sans réexposer l’ancien écran d’administration.</p>
+                <p><a class="button" href="<?php echo esc_url($content); ?>">Contenus & traductions</a></p>
             </section>
         </div>
         <?php

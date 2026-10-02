@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.19.3
+Stable tag: 1.19.4
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes, FAQ et outils du parc.
 
@@ -10,7 +10,7 @@ Gestion centralisée et multilingue des horaires, calendriers, tarifs, événeme
 
 Cette extension gère plusieurs saisons de parc, les horaires habituels et exceptionnels, le calendrier public, les périodes et événements, les tarifs individuels et groupes, les devis, les guides pédagogiques, la FAQ globale et le Calendrier de l’Avent.
 
-Les données de chaque saison restent séparées. La FAQ dispose de son propre stockage global, indépendant des saisons. Les mises à jour sont conçues pour conserver les réglages déjà enregistrés.
+Les données saisonnières restent séparées. La bibliothèque de guides pédagogiques et la FAQ sont globales ; l’affichage des guides reste configurable par année. Les mises à jour sont conçues pour conserver les réglages et statistiques déjà enregistrés.
 
 == Mise à jour manuelle ==
 
@@ -19,6 +19,14 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.19.4 =
+* Transforme les guides pédagogiques en bibliothèque permanente commune à toutes les années, avec affichage configurable par année.
+* Conserve les identifiants permanents et agrège les anciens identifiants saisonniers afin de préserver l’historique statistique.
+* Maintient les statistiques par année ainsi que les vues 7 jours, 30 jours, saison et toutes saisons.
+* Supprime l’enregistrement de l’ancien panneau Guides embarqué et les contournements qui pouvaient réafficher l’ancienne interface.
+* Remplace les ponts Aperçu et Shortcodes par de vrais écrans dédiés et redirige les anciennes URL vers les écrans métier actuels.
+* Aligne la couche de sauvegarde sécurisée sur le stockage v4 de la bibliothèque.
 
 = 1.19.3 =
 * Unifie les questions visiteurs et les règles de visite dans la FAQ importée par CSV : l’onglet du parc devient la source publique unique.

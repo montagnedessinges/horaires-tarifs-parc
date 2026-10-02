@@ -14,7 +14,9 @@ function guide_contract($condition, $message) {
     echo '[OK] ' . $message . PHP_EOL;
 }
 
-guide_contract(strpos($php, 'const STORE_VERSION = 3') !== false, 'Guide storage contract is version 3');
+guide_contract(strpos($php, 'const STORE_VERSION = 4') !== false, 'Guide storage contract is version 4');
+guide_contract(strpos($php, "'library'") !== false && strpos($php, "'years'") !== false && strpos($php, 'canonical_id_map') !== false, 'Guide storage separates the permanent library from yearly visibility');
+guide_contract(strpos($php, "add_action('admin_menu'") === false && strpos($php, "add_action('admin_footer'") === false, 'Historical embedded guide administration is no longer registered');
 guide_contract(strpos($php, 'private static function cycle_catalog()') !== false, 'Cycles are a fixed reusable catalog');
 guide_contract(strpos($php, "'cycle4'=>array(") !== false, 'Cycle 4 is supported');
 guide_contract(strpos($php, "'fr'=>'Cycle 1'") !== false && strpos($php, "'fr'=>'Maternelle – 3 à 6 ans'") !== false, 'French filter keeps Cycle 1 and exposes its detail');
@@ -68,7 +70,7 @@ guide_contract(strpos($main, 'parcs-ht-admin-save-guard') === false, 'Duplicate 
 guide_contract(strpos($save_js, 'protectGuideVisibilitySave') === false && strpos($save_js, 'data-htp-guide-enabled-fallback') === false, 'Guide save no longer mutates checkbox values in JavaScript');
 guide_contract(strpos($integrity, "admin_post_parcs_ht_save_pedagogical_guides") !== false && strpos($integrity, "admin_post_parcs_ht_save_guide_appearance") !== false, 'Guide data and appearance use the verified save path');
 guide_contract(strpos($integrity, 'persist_guides_value') !== false && strpos($integrity, 'persist_appearance_value') !== false, 'Save module exposes deterministic persistence functions used by handlers and tests');
-guide_contract(strpos($integrity, 'same_value($clean, $stored_year)') !== false && strpos($integrity, 'same_value($clean, $stored)') !== false, 'Both guide saves reread WordPress and compare persisted values before success');
+guide_contract(strpos($integrity, 'Parcs_HT_Pedagogical_Guides::persist_admin_value') !== false && strpos($integrity, 'same_value($clean, $stored)') !== false, 'Guide data delegates to the verified v4 persistence path and appearance still rereads WordPress before success');
 guide_contract(substr_count($integrity, "wp_unslash(\$_POST['guides'])") === 1, 'Guide POST data is unslashed exactly once in the verified handler');
 guide_contract(substr_count($integrity, "wp_unslash(\$_POST['appearance'])") === 1, 'Appearance POST data is unslashed exactly once in the verified handler');
 guide_contract(strpos($integrity, 'const MAX_DAILY_BACKUPS = 10') !== false && strpos($integrity, "wp_date('Y-m-d'") !== false, 'Safety history keeps one daily snapshot for up to ten days');
@@ -84,6 +86,7 @@ if (!function_exists('sanitize_key')) { function sanitize_key($value) { return p
 if (!function_exists('sanitize_text_field')) { function sanitize_text_field($value) { return trim(strip_tags((string)$value)); } }
 if (!function_exists('sanitize_textarea_field')) { function sanitize_textarea_field($value) { return trim(strip_tags((string)$value)); } }
 if (!function_exists('sanitize_hex_color')) { function sanitize_hex_color($value) { return preg_match('/^#[0-9a-fA-F]{6}$/', (string)$value) ? strtolower((string)$value) : null; } }
+if (!function_exists('wp_unslash')) { function wp_unslash($value) { return $value; } }
 if (!function_exists('esc_url_raw')) { function esc_url_raw($value) { return trim((string)$value); } }
 if (!function_exists('wp_json_encode')) { function wp_json_encode($value) { return json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); } }
 if (!function_exists('wp_date')) { function wp_date($format, $timestamp = null) { return gmdate($format, $timestamp === null ? time() : $timestamp); } }
@@ -97,15 +100,6 @@ if (!class_exists('Parcs_HT_Defaults')) {
         public static function all_settings() { return get_option(self::OPTION, array()); }
     }
 }
-if (!class_exists('Parcs_HT_Pedagogical_Guides')) {
-    class Parcs_HT_Pedagogical_Guides {
-        const OPTION = 'parcs_ht_pedagogical_guides';
-        public static function settings($year = '') {
-            $saved = get_option(self::OPTION, array());
-            return isset($saved['seasons'][$year]) && is_array($saved['seasons'][$year]) ? $saved['seasons'][$year] : array('guides'=>array());
-        }
-    }
-}
 if (!class_exists('Parcs_HT_Guide_Appearance')) {
     class Parcs_HT_Guide_Appearance { const OPTION = 'parcs_ht_guide_appearance'; }
 }
@@ -113,29 +107,34 @@ if (!class_exists('Parcs_HT_Quote_Languages')) {
     class Parcs_HT_Quote_Languages { const OPTION = 'parcs_ht_quote_language_shortcodes'; }
 }
 
+require_once $root . '/includes/class-parcs-ht-pedagogical-guides.php';
 require_once $root . '/includes/class-parcs-ht-save-integrity.php';
 
 $GLOBALS['htp_test_options'][Parcs_HT_Defaults::OPTION] = array(
     'active_season_year'=>'2026',
     'seasons'=>array('2026'=>array('published'=>'1')),
 );
-$GLOBALS['htp_test_options'][Parcs_HT_Pedagogical_Guides::OPTION] = array('version'=>3, 'seasons'=>array('2026'=>array('guides'=>array())));
+$GLOBALS['htp_test_options'][Parcs_HT_Pedagogical_Guides::OPTION] = array(
+    'version'=>4,
+    'library'=>array('guides'=>array()),
+    'years'=>array('2026'=>array('enabled'=>array())),
+);
 $GLOBALS['htp_test_options'][Parcs_HT_Guide_Appearance::OPTION] = array();
 
 $guide = array('items'=>array(array(
-    'enabled'=>'1', 'cycle'=>'cycle1', 'languages'=>array('fr'=>'1'), 'status'=>'available',
+    'id'=>'guide_000001', 'enabled'=>'1', 'cycle'=>'cycle1', 'languages'=>array('fr'=>'1'), 'status'=>'available',
     'title'=>array('fr'=>'Version A'), 'description'=>array('fr'=>'Texte A'),
     'pdf_url'=>'https://example.test/a.pdf', 'cover_url'=>'https://example.test/a.jpg', 'order'=>'10',
 )));
 guide_contract(Parcs_HT_Save_Integrity::persist_guides_value('2026', $guide), 'First guide save is persisted and verified');
 $stored = get_option(Parcs_HT_Pedagogical_Guides::OPTION, array());
-guide_contract($stored['seasons']['2026']['guides'][0]['title']['fr'] === 'Version A' && $stored['seasons']['2026']['guides'][0]['enabled'] === '1', 'First save stores title and checked visibility');
+guide_contract($stored['library']['guides'][0]['title']['fr'] === 'Version A' && $stored['years']['2026']['enabled']['guide_000001'] === '1', 'First save stores permanent content and 2026 visibility separately');
 
 $guide['items'][0]['title']['fr'] = 'Version B';
 unset($guide['items'][0]['enabled']);
 guide_contract(Parcs_HT_Save_Integrity::persist_guides_value('2026', $guide), 'Second guide save is persisted and verified');
 $stored = get_option(Parcs_HT_Pedagogical_Guides::OPTION, array());
-guide_contract($stored['seasons']['2026']['guides'][0]['title']['fr'] === 'Version B' && $stored['seasons']['2026']['guides'][0]['enabled'] === '0', 'Second save replaces title and stores unchecked visibility without JavaScript');
+guide_contract($stored['library']['guides'][0]['title']['fr'] === 'Version B' && $stored['years']['2026']['enabled']['guide_000001'] === '0', 'Second save replaces permanent content and stores unchecked 2026 visibility without JavaScript');
 
 $guide['items'][0]['enabled'] = '1';
 $guide['items'][0]['title']['fr'] = 'Version C';
@@ -145,16 +144,23 @@ $guide['items'][0]['cover_url'] = 'https://example.test/c.jpg';
 $guide['items'][0]['order'] = '30';
 guide_contract(Parcs_HT_Save_Integrity::persist_guides_value('2026', $guide), 'Third guide save is persisted and verified');
 $stored = get_option(Parcs_HT_Pedagogical_Guides::OPTION, array());
-$current = $stored['seasons']['2026']['guides'][0];
-guide_contract($current['title']['fr'] === 'Version C' && $current['enabled'] === '1' && $current['cycle'] === 'cycle3' && $current['order'] === 30, 'Third save replaces all edited guide fields');
+$current = $stored['library']['guides'][0];
+guide_contract($current['title']['fr'] === 'Version C' && $stored['years']['2026']['enabled']['guide_000001'] === '1' && $current['cycle'] === 'cycle3' && $current['order'] === 30, 'Third save replaces all edited guide fields while keeping annual visibility separate');
 
 $guide['items'][0]['title']['fr'] = 'Version D';
 $guide['items'][0]['languages'] = array('fr'=>'1','de'=>'1');
 $guide['items'][0]['description']['fr'] = 'Texte D';
 guide_contract(Parcs_HT_Save_Integrity::persist_guides_value('2026', $guide), 'Fourth guide save is persisted and verified');
 $stored = get_option(Parcs_HT_Pedagogical_Guides::OPTION, array());
-$current = $stored['seasons']['2026']['guides'][0];
-guide_contract($current['title']['fr'] === 'Version D' && $current['description']['fr'] === 'Texte D' && $current['languages'] === array('fr','de'), 'Fourth save replaces the third state instead of restoring stale values');
+$current = $stored['library']['guides'][0];
+guide_contract($current['title']['fr'] === 'Version D' && $current['description']['fr'] === 'Texte D' && $current['languages'] === array('fr','de'), 'Fourth save replaces the third permanent-library state instead of restoring stale values');
+
+unset($guide['items'][0]['enabled']);
+guide_contract(Parcs_HT_Save_Integrity::persist_guides_value('2027', $guide), 'The same guide can receive a different visibility state for 2027');
+$stored = get_option(Parcs_HT_Pedagogical_Guides::OPTION, array());
+guide_contract(count($stored['library']['guides']) === 1 && $stored['library']['guides'][0]['id'] === 'guide_000001', 'Configuring another year does not duplicate the guide or change its permanent id');
+guide_contract($stored['years']['2026']['enabled']['guide_000001'] === '1' && $stored['years']['2027']['enabled']['guide_000001'] === '0', 'Yearly visibility states remain independent');
+guide_contract(Parcs_HT_Pedagogical_Guides::settings('2026')['guides'][0]['enabled'] === '1' && Parcs_HT_Pedagogical_Guides::settings('2027')['guides'][0]['enabled'] === '0', 'Public guide settings resolve visibility from the requested year');
 
 $appearance_a = array('card_background'=>'transparent','text_color'=>'inherit','title_color'=>'inherit','primary_button_background'=>'#176b57','primary_button_text'=>'#ffffff','secondary_button_color'=>'inherit','category_color'=>'inherit');
 $appearance_b = $appearance_a;

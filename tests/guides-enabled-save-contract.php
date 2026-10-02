@@ -16,6 +16,6 @@ guides_enabled_save_contract(strpos($js, 'protectGuideVisibilitySave') === false
 guides_enabled_save_contract(strpos($js, 'data-htp-guide-enabled-fallback') === false && strpos($js, "hidden.value = '0'") === false, 'No hidden visibility fallback is injected by JavaScript');
 guides_enabled_save_contract(strpos($main, 'parcs-ht-admin-save-guard') === false, 'Duplicate standalone save guard is no longer enqueued');
 guides_enabled_save_contract(strpos($integrity, 'persist_guides_value') !== false && strpos($integrity, 'get_option(Parcs_HT_Pedagogical_Guides::OPTION') !== false, 'Guide save is reread from WordPress after writing');
-guides_enabled_save_contract(strpos($integrity, 'same_value($clean, $stored_year)') !== false, 'Guide save confirmation depends on persisted data matching requested data');
+guides_enabled_save_contract(strpos($integrity, 'Parcs_HT_Pedagogical_Guides::persist_admin_value') !== false, 'Guide save confirmation delegates to the verified v4 persistent-library writer');
 
 echo "Guide visibility save contract: OK\n";
