@@ -165,7 +165,6 @@ final class Parcs_HT_Admin_Group_Quotes_1177 {
         $overview = class_exists('Parcs_HT_Admin_Overview')
             ? add_query_arg(array('page'=>Parcs_HT_Admin_Overview::PAGE, 'season'=>$year), admin_url('admin.php'))
             : admin_url('admin.php');
-        $legacy = add_query_arg(array('page'=>Parcs_HT_Admin::PAGE, 'tab'=>'htp-quote', 'season'=>$year, 'legacy_quote'=>'1'), admin_url('admin.php'));
         $content = class_exists('Parcs_HT_Public_Content')
             ? add_query_arg(array('page'=>Parcs_HT_Public_Content::PAGE), admin_url('admin.php'))
             : admin_url('admin.php');
@@ -194,8 +193,8 @@ final class Parcs_HT_Admin_Group_Quotes_1177 {
 
             <section class="htp-1177-card">
                 <h2>Contenu et présentation</h2>
-                <p>Les textes publics communs FR / EN / DE restent centralisés dans « Contenus & traductions ». Les blocs historiques avancés de la page de devis sont conservés pendant la refonte afin de ne perdre aucune donnée.</p>
-                <p><a class="button" href="<?php echo esc_url($content); ?>">Contenus & traductions</a> <a class="button" href="<?php echo esc_url($legacy); ?>">Éditeur avancé historique</a></p>
+                <p>Les textes publics communs FR / EN / DE restent centralisés dans « Contenus & traductions ». Les anciennes données techniques restent conservées en base pour compatibilité, sans réexposer l’ancien écran d’administration.</p>
+                <p><a class="button" href="<?php echo esc_url($content); ?>">Contenus & traductions</a></p>
             </section>
         </div>
         <?php
