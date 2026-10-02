@@ -1,3 +1,13 @@
+## 1.19.4
+
+- Transforme les guides pédagogiques en bibliothèque permanente commune à toutes les années : le contenu d’un guide n’est plus dupliqué à chaque saison.
+- Sépare le contenu permanent de l’état d’affichage annuel et conserve les identifiants statistiques stables lors des changements d’année.
+- Migre automatiquement l’ancien stockage saisonnier v3 vers le stockage v4, en conservant les anciens identifiants comme alias pour agréger l’historique statistique sans perte.
+- Aligne la couche de sauvegarde sécurisée sur le nouveau stockage et conserve les shortcodes publics ainsi que `parcs_ht_settings` inchangés.
+- Désactive l’ancien panneau Guides embarqué, supprime les contournements legacy et empêche les URL historiques de rouvrir l’ancien grand écran à onglets.
+- Transforme Aperçu et Shortcodes en écrans dédiés et renforce la déduplication des sous-menus d’administration.
+- Ajoute un contrat de régression 1.19.4 pour la bibliothèque permanente, les statistiques et le routage administratif.
+
 ## 1.19.0
 
 - Ajoute une FAQ globale FR/EN/DE, désactivée par défaut, avec recherche, filtres et accordéons rendus côté serveur ; shortcodes `[parc_faq]`, `[parc_faq_fr]`, `[parc_faq_en]` et `[parc_faq_de]`.
