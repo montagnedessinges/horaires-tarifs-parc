@@ -16,9 +16,7 @@ final class Parcs_HT_Admin_Navigation {
     const UPDATES_PAGE = 'parcs-ht-updates';
 
     private static $bridges = array(
-        'parcs-ht-tariffs'    => 'htp-tariffs',
-        'parcs-ht-preview'    => 'htp-preview',
-        'parcs-ht-shortcodes' => 'htp-shortcodes',
+        'parcs-ht-tariffs' => 'htp-tariffs',
     );
 
     public static function init() {
@@ -102,6 +100,19 @@ final class Parcs_HT_Admin_Navigation {
             self::redirect(add_query_arg(array('page'=>self::UPDATES_PAGE), admin_url('admin.php')));
         }
 
+        if ($page === Parcs_HT_Admin::PAGE && $tab === 'htp-preview') {
+            $args = array('page'=>'parcs-ht-preview');
+            if ($year !== '') $args['season'] = $year;
+            foreach (array('restored','updated','preserved') as $notice) {
+                if (isset($_GET[$notice])) $args[$notice] = '1'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- indicateur visuel uniquement.
+            }
+            self::redirect(add_query_arg($args, admin_url('admin.php')));
+        }
+
+        if ($page === Parcs_HT_Admin::PAGE && $tab === 'htp-shortcodes') {
+            self::redirect(add_query_arg(array('page'=>'parcs-ht-shortcodes'), admin_url('admin.php')));
+        }
+
         if (isset(self::$bridges[$page])) {
             self::redirect(self::legacy_url(self::$bridges[$page], $year));
         }
@@ -116,9 +127,9 @@ final class Parcs_HT_Admin_Navigation {
         add_submenu_page($parent, 'Tarifs visiteurs', 'Tarifs visiteurs', 'manage_options', 'parcs-ht-tariffs', array(__CLASS__, 'bridge_fallback'));
         add_submenu_page($parent, 'Groupes', 'Groupes', 'manage_options', self::GROUPS_PAGE, array(__CLASS__, 'groups_page'));
         add_submenu_page($parent, 'Communication', 'Communication', 'manage_options', self::COMMUNICATION_PAGE, array(__CLASS__, 'communication_page'));
-        add_submenu_page($parent, 'Aperçu', 'Aperçu', 'manage_options', 'parcs-ht-preview', array(__CLASS__, 'bridge_fallback'));
+        add_submenu_page($parent, 'Aperçu', 'Aperçu', 'manage_options', 'parcs-ht-preview', array('Parcs_HT_Admin', 'preview_page'));
         add_submenu_page($parent, 'Mises à jour', 'Mises à jour', 'update_plugins', self::UPDATES_PAGE, array(__CLASS__, 'updates_page'));
-        add_submenu_page($parent, 'Shortcodes', 'Shortcodes', 'manage_options', 'parcs-ht-shortcodes', array(__CLASS__, 'bridge_fallback'));
+        add_submenu_page($parent, 'Shortcodes', 'Shortcodes', 'manage_options', 'parcs-ht-shortcodes', array('Parcs_HT_Admin', 'shortcodes_page'));
     }
 
     /** Range le sous-menu dans l'ordre fonctionnel retenu. */
