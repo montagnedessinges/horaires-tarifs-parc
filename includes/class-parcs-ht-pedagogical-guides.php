@@ -369,14 +369,11 @@ final class Parcs_HT_Pedagogical_Guides {
         return $out;
     }
 
-    public static function save() {
-        if (!current_user_can('manage_options')) wp_die('Accès refusé.');
-        check_admin_referer('parcs_ht_save_pedagogical_guides');
-        $year = isset($_POST['season_year']) ? sanitize_text_field(wp_unslash($_POST['season_year'])) : '';
-        if (!preg_match('/^20\d{2}$/', $year)) wp_die('Année invalide.');
-        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Tableau imbriqué nettoyé champ par champ par sanitize_posted_library().
-        $raw = isset($_POST['guides']) && is_array($_POST['guides']) ? wp_unslash($_POST['guides']) : array();
-        $posted = self::sanitize_posted_library($raw);
+    public static function persist_admin_value($year, $raw) {
+        $year = (string)$year;
+        if (!preg_match('/^20\d{2}$/', $year)) return false;
+
+        $posted = self::sanitize_posted_library(is_array($raw) ? $raw : array());
         $store = self::store();
 
         $existing = array();
@@ -399,6 +396,23 @@ final class Parcs_HT_Pedagogical_Guides {
         $store['library'] = self::normalize_library($posted);
         $store['years'][$year] = array('enabled'=>$enabled);
         update_option(self::OPTION, $store, false);
+
+        $stored = get_option(self::OPTION, array());
+        return is_array($stored)
+            && (int)($stored['version'] ?? 0) === self::STORE_VERSION
+            && isset($stored['library'], $stored['years'][$year])
+            && $stored['library'] === $store['library']
+            && $stored['years'][$year] === $store['years'][$year];
+    }
+
+    public static function save() {
+        if (!current_user_can('manage_options')) wp_die('Accès refusé.');
+        check_admin_referer('parcs_ht_save_pedagogical_guides');
+        $year = isset($_POST['season_year']) ? sanitize_text_field(wp_unslash($_POST['season_year'])) : '';
+        if (!preg_match('/^20\d{2}$/', $year)) wp_die('Année invalide.');
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Tableau imbriqué nettoyé champ par champ par persist_admin_value().
+        $raw = isset($_POST['guides']) && is_array($_POST['guides']) ? wp_unslash($_POST['guides']) : array();
+        if (!self::persist_admin_value($year, $raw)) wp_die('L’enregistrement des guides pédagogiques n’a pas pu être confirmé.');
 
         $page = class_exists('Parcs_HT_Admin_Guides_1178') ? Parcs_HT_Admin_Guides_1178::PAGE : Parcs_HT_Admin::PAGE;
         $args = array('page'=>$page,'season'=>$year,'guides-updated'=>'1');
