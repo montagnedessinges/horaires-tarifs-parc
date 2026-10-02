@@ -13,7 +13,7 @@ function guide_stats_contract($condition, $message) {
 
 guide_stats_contract(strpos($stats_php, "const ID_OPTION = 'parcs_ht_pedagogical_guide_ids'") !== false, 'Guide identifiers have a permanent dedicated registry');
 guide_stats_contract(strpos($stats_php, "'guide_' . str_pad") !== false && strpos($stats_php, "while (isset(\$state['used'][\$id]))") !== false, 'New guide identifiers are monotonic and never recycle an issued id');
-guide_stats_contract(strpos($stats_php, 'public static function clone_library_with_new_ids($library)') !== false && strpos($stats_php, "return is_array($library) ? $library : array('guides'=>array());") !== false, 'Season duplication preserves permanent guide identifiers');
+guide_stats_contract(strpos($stats_php, 'public static function clone_library_with_new_ids($library)') !== false && strpos($stats_php, 'return is_array($library) ? $library : array(\'guides\'=>array());') !== false, 'Season duplication preserves permanent guide identifiers');
 guide_stats_contract(strpos($stats_php, "'deleted_at' => 0") !== false && strpos($stats_php, "['deleted_at'] = \$now") !== false, 'Deleted guides remain archived in statistical metadata');
 guide_stats_contract(strpos($stats_php, "admin_post_nopriv_parcs_ht_track_guide_click") !== false, 'Anonymous public guide clicks have a dedicated endpoint');
 guide_stats_contract(strpos($stats_php, 'ON DUPLICATE KEY UPDATE clicks = clicks + 1') !== false, 'Click increments are atomic in the dedicated statistics table');
