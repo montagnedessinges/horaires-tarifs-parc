@@ -50,9 +50,7 @@ final class Parcs_HT_Admin_Guides_1178 {
         // phpcs:disable WordPress.Security.NonceVerification.Recommended -- routage et indicateurs visuels en lecture seule.
         $page = isset($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : '';
         $tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : '';
-        $legacy = isset($_GET['legacy_guides']) && sanitize_text_field(wp_unslash($_GET['legacy_guides'])) === '1';
         // phpcs:enable WordPress.Security.NonceVerification.Recommended
-        if ($legacy) return;
 
         $is_old_tab = $page === Parcs_HT_Admin::PAGE && $tab === 'htp-guides';
         $is_old_page = class_exists('Parcs_HT_Pedagogical_Guides') && $page === Parcs_HT_Pedagogical_Guides::PAGE;
@@ -186,14 +184,14 @@ final class Parcs_HT_Admin_Guides_1178 {
         ?>
         <div class="wrap htp-1178-guides">
             <h1>Guides pédagogiques</h1>
-            <p class="description">Gérez les documents, leurs cycles, langues, badges et fichiers depuis un seul écran. Le stockage, les identifiants statistiques et les shortcodes publics existants sont conservés.</p>
+            <p class="description">Gérez une seule bibliothèque de documents pour toutes les années. Les contenus et leurs identifiants restent permanents ; l’année sélectionnée sert uniquement à choisir les documents affichés et à consulter les statistiques correspondantes.</p>
             <?php self::notice(); self::group_navigation($year); ?>
             <?php if (class_exists('Parcs_HT_Admin_Navigation')) Parcs_HT_Admin_Navigation::render_year_context(self::PAGE, $year); ?>
 
             <section class="htp-1178-card">
-                <div class="htp-1178-card-head"><div><h2>Bibliothèque <?php echo esc_html($year); ?></h2><p>Vue synthétique des documents de la saison sélectionnée.</p></div><a class="button" href="<?php echo esc_url(self::content_url()); ?>">Contenus & traductions</a></div>
+                <div class="htp-1178-card-head"><div><h2>Bibliothèque permanente</h2><p>Les documents sont communs à toutes les années. Vous configurez ici leur affichage pour <?php echo esc_html($year); ?>.</p></div><a class="button" href="<?php echo esc_url(self::content_url()); ?>">Contenus & traductions</a></div>
                 <?php self::summary($guides); ?>
-                <div class="htp-1178-separation-note"><strong>Données structurelles</strong> : cycle associé, langues disponibles, statut, ordre, PDF, couverture et ID statistique restent propres au document. <strong>Libellés publics</strong> : titres de rubrique, noms des cycles/niveaux et noms des langues sont centralisés dans « Contenus & traductions » FR / EN / DE.</div>
+                <div class="htp-1178-separation-note"><strong>Bibliothèque permanente</strong> : cycle, langues, statut, ordre, PDF, couverture, textes et ID statistique appartiennent au document et ne sont plus recréés chaque année. <strong>Réglage annuel</strong> : seule la case d’affichage est mémorisée pour <?php echo esc_html($year); ?>. Les statistiques restent historisées par année.</div>
             </section>
 
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="htp-1178-library-form" data-htp-guides-1178>
@@ -201,12 +199,12 @@ final class Parcs_HT_Admin_Guides_1178 {
                 <input type="hidden" name="season_year" value="<?php echo esc_attr($year); ?>">
                 <?php wp_nonce_field('parcs_ht_save_pedagogical_guides'); ?>
                 <section class="htp-1178-card">
-                    <div class="htp-1178-card-head"><div><h2>Documents pédagogiques</h2><p>Chaque document est replié pour alléger l’écran. Ouvrez uniquement celui que vous souhaitez modifier.</p></div><button type="button" class="button button-primary" data-add-guide>Ajouter un guide</button></div>
+                    <div class="htp-1178-card-head"><div><h2>Documents de la bibliothèque</h2><p>Une modification du titre, du PDF, du cycle ou des langues s’applique à toutes les années. La case d’affichage reste propre à <?php echo esc_html($year); ?>.</p></div><button type="button" class="button button-primary" data-add-guide>Ajouter un guide</button></div>
                     <div class="htp-1178-guide-list" data-guide-list>
                         <?php foreach ($guides as $index=>$guide) self::guide_row($index, $guide); ?>
                     </div>
                     <template data-guide-template><?php self::guide_row('__INDEX__', array('id'=>'','enabled'=>'0','cycle'=>'cycle1','languages'=>array('fr'),'status'=>'coming','title'=>array(),'description'=>array(),'pdf_url'=>'','cover_url'=>'','order'=>0), true); ?></template>
-                    <?php submit_button('Enregistrer les guides', 'primary', 'submit', false); ?>
+                    <?php submit_button('Enregistrer la bibliothèque et l’affichage ' . $year, 'primary', 'submit', false); ?>
                 </section>
             </form>
 
@@ -254,7 +252,7 @@ final class Parcs_HT_Admin_Guides_1178 {
                 <div class="htp-1178-block">
                     <h3>Classement et affichage</h3>
                     <div class="htp-1178-fields htp-1178-fields-4">
-                        <label class="htp-1178-check"><input type="checkbox" name="<?php echo esc_attr($base . '[enabled]'); ?>" value="1" <?php checked((string)$guide['enabled'], '1'); ?>> <span>Afficher ce document</span></label>
+                        <label class="htp-1178-check"><input type="checkbox" name="<?php echo esc_attr($base . '[enabled]'); ?>" value="1" <?php checked((string)$guide['enabled'], '1'); ?>> <span>Afficher pour l’année sélectionnée</span></label>
                         <label><span>Cycle / niveau</span><select name="<?php echo esc_attr($base . '[cycle]'); ?>" data-guide-cycle><?php foreach (self::cycles() as $cycle_id=>$meta) : ?><option value="<?php echo esc_attr($cycle_id); ?>" <?php selected($cycle, $cycle_id); ?>><?php echo esc_html(self::cycle_label($cycle_id) . ' — ' . self::cycle_label($cycle_id, true)); ?></option><?php endforeach; ?></select></label>
                         <label><span>Badge / statut</span><select name="<?php echo esc_attr($base . '[status]'); ?>" data-guide-status><option value="available" <?php selected($status, 'available'); ?>>Disponible</option><option value="new" <?php selected($status, 'new'); ?>>Nouveau</option><option value="coming" <?php selected($status, 'coming'); ?>>À venir</option></select></label>
                         <label><span>Ordre d’affichage</span><input type="number" class="small-text" data-guide-order name="<?php echo esc_attr($base . '[order]'); ?>" value="<?php echo (int)$guide['order']; ?>"></label>
