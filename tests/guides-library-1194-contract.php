@@ -40,8 +40,8 @@ release_contract_require_all($guides, array(
     "'years'",
     'persist_admin_value',
     'canonical_id_map',
-    "elseif ($year_is_configured)",
-    "$library['guides'][$index]['enabled'] = '0'",
+    'elseif ($year_is_configured)',
+    '$library[\'guides\'][$index][\'enabled\'] = \'0\'',
 ), '1.19.4 permanent guide library');
 
 if (strpos($guides, "add_action('admin_menu'") !== false || strpos($guides, "add_action('admin_footer'") !== false) {
