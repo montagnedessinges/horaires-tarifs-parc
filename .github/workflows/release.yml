@@ -80,6 +80,7 @@ jobs:
           php tests/updater-metadata-contract.php
           php tests/pedagogical-guides-contract.php
           php tests/pedagogical-guide-stats-contract.php
+          php tests/guides-library-1194-contract.php
           php tests/advent-contract.php
           php tests/advent-ux-contract.php
           php tests/faq-1190-contract.php
@@ -124,6 +125,7 @@ jobs:
           PLUGIN_ROOT=/tmp/htp-production-test php tests/admin-shortcode-preview-script-regression.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/pedagogical-guides-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/pedagogical-guide-stats-contract.php
+          PLUGIN_ROOT=/tmp/htp-production-test php tests/guides-library-1194-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/advent-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/advent-ux-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/faq-1190-contract.php
