@@ -325,7 +325,7 @@ final class Parcs_HT_Guide_Stats {
         if (!self::is_valid_id($id) || !self::is_reserved_id($id)) self::no_content();
         if (!in_array($click_type, array('view','download'), true)) self::no_content();
         if (!in_array($language, array('fr','de','en'), true)) self::no_content();
-        if (!preg_match('/^20\\d{2}$/', $year)) self::no_content();
+        if (!preg_match('/^20\d{2}$/', $year)) self::no_content();
         $expected = self::tracking_token($id, $click_type, $language, $year);
         if ($token === '' || !hash_equals($expected, $token)) self::no_content();
 
@@ -400,7 +400,7 @@ final class Parcs_HT_Guide_Stats {
     public static function render_admin_panel($year) {
         if (!current_user_can('manage_options')) return;
         self::maybe_install();
-        $year = preg_match('/^20\\d{2}$/', (string)$year) ? (string)$year : (string)wp_date('Y');
+        $year = preg_match('/^20\d{2}$/', (string)$year) ? (string)$year : (string)wp_date('Y');
         $range = isset($_GET['guide_stats_range']) ? sanitize_key(wp_unslash($_GET['guide_stats_range'])) : '30'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Filtre de lecture uniquement.
         if (!in_array($range, array('7','30','season','all'), true)) $range = '30';
 
