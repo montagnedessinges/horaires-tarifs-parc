@@ -129,10 +129,18 @@ final class Parcs_HT_Admin_Navigation {
             self::redirect(add_query_arg($args, admin_url('admin.php')));
         }
         if ($page === Parcs_HT_Admin::PAGE && $tab === 'htp-alerts' && class_exists('Parcs_HT_Admin_Communication_1179')) {
-            self::redirect(add_query_arg(array('page'=>Parcs_HT_Admin_Communication_1179::POPUP_PAGE), admin_url('admin.php')));
+            $args = array('page'=>Parcs_HT_Admin_Communication_1179::POPUP_PAGE);
+            foreach (array('updated','preserved') as $key) {
+                if (isset($_GET[$key])) $args[$key] = '1'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- indicateur de retour uniquement.
+            }
+            self::redirect(add_query_arg($args, admin_url('admin.php')));
         }
         if ($page === Parcs_HT_Admin::PAGE && $tab === 'htp-advent' && class_exists('Parcs_HT_Admin_Communication_1179')) {
-            self::redirect(add_query_arg(array('page'=>Parcs_HT_Admin_Communication_1179::ADVENT_PAGE), admin_url('admin.php')));
+            $args = array('page'=>Parcs_HT_Admin_Communication_1179::ADVENT_PAGE);
+            foreach (array('campaign','advent_view','day','teaser','partner','result','import_token','advent_notice','advent_error','advent_fragment') as $key) {
+                if (isset($_GET[$key])) $args[$key] = sanitize_text_field(wp_unslash($_GET[$key])); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- paramètres de navigation/retour uniquement.
+            }
+            self::redirect(add_query_arg($args, admin_url('admin.php')));
         }
 
         if (isset(self::$bridges[$page])) {
