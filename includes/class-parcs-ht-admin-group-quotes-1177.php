@@ -51,9 +51,7 @@ final class Parcs_HT_Admin_Group_Quotes_1177 {
         // phpcs:disable WordPress.Security.NonceVerification.Recommended -- routage en lecture seule.
         $page = isset($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : '';
         $tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : '';
-        $legacy = isset($_GET['legacy_quote']) && sanitize_text_field(wp_unslash($_GET['legacy_quote'])) === '1';
         // phpcs:enable WordPress.Security.NonceVerification.Recommended
-        if ($legacy) return;
 
         $is_old_tab = class_exists('Parcs_HT_Admin') && $page === Parcs_HT_Admin::PAGE && $tab === 'htp-quote';
         $is_old_page = class_exists('Parcs_HT_Group_Quotes') && $page === Parcs_HT_Group_Quotes::PAGE;
