@@ -419,6 +419,8 @@ final class Parcs_HT_Guide_Stats {
         $ids = array_keys($counts);
         foreach ($meta_guides as $id => $guide_meta) {
             if (!self::is_valid_id($id) || !is_array($guide_meta)) continue;
+            $canonical_id = sanitize_key($guide_meta['canonical_id'] ?? '');
+            if ($canonical_id !== '' && $canonical_id !== $id) continue;
             if ($range === 'all' || in_array($year, array_map('strval', (array)($guide_meta['years'] ?? array())), true) || isset($active_ids[$id])) $ids[] = $id;
         }
         $ids = array_values(array_unique($ids));
