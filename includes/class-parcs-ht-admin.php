@@ -31,7 +31,12 @@ final class Parcs_HT_Admin {
     }
 
     public static function assets($hook) {
-        if ($hook !== 'toplevel_page_' . self::PAGE) {
+        // Les écrans Aperçu et Shortcodes sont désormais de vrais écrans dédiés
+        // et ne doivent plus rouvrir l'ancien grand formulaire à onglets.
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- sélection d'écran en lecture seule.
+        $page = isset($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : '';
+        $dedicated = in_array($page, array('parcs-ht-preview','parcs-ht-shortcodes'), true);
+        if ($hook !== 'toplevel_page_' . self::PAGE && !$dedicated) {
             return;
         }
         wp_enqueue_style('parcs-ht-admin', PARCS_HT_URL . 'assets/admin.css', array(), PARCS_HT_VERSION);
@@ -150,6 +155,26 @@ final class Parcs_HT_Admin {
             <?php if (class_exists('Parcs_HT_Advent_Admin')) Parcs_HT_Advent_Admin::render_workspace(); ?>
         </div>
         <?php
+    }
+
+    public static function preview_page() {
+        if (!current_user_can('manage_options')) return;
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- année d'affichage uniquement.
+        $year = isset($_GET['season']) ? sanitize_text_field(wp_unslash($_GET['season'])) : '';
+        $settings = Parcs_HT_Defaults::settings($year);
+        $active_year = (string)($settings['active_season_year'] ?? ($settings['general']['year'] ?? ''));
+        $audit = Parcs_HT_Schedule::audit_season($settings);
+        echo '<div class="wrap htp-admin"><h1>Aperçu</h1><p class="description">Diagnostic et aperçu de l’année administrée, sans recharger l’ancienne interface à onglets.</p>';
+        if (class_exists('Parcs_HT_Admin_Navigation')) Parcs_HT_Admin_Navigation::render_year_context('parcs-ht-preview', $active_year);
+        self::preview_section($audit);
+        echo '</div>';
+    }
+
+    public static function shortcodes_page() {
+        if (!current_user_can('manage_options')) return;
+        echo '<div class="wrap htp-admin"><h1>Shortcodes</h1><p class="description">Référence des shortcodes publics disponibles dans l’extension.</p>';
+        self::shortcodes_section();
+        echo '</div>';
     }
 
     private static function general_section($settings) {
