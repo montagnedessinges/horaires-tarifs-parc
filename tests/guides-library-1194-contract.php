@@ -51,7 +51,7 @@ if (strpos($guides, "add_action('admin_menu'") !== false || strpos($guides, "add
 echo "[OK] Historical embedded guide admin stays disabled.\n";
 
 release_contract_require_all($stats, array(
-    "return is_array($library) ? $library : array('guides'=>array());",
+    'return is_array($library) ? $library : array(\'guides\'=>array());',
     'canonical_id_map()',
     "'canonical_id'",
     'season_year',
@@ -75,7 +75,7 @@ release_contract_require_all($navigation, array(
     "Parcs_HT_Admin_Group_Quotes_1177::PAGE",
     "Parcs_HT_Admin_Communication_1179::POPUP_PAGE",
     "Parcs_HT_Admin_Communication_1179::ADVENT_PAGE",
-    "if ($page === Parcs_HT_Admin::PAGE && $tab !== '')",
+    'if ($page === Parcs_HT_Admin::PAGE && $tab !== \'\')',
 ), '1.19.4 canonical admin routing');
 
 if (strpos($navigation, "'parcs-ht-preview'    => 'htp-preview'") !== false || strpos($navigation, "'parcs-ht-shortcodes' => 'htp-shortcodes'") !== false) {
