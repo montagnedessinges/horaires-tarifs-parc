@@ -13,7 +13,7 @@ function guide_stats_contract($condition, $message) {
 
 guide_stats_contract(strpos($stats_php, "const ID_OPTION = 'parcs_ht_pedagogical_guide_ids'") !== false, 'Guide identifiers have a permanent dedicated registry');
 guide_stats_contract(strpos($stats_php, "'guide_' . str_pad") !== false && strpos($stats_php, "while (isset(\$state['used'][\$id]))") !== false, 'New guide identifiers are monotonic and never recycle an issued id');
-guide_stats_contract(strpos($stats_php, 'clone_library_with_new_ids') !== false, 'A duplicated season receives new guide identifiers');
+guide_stats_contract(strpos($stats_php, 'clone_library_with_new_ids') !== false && strpos($stats_php, 'Les IDs permanents restent donc inchangés') !== false, 'Season duplication preserves permanent guide identifiers');
 guide_stats_contract(strpos($stats_php, "'deleted_at' => 0") !== false && strpos($stats_php, "['deleted_at'] = \$now") !== false, 'Deleted guides remain archived in statistical metadata');
 guide_stats_contract(strpos($stats_php, "admin_post_nopriv_parcs_ht_track_guide_click") !== false, 'Anonymous public guide clicks have a dedicated endpoint');
 guide_stats_contract(strpos($stats_php, 'ON DUPLICATE KEY UPDATE clicks = clicks + 1') !== false, 'Click increments are atomic in the dedicated statistics table');
@@ -21,6 +21,7 @@ guide_stats_contract(strpos($stats_php, 'UNIQUE KEY guide_event') !== false, 'Cl
 guide_stats_contract(strpos($stats_php, "array('view','download')") !== false, 'Only Consult and Download actions are counted');
 guide_stats_contract(strpos($stats_php, "array('fr','de','en')") !== false, 'Click language is limited to FR DE EN');
 guide_stats_contract(strpos($stats_php, 'guide_stats_range') !== false && strpos($stats_php, "'7'=>'7 jours'") !== false && strpos($stats_php, "'30'=>'30 jours'") !== false, 'Admin statistics provide useful period filters');
+guide_stats_contract(strpos($stats_php, 'canonical_id_map()') !== false && strpos($stats_php, "'canonical_id'") !== false, 'Historical seasonal ids are aggregated into the permanent guide id');
 guide_stats_contract(strpos($stats_php, 'adresse IP') !== false && stripos($stats_php, 'REMOTE_ADDR') === false && stripos($stats_php, 'setcookie') === false, 'Analytics explicitly avoid storing IP addresses or cookies');
 guide_stats_contract(strpos($guides_php, "name=\"<?php echo esc_attr(\$base.'[id]');?>\"") !== false, 'Saved guides carry their permanent id through the admin form');
 guide_stats_contract(strpos($guides_php, 'data-guide-action="view"') !== false && strpos($guides_php, 'data-guide-action="download"') !== false, 'Both public guide buttons expose their distinct tracking action');
@@ -45,12 +46,17 @@ $id1 = Parcs_HT_Guide_Stats::allocate_id();
 $id2 = Parcs_HT_Guide_Stats::allocate_id();
 guide_stats_contract($id1 === 'guide_000001' && $id2 === 'guide_000002', 'First two created guides receive deterministic unique ids');
 
-$store = array('version'=>3,'seasons'=>array('2026'=>array('guides'=>array(
-    array('id'=>$id1,'cycle'=>'cycle1','title'=>array('fr'=>'Guide A')),
-    array('id'=>$id2,'cycle'=>'cycle2','title'=>array('fr'=>'Guide B')),
-))));
+$store = array(
+    'version'=>4,
+    'library'=>array('guides'=>array(
+        array('id'=>$id1,'legacy_ids'=>array(),'cycle'=>'cycle1','title'=>array('fr'=>'Guide A')),
+        array('id'=>$id2,'legacy_ids'=>array(),'cycle'=>'cycle2','title'=>array('fr'=>'Guide B')),
+    )),
+    'years'=>array('2026'=>array('enabled'=>array($id1=>'1',$id2=>'1'))),
+);
 Parcs_HT_Guide_Stats::sync_metadata_from_store($store);
-$store['seasons']['2026']['guides'] = array($store['seasons']['2026']['guides'][1]);
+$store['library']['guides'] = array($store['library']['guides'][1]);
+$store['years']['2026']['enabled'] = array($id2=>'1');
 Parcs_HT_Guide_Stats::sync_metadata_from_store($store);
 $meta = get_option(Parcs_HT_Guide_Stats::META_OPTION, array());
 guide_stats_contract(!empty($meta['guides'][$id1]['deleted_at']), 'Deleting a guide archives its id instead of erasing statistical memory');
@@ -62,7 +68,7 @@ $id4 = Parcs_HT_Guide_Stats::allocate_id();
 guide_stats_contract($id4 === 'guide_000004', 'Reclaiming an old reserved id never moves the new-id counter backwards');
 
 $clone = Parcs_HT_Guide_Stats::clone_library_with_new_ids(array('guides'=>array(array('id'=>$id2,'title'=>array('fr'=>'Copie')))));
-guide_stats_contract($clone['guides'][0]['id'] === 'guide_000005' && $clone['guides'][0]['id'] !== $id2, 'Season duplication creates a fresh id instead of copying the source id');
+guide_stats_contract($clone['guides'][0]['id'] === $id2, 'Season duplication keeps the same permanent guide id');
 
 guide_stats_contract(
     Parcs_HT_Guide_Stats::tracking_token($id2, 'view', 'fr', '2026') !== Parcs_HT_Guide_Stats::tracking_token($id2, 'download', 'fr', '2026'),
