@@ -306,11 +306,16 @@ final class Parcs_HT_Pedagogical_Guides {
         if (!preg_match('/^20\d{2}$/', $year)) $year = self::current_year();
         $store = self::store();
         $library = self::normalize_library($store['library'] ?? self::defaults());
+        $year_is_configured = isset($store['years'][$year]) && is_array($store['years'][$year]);
         $enabled = (array)($store['years'][$year]['enabled'] ?? array());
         foreach ($library['guides'] as $index => $guide) {
             $id = sanitize_key($guide['id'] ?? '');
             if ($id !== '' && array_key_exists($id, $enabled)) {
                 $library['guides'][$index]['enabled'] = (string)$enabled[$id] === '1' ? '1' : '0';
+            } elseif ($year_is_configured) {
+                // Un guide ajouté plus tard ne doit pas apparaître rétroactivement
+                // dans une année déjà configurée.
+                $library['guides'][$index]['enabled'] = '0';
             }
         }
         return $library;
