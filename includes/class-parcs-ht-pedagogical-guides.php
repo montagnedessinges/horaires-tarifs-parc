@@ -2,19 +2,20 @@
 
 if (!defined('ABSPATH')) { exit; }
 
-/** Bibliothèque de guides pédagogiques multilingues, enregistrée par saison. */
+/** Bibliothèque pérenne de guides pédagogiques multilingues, avec visibilité configurable par année. */
 final class Parcs_HT_Pedagogical_Guides {
     const OPTION = 'parcs_ht_pedagogical_guides';
     const PAGE = 'parcs-ht-pedagogical-guides';
-    const STORE_VERSION = 3;
+    const STORE_VERSION = 4;
 
     private static $pending_duplicate = null;
 
     public static function init() {
-        add_action('admin_menu', array(__CLASS__, 'menu'));
+        // L'administration canonique est l'écran métier 1.17.8. L'ancien écran
+        // embarqué reste disponible comme code de compatibilité, mais il n'enregistre
+        // plus de menu ni de panneau parallèle.
+        add_action('admin_init', array(__CLASS__, 'maybe_upgrade_store'), 1);
         add_action('admin_post_parcs_ht_save_pedagogical_guides', array(__CLASS__, 'save'));
-        add_action('admin_enqueue_scripts', array(__CLASS__, 'admin_assets'));
-        add_action('admin_footer', array(__CLASS__, 'embedded_admin_panel'), 5);
         add_action('admin_post_parcs_ht_duplicate_season', array(__CLASS__, 'prepare_season_duplicate'), 5);
         add_action('updated_option', array(__CLASS__, 'complete_season_duplicate'), 20, 3);
         add_action('wp_enqueue_scripts', array(__CLASS__, 'register_assets'));
@@ -75,8 +76,15 @@ final class Parcs_HT_Pedagogical_Guides {
             if (!in_array($status, array('available','new','coming'), true)) $status = 'available';
             $cycle = sanitize_key($guide['cycle'] ?? '');
             if (!isset($catalog[$cycle])) $cycle = 'cycle1';
+            $id = sanitize_key($guide['id'] ?? '');
+            $legacy_ids = array();
+            foreach ((array)($guide['legacy_ids'] ?? array()) as $legacy_id) {
+                $legacy_id = sanitize_key($legacy_id);
+                if ($legacy_id !== '' && $legacy_id !== $id) $legacy_ids[] = $legacy_id;
+            }
             $out['guides'][] = array(
-                'id'=>sanitize_key($guide['id'] ?? ''),
+                'id'=>$id,
+                'legacy_ids'=>array_values(array_unique($legacy_ids)),
                 'enabled'=>(string)($guide['enabled'] ?? '0') === '1' ? '1' : '0',
                 'cycle'=>$cycle,
                 'languages'=>$languages,
@@ -91,16 +99,197 @@ final class Parcs_HT_Pedagogical_Guides {
         return $out;
     }
 
-    private static function store() {
-        $saved = get_option(self::OPTION, array());
-        if (is_array($saved) && isset($saved['seasons']) && is_array($saved['seasons'])) return array('version'=>self::STORE_VERSION, 'seasons'=>$saved['seasons']);
-        $legacy = self::normalize_library($saved);
-        $seasons = array();
-        if (class_exists('Parcs_HT_Defaults')) {
-            $all = Parcs_HT_Defaults::all_settings();
-            foreach (array_keys((array)($all['seasons'] ?? array())) as $year) $seasons[(string)$year] = $legacy;
+    private static function guide_signature($guide) {
+        $guide = is_array($guide) ? $guide : array();
+        $pdf = trim((string)($guide['pdf_url'] ?? ''));
+        if ($pdf !== '') return 'pdf:' . strtolower($pdf);
+        return 'content:' . sha1(serialize(array(
+            sanitize_key($guide['cycle'] ?? ''),
+            self::clean_translations($guide['title'] ?? array()),
+            esc_url_raw((string)($guide['cover_url'] ?? '')),
+        )));
+    }
+
+    private static function normalize_year_settings($years, $library) {
+        $valid_ids = array();
+        foreach ((array)($library['guides'] ?? array()) as $guide) {
+            $id = sanitize_key(is_array($guide) ? ($guide['id'] ?? '') : '');
+            if ($id !== '') $valid_ids[$id] = true;
         }
-        return array('version'=>self::STORE_VERSION, 'seasons'=>$seasons);
+        $out = array();
+        foreach ((array)$years as $year => $config) {
+            if (!preg_match('/^20\\d{2}$/', (string)$year)) continue;
+            $enabled = array();
+            foreach ((array)(is_array($config) ? ($config['enabled'] ?? array()) : array()) as $id => $value) {
+                $id = sanitize_key($id);
+                if ($id !== '' && isset($valid_ids[$id])) $enabled[$id] = (string)$value === '1' ? '1' : '0';
+            }
+            $out[(string)$year] = array('enabled'=>$enabled);
+        }
+        return $out;
+    }
+
+    private static function convert_legacy_store($saved) {
+        if (is_array($saved) && (int)($saved['version'] ?? 0) >= self::STORE_VERSION && isset($saved['library'])) {
+            $library = self::normalize_library($saved['library']);
+            return array(
+                'version'=>self::STORE_VERSION,
+                'library'=>$library,
+                'years'=>self::normalize_year_settings($saved['years'] ?? array(), $library),
+            );
+        }
+
+        $source_seasons = is_array($saved) && isset($saved['seasons']) && is_array($saved['seasons'])
+            ? $saved['seasons']
+            : array();
+        if (!$source_seasons) {
+            $legacy = self::normalize_library($saved);
+            $years = array();
+            if (class_exists('Parcs_HT_Defaults')) {
+                $all = Parcs_HT_Defaults::all_settings();
+                foreach (array_keys((array)($all['seasons'] ?? array())) as $year) {
+                    if (!preg_match('/^20\\d{2}$/', (string)$year)) continue;
+                    $enabled = array();
+                    foreach ($legacy['guides'] as $guide) {
+                        $id = sanitize_key($guide['id'] ?? '');
+                        if ($id !== '') $enabled[$id] = (string)($guide['enabled'] ?? '0') === '1' ? '1' : '0';
+                    }
+                    $years[(string)$year] = array('enabled'=>$enabled);
+                }
+            }
+            return array('version'=>self::STORE_VERSION, 'library'=>$legacy, 'years'=>$years);
+        }
+
+        ksort($source_seasons, SORT_NUMERIC);
+        $canonical = array();
+        $order = array();
+        $id_to_key = array();
+        $signature_to_key = array();
+        $year_states = array();
+
+        foreach ($source_seasons as $year => $raw_library) {
+            if (!preg_match('/^20\\d{2}$/', (string)$year)) continue;
+            $library = self::normalize_library($raw_library);
+            foreach ($library['guides'] as $index => $guide) {
+                $id = sanitize_key($guide['id'] ?? '');
+                $signature = self::guide_signature($guide);
+                if ($id !== '' && isset($id_to_key[$id])) {
+                    $key = $id_to_key[$id];
+                } elseif ($signature !== '' && isset($signature_to_key[$signature])) {
+                    $key = $signature_to_key[$signature];
+                } else {
+                    $key = $id !== '' ? 'id:' . $id : 'legacy:' . (string)$year . ':' . (string)$index . ':' . $signature;
+                    $order[] = $key;
+                }
+
+                $previous = isset($canonical[$key]) && is_array($canonical[$key]) ? $canonical[$key] : array();
+                $canonical_id = sanitize_key($previous['id'] ?? '');
+                if ($canonical_id === '') $canonical_id = $id;
+                $legacy_ids = array_values(array_unique(array_filter(array_merge(
+                    (array)($previous['legacy_ids'] ?? array()),
+                    (array)($guide['legacy_ids'] ?? array()),
+                    ($id !== '' && $canonical_id !== '' && $id !== $canonical_id) ? array($id) : array()
+                ))));
+
+                $next = $guide;
+                $next['id'] = $canonical_id;
+                $next['legacy_ids'] = $legacy_ids;
+                $canonical[$key] = $next;
+
+                if ($id !== '') $id_to_key[$id] = $key;
+                if ($canonical_id !== '') $id_to_key[$canonical_id] = $key;
+                if ($signature !== '') $signature_to_key[$signature] = $key;
+                $year_states[(string)$year][$key] = (string)($guide['enabled'] ?? '0') === '1' ? '1' : '0';
+            }
+        }
+
+        $guides = array();
+        $key_to_id = array();
+        foreach ($order as $key) {
+            if (!isset($canonical[$key])) continue;
+            $guide = $canonical[$key];
+            $guides[] = $guide;
+            $id = sanitize_key($guide['id'] ?? '');
+            if ($id !== '') $key_to_id[$key] = $id;
+        }
+        $library = self::normalize_library(array('guides'=>$guides));
+
+        $years = array();
+        foreach ($year_states as $year => $states) {
+            $enabled = array();
+            foreach ($states as $key => $value) {
+                if (isset($key_to_id[$key])) $enabled[$key_to_id[$key]] = $value;
+            }
+            $years[$year] = array('enabled'=>$enabled);
+        }
+
+        return array('version'=>self::STORE_VERSION, 'library'=>$library, 'years'=>$years);
+    }
+
+    private static function store() {
+        return self::convert_legacy_store(get_option(self::OPTION, array()));
+    }
+
+    public static function maybe_upgrade_store() {
+        if (!current_user_can('manage_options')) return;
+        $saved = get_option(self::OPTION, array());
+        $store = self::convert_legacy_store($saved);
+        $seen = array();
+        $remap = array();
+        $changed = !is_array($saved)
+            || (int)($saved['version'] ?? 0) !== self::STORE_VERSION
+            || !isset($saved['library'])
+            || !isset($saved['years']);
+
+        foreach ($store['library']['guides'] as $index => $guide) {
+            $old_id = sanitize_key($guide['id'] ?? '');
+            $id = $old_id;
+            if (!class_exists('Parcs_HT_Guide_Stats')) continue;
+            if (!Parcs_HT_Guide_Stats::is_valid_id($id) || isset($seen[$id])) {
+                $id = Parcs_HT_Guide_Stats::allocate_id();
+                $changed = true;
+            } else {
+                $id = Parcs_HT_Guide_Stats::claim_id($id);
+            }
+            $seen[$id] = true;
+            if ($old_id !== '' && $old_id !== $id) $remap[$old_id] = $id;
+            $store['library']['guides'][$index]['id'] = $id;
+
+            $legacy_ids = array();
+            foreach ((array)($guide['legacy_ids'] ?? array()) as $legacy_id) {
+                $legacy_id = sanitize_key($legacy_id);
+                if (!Parcs_HT_Guide_Stats::is_valid_id($legacy_id) || $legacy_id === $id) continue;
+                $legacy_ids[] = Parcs_HT_Guide_Stats::claim_id($legacy_id);
+            }
+            $store['library']['guides'][$index]['legacy_ids'] = array_values(array_unique($legacy_ids));
+        }
+
+        foreach ($store['years'] as $year => $config) {
+            $enabled = array();
+            foreach ((array)($config['enabled'] ?? array()) as $id => $value) {
+                $target = isset($remap[$id]) ? $remap[$id] : sanitize_key($id);
+                if ($target !== '') $enabled[$target] = (string)$value === '1' ? '1' : '0';
+            }
+            $store['years'][$year] = array('enabled'=>$enabled);
+        }
+
+        if ($changed || $store !== $saved) update_option(self::OPTION, $store, false);
+    }
+
+    public static function canonical_id_map() {
+        $map = array();
+        $store = self::store();
+        foreach ($store['library']['guides'] as $guide) {
+            if (!is_array($guide)) continue;
+            $id = sanitize_key($guide['id'] ?? '');
+            if ($id === '') continue;
+            $map[$id] = $id;
+            foreach ((array)($guide['legacy_ids'] ?? array()) as $legacy_id) {
+                $legacy_id = sanitize_key($legacy_id);
+                if ($legacy_id !== '') $map[$legacy_id] = $id;
+            }
+        }
+        return $map;
     }
 
     private static function current_year() {
@@ -114,9 +303,17 @@ final class Parcs_HT_Pedagogical_Guides {
 
     public static function settings($year = '') {
         $year = (string)$year;
-        if (!preg_match('/^20\d{2}$/', $year)) $year = self::current_year();
+        if (!preg_match('/^20\\d{2}$/', $year)) $year = self::current_year();
         $store = self::store();
-        return isset($store['seasons'][$year]) ? self::normalize_library($store['seasons'][$year]) : self::defaults();
+        $library = self::normalize_library($store['library'] ?? self::defaults());
+        $enabled = (array)($store['years'][$year]['enabled'] ?? array());
+        foreach ($library['guides'] as $index => $guide) {
+            $id = sanitize_key($guide['id'] ?? '');
+            if ($id !== '' && array_key_exists($id, $enabled)) {
+                $library['guides'][$index]['enabled'] = (string)$enabled[$id] === '1' ? '1' : '0';
+            }
+        }
+        return $library;
     }
 
     public static function menu() {
@@ -171,13 +368,37 @@ final class Parcs_HT_Pedagogical_Guides {
         if (!current_user_can('manage_options')) wp_die('Accès refusé.');
         check_admin_referer('parcs_ht_save_pedagogical_guides');
         $year = isset($_POST['season_year']) ? sanitize_text_field(wp_unslash($_POST['season_year'])) : '';
-        if (!preg_match('/^20\d{2}$/', $year)) wp_die('Année invalide.');
+        if (!preg_match('/^20\\d{2}$/', $year)) wp_die('Année invalide.');
         // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Tableau imbriqué nettoyé champ par champ par sanitize_posted_library().
         $raw = isset($_POST['guides']) && is_array($_POST['guides']) ? wp_unslash($_POST['guides']) : array();
+        $posted = self::sanitize_posted_library($raw);
         $store = self::store();
-        $store['seasons'][$year] = self::sanitize_posted_library($raw);
+
+        $existing = array();
+        foreach ((array)($store['library']['guides'] ?? array()) as $guide) {
+            if (!is_array($guide)) continue;
+            $id = sanitize_key($guide['id'] ?? '');
+            if ($id !== '') $existing[$id] = $guide;
+        }
+
+        $enabled = array();
+        foreach ($posted['guides'] as $index => $guide) {
+            $id = sanitize_key($guide['id'] ?? '');
+            if ($id !== '' && isset($existing[$id])) {
+                $posted['guides'][$index]['legacy_ids'] = (array)($existing[$id]['legacy_ids'] ?? array());
+            }
+            if ($id !== '') $enabled[$id] = (string)($guide['enabled'] ?? '0') === '1' ? '1' : '0';
+        }
+
+        $store['version'] = self::STORE_VERSION;
+        $store['library'] = self::normalize_library($posted);
+        $store['years'][$year] = array('enabled'=>$enabled);
         update_option(self::OPTION, $store, false);
-        wp_safe_redirect(add_query_arg(array('page'=>Parcs_HT_Admin::PAGE,'season'=>$year,'tab'=>'htp-guides','guides-updated'=>'1'), admin_url('admin.php')));
+
+        $page = class_exists('Parcs_HT_Admin_Guides_1178') ? Parcs_HT_Admin_Guides_1178::PAGE : Parcs_HT_Admin::PAGE;
+        $args = array('page'=>$page,'season'=>$year,'guides-updated'=>'1');
+        if ($page === Parcs_HT_Admin::PAGE) $args['tab'] = 'htp-guides';
+        wp_safe_redirect(add_query_arg($args, admin_url('admin.php')));
         exit;
     }
 
@@ -201,10 +422,10 @@ final class Parcs_HT_Pedagogical_Guides {
         self::$pending_duplicate = null;
         if (isset($old_value['seasons'][$target]) || !isset($new_value['seasons'][$target])) return;
         $store = self::store();
-        if (!isset($store['seasons'][$source])) return;
-        $copy = $store['seasons'][$source];
-        if (class_exists('Parcs_HT_Guide_Stats')) $copy = Parcs_HT_Guide_Stats::clone_library_with_new_ids($copy);
-        $store['seasons'][$target] = $copy;
+        $source_config = isset($store['years'][$source]) && is_array($store['years'][$source])
+            ? $store['years'][$source]
+            : array('enabled'=>array());
+        $store['years'][$target] = $source_config;
         update_option(self::OPTION, $store, false);
     }
 
@@ -292,7 +513,7 @@ final class Parcs_HT_Pedagogical_Guides {
         $s = self::settings($year);?>
         <div class="htp-guides-admin<?php echo $embedded?' htp-guides-admin-embedded':'';?>">
             <?php if ($embedded):?><h2>Guides pédagogiques — <?php echo esc_html($year);?></h2><?php else:?><h1>Guides pédagogiques — <?php echo esc_html($year);?></h1><?php endif;?>
-            <p class="description">Chaque document est rattaché directement à un cycle/niveau et à une ou plusieurs langues. Les filtres publics sont créés automatiquement uniquement avec les cycles et langues réellement présents. Lors d’une duplication d’année, les contenus sont copiés à l’identique mais chaque copie reçoit un nouvel identifiant statistique.</p>
+            <p class="description">Les documents appartiennent à une bibliothèque permanente commune à toutes les années. L’année sélectionnée ne pilote que leur affichage public ; les identifiants restent stables et les statistiques continuent d’être historisées par année.</p>
             <?php if (isset($_GET['guides-updated'])): /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Message de confirmation uniquement. */?><div class="notice notice-success inline"><p>Les guides pédagogiques ont été enregistrés.</p></div><?php endif;?>
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php'));?>">
                 <input type="hidden" name="action" value="parcs_ht_save_pedagogical_guides"><input type="hidden" name="season_year" value="<?php echo esc_attr($year);?>"><?php wp_nonce_field('parcs_ht_save_pedagogical_guides');?>
