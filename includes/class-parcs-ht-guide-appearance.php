@@ -52,7 +52,10 @@ final class Parcs_HT_Guide_Appearance {
         );
         update_option(self::OPTION, $settings, false);
         $year = isset($_POST['season_year']) ? sanitize_text_field(wp_unslash($_POST['season_year'])) : '';
-        wp_safe_redirect(add_query_arg(array('page'=>Parcs_HT_Admin::PAGE,'season'=>$year,'tab'=>'htp-guides','guide-appearance-updated'=>'1'), admin_url('admin.php')));
+        $page = class_exists('Parcs_HT_Admin_Guides_1178') ? Parcs_HT_Admin_Guides_1178::PAGE : Parcs_HT_Admin::PAGE;
+        $args = array('page'=>$page,'season'=>$year,'guide-appearance-updated'=>'1');
+        if ($page === Parcs_HT_Admin::PAGE) $args['tab'] = 'htp-guides';
+        wp_safe_redirect(add_query_arg($args, admin_url('admin.php')));
         exit;
     }
 
