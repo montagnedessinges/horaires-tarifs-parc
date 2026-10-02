@@ -58,7 +58,7 @@
     root.on('click','[data-remove-guide]',function(){
         var row = $(this).closest('[data-guide-row]');
         var title = $.trim(row.find('[data-guide-summary-title]').text());
-        if (window.confirm('Supprimer « ' + title + ' » de cette saison ? Les statistiques historiques associées à son ID resteront conservées.')) row.remove();
+        if (window.confirm('Supprimer « ' + title + ' » de la bibliothèque permanente ? Le document sera retiré de toutes les années, mais les statistiques historiques associées à son ID resteront conservées.')) row.remove();
     });
 
     root.on('click','[data-media-field]',function(event){
