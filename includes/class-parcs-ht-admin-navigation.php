@@ -113,8 +113,37 @@ final class Parcs_HT_Admin_Navigation {
             self::redirect(add_query_arg(array('page'=>'parcs-ht-shortcodes'), admin_url('admin.php')));
         }
 
+        // 1.19.4 : tous les anciens onglets encore susceptibles d'ouvrir le grand
+        // écran historique sont rabattus vers leur écran métier canonique.
+        if ($page === Parcs_HT_Admin::PAGE && $tab === 'htp-quote' && class_exists('Parcs_HT_Admin_Group_Quotes_1177')) {
+            $args = array('page'=>Parcs_HT_Admin_Group_Quotes_1177::PAGE);
+            if ($year !== '') $args['season'] = $year;
+            self::redirect(add_query_arg($args, admin_url('admin.php')));
+        }
+        if ($page === Parcs_HT_Admin::PAGE && $tab === 'htp-guides' && class_exists('Parcs_HT_Admin_Guides_1178')) {
+            $args = array('page'=>Parcs_HT_Admin_Guides_1178::PAGE);
+            if ($year !== '') $args['season'] = $year;
+            foreach (array('guides-updated','guide-appearance-updated','guide_stats_range') as $key) {
+                if (isset($_GET[$key])) $args[$key] = sanitize_text_field(wp_unslash($_GET[$key])); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- paramètres de lecture/retour uniquement.
+            }
+            self::redirect(add_query_arg($args, admin_url('admin.php')));
+        }
+        if ($page === Parcs_HT_Admin::PAGE && $tab === 'htp-alerts' && class_exists('Parcs_HT_Admin_Communication_1179')) {
+            self::redirect(add_query_arg(array('page'=>Parcs_HT_Admin_Communication_1179::POPUP_PAGE), admin_url('admin.php')));
+        }
+        if ($page === Parcs_HT_Admin::PAGE && $tab === 'htp-advent' && class_exists('Parcs_HT_Admin_Communication_1179')) {
+            self::redirect(add_query_arg(array('page'=>Parcs_HT_Admin_Communication_1179::ADVENT_PAGE), admin_url('admin.php')));
+        }
+
         if (isset(self::$bridges[$page])) {
             self::redirect(self::legacy_url(self::$bridges[$page], $year));
+        }
+
+        // Aucune URL d'onglet historique inconnue ne doit afficher l'ancien écran.
+        if ($page === Parcs_HT_Admin::PAGE && $tab !== '') {
+            $args = array('page'=>class_exists('Parcs_HT_Admin_Overview') ? Parcs_HT_Admin_Overview::PAGE : 'parcs-ht-overview');
+            if ($year !== '') $args['season'] = $year;
+            self::redirect(add_query_arg($args, admin_url('admin.php')));
         }
     }
 
@@ -140,8 +169,12 @@ final class Parcs_HT_Admin_Navigation {
         if (empty($submenu[$parent]) || !is_array($submenu[$parent])) return;
 
         $items = array();
+        $seen_slugs = array();
         foreach ($submenu[$parent] as $item) {
-            if (isset($item[2]) && $item[2] === $parent) continue;
+            if (!isset($item[2]) || $item[2] === $parent) continue;
+            $slug = (string)$item[2];
+            if (isset($seen_slugs[$slug])) continue;
+            $seen_slugs[$slug] = true;
             $items[] = $item;
         }
 
