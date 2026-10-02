@@ -118,7 +118,7 @@ final class Parcs_HT_Pedagogical_Guides {
         }
         $out = array();
         foreach ((array)$years as $year => $config) {
-            if (!preg_match('/^20\\d{2}$/', (string)$year)) continue;
+            if (!preg_match('/^20\d{2}$/', (string)$year)) continue;
             $enabled = array();
             foreach ((array)(is_array($config) ? ($config['enabled'] ?? array()) : array()) as $id => $value) {
                 $id = sanitize_key($id);
@@ -148,7 +148,7 @@ final class Parcs_HT_Pedagogical_Guides {
             if (class_exists('Parcs_HT_Defaults')) {
                 $all = Parcs_HT_Defaults::all_settings();
                 foreach (array_keys((array)($all['seasons'] ?? array())) as $year) {
-                    if (!preg_match('/^20\\d{2}$/', (string)$year)) continue;
+                    if (!preg_match('/^20\d{2}$/', (string)$year)) continue;
                     $enabled = array();
                     foreach ($legacy['guides'] as $guide) {
                         $id = sanitize_key($guide['id'] ?? '');
@@ -168,7 +168,7 @@ final class Parcs_HT_Pedagogical_Guides {
         $year_states = array();
 
         foreach ($source_seasons as $year => $raw_library) {
-            if (!preg_match('/^20\\d{2}$/', (string)$year)) continue;
+            if (!preg_match('/^20\d{2}$/', (string)$year)) continue;
             $library = self::normalize_library($raw_library);
             foreach ($library['guides'] as $index => $guide) {
                 $id = sanitize_key($guide['id'] ?? '');
@@ -303,7 +303,7 @@ final class Parcs_HT_Pedagogical_Guides {
 
     public static function settings($year = '') {
         $year = (string)$year;
-        if (!preg_match('/^20\\d{2}$/', $year)) $year = self::current_year();
+        if (!preg_match('/^20\d{2}$/', $year)) $year = self::current_year();
         $store = self::store();
         $library = self::normalize_library($store['library'] ?? self::defaults());
         $enabled = (array)($store['years'][$year]['enabled'] ?? array());
@@ -368,7 +368,7 @@ final class Parcs_HT_Pedagogical_Guides {
         if (!current_user_can('manage_options')) wp_die('Accès refusé.');
         check_admin_referer('parcs_ht_save_pedagogical_guides');
         $year = isset($_POST['season_year']) ? sanitize_text_field(wp_unslash($_POST['season_year'])) : '';
-        if (!preg_match('/^20\\d{2}$/', $year)) wp_die('Année invalide.');
+        if (!preg_match('/^20\d{2}$/', $year)) wp_die('Année invalide.');
         // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Tableau imbriqué nettoyé champ par champ par sanitize_posted_library().
         $raw = isset($_POST['guides']) && is_array($_POST['guides']) ? wp_unslash($_POST['guides']) : array();
         $posted = self::sanitize_posted_library($raw);
