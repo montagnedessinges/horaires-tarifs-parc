@@ -155,6 +155,7 @@ final class Parcs_HT_Tariff_Public_Fixes {
             if ($key === 'individual') {
                 $html .= self::visitor_payment_strip($tariffs, $language, 'individual', $label);
                 $html .= self::display_call('price_table', array($tariffs, 'individual', $language, array('tickets_url'=>$tickets_url)));
+                $html .= self::display_call('info_callouts', array($tariffs['info_blocks']['individual'] ?? array(), $language, '#006757'));
                 if ($tickets_url !== '') {
                     $html .= '<div class="parcs-ht-tariff-ui__actions"><a class="parcs-ht-tariff-ui__button is-primary" href="' . esc_url($tickets_url) . '">' . esc_html($d['tickets'] ?? self::t($language, 'Acheter vos billets', 'Buy tickets', 'Tickets kaufen')) . '</a></div>';
                 }
@@ -163,6 +164,7 @@ final class Parcs_HT_Tariff_Public_Fixes {
                 $note = self::tr($tariffs['notes'] ?? array(), $language, '');
                 if ($note !== '') $html .= '<p class="parcs-ht-tariff-ui__note is-before-table">' . esc_html($note) . '</p>';
                 $html .= self::display_call('price_table', array($tariffs, 'reduced', $language, array()));
+                $html .= self::display_call('info_callouts', array($tariffs['info_blocks']['reduced'] ?? array(), $language, '#006757'));
             } else {
                 $html .= self::display_call('price_table', array($tariffs, 'groups', $language, array()));
                 $html .= self::display_call('public_group_extras', array($general, $language, $d));
