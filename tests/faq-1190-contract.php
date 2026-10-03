@@ -48,6 +48,15 @@ release_contract_require_all($feature, array(
     'data-htp-faq-secondary',
     'data-htp-faq-secondary-item',
     'parcs-ht-faq-source',
+    'parcs-ht-faq-button',
+    'button_label',
+    'translated_url',
+    'Lien de redirection FR',
+    'Weiterleitungslink DE',
+    'Redirect link EN',
+    'Texte bouton FR',
+    'Button-Text DE',
+    'Button text EN',
     'regles-du-parc',
     '<details class=',
 ), 'FAQ public feature');
@@ -89,7 +98,14 @@ release_contract_require_all($csv, array(
     'Kurzantwort DE',
     'Question EN',
     'Short answer EN',
-), 'FAQ CSV 1.19.8 rules-only workflow');
+    'Lien de redirection FR',
+    'Weiterleitungslink DE',
+    'Redirect link EN',
+    'Texte bouton FR',
+    'Button-Text DE',
+    'Button text EN',
+    'button_label',
+), 'FAQ CSV 1.19.9 buttons workflow');
 
 release_contract_forbid($csv, array(
     'wp_safe_remote_post',
@@ -186,4 +202,4 @@ release_contract_require_all($registry, array(
 
 release_contract_require_all($uninstall, array('parcs_ht_faq', 'parcs_ht_faq_revisions', 'parcs_ht_faq_contact'), 'FAQ uninstall');
 
-echo "FAQ 1.19.8 secondary rules-only contract OK.\n";
+echo "FAQ 1.19.9 multilingual action buttons contract OK.\n";
