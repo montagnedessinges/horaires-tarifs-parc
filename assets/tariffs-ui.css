@@ -44,6 +44,24 @@
 .parcs-ht-tariff-ui__note.is-before-table{margin-top:2px;margin-bottom:14px}
 .parcs-ht-tariff-ui__info{border-left-color:var(--htp-primary,#006757)}
 
+.parcs-ht-tariff-ui__callouts{display:grid;gap:8px;width:100%;margin:14px 0 18px}
+.parcs-ht-tariff-ui__callout{
+  position:relative;
+  margin:0;
+  padding:10px 12px 10px 15px;
+  border:0!important;
+  border-left:4px solid var(--htp-tariff-callout-accent,#006757)!important;
+  border-radius:0 8px 8px 0;
+  background:color-mix(in srgb,var(--htp-tariff-callout-accent,#006757) 8%,transparent);
+  box-shadow:none!important;
+  color:inherit!important;
+}
+@supports not (background:color-mix(in srgb,#000 10%,transparent)){
+  .parcs-ht-tariff-ui__callout{background:transparent}
+}
+.parcs-ht-tariff-ui__callout-title{margin:0 0 3px;color:inherit;font:inherit;font-size:15px;font-weight:850;line-height:1.25}
+.parcs-ht-tariff-ui__callout p{margin:0;color:inherit;font:inherit;font-size:14px;line-height:1.45;opacity:.9}
+
 .parcs-ht-tariff-ui__list{display:grid;gap:0;width:100%;border-top:1px solid var(--htp-ui-border,#d7e1dd)}
 .parcs-ht-tariff-ui__column-row,
 .parcs-ht-tariff-ui__row{display:grid;grid-template-columns:minmax(0,1fr) minmax(230px,290px);align-items:center;gap:16px;min-width:0}
@@ -103,6 +121,10 @@
   .parcs-ht-tariff-ui__channel{font-size:10px}
   .parcs-ht-tariff-ui__price b{font-size:18px}
   .parcs-ht-tariff-ui__note,.parcs-ht-tariff-ui__info{font-size:13.5px;padding:10px 11px}
+  .parcs-ht-tariff-ui__callouts{gap:7px;margin:10px 0 16px}
+  .parcs-ht-tariff-ui__callout{padding:9px 10px 9px 12px}
+  .parcs-ht-tariff-ui__callout-title{font-size:14px}
+  .parcs-ht-tariff-ui__callout p{font-size:13px;line-height:1.4}
   .parcs-ht-tariff-ui__button{min-height:44px;font-size:14px}
 }
 @media(max-width:360px){
