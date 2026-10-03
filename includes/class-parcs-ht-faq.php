@@ -86,8 +86,9 @@ final class Parcs_HT_FAQ {
                 'visibility'=>'FAQ publique / IA',
                 'dynamic'=>'0',
                 'source_url'=>'',
-                'public_url'=>'',
+                'public_url'=>self::triple('', '', ''),
                 'link_label'=>self::triple('', '', ''),
+                'button_label'=>self::triple('', '', ''),
                 'response_mode'=>'direct',
                 'verified'=>sanitize_text_field((string)($row['last_verified'] ?? '')),
                 'status'=>'Validé',
@@ -218,15 +219,29 @@ final class Parcs_HT_FAQ {
         return $labels;
     }
 
-    private static function public_url($row) {
-        $candidate = self::value_from($row, array('Lien public','URL publique','Public URL'), '');
-        if ($candidate === '') $candidate = self::value_from($row, array('Source principale','Source'), '');
+    private static function safe_public_url($candidate) {
         $candidate = trim((string)$candidate);
         if (!preg_match('#^https://#i', $candidate)) return '';
         $url = esc_url_raw($candidate);
         $host = strtolower((string)wp_parse_url($url, PHP_URL_HOST));
         if ($host === '' || in_array($host, array('docs.google.com','drive.google.com','mail.google.com'), true)) return '';
         return $url;
+    }
+
+    private static function public_urls($row) {
+        $urls = self::triple('', '', '');
+        $aliases = array(
+            'fr'=>array('Lien de redirection FR','Lien public FR','URL publique FR','Public URL FR','Lien public','URL publique','Public URL'),
+            'de'=>array('Weiterleitungslink DE','Lien de redirection DE','Lien public DE','URL publique DE','Public URL DE'),
+            'en'=>array('Redirect link EN','Lien de redirection EN','Lien public EN','URL publique EN','Public URL EN'),
+        );
+        foreach ($aliases as $language => $headers) {
+            $urls[$language] = self::safe_public_url(self::value_from($row, $headers, ''));
+        }
+        if ($urls['fr'] === '') {
+            $urls['fr'] = self::safe_public_url(self::value_from($row, array('Source principale','Source'), ''));
+        }
+        return $urls;
     }
 
     private static function response_mode($row, $id, $category, $dynamic, $public_url) {
@@ -297,12 +312,21 @@ final class Parcs_HT_FAQ {
         $status_key = self::normalize_text($status);
         $visibility_key = self::normalize_text($visibility);
         $publishable = in_array($status_key, array('valide','publie','published'), true) && (strpos($visibility_key, 'faq-publique') !== false || strpos($visibility_key, 'public-faq') !== false);
-        $public_url = self::public_url($row);
-        $mode = self::response_mode($row, $id, $category, $dynamic, $public_url);
+        $public_url = self::public_urls($row);
+        $mode_url = $public_url['fr'] !== '' ? $public_url['fr'] : ($public_url['en'] !== '' ? $public_url['en'] : $public_url['de']);
+        $mode = self::response_mode($row, $id, $category, $dynamic, $mode_url);
         $link_label = self::default_link_label($category);
+        $button_label = self::triple('', '', '');
         foreach (array('fr'=>'FR','en'=>'EN','de'=>'DE') as $language => $suffix) {
             $custom = sanitize_text_field(self::value_from($row, array('Libellé du lien ' . $suffix, 'Libelle du lien ' . $suffix, 'Link label ' . $suffix), ''));
             if ($custom !== '') $link_label[$language] = $custom;
+
+            $button_aliases = array(
+                'fr'=>array('Texte bouton FR','Libellé bouton FR','Libelle bouton FR','Button text FR','Button label FR'),
+                'de'=>array('Button-Text DE','Texte bouton DE','Libellé bouton DE','Libelle bouton DE','Button text DE','Button label DE'),
+                'en'=>array('Button text EN','Texte bouton EN','Libellé bouton EN','Libelle bouton EN','Button-Text EN','Button label EN'),
+            );
+            $button_label[$language] = sanitize_text_field(self::value_from($row, $button_aliases[$language], ''));
         }
 
         return array(
@@ -318,6 +342,7 @@ final class Parcs_HT_FAQ {
             'source_url'=>esc_url_raw(self::value_from($row, array('Source principale','Source'), '')),
             'public_url'=>$public_url,
             'link_label'=>$link_label,
+            'button_label'=>$button_label,
             'response_mode'=>$mode,
             'verified'=>sanitize_text_field(self::value_from($row, array('Vérifié le','Verifie le','Verified'), '')),
             'status'=>$status,
@@ -647,6 +672,22 @@ final class Parcs_HT_FAQ {
         return (string)$fallback;
     }
 
+    private static function translated_url($value, $language) {
+        if (!is_array($value)) return self::safe_public_url($value);
+        if (isset($value[$language]) && trim((string)$value[$language]) !== '') {
+            return self::safe_public_url($value[$language]);
+        }
+        if (isset($value['fr']) && trim((string)$value['fr']) !== '') {
+            return self::safe_public_url($value['fr']);
+        }
+        foreach (array('en','de') as $fallback_language) {
+            if (isset($value[$fallback_language]) && trim((string)$value[$fallback_language]) !== '') {
+                return self::safe_public_url($value[$fallback_language]);
+            }
+        }
+        return '';
+    }
+
     private static function is_secondary_category($category) {
         return self::normalize_text((string)$category) === 'regles-du-parc';
     }
@@ -666,12 +707,16 @@ final class Parcs_HT_FAQ {
 
         $secondary_attr = $secondary ? ' data-htp-faq-secondary-item="1"' : '';
         $html = '<details class="parcs-ht-faq-item" data-htp-faq-item data-category="' . esc_attr($slug) . '" data-search="' . esc_attr($search) . '"' . $secondary_attr . '><summary>' . esc_html($item['_question']) . '</summary><div class="parcs-ht-faq-answer">' . wp_kses_post(wpautop($answer));
-        $url = (string)($item['public_url'] ?? '');
+        $url = self::translated_url($item['public_url'] ?? '', $language);
         $mode = (string)($item['response_mode'] ?? 'direct');
+        $button_label = self::translated($item['button_label'] ?? array(), $language, '');
         $link_rendered = false;
-        if ($url !== '' && in_array($mode, array('answer_link','canonical'), true)) {
+        if ($url !== '' && $button_label !== '') {
+            $html .= '<p class="parcs-ht-faq-action"><a class="parcs-ht-faq-button" href="' . esc_url($url) . '">' . esc_html($button_label) . '</a></p>';
+            $link_rendered = true;
+        } elseif ($url !== '' && in_array($mode, array('answer_link','canonical'), true)) {
             $label = $item['_link_label'] !== '' ? $item['_link_label'] : self::default_link_label((string)($item['category'] ?? ''))[$language];
-            $html .= '<p class="parcs-ht-faq-action"><a href="' . esc_url($url) . '">' . esc_html($label) . '</a></p>';
+            $html .= '<p class="parcs-ht-faq-action"><a class="parcs-ht-faq-button" href="' . esc_url($url) . '">' . esc_html($label) . '</a></p>';
             $link_rendered = true;
         }
         if ($secondary && $url !== '' && !$link_rendered) {

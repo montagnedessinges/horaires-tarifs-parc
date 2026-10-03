@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.19.8
+Stable tag: 1.19.9
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes, FAQ et outils du parc.
 
@@ -19,6 +19,14 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.19.9 =
+* Lit enfin les colonnes multilingues « Lien de redirection FR », « Weiterleitungslink DE » et « Redirect link EN » du CSV FAQ.
+* Ajoute les colonnes facultatives « Texte bouton FR », « Button-Text DE » et « Button text EN » pour afficher volontairement un bouton cliquable sous une réponse.
+* Le bouton utilise l’URL correspondant à la langue affichée ; une réponse directe sans libellé de bouton ne reçoit pas de bouton supplémentaire.
+* Les liens d’action déjà gérés par la FAQ (horaires, tarifs et réponses dynamiques) adoptent le même rendu de bouton.
+* Le style des boutons reste transparent et hérite des couleurs du thème.
+* Aucun changement sur les saisons, horaires, tarifs, devis, guides ou formulaires de contact.
 
 = 1.19.8 =
 * Corrige le périmètre de la catégorie secondaire « Règles du parc » : elle est alimentée uniquement par le CSV normal de l’onglet du parc.
