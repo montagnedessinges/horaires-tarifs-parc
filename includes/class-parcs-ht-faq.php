@@ -647,6 +647,39 @@ final class Parcs_HT_FAQ {
         return (string)$fallback;
     }
 
+    private static function is_secondary_category($category) {
+        return self::normalize_text((string)$category) === 'regles-du-parc';
+    }
+
+    private static function source_label($language) {
+        $labels = array('fr'=>'Source','en'=>'Source','de'=>'Quelle');
+        return $labels[$language] ?? $labels['fr'];
+    }
+
+    private static function render_item($item, $slug, $language, $secondary = false) {
+        $variants = isset($item['variants'][$language]) && is_array($item['variants'][$language]) ? $item['variants'][$language] : array();
+        $search = trim($item['_question'] . ' ' . implode(' ', $variants));
+        $answer = (string)$item['_answer'];
+        if ((string)($item['response_mode'] ?? 'direct') === 'canonical') {
+            $answer = self::canonical_answer((string)($item['category'] ?? ''), $language, $answer);
+        }
+
+        $secondary_attr = $secondary ? ' data-htp-faq-secondary-item="1"' : '';
+        $html = '<details class="parcs-ht-faq-item" data-htp-faq-item data-category="' . esc_attr($slug) . '" data-search="' . esc_attr($search) . '"' . $secondary_attr . '><summary>' . esc_html($item['_question']) . '</summary><div class="parcs-ht-faq-answer">' . wp_kses_post(wpautop($answer));
+        $url = (string)($item['public_url'] ?? '');
+        $mode = (string)($item['response_mode'] ?? 'direct');
+        $link_rendered = false;
+        if ($url !== '' && in_array($mode, array('answer_link','canonical'), true)) {
+            $label = $item['_link_label'] !== '' ? $item['_link_label'] : self::default_link_label((string)($item['category'] ?? ''))[$language];
+            $html .= '<p class="parcs-ht-faq-action"><a href="' . esc_url($url) . '">' . esc_html($label) . '</a></p>';
+            $link_rendered = true;
+        }
+        if ($secondary && $url !== '' && !$link_rendered) {
+            $html .= '<p class="parcs-ht-faq-source"><a href="' . esc_url($url) . '">' . esc_html(self::source_label($language)) . '</a></p>';
+        }
+        return $html . '</div></details>';
+    }
+
     public static function public_items($language = 'fr', $category_filter = '') {
         $settings = self::settings();
         $language = in_array($language, array('fr','en','de'), true) ? $language : 'fr';
@@ -687,9 +720,17 @@ final class Parcs_HT_FAQ {
         $groups = array();
         foreach ($items as $item) {
             $slug = self::normalize_text((string)($item['category'] ?? 'autres'));
-            if (!isset($groups[$slug])) $groups[$slug] = array('label'=>$item['_category'],'items'=>array());
+            if (!isset($groups[$slug])) {
+                $groups[$slug] = array(
+                    'label'=>$item['_category'],
+                    'items'=>array(),
+                    'secondary'=>self::is_secondary_category($slug),
+                );
+            }
             $groups[$slug]['items'][] = $item;
         }
+        $primary_groups = array_filter($groups, static function ($group) { return empty($group['secondary']); });
+        $secondary_groups = array_filter($groups, static function ($group) { return !empty($group['secondary']); });
 
         $html = '<section id="' . esc_attr($id) . '" class="parcs-ht-faq" data-htp-faq data-htp-lang="' . esc_attr($language) . '">';
         if ($show_title) {
@@ -698,35 +739,33 @@ final class Parcs_HT_FAQ {
         if ($show_search) {
             $html .= '<div class="parcs-ht-faq-search"><label for="' . esc_attr($id . '-search') . '">' . esc_html($texts['search']) . '</label><input id="' . esc_attr($id . '-search') . '" type="search" autocomplete="off" data-htp-faq-search placeholder="' . esc_attr($texts['search']) . '"></div>';
         }
-        if ($show_categories && count($groups) > 1) {
+        if ($show_categories && count($primary_groups) > 1) {
             $html .= '<div class="parcs-ht-faq-categories" role="group" aria-label="' . esc_attr($texts['all']) . '"><button type="button" class="is-active" data-htp-faq-category="" aria-pressed="true">' . esc_html($texts['all']) . '</button>';
-            foreach ($groups as $slug => $group) {
+            foreach ($primary_groups as $slug => $group) {
                 $html .= '<button type="button" data-htp-faq-category="' . esc_attr($slug) . '" aria-pressed="false">' . esc_html($group['label']) . '</button>';
             }
             $html .= '</div>';
         }
         $html .= '<div class="parcs-ht-faq-groups">';
-        foreach ($groups as $slug => $group) {
+        foreach ($primary_groups as $slug => $group) {
             $html .= '<section class="parcs-ht-faq-group" data-htp-faq-group="' . esc_attr($slug) . '"><h3>' . esc_html($group['label']) . '</h3><div class="parcs-ht-faq-list">';
-            foreach ($group['items'] as $item) {
-                $variants = isset($item['variants'][$language]) && is_array($item['variants'][$language]) ? $item['variants'][$language] : array();
-                $search = trim($item['_question'] . ' ' . implode(' ', $variants));
-                $answer = (string)$item['_answer'];
-                if ((string)($item['response_mode'] ?? 'direct') === 'canonical') {
-                    $answer = self::canonical_answer((string)($item['category'] ?? ''), $language, $answer);
-                }
-                $html .= '<details class="parcs-ht-faq-item" data-htp-faq-item data-category="' . esc_attr($slug) . '" data-search="' . esc_attr($search) . '"><summary>' . esc_html($item['_question']) . '</summary><div class="parcs-ht-faq-answer">' . wp_kses_post(wpautop($answer));
-                $url = (string)($item['public_url'] ?? '');
-                $mode = (string)($item['response_mode'] ?? 'direct');
-                if ($url !== '' && in_array($mode, array('answer_link','canonical'), true)) {
-                    $label = $item['_link_label'] !== '' ? $item['_link_label'] : self::default_link_label((string)($item['category'] ?? ''))[$language];
-                    $html .= '<p class="parcs-ht-faq-action"><a href="' . esc_url($url) . '">' . esc_html($label) . '</a></p>';
-                }
-                $html .= '</div></details>';
-            }
+            foreach ($group['items'] as $item) $html .= self::render_item($item, $slug, $language, false);
             $html .= '</div></section>';
         }
-        $html .= '</div><p class="parcs-ht-faq-empty" data-htp-faq-empty hidden>' . esc_html($texts['empty']) . '</p></section>';
+        $html .= '</div>';
+
+        if ($secondary_groups) {
+            $html .= '<div class="parcs-ht-faq-secondary-groups" data-htp-faq-secondary-groups>';
+            foreach ($secondary_groups as $slug => $group) {
+                $html .= '<details class="parcs-ht-faq-secondary" data-htp-faq-secondary><summary>' . esc_html($group['label']) . '</summary><div class="parcs-ht-faq-secondary-content">';
+                $html .= '<section class="parcs-ht-faq-group parcs-ht-faq-group-secondary" data-htp-faq-group="' . esc_attr($slug) . '"><div class="parcs-ht-faq-list">';
+                foreach ($group['items'] as $item) $html .= self::render_item($item, $slug, $language, true);
+                $html .= '</div></section></div></details>';
+            }
+            $html .= '</div>';
+        }
+
+        $html .= '<p class="parcs-ht-faq-empty" data-htp-faq-empty hidden>' . esc_html($texts['empty']) . '</p></section>';
         return $late_style . $html;
     }
 
