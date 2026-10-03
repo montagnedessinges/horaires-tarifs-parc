@@ -226,6 +226,50 @@ final class Parcs_HT_FAQ_CSV_1191 {
         );
     }
 
+    private static function import_knowledge_row($row, $order) {
+        if (!is_array($row)) return null;
+        $id = strtoupper(sanitize_text_field(self::value_from($row, array('ID stable','ID'), '')));
+        if ($id === '' || strpos($id, 'SIN-COM-') !== 0) return null;
+
+        $question_fr = sanitize_text_field(self::value_from($row, array('Question canonique','Question canonique FR','Question FR'), ''));
+        $answer_fr = wp_kses_post(self::value_from($row, array('Réponse courte vérifiée','Reponse courte verifiee','Réponse courte FR','Reponse courte FR'), ''));
+        if ($question_fr === '' || $answer_fr === '') return null;
+
+        $visibility = sanitize_text_field(self::value_from($row, array('Usage','Usage / visibilité','Usage / visibilite'), ''));
+        $status = sanitize_text_field(self::value_from($row, array('Statut','Status'), ''));
+        $status_key = self::normalize_text($status);
+        $visibility_key = self::normalize_text($visibility);
+        $publishable = in_array($status_key, array('valide','publie','published'), true) && strpos($visibility_key, 'ia') !== false;
+
+        $source = esc_url_raw(self::value_from($row, array('Source officielle','Source principale','Source'), ''));
+        $public_url = self::public_url(array('Source principale'=>$source));
+
+        return array(
+            'id'=>$id,
+            'priority'=>'P2',
+            'category'=>'Règles du parc',
+            'category_label'=>self::triple('Règles du parc','Visiting rules','Besuchsregeln'),
+            'question'=>array('fr'=>$question_fr,'en'=>'','de'=>''),
+            'variants'=>array(
+                'fr'=>self::list_from(self::value_from($row, array('Variantes / formulations IA','Variantes / formulations IA FR','Variantes FR'), '')),
+                'en'=>array(),
+                'de'=>array(),
+            ),
+            'answer'=>array('fr'=>$answer_fr,'en'=>'','de'=>''),
+            'visibility'=>$visibility,
+            'dynamic'=>'0',
+            'source_url'=>$source,
+            'public_url'=>$public_url,
+            'link_label'=>self::triple('Source','Source','Quelle'),
+            'response_mode'=>'direct',
+            'verified'=>sanitize_text_field(self::value_from($row, array('Vérifié le','Verifie le','Verified'), '')),
+            'status'=>$status,
+            'notes'=>'Import depuis « Connaissances singes - IA » ; affichage secondaire discret dans « Règles du parc ».',
+            'enabled'=>$publishable ? '1' : '0',
+            'remote_order'=>10000 + (int)$order,
+        );
+    }
+
     private static function item_fingerprint($item) {
         $copy = is_array($item) ? $item : array();
         unset($copy['remote_order']);
@@ -252,7 +296,8 @@ final class Parcs_HT_FAQ_CSV_1191 {
         return '';
     }
 
-    private static function parse_csv($path, $park_code) {
+    private static function parse_csv($path, $park_code, $source_kind = 'faq') {
+        $source_kind = $source_kind === 'knowledge' ? 'knowledge' : 'faq';
         $delimiter = self::detect_delimiter($path);
         if ($delimiter === '') self::error_redirect('Format CSV non reconnu : la colonne « ID stable » est introuvable.');
         $handle = fopen($path, 'rb');
@@ -271,7 +316,9 @@ final class Parcs_HT_FAQ_CSV_1191 {
             if ($headers === null) {
                 if (!in_array('ID stable', $cells, true)) continue;
                 $headers = $cells;
-                $required = array('ID stable','Question canonique FR','Réponse courte FR','Statut','Usage / visibilité');
+                $required = $source_kind === 'knowledge'
+                    ? array('ID stable','Question canonique','Réponse courte vérifiée','Statut','Usage')
+                    : array('ID stable','Question canonique FR','Réponse courte FR','Statut','Usage / visibilité');
                 foreach ($required as $required_header) {
                     if (!in_array($required_header, $headers, true)) { fclose($handle); self::error_redirect('CSV incomplet : colonne requise manquante (« ' . $required_header . ' »).'); }
                 }
@@ -290,7 +337,12 @@ final class Parcs_HT_FAQ_CSV_1191 {
 
             $id = strtoupper(trim((string)($record['ID stable'] ?? '')));
             if ($id === '') continue;
-            if (strpos($id, $park_code . '-') !== 0) { fclose($handle); self::error_redirect('Le CSV contient une fiche d’un autre parc (' . $id . '). Import annulé.'); }
+            if ($source_kind === 'knowledge') {
+                if (strpos($id, 'SIN-COM-') !== 0) { fclose($handle); self::error_redirect('Le CSV de connaissances contient un ID non reconnu (' . $id . '). Import annulé.'); }
+            } elseif (strpos($id, $park_code . '-') !== 0) {
+                fclose($handle);
+                self::error_redirect('Le CSV contient une fiche d’un autre parc (' . $id . '). Import annulé.');
+            }
             if (isset($seen[$id])) { fclose($handle); self::error_redirect('Le CSV contient un ID stable dupliqué : ' . $id . '.'); }
             $seen[$id] = true;
             $records[] = $record;
@@ -308,6 +360,8 @@ final class Parcs_HT_FAQ_CSV_1191 {
 
         $park_code = isset($_POST['park_code']) ? strtoupper(sanitize_text_field(wp_unslash($_POST['park_code']))) : '';
         if (!in_array($park_code, array('MDS','FDS'), true)) self::error_redirect('Choisissez le parc correspondant au CSV.');
+        $source_kind = isset($_POST['source_kind']) ? sanitize_key(wp_unslash($_POST['source_kind'])) : 'faq';
+        if (!in_array($source_kind, array('faq','knowledge'), true)) self::error_redirect('Type de CSV non reconnu.');
         if (empty($_FILES['faq_csv']) || !is_array($_FILES['faq_csv'])) self::error_redirect('Choisissez un fichier CSV.');
         $file = $_FILES['faq_csv'];
         if ((int)($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) self::error_redirect('Le téléversement du CSV a échoué.');
@@ -318,7 +372,7 @@ final class Parcs_HT_FAQ_CSV_1191 {
         $path = (string)($file['tmp_name'] ?? '');
         if ($path === '' || !is_uploaded_file($path)) self::error_redirect('Fichier CSV temporaire invalide.');
 
-        $records = self::parse_csv($path, $park_code);
+        $records = self::parse_csv($path, $park_code, $source_kind);
         $current = Parcs_HT_FAQ::settings();
         $current_index = array();
         foreach ((array)($current['items'] ?? array()) as $item) {
@@ -328,7 +382,7 @@ final class Parcs_HT_FAQ_CSV_1191 {
         $rows = array();
         $counts = array('new'=>0,'modified'=>0,'unchanged'=>0,'blocked'=>0,'invalid'=>0);
         foreach ($records as $order => $record) {
-            $item = self::import_row($record, $order);
+            $item = $source_kind === 'knowledge' ? self::import_knowledge_row($record, $order) : self::import_row($record, $order);
             if (!$item) { $counts['invalid']++; continue; }
             $id = (string)$item['id'];
             $publishable = (string)$item['enabled'] === '1';
@@ -343,6 +397,7 @@ final class Parcs_HT_FAQ_CSV_1191 {
         set_transient(self::preview_key(), array(
             'created_at'=>time(),
             'park_code'=>$park_code,
+            'source_kind'=>$source_kind,
             'source_name'=>$name,
             'counts'=>$counts,
             'rows'=>$rows,
@@ -389,7 +444,8 @@ final class Parcs_HT_FAQ_CSV_1191 {
         }
         if ($applied < 1) self::error_redirect('Aucune fiche validée et publiable n’a été sélectionnée.');
 
-        self::add_revision($settings, 'Avant import CSV FAQ');
+        $revision_reason = (string)($preview['source_kind'] ?? 'faq') === 'knowledge' ? 'Avant import CSV connaissances IA' : 'Avant import CSV FAQ';
+        self::add_revision($settings, $revision_reason);
         $items = array_values($index);
         usort($items, static function ($a, $b) {
             $pa = (int)substr((string)($a['priority'] ?? 'P3'), 1);
@@ -454,12 +510,25 @@ final class Parcs_HT_FAQ_CSV_1191 {
                     <p>Dans Google Sheets : ouvrez l’onglet du parc puis <strong>Fichier → Télécharger → Valeurs séparées par des virgules (.csv)</strong>. Importez ensuite ce fichier ici.</p>
                     <form method="post" enctype="multipart/form-data" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                         <input type="hidden" name="action" value="parcs_ht_faq_csv_preview">
+                        <input type="hidden" name="source_kind" value="faq">
                         <?php wp_nonce_field('parcs_ht_faq_csv_preview'); ?>
                         <p><label><strong>Parc du fichier</strong><br><select name="park_code"><option value="MDS">Montagne des Singes (MDS)</option><option value="FDS">Forêt des Singes (FDS)</option></select></label></p>
                         <p><label><strong>Fichier CSV</strong><br><input type="file" name="faq_csv" accept=".csv,text/csv" required></label></p>
                         <p><button type="submit" class="button button-primary">Analyser le CSV</button></p>
                     </form>
                     <p class="description">L’analyse ne modifie rien. L’extension vérifie le parc, les colonnes, les IDs et les statuts avant d’afficher un aperçu.</p>
+                    <hr>
+                    <h3>Connaissances singes → Règles du parc</h3>
+                    <p>Exportez l’onglet <strong>« Connaissances singes - IA »</strong> en CSV. Les lignes validées destinées à l’IA sont importées dans le même stockage FAQ et affichées dans la catégorie secondaire « Règles du parc ».</p>
+                    <form method="post" enctype="multipart/form-data" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                        <input type="hidden" name="action" value="parcs_ht_faq_csv_preview">
+                        <input type="hidden" name="source_kind" value="knowledge">
+                        <?php wp_nonce_field('parcs_ht_faq_csv_preview'); ?>
+                        <p><label><strong>Parc destinataire</strong><br><select name="park_code"><option value="MDS">Montagne des Singes (MDS)</option><option value="FDS">Forêt des Singes (FDS)</option></select></label></p>
+                        <p><label><strong>CSV Connaissances singes - IA</strong><br><input type="file" name="faq_csv" accept=".csv,text/csv" required></label></p>
+                        <p><button type="submit" class="button">Analyser les connaissances</button></p>
+                    </form>
+                    <p class="description">Les IDs attendus commencent par <code>SIN-COM-</code>. Les fiches sont fusionnées avec la FAQ existante ; aucune fiche absente n’est supprimée.</p>
                 </section>
 
                 <section class="postbox" style="padding:18px;">
@@ -474,7 +543,7 @@ final class Parcs_HT_FAQ_CSV_1191 {
             <?php if (!empty($preview['rows'])) : ?>
                 <section class="postbox" style="padding:18px;margin-top:18px;">
                     <h2 style="margin-top:0;">Aperçu CSV — aucune modification n’est encore appliquée</h2>
-                    <p><strong>Fichier :</strong> <?php echo esc_html((string)($preview['source_name'] ?? '')); ?> · <strong>Parc :</strong> <?php echo esc_html((string)($preview['park_code'] ?? '')); ?></p>
+                    <p><strong>Fichier :</strong> <?php echo esc_html((string)($preview['source_name'] ?? '')); ?> · <strong>Parc :</strong> <?php echo esc_html((string)($preview['park_code'] ?? '')); ?> · <strong>Type :</strong> <?php echo (string)($preview['source_kind'] ?? 'faq') === 'knowledge' ? 'Connaissances IA' : 'FAQ du parc'; ?></p>
                     <?php $counts = (array)($preview['counts'] ?? array()); ?>
                     <p><strong><?php echo esc_html((int)($counts['new'] ?? 0)); ?></strong> nouvelle(s) · <strong><?php echo esc_html((int)($counts['modified'] ?? 0)); ?></strong> modifiée(s) · <strong><?php echo esc_html((int)($counts['unchanged'] ?? 0)); ?></strong> identique(s) · <strong><?php echo esc_html((int)($counts['blocked'] ?? 0)); ?></strong> non publiable(s) · <strong><?php echo esc_html((int)($counts['invalid'] ?? 0)); ?></strong> invalide(s)</p>
                     <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
@@ -495,7 +564,7 @@ final class Parcs_HT_FAQ_CSV_1191 {
                 <?php if (!$items) : ?><p>Aucune fiche n’a encore été importée.</p><?php else : ?>
                     <div style="overflow:auto;"><table class="widefat striped"><thead><tr><th>ID</th><th>Priorité</th><th>Catégorie</th><th>Question FR</th><th>FR</th><th>EN</th><th>DE</th><th>Publication</th><th>Vérifié le</th></tr></thead><tbody>
                     <?php foreach ($items as $item) : if (!is_array($item)) continue; ?>
-                        <tr><td><code><?php echo esc_html((string)($item['id'] ?? '')); ?></code></td><td><?php echo esc_html((string)($item['priority'] ?? '')); ?></td><td><?php echo esc_html((string)($item['category'] ?? '')); ?></td><td><?php echo esc_html((string)($item['question']['fr'] ?? '')); ?></td><td><?php echo !empty($item['answer']['fr']) ? '✓' : '—'; ?></td><td><?php echo !empty($item['answer']['en']) ? '✓' : '—'; ?></td><td><?php echo !empty($item['answer']['de']) ? '✓' : '—'; ?></td><td><?php echo (string)($item['enabled'] ?? '0') === '1' ? 'Publiable' : 'Interne'; ?></td><td><?php echo esc_html((string)($item['verified'] ?? '')); ?></td></tr>
+                        <tr><td><code><?php echo esc_html((string)($item['id'] ?? '')); ?></code></td><td><?php echo esc_html((string)($item['priority'] ?? '')); ?></td><td><?php echo esc_html((string)($item['category'] ?? '')); ?></td><td><?php echo esc_html((string)($item['question']['fr'] ?? '')); ?></td><td><?php echo !empty($item['answer']['fr']) ? '✓' : '—'; ?></td><td><?php echo !empty($item['answer']['en']) ? '✓' : '—'; ?></td><td><?php echo !empty($item['answer']['de']) ? '✓' : '—'; ?></td><td><?php if ((string)($item['enabled'] ?? '0') !== '1') echo 'Interne'; elseif (self::normalize_text((string)($item['category'] ?? '')) === 'regles-du-parc') echo 'Secondaire / IA'; else echo 'FAQ principale'; ?></td><td><?php echo esc_html((string)($item['verified'] ?? '')); ?></td></tr>
                     <?php endforeach; ?>
                     </tbody></table></div>
                 <?php endif; ?>
