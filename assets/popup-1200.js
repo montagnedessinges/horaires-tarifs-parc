@@ -75,7 +75,7 @@
       link.className='parcs-ht-popup1200-link';
       link.href=popup.linkUrl;
       link.appendChild(image);
-      link.addEventListener('click',function(){remember(popup);});
+      link.addEventListener('click',function(){dismiss(true);});
       dialog.appendChild(link);
     }else{
       dialog.appendChild(image);
@@ -86,8 +86,8 @@
     document.body.appendChild(overlay);
     document.body.style.overflow='hidden';
 
-    function dismiss(){
-      remember(popup);
+    function dismiss(shouldRemember){
+      if(shouldRemember!==false) remember(popup);
       document.removeEventListener('keydown',trap);
       if(overlay.parentNode) overlay.parentNode.removeChild(overlay);
       document.body.style.overflow=previousOverflow;
@@ -122,10 +122,7 @@
 
     close.addEventListener('click',dismiss);
     overlay.addEventListener('click',function(event){if(event.target===overlay)dismiss();});
-    image.addEventListener('error',function(){
-      if(overlay.parentNode) overlay.parentNode.removeChild(overlay);
-      document.body.style.overflow=previousOverflow;
-    });
+    image.addEventListener('error',function(){dismiss(false);});
     document.addEventListener('keydown',trap);
     close.focus();
   }
