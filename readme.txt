@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.19.5
+Stable tag: 1.19.6
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes, FAQ et outils du parc.
 
@@ -19,6 +19,15 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.19.6 =
+* Ajoute un affichage secondaire discret pour la catégorie « Règles du parc » : elle n’apparaît plus dans les filtres principaux de la FAQ et reste fermée par défaut.
+* Les questions « Règles du parc » restent présentes dans le HTML initial, accessibles volontairement par le visiteur et trouvables via la recherche de la FAQ.
+* Une recherche correspondant à une question secondaire ouvre automatiquement le bloc « Règles du parc » afin d’afficher le résultat.
+* Les réponses secondaires peuvent afficher un lien « Source » lorsque la source officielle est une URL publique sûre.
+* Ajoute dans Gestion du parc > FAQ un import CSV dédié à l’onglet « Connaissances singes - IA » ; les IDs SIN-COM-* validés et destinés à l’IA sont fusionnés dans le stockage FAQ existant sous « Règles du parc ».
+* Ne crée aucune seconde base publique : les imports FAQ du parc et connaissances IA alimentent la même option globale, avec révision de sécurité et sans suppression automatique.
+* Aucun changement sur les saisons, horaires, tarifs, devis, guides ou formulaires de contact.
 
 = 1.19.5 =
 * Renforce le principe « FAQ d’abord, contact en dernier recours » dans le shortcode FAQ + Contact.
