@@ -3,7 +3,7 @@
 if (!defined('ABSPATH')) { exit; }
 
 /**
- * FAQ / Contact 1.19.2, maintenance 1.19.3.
+ * FAQ / Contact 1.19.2, maintenance 1.19.5.
  *
  * Cette couche garde le moteur FAQ 1.19.x comme source de vérité et ajoute :
  * - un rendu public sans faux en-tête de page ;
@@ -82,24 +82,24 @@ final class Parcs_HT_FAQ_Contact_1192 {
                 'title'=>'Questions fréquentes',
                 'intro'=>'Trouvez rapidement la réponse à votre question.',
                 'contact_title'=>'Vous n’avez pas trouvé votre réponse ?',
-                'contact_intro'=>'Vous pouvez envoyer votre demande à l’équipe sans quitter cette page.',
-                'contact_button'=>'Nous écrire',
+                'contact_intro'=>'Consultez d’abord la FAQ ci-dessus. Si aucune réponse ne correspond à votre situation, vous pouvez contacter l’équipe.',
+                'contact_button'=>'Je n’ai pas trouvé ma réponse',
                 'contact_close'=>'Masquer le formulaire',
             ),
             'en'=>array(
                 'title'=>'Frequently asked questions',
                 'intro'=>'Quickly find the answer to your question.',
                 'contact_title'=>'Didn’t find your answer?',
-                'contact_intro'=>'You can send your request to the team without leaving this page.',
-                'contact_button'=>'Contact us',
+                'contact_intro'=>'Please check the FAQ above first. If none of the answers matches your situation, you can contact the team.',
+                'contact_button'=>'I didn’t find my answer',
                 'contact_close'=>'Hide the form',
             ),
             'de'=>array(
                 'title'=>'Häufig gestellte Fragen',
                 'intro'=>'Finden Sie schnell die Antwort auf Ihre Frage.',
                 'contact_title'=>'Keine passende Antwort gefunden?',
-                'contact_intro'=>'Sie können Ihre Anfrage direkt auf dieser Seite an das Team senden.',
-                'contact_button'=>'Uns schreiben',
+                'contact_intro'=>'Bitte prüfen Sie zuerst die FAQ oben. Wenn keine Antwort zu Ihrer Situation passt, können Sie das Team kontaktieren.',
+                'contact_button'=>'Ich habe keine Antwort gefunden',
                 'contact_close'=>'Formular ausblenden',
             ),
         );
@@ -210,12 +210,12 @@ final class Parcs_HT_FAQ_Contact_1192 {
             <?php endif; ?>
             <section class="postbox" style="padding:18px;margin-top:18px;">
                 <h2 style="margin-top:0;">Formulaire de contact</h2>
-                <p>Dans le shortcode FAQ + Contact, le visiteur voit d’abord un bouton <strong>« Nous écrire »</strong>. Un clic ouvre le formulaire sur la même page ; <strong>Contact Form 7 envoie ensuite la demande par e-mail</strong> selon les destinataires configurés dans chaque formulaire.</p>
+                <p>Dans le shortcode FAQ + Contact, la <strong>FAQ reste prioritaire</strong> et le formulaire est <strong>masqué par défaut</strong>. Le visiteur ne l’ouvre qu’en cliquant sur <strong>« Je n’ai pas trouvé ma réponse »</strong> ; <strong>Contact Form 7 envoie ensuite la demande par e-mail</strong> selon les destinataires configurés dans chaque formulaire.</p>
                 <p><strong>Contact Form 7 :</strong> <?php echo $cf7_active ? 'détecté' : 'non détecté'; ?></p>
                 <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                     <input type="hidden" name="action" value="parcs_ht_faq_contact_save">
                     <?php wp_nonce_field('parcs_ht_faq_contact_save'); ?>
-                    <p><label><input type="checkbox" name="contact[enabled]" value="1" <?php checked((string)$settings['enabled'], '1'); ?>> Activer le formulaire dans le shortcode FAQ + Contact</label></p>
+                    <p><label><input type="checkbox" name="contact[enabled]" value="1" <?php checked((string)$settings['enabled'], '1'); ?>> Activer le contact en dernier recours dans le shortcode FAQ + Contact</label></p>
                     <?php foreach (array('fr'=>'Français','en'=>'Anglais','de'=>'Allemand') as $language=>$label) : ?>
                         <?php $configured = trim((string)$settings['forms'][$language]) !== ''; ?>
                         <p><label><strong>Shortcode Contact Form 7 — <?php echo esc_html($label); ?></strong> <span class="description">(<?php echo $configured ? 'configuré' : 'à renseigner'; ?>)</span><br>

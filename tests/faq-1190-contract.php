@@ -118,14 +118,16 @@ release_contract_require_all($contact, array(
     'data-htp-faq-contact',
     'data-htp-faq-contact-toggle',
     'data-htp-faq-contact-form',
-    'Nous écrire',
-), 'FAQ contact 1.19.3 integration');
+    'Je n’ai pas trouvé ma réponse',
+    'data-htp-faq-contact-form hidden',
+), 'FAQ contact 1.19.5 integration');
 
 release_contract_forbid($contact, array(
     "update_option(Parcs_HT_Defaults::OPTION",
     "update_option('parcs_ht_settings'",
     '<header class="parcs-ht-faq-heading"',
     'wp_mail(',
+    "'contact_button'=>'Nous écrire'",
 ), 'FAQ contact isolation/plain rendering');
 
 release_contract_require_all($unified, array(
