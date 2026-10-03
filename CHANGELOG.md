@@ -1,3 +1,11 @@
+## 1.19.8
+
+- Corrige la 1.19.7 pour limiter la catégorie secondaire « Règles du parc » aux règles de visite provenant du CSV normal du parc.
+- Supprime le formulaire et le code d’import dédiés à l’onglet « Connaissances singes - IA ».
+- Conserve l’accordéon secondaire discret, le rendu dans le HTML initial, la recherche interne et l’ouverture automatique lorsqu’une règle correspond à la recherche.
+- L’onglet « Connaissances singes - IA » reste une base interne et n’est pas une source d’import WordPress.
+- Ne modifie ni les saisons, ni les horaires, ni les tarifs, ni les devis, ni les guides, ni le fonctionnement Contact Form 7.
+
 ## 1.19.7
 
 - Ajoute un affichage secondaire discret pour la catégorie « Règles du parc » : elle n’apparaît pas dans les filtres principaux et reste fermée par défaut.

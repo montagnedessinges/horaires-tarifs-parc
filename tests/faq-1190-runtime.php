@@ -1,7 +1,7 @@
 <?php
 // Exercise FAQ 1.19.1 writes without touching annual storage.
 define('ABSPATH', __DIR__ . '/');
-define('PARCS_HT_VERSION', '1.19.7');
+define('PARCS_HT_VERSION', '1.19.8');
 define('PARCS_HT_URL', 'https://example.org/plugin/');
 define('PARCS_HT_DIR', (getenv('PLUGIN_ROOT') ?: dirname(__DIR__)) . '/');
 
