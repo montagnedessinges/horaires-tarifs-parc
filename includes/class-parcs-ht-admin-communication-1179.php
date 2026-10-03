@@ -115,6 +115,10 @@ final class Parcs_HT_Admin_Communication_1179 {
     }
 
     public static function popup_page() {
+        if (class_exists('Parcs_HT_Popup_Admin_1200')) {
+            Parcs_HT_Popup_Admin_1200::render_page();
+            return;
+        }
         if (!current_user_can('manage_options')) return;
         $settings = Parcs_HT_Defaults::settings(self::active_year());
         $alerts = isset($settings['alerts']) && is_array($settings['alerts']) ? $settings['alerts'] : array();

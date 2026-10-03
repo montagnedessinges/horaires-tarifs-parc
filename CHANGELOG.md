@@ -1,3 +1,15 @@
+## 1.20.0
+
+- Refonte complète du module Pop-up autour d’un stockage autonome, sans dépendance publique aux événements, périodes ou exceptions.
+- Remplace les anciens titres, messages et boutons de pop-up par un visuel indépendant FR / EN / DE, choisi dans la médiathèque WordPress, avec lien facultatif et texte alternatif par langue.
+- Ajoute les tailles 480, 620 et 800 px ainsi qu’une largeur personnalisée de 320 à 1200 px ; le rendu public conserve toujours l’image entière avec un comportement responsive sans recadrage.
+- Ajoute activation, brouillon/publié, dates et heures, priorité, affichage unique ou réapparition après X heures, duplication et prévisualisation par langue.
+- Le nouveau moteur public interroge une route REST sans cache et charge son client léger sur les pages publiques afin qu’une activation ultérieure reste indépendante du cache HTML.
+- La langue du pop-up suit la langue canonique de la page : qTranslate-XT, Polylang, WPML puis locale WordPress. Aucune détection via la langue du navigateur n’est utilisée.
+- Un visuel absent dans la langue courante empêche l’affichage du pop-up dans cette langue au lieu de revenir automatiquement au français.
+- Les anciens pop-up sont migrés en brouillons désactivés pour contrôle manuel ; les anciens contrôles Pop-up des écrans Périodes/Événements/Exceptions ne sont plus proposés à l’administrateur.
+- Ajoute un contrat de régression 1.20.0 exécuté sur les sources et sur le paquet de production.
+
 ## 1.19.9
 
 - Corrige l’import FAQ pour lire réellement les colonnes multilingues de redirection FR / DE / EN déjà présentes dans le Google Sheet.
