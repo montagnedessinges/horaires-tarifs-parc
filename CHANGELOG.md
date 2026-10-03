@@ -1,3 +1,12 @@
+## 1.19.9
+
+- Corrige l’import FAQ pour lire réellement les colonnes multilingues de redirection FR / DE / EN déjà présentes dans le Google Sheet.
+- Ajoute trois colonnes facultatives de libellé de bouton : `Texte bouton FR`, `Button-Text DE` et `Button text EN`.
+- Affiche un bouton cliquable uniquement lorsqu’un libellé explicite est fourni sur une réponse directe ; les comportements dynamiques existants restent compatibles.
+- Sélectionne automatiquement l’URL correspondant à la langue affichée, avec repli sécurisé pour les anciennes fiches.
+- Transforme les liens d’action FAQ existants en boutons sobres qui héritent des couleurs du thème.
+- Ne modifie ni les saisons, ni les horaires, ni les tarifs, ni les devis, ni les guides, ni Contact Form 7.
+
 ## 1.19.8
 
 - Corrige la 1.19.7 pour limiter la catégorie secondaire « Règles du parc » aux règles de visite provenant du CSV normal du parc.
