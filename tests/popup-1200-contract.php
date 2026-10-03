@@ -43,7 +43,7 @@ release_contract_require_all($engine, array(
     "wp_enqueue_script(",
     "Parcs_HT_Schedule::language()",
     "wp_get_attachment_image_url",
-    "if ($image_url === '') continue;",
+    "if (\$image_url === '') continue;",
     "'priority'",
     "'reappear_mode'",
     "'size_preset'",
