@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.19.4
+Stable tag: 1.19.5
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes, FAQ et outils du parc.
 
@@ -19,6 +19,14 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.19.5 =
+* Renforce le principe « FAQ d’abord, contact en dernier recours » dans le shortcode FAQ + Contact.
+* Remplace le bouton générique « Nous écrire » par « Je n’ai pas trouvé ma réponse » avec des équivalents FR / EN / DE.
+* Le formulaire Contact Form 7 reste masqué par défaut et ne s’affiche qu’après une action volontaire du visiteur.
+* La FAQ reste la source principale : aucune réponse FAQ n’est dupliquée dans le formulaire.
+* En cas de recherche sans résultat, le bloc de contact reste disponible mais le formulaire ne s’ouvre jamais automatiquement.
+* Aucun changement sur les saisons, horaires, tarifs, devis, guides ou données FAQ.
 
 = 1.19.4 =
 * Transforme les guides pédagogiques en bibliothèque permanente commune à toutes les années, avec affichage configurable par année.

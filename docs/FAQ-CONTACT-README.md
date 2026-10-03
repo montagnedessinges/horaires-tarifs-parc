@@ -1,1 +1,1 @@
-La FAQ 1.19.2 conserve Contact Form 7 comme moteur d’envoi et ajoute un shortcode combiné pour afficher FAQ puis formulaire dans la même zone de page.
+La FAQ + Contact conserve Contact Form 7 comme moteur d’envoi. Depuis la 1.19.5, la FAQ est explicitement prioritaire : le formulaire reste masqué par défaut et n’apparaît qu’après un clic volontaire sur « Je n’ai pas trouvé ma réponse ». Le formulaire ne doit pas devenir une seconde FAQ ni recopier les réponses de la base.

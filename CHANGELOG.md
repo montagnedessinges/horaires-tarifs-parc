@@ -1,3 +1,12 @@
+## 1.19.5
+
+- Renforce le principe « FAQ d’abord, contact en dernier recours » sur le shortcode FAQ + Contact.
+- Remplace le bouton générique « Nous écrire » par « Je n’ai pas trouvé ma réponse » avec des libellés adaptés en français, anglais et allemand.
+- Maintient le formulaire Contact Form 7 masqué par défaut et ne l’affiche qu’après une action volontaire du visiteur ; aucune réponse de FAQ n’est recopiée dans le formulaire.
+- Clarifie l’écran d’administration pour rappeler que la FAQ reste la source principale et que Contact Form 7 conserve exclusivement l’envoi des messages.
+- Conserve le comportement de recherche existant : lorsqu’aucun résultat n’est trouvé, le bloc de contact reste disponible sans ouverture automatique du formulaire.
+- Ne modifie ni les saisons, ni les horaires, ni les tarifs, ni les devis, ni les guides, ni le contenu des fiches FAQ.
+
 ## 1.19.4
 
 - Transforme les guides pédagogiques en bibliothèque permanente commune à toutes les années : le contenu d’un guide n’est plus dupliqué à chaque saison.
