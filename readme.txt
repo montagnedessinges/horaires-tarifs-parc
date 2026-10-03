@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.19.9
+Stable tag: 1.20.0
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes, FAQ et outils du parc.
 
@@ -19,6 +19,15 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.20.0 =
+* Refonte complète des pop-up : ils deviennent autonomes et ne dépendent plus des événements, périodes ou exceptions.
+* Remplace le contenu texte/bouton du pop-up par un visuel FR / EN / DE sélectionné dans la médiathèque WordPress, avec lien facultatif et texte alternatif par langue.
+* Ajoute les tailles Petit 480 px, Moyen 620 px, Grand 800 px et Personnalisé 320–1200 px ; les visuels restent entiers et responsives sans recadrage.
+* Ajoute priorité, dates/heures d’affichage, brouillon/publié, activation, affichage unique ou réapparition après X heures, duplication et aperçu par langue.
+* Utilise un moteur public unique via REST avec récupération non mise en cache, afin qu’un pop-up nouvellement activé ne dépende plus du HTML de page mis en cache.
+* Étend la langue canonique de l’extension à qTranslate-XT, Polylang, WPML puis au locale WordPress ; le navigateur ne choisit jamais la langue du pop-up.
+* Les anciens pop-up sont conservés comme brouillons désactivés à contrôler avant publication ; les anciens réglages Pop-up sont retirés visuellement des écrans Événements et Exceptions.
 
 = 1.19.9 =
 * Lit enfin les colonnes multilingues « Lien de redirection FR », « Weiterleitungslink DE » et « Redirect link EN » du CSV FAQ.
