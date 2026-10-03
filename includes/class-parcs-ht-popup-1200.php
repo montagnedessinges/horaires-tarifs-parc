@@ -149,7 +149,7 @@ final class Parcs_HT_Popup_1200 {
     }
 
     public static function enqueue_public_assets() {
-        if (is_admin() || !self::has_public_source()) return;
+        if (is_admin()) return;
 
         wp_enqueue_style(
             'parcs-ht-popup-1200',
