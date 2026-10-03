@@ -1,7 +1,7 @@
 <?php
 // Exercise FAQ 1.19.1 writes without touching annual storage.
 define('ABSPATH', __DIR__ . '/');
-define('PARCS_HT_VERSION', '1.19.8');
+define('PARCS_HT_VERSION', '1.19.9');
 define('PARCS_HT_URL', 'https://example.org/plugin/');
 define('PARCS_HT_DIR', (getenv('PLUGIN_ROOT') ?: dirname(__DIR__)) . '/');
 
@@ -75,7 +75,7 @@ $item = array(
     'variants'=>array('fr'=>array('test'),'en'=>array(),'de'=>array()),
     'answer'=>array('fr'=>'Réponse.','en'=>'','de'=>''),
     'visibility'=>'FAQ publique', 'dynamic'=>'0', 'source_url'=>'', 'public_url'=>'',
-    'link_label'=>array('fr'=>'','en'=>'','de'=>''), 'response_mode'=>'direct',
+    'link_label'=>array('fr'=>'','en'=>'','de'=>''), 'button_label'=>array('fr'=>'','en'=>'','de'=>''), 'response_mode'=>'direct',
     'verified'=>'29/09/2026', 'status'=>'Validé', 'notes'=>'', 'enabled'=>'1', 'remote_order'=>0,
 );
 $preview = array('created_at'=>time(),'park_code'=>'MDS','source_name'=>'faq.csv','counts'=>array('new'=>1),'rows'=>array(array('id'=>'MDS-TEST-001','change'=>'new','publishable'=>true,'item'=>$item)));
@@ -108,6 +108,32 @@ $rules_html = Parcs_HT_FAQ::render('fr');
 ensure(strpos($rules_html, 'data-htp-faq-secondary') !== false, 'Secondary rules wrapper missing');
 ensure(strpos($rules_html, 'data-htp-faq-category="regles-du-parc"') === false, 'Secondary rules exposed as a primary category button');
 ensure(strpos($rules_html, '>Source</a>') !== false, 'Secondary source link missing');
+
+$cta = $item;
+$cta['id'] = 'MDS-CTA-TEST';
+$cta['question'] = array('fr'=>'Lien FR ?','en'=>'EN link?','de'=>'DE Link?');
+$cta['answer'] = array('fr'=>'Réponse CTA.','en'=>'CTA answer.','de'=>'CTA Antwort.');
+$cta['public_url'] = array(
+    'fr'=>'https://example.org/fr/action',
+    'en'=>'https://example.org/en/action',
+    'de'=>'https://example.org/de/action',
+);
+$cta['button_label'] = array(
+    'fr'=>'Ouvrir le lien',
+    'en'=>'Open the link',
+    'de'=>'Link öffnen',
+);
+$cta['remote_order'] = 3;
+$current_faq = get_option('parcs_ht_faq');
+$current_faq['items'][] = $cta;
+update_option('parcs_ht_faq', $current_faq, false);
+$cta_fr = Parcs_HT_FAQ::render('fr');
+$cta_en = Parcs_HT_FAQ::render('en');
+$cta_de = Parcs_HT_FAQ::render('de');
+ensure(strpos($cta_fr, 'class="parcs-ht-faq-button"') !== false, 'CTA button class missing');
+ensure(strpos($cta_fr, 'href="https://example.org/fr/action"') !== false && strpos($cta_fr, '>Ouvrir le lien</a>') !== false, 'FR CTA URL or label missing');
+ensure(strpos($cta_en, 'href="https://example.org/en/action"') !== false && strpos($cta_en, '>Open the link</a>') !== false, 'EN CTA URL or label missing');
+ensure(strpos($cta_de, 'href="https://example.org/de/action"') !== false && strpos($cta_de, '>Link öffnen</a>') !== false, 'DE CTA URL or label missing');
 
 $blocked = $item; $blocked['status'] = 'À valider'; $blocked['enabled'] = '0'; $blocked['answer']['fr'] = 'Ne doit pas remplacer.';
 set_transient('parcs_ht_faq_csv_preview_1', array('rows'=>array(array('id'=>'MDS-TEST-001','change'=>'blocked','publishable'=>false,'item'=>$blocked))), 1800);
