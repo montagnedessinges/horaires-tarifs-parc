@@ -13,12 +13,18 @@ final class Parcs_HT_Schedule {
     }
     public static function language() {
         if (function_exists('qtranxf_getLanguage')) {
-            $language = qtranxf_getLanguage();
-            if (in_array($language, array('fr', 'en', 'de'), true)) {
-                return $language;
-            }
+            $language = strtolower(substr((string)qtranxf_getLanguage(), 0, 2));
+            if (in_array($language, array('fr', 'en', 'de'), true)) return $language;
         }
-        $locale = substr((string) determine_locale(), 0, 2);
+        if (function_exists('pll_current_language')) {
+            $language = strtolower(substr((string)pll_current_language('slug'), 0, 2));
+            if (in_array($language, array('fr', 'en', 'de'), true)) return $language;
+        }
+        if (has_filter('wpml_current_language')) {
+            $language = strtolower(substr((string)apply_filters('wpml_current_language', null), 0, 2));
+            if (in_array($language, array('fr', 'en', 'de'), true)) return $language;
+        }
+        $locale = strtolower(substr((string) determine_locale(), 0, 2));
         return in_array($locale, array('fr', 'en', 'de'), true) ? $locale : 'fr';
     }
 
