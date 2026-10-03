@@ -96,7 +96,7 @@ release_contract_require_all($csv, array(
     "'Réponse courte vérifiée'",
     'Connaissances singes - IA',
     'Secondaire / IA',
-), 'FAQ CSV 1.19.6 workflow');
+), 'FAQ CSV 1.19.7 workflow');
 
 release_contract_forbid($csv, array(
     'wp_safe_remote_post',
@@ -189,4 +189,4 @@ release_contract_require_all($registry, array(
 
 release_contract_require_all($uninstall, array('parcs_ht_faq', 'parcs_ht_faq_revisions', 'parcs_ht_faq_contact'), 'FAQ uninstall');
 
-echo "FAQ 1.19.6 secondary rules and knowledge import contract OK.\n";
+echo "FAQ 1.19.7 secondary rules and knowledge import contract OK.\n";
