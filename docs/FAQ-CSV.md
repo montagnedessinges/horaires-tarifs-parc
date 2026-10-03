@@ -1,4 +1,4 @@
-# FAQ 1.19.6 — imports CSV FAQ et connaissances IA
+# FAQ 1.19.7 — imports CSV FAQ et connaissances IA
 
 La FAQ reste globale au parc et indépendante de toute année ou saison.
 
