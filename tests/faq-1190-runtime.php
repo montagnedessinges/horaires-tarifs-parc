@@ -1,7 +1,7 @@
 <?php
 // Exercise FAQ 1.19.1 writes without touching annual storage.
 define('ABSPATH', __DIR__ . '/');
-define('PARCS_HT_VERSION', '1.19.1');
+define('PARCS_HT_VERSION', '1.19.6');
 define('PARCS_HT_URL', 'https://example.org/plugin/');
 define('PARCS_HT_DIR', (getenv('PLUGIN_ROOT') ?: dirname(__DIR__)) . '/');
 
@@ -92,6 +92,22 @@ ensure(count(get_option('parcs_ht_faq_revisions')) === 1, 'CSV revision missing'
 ensure(get_option('parcs_ht_settings') === $annual, 'CSV import mutated annual storage');
 ensure(strpos(Parcs_HT_FAQ::render('fr'), 'Réponse.') !== false, 'FR answer missing from HTML');
 ensure(Parcs_HT_FAQ::render('en') === '' && Parcs_HT_FAQ::render('de') === '', 'Missing translation fell back to French');
+
+$rules = $item;
+$rules['id'] = 'MDS-SIN-TEST';
+$rules['category'] = 'Règles du parc';
+$rules['category_label'] = array('fr'=>'Règles du parc','en'=>'Visiting rules','de'=>'Besuchsregeln');
+$rules['question']['fr'] = 'Peut-on toucher les singes ?';
+$rules['answer']['fr'] = 'Non.';
+$rules['public_url'] = 'https://example.org/regles/';
+$rules['remote_order'] = 2;
+$current_faq = get_option('parcs_ht_faq');
+$current_faq['items'][] = $rules;
+update_option('parcs_ht_faq', $current_faq, false);
+$rules_html = Parcs_HT_FAQ::render('fr');
+ensure(strpos($rules_html, 'data-htp-faq-secondary') !== false, 'Secondary rules wrapper missing');
+ensure(strpos($rules_html, 'data-htp-faq-category="regles-du-parc"') === false, 'Secondary rules exposed as a primary category button');
+ensure(strpos($rules_html, '>Source</a>') !== false, 'Secondary source link missing');
 
 $blocked = $item; $blocked['status'] = 'À valider'; $blocked['enabled'] = '0'; $blocked['answer']['fr'] = 'Ne doit pas remplacer.';
 set_transient('parcs_ht_faq_csv_preview_1', array('rows'=>array(array('id'=>'MDS-TEST-001','change'=>'blocked','publishable'=>false,'item'=>$blocked))), 1800);
