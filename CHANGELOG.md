@@ -1,3 +1,12 @@
+## 1.19.7
+
+- Ajoute un affichage secondaire discret pour la catégorie « Règles du parc » : elle n’apparaît pas dans les filtres principaux et reste fermée par défaut.
+- Conserve les questions secondaires dans le HTML initial et dans la recherche interne ; une recherche correspondante ouvre automatiquement le bloc.
+- Affiche un lien « Source » pour les réponses secondaires lorsqu’une URL publique sûre est disponible.
+- Ajoute un import CSV dédié à l’onglet « Connaissances singes - IA » et fusionne les IDs `SIN-COM-*` validés dans le stockage FAQ existant.
+- Conserve une seule source publique dans WordPress : aucun second stockage FAQ n’est créé et aucune ligne absente du CSV n’est supprimée automatiquement.
+- Ne modifie ni les saisons, ni les horaires, ni les tarifs, ni les devis, ni les guides, ni le fonctionnement Contact Form 7.
+
 ## 1.19.6
 
 - Réutilise sous les tarifs le rendu « message important » du devis en ligne : repère coloré à gauche et fond légèrement teinté à partir de la même couleur.
