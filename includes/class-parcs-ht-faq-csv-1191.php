@@ -133,14 +133,29 @@ final class Parcs_HT_FAQ_CSV_1191 {
         return $labels;
     }
 
-    private static function public_url($row) {
-        $candidate = trim(self::value_from($row, array('Lien public','URL publique','Public URL'), ''));
-        if ($candidate === '') $candidate = trim(self::value_from($row, array('Source principale','Source'), ''));
+    private static function safe_public_url($candidate) {
+        $candidate = trim((string)$candidate);
         if (!preg_match('#^https://#i', $candidate)) return '';
         $url = esc_url_raw($candidate);
         $host = strtolower((string)wp_parse_url($url, PHP_URL_HOST));
         if ($host === '' || in_array($host, array('docs.google.com','drive.google.com','mail.google.com'), true)) return '';
         return $url;
+    }
+
+    private static function public_urls($row) {
+        $urls = self::triple('', '', '');
+        $aliases = array(
+            'fr'=>array('Lien de redirection FR','Lien public FR','URL publique FR','Public URL FR','Lien public','URL publique','Public URL'),
+            'de'=>array('Weiterleitungslink DE','Lien de redirection DE','Lien public DE','URL publique DE','Public URL DE'),
+            'en'=>array('Redirect link EN','Lien de redirection EN','Lien public EN','URL publique EN','Public URL EN'),
+        );
+        foreach ($aliases as $language => $headers) {
+            $urls[$language] = self::safe_public_url(self::value_from($row, $headers, ''));
+        }
+        if ($urls['fr'] === '') {
+            $urls['fr'] = self::safe_public_url(self::value_from($row, array('Source principale','Source'), ''));
+        }
+        return $urls;
     }
 
     private static function default_link_label($category) {
@@ -197,11 +212,20 @@ final class Parcs_HT_FAQ_CSV_1191 {
         $visibility_key = self::normalize_text($visibility);
         $publishable = in_array($status_key, array('valide','publie','published'), true) && (strpos($visibility_key, 'faq-publique') !== false || strpos($visibility_key, 'public-faq') !== false);
         $dynamic = self::bool_value(self::value_from($row, array('Donnée dynamique ?','Donnee dynamique ?','Dynamique','Dynamic'), ''));
-        $public_url = self::public_url($row);
+        $public_url = self::public_urls($row);
+        $mode_url = $public_url['fr'] !== '' ? $public_url['fr'] : ($public_url['en'] !== '' ? $public_url['en'] : $public_url['de']);
         $link_label = self::default_link_label($category);
+        $button_label = self::triple('', '', '');
         foreach (array('fr'=>'FR','en'=>'EN','de'=>'DE') as $language => $suffix) {
             $custom = sanitize_text_field(self::value_from($row, array('Libellé du lien ' . $suffix, 'Libelle du lien ' . $suffix, 'Link label ' . $suffix), ''));
             if ($custom !== '') $link_label[$language] = $custom;
+
+            $button_aliases = array(
+                'fr'=>array('Texte bouton FR','Libellé bouton FR','Libelle bouton FR','Button text FR','Button label FR'),
+                'de'=>array('Button-Text DE','Texte bouton DE','Libellé bouton DE','Libelle bouton DE','Button text DE','Button label DE'),
+                'en'=>array('Button text EN','Texte bouton EN','Libellé bouton EN','Libelle bouton EN','Button-Text EN','Button label EN'),
+            );
+            $button_label[$language] = sanitize_text_field(self::value_from($row, $button_aliases[$language], ''));
         }
 
         return array(
@@ -217,7 +241,8 @@ final class Parcs_HT_FAQ_CSV_1191 {
             'source_url'=>esc_url_raw(self::value_from($row, array('Source principale','Source'), '')),
             'public_url'=>$public_url,
             'link_label'=>$link_label,
-            'response_mode'=>self::response_mode($row, $id, $category, $dynamic, $public_url),
+            'button_label'=>$button_label,
+            'response_mode'=>self::response_mode($row, $id, $category, $dynamic, $mode_url),
             'verified'=>sanitize_text_field(self::value_from($row, array('Vérifié le','Verifie le','Verified'), '')),
             'status'=>$status,
             'notes'=>sanitize_textarea_field(self::value_from($row, array('Notes / garde-fou','Notes','Guardrail'), '')),
