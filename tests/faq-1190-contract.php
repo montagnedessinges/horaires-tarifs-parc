@@ -45,6 +45,10 @@ release_contract_require_all($feature, array(
     '[parc_faq_en]',
     '[parc_faq_de]',
     'data-htp-faq-item',
+    'data-htp-faq-secondary',
+    'data-htp-faq-secondary-item',
+    'parcs-ht-faq-source',
+    'regles-du-parc',
     '<details class=',
 ), 'FAQ public feature');
 
@@ -85,7 +89,14 @@ release_contract_require_all($csv, array(
     'Kurzantwort DE',
     'Question EN',
     'Short answer EN',
-), 'FAQ CSV 1.19.1 workflow');
+    "'source_kind'",
+    "'knowledge'",
+    "'SIN-COM-'",
+    "'Question canonique'",
+    "'Réponse courte vérifiée'",
+    'Connaissances singes - IA',
+    'Secondaire / IA',
+), 'FAQ CSV 1.19.6 workflow');
 
 release_contract_forbid($csv, array(
     'wp_safe_remote_post',
@@ -152,7 +163,9 @@ release_contract_require_all($faq_js, array(
     '[data-htp-faq-contact-form]',
     'aria-expanded',
     'is-search-fallback',
-), 'FAQ contact JavaScript');
+    '[data-htp-faq-secondary]',
+    'section.open = true',
+), 'FAQ secondary/search JavaScript');
 
 release_contract_require_all($bootstrap, array(
     "require_once PARCS_HT_DIR . 'includes/class-parcs-ht-faq.php';",
@@ -176,4 +189,4 @@ release_contract_require_all($registry, array(
 
 release_contract_require_all($uninstall, array('parcs_ht_faq', 'parcs_ht_faq_revisions', 'parcs_ht_faq_contact'), 'FAQ uninstall');
 
-echo "FAQ 1.19.3 unified contact contract OK.\n";
+echo "FAQ 1.19.6 secondary rules and knowledge import contract OK.\n";
