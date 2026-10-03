@@ -208,7 +208,39 @@ final class Parcs_HT_Admin_Retail_Tariffs {
             <div class="htp-1175-category-head"><div><h2><?php echo esc_html($title); ?></h2><p class="description"><?php echo esc_html($description); ?></p></div><span class="htp-1175-count"><?php echo esc_html((string)count((array)($tariffs[$group] ?? array()))); ?> ligne(s)</span></div>
             <div class="htp-tariff-columns-manager"><div class="htp-tariff-columns-title"><strong>Colonnes de prix</strong><span class="description">Ajoutez, masquez ou réorganisez les colonnes sans changer les identités métier.</span></div><div class="htp-tariff-columns-list" data-htp-tariff-columns><?php foreach ($columns as $col_index=>$column) self::column_row($group, $col_index, $column); ?></div><button type="button" class="button" data-htp-add-column>Ajouter une colonne</button><script type="text/html" class="htp-template-tariff-column"><?php self::column_row($group, '__COLINDEX__', array('id'=>'__COLID__','label'=>array('fr'=>'Nouvelle colonne','en'=>'New column','de'=>'Neue Spalte'))); ?></script></div>
             <div class="htp-repeater htp-tariff-repeater" data-template="htp-template-tariff-<?php echo esc_attr($group); ?>" data-htp-tariff-row-repeater><div class="htp-repeater-rows"><?php foreach ((array)($tariffs[$group] ?? array()) as $index=>$row) self::tariff_row($group, $index, $row, $columns); ?></div><button type="button" class="button htp-add-row">Ajouter une ligne</button></div><script type="text/html" id="htp-template-tariff-<?php echo esc_attr($group); ?>"><?php self::tariff_row($group, '__INDEX__', array(), $columns); ?></script>
+            <?php $info_blocks = isset($tariffs['info_blocks'][$group]) && is_array($tariffs['info_blocks'][$group]) ? $tariffs['info_blocks'][$group] : array(); ?>
+            <details class="htp-advanced htp-tariff-info-admin" open>
+                <summary>Blocs d’information sous les tarifs</summary>
+                <div class="htp-advanced-content">
+                    <p class="description">Ces blocs reprennent le rendu des messages importants du devis en ligne. Chaque bloc possède sa propre couleur et peut être réorganisé.</p>
+                    <div class="htp-repeater htp-quote-repeater" data-template="htp-template-tariff-info-<?php echo esc_attr($group); ?>">
+                        <div class="htp-repeater-rows htp-quote-sortable" data-htp-quote-sortable><?php foreach ($info_blocks as $info_index=>$info_row) self::info_block_row($group, $info_index, $info_row); ?></div>
+                        <button type="button" class="button htp-add-row">Ajouter un bloc d’information</button>
+                    </div>
+                    <script type="text/html" id="htp-template-tariff-info-<?php echo esc_attr($group); ?>"><?php self::info_block_row($group, '__INDEX__', array()); ?></script>
+                </div>
+            </details>
         </section><?php
+    }
+
+
+    private static function info_block_row($group, $index, $row) {
+        $row = wp_parse_args(is_array($row) ? $row : array(), array(
+            'enabled'=>'1',
+            'color'=>'#006757',
+            'title'=>array('fr'=>'','en'=>'','de'=>''),
+            'text'=>array('fr'=>'','en'=>'','de'=>''),
+        ));
+        $base = 'settings[tariffs][info_blocks][' . $group . '][' . $index . ']'; ?>
+        <div class="htp-repeat-row htp-quote-row htp-tariff-info-row">
+            <div class="htp-row-head"><span class="htp-sort-handle-quote" title="Déplacer">⋮⋮</span><strong>Bloc d’information</strong><?php self::enabled($base . '[enabled]', $row['enabled']); ?><button type="button" class="button-link-delete htp-remove-row">Supprimer</button></div>
+            <div class="htp-grid htp-grid-2">
+                <?php self::translated_input($base . '[title]', $row['title'], 'Titre'); ?>
+                <label class="htp-field"><span>Couleur du repère</span><input type="color" name="<?php echo esc_attr($base . '[color]'); ?>" value="<?php echo esc_attr(sanitize_hex_color($row['color']) ?: '#006757'); ?>"></label>
+            </div>
+            <?php self::translated_textarea($base . '[text]', $row['text'], 'Texte'); ?>
+            <p class="description">Même rendu que les messages importants du devis en ligne : la couleur choisie pilote la bordure et le fond légèrement teinté.</p>
+        </div><?php
     }
 
     private static function payment_row($index, $row) {

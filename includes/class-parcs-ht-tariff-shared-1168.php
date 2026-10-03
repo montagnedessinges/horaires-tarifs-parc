@@ -179,6 +179,7 @@ final class Parcs_HT_Tariff_Shared_1168 {
             if ($key === 'individual') {
                 $html .= self::fixes_call('visitor_payment_strip', array($tariffs, $language, 'individual', $label));
                 $html .= self::display_call('price_table', array($tariffs, 'individual', $language, array('tickets_url'=>$tickets_url)));
+                $html .= self::display_call('info_callouts', array($tariffs['info_blocks']['individual'] ?? array(), $language, '#006757'));
                 if ($tickets_url !== '') {
                     $tickets_label = self::content($language, 'common.tickets', $d['tickets'] ?? 'Acheter vos billets', $d['tickets'] ?? 'Buy tickets', $d['tickets'] ?? 'Tickets kaufen');
                     $html .= '<div class="parcs-ht-tariff-ui__actions"><a class="parcs-ht-tariff-ui__button is-primary" href="' . esc_url($tickets_url) . '">' . esc_html($tickets_label) . '</a></div>';
@@ -188,6 +189,7 @@ final class Parcs_HT_Tariff_Shared_1168 {
                 $note = self::tr($tariffs['notes'] ?? array(), $language, '');
                 if ($note !== '') $html .= '<p class="parcs-ht-tariff-ui__note is-before-table">' . esc_html($note) . '</p>';
                 $html .= self::display_call('price_table', array($tariffs, 'reduced', $language, array()));
+                $html .= self::display_call('info_callouts', array($tariffs['info_blocks']['reduced'] ?? array(), $language, '#006757'));
             } elseif ($retail_visible) {
                 // Un seul renderer groupes : exactement celui du shortcode / portail Groupes.
                 $html .= self::render_group_year($language, $year);

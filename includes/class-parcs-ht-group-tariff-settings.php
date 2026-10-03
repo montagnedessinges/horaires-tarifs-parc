@@ -61,8 +61,10 @@ final class Parcs_HT_Group_Tariff_Settings {
             $title = self::clean_translations($item['title'] ?? array());
             $text = self::clean_translations($item['text'] ?? array(), true);
             if ($title['fr'] === '' && $title['en'] === '' && $title['de'] === '' && $text['fr'] === '' && $text['en'] === '' && $text['de'] === '') continue;
+            $color = self::clean_color($item['color'] ?? '') ?: '#006757';
             $out[] = array(
                 'enabled'=>isset($item['enabled']) && (string)$item['enabled'] === '0' ? '0' : '1',
+                'color'=>$color,
                 'title'=>$title,
                 'text'=>$text,
             );

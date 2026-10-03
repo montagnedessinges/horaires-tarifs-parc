@@ -259,6 +259,9 @@ final class Parcs_HT_Tariff_Display {
                 if ($note !== '') $html .= '<p class="parcs-ht-tariff-ui__note is-before-table">' . esc_html($note) . '</p>';
             }
             $html .= self::price_table($tariffs, $key, $language, array('tickets_url'=>$tickets_url));
+            if (in_array($key, array('individual','reduced'), true)) {
+                $html .= self::info_callouts($tariffs['info_blocks'][$key] ?? array(), $language, '#006757');
+            }
             if ($key === 'groups') $html .= self::public_group_extras($general, $language, $d);
             $html .= '</div>';
             $first = false;
@@ -588,19 +591,27 @@ final class Parcs_HT_Tariff_Display {
         return self::payment_strip($title, $normalized);
     }
 
+
+    private static function info_callouts($rows, $language, $fallback_color = '#006757') {
+        $items = array();
+        foreach ((array)$rows as $block) {
+            if (!is_array($block) || (isset($block['enabled']) && (string)$block['enabled'] === '0')) continue;
+            $title = self::tr($block['title'] ?? array(), $language, '');
+            $text = self::tr($block['text'] ?? array(), $language, '');
+            if ($title === '' && $text === '') continue;
+            $color = sanitize_hex_color($block['color'] ?? '') ?: (sanitize_hex_color($fallback_color) ?: '#006757');
+            $items[] = '<article class="parcs-ht-tariff-ui__callout" style="--htp-tariff-callout-accent:' . esc_attr($color) . '">' .
+                ($title !== '' ? '<div class="parcs-ht-tariff-ui__callout-title" role="heading" aria-level="3">' . esc_html($title) . '</div>' : '') .
+                ($text !== '' ? '<p>' . nl2br(esc_html($text)) . '</p>' : '') .
+                '</article>';
+        }
+        return $items ? '<div class="parcs-ht-tariff-ui__callouts">' . implode('', $items) . '</div>' : '';
+    }
+
     private static function group_info($display, $language, $general) {
         $html = '';
         if ((string)($display['show_info_blocks'] ?? '0') === '1') {
-            foreach ((array)($display['info_blocks'] ?? array()) as $block) {
-                if (!is_array($block) || (isset($block['enabled']) && (string)$block['enabled'] === '0')) continue;
-                $title = self::tr($block['title'] ?? array(), $language, '');
-                $text = self::tr($block['text'] ?? array(), $language, '');
-                if ($title === '' && $text === '') continue;
-                $html .= '<article class="parcs-ht-tariff-ui__info-card">';
-                if ($title !== '') $html .= '<strong>' . esc_html($title) . '</strong>';
-                if ($text !== '') $html .= '<p>' . nl2br(esc_html($text)) . '</p>';
-                $html .= '</article>';
-            }
+            $html .= self::info_callouts($display['info_blocks'] ?? array(), $language, '#006757');
         } else {
             $booking = self::tr($general['groups_booking_note'] ?? array(), $language, '');
             if ($booking !== '') $html .= '<p class="parcs-ht-tariff-ui__info">' . nl2br(esc_html($booking)) . '</p>';

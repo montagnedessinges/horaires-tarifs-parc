@@ -1369,7 +1369,7 @@ final class Parcs_HT_Admin {
             'regular_periods' => array(), 'school_holidays' => array(), 'special_periods' => array(), 'public_holidays' => array(),
             'domain_rules' => array(), 'exceptions' => array(), 'alerts' => array(),
             'quote_page' => array(),
-            'tariffs' => array('group_order'=>array(),'columns'=>array('individual'=>array(),'reduced'=>array(),'groups'=>array()),'individual'=>array(),'reduced'=>array(),'groups'=>array(),'notes'=>array(),'payment_methods'=>array(),'payment_icons'=>array(),'payment_styles'=>array(),'print'=>array()),
+            'tariffs' => array('group_order'=>array(),'columns'=>array('individual'=>array(),'reduced'=>array(),'groups'=>array()),'individual'=>array(),'reduced'=>array(),'groups'=>array(),'info_blocks'=>array('individual'=>array(),'reduced'=>array()),'notes'=>array(),'payment_methods'=>array(),'payment_icons'=>array(),'payment_styles'=>array(),'print'=>array()),
         );
         $g = isset($raw['general']) && is_array($raw['general']) ? $raw['general'] : array();
         if (isset($current['general']) && is_array($current['general'])) {
@@ -1563,6 +1563,23 @@ final class Parcs_HT_Admin {
             'show_generation_date'=>array_key_exists('show_generation_date',$print)?self::bool($print,'show_generation_date'):'1',
             'orientation'=>$orientation,
         );
+
+        $clean['tariffs']['info_blocks'] = array('individual'=>array(),'reduced'=>array());
+        $posted_info_blocks = isset($tariffs['info_blocks']) && is_array($tariffs['info_blocks']) ? $tariffs['info_blocks'] : array();
+        foreach (array('individual','reduced') as $info_group) {
+            foreach (array_slice(isset($posted_info_blocks[$info_group]) && is_array($posted_info_blocks[$info_group]) ? $posted_info_blocks[$info_group] : array(), 0, 20) as $row) {
+                if (!is_array($row)) continue;
+                $title = self::sanitize_translations(isset($row['title']) ? $row['title'] : array());
+                $text = self::sanitize_translations(isset($row['text']) ? $row['text'] : array(), true);
+                if ($title['fr'] === '' && $title['en'] === '' && $title['de'] === '' && $text['fr'] === '' && $text['en'] === '' && $text['de'] === '') continue;
+                $clean['tariffs']['info_blocks'][$info_group][] = array(
+                    'enabled'=>self::bool($row, 'enabled'),
+                    'color'=>self::color($row, 'color', '#006757'),
+                    'title'=>$title,
+                    'text'=>$text,
+                );
+            }
+        }
         $clean['tariffs']['notes'] = self::sanitize_translations(isset($tariffs['notes'])?$tariffs['notes']:array(), true);
         $clean['tariffs']['payment_methods'] = self::sanitize_translations(isset($tariffs['payment_methods'])?$tariffs['payment_methods']:array(), true);
         $clean['tariffs']['payment_items'] = array();

@@ -1,3 +1,12 @@
+## 1.19.6
+
+- Réutilise sous les tarifs le rendu « message important » du devis en ligne : repère coloré à gauche et fond légèrement teinté à partir de la même couleur.
+- Ajoute des blocs d’information indépendants sous les tarifs Individuels et Tarifs réduits, avec activation, ordre, titre et texte FR / EN / DE, et couleur propre à chaque bloc.
+- Étend les blocs d’information Groupes existants avec une couleur individuelle et le même rendu public, sans supprimer ni réécrire leurs contenus.
+- Conserve les anciens blocs Groupes compatibles : lorsqu’aucune couleur n’était enregistrée, le vert principal des tarifs est utilisé comme valeur par défaut.
+- N’ajoute aucun second moteur de contenu : les blocs restent stockés avec les tarifs de leur année et le devis en ligne demeure inchangé.
+- Ajoute un contrat de régression 1.19.6 et l’exécute aussi sur le paquet de production nettoyé.
+
 ## 1.19.5
 
 - Renforce le principe « FAQ d’abord, contact en dernier recours » sur le shortcode FAQ + Contact.

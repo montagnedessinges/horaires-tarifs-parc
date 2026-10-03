@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.19.5
+Stable tag: 1.19.6
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes, FAQ et outils du parc.
 
@@ -19,6 +19,13 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.19.6 =
+* Ajoute sous les tarifs le même rendu coloré que les messages importants du devis en ligne.
+* Les tarifs Individuels et Réduits peuvent recevoir plusieurs blocs d’information, chacun avec activation, ordre, contenu FR / EN / DE et couleur propre.
+* Les blocs d’information Groupes existants gagnent eux aussi une couleur individuelle sans perte de contenu.
+* La couleur de chaque bloc pilote à la fois le repère latéral et le fond légèrement teinté.
+* Le devis en ligne reste inchangé ; aucun contenu n’est dupliqué entre Devis et Tarifs.
 
 = 1.19.5 =
 * Renforce le principe « FAQ d’abord, contact en dernier recours » dans le shortcode FAQ + Contact.
