@@ -20,8 +20,8 @@ check(strpos($schedule, 'determine_locale()') !== false, 'Le locale WordPress do
 check(strpos($schedule, 'navigator.language') === false, 'Le moteur PHP ne doit jamais dépendre de la langue du navigateur.');
 
 check(strpos($popup, 'Parcs_HT_Schedule::language()') !== false, 'Le pop-up doit utiliser la langue de page résolue par le moteur canonique.');
-check(strpos($popup, "in_array($lang, array('fr','en','de')") !== false, 'Le endpoint doit limiter explicitement les langues publiques à FR/EN/DE.');
-check(strpos($popup, "if ($image_url === '') continue;") !== false, 'Un pop-up sans visuel dans la langue courante ne doit pas être affiché.');
+check(strpos($popup, "in_array(\$lang, array('fr','en','de')") !== false, 'Le endpoint doit limiter explicitement les langues publiques à FR/EN/DE.');
+check(strpos($popup, "if (\$image_url === '') continue;") !== false, 'Un pop-up sans visuel dans la langue courante ne doit pas être affiché.');
 check(strpos($popupJs, 'navigator.language') === false && strpos($popupJs, 'navigator.languages') === false, 'Le pop-up public ne doit pas sélectionner sa langue depuis le navigateur.');
 check(strpos($health, "wp_schedule_event(time() + HOUR_IN_SECONDS, 'daily'") === false, 'Le contrôle quotidien ne doit plus être planifié.');
 
