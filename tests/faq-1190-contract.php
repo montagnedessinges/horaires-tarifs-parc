@@ -89,14 +89,7 @@ release_contract_require_all($csv, array(
     'Kurzantwort DE',
     'Question EN',
     'Short answer EN',
-    "'source_kind'",
-    "'knowledge'",
-    "'SIN-COM-'",
-    "'Question canonique'",
-    "'Réponse courte vérifiée'",
-    'Connaissances singes - IA',
-    'Secondaire / IA',
-), 'FAQ CSV 1.19.7 workflow');
+), 'FAQ CSV 1.19.8 rules-only workflow');
 
 release_contract_forbid($csv, array(
     'wp_safe_remote_post',
@@ -105,7 +98,11 @@ release_contract_forbid($csv, array(
     "update_option(Parcs_HT_Defaults::OPTION",
     "update_option('parcs_ht_settings'",
     'wp_ajax_',
-), 'FAQ CSV isolation/no-Google contract');
+    'Connaissances singes - IA',
+    "'SIN-COM-'",
+    "'source_kind'",
+    "'knowledge'",
+), 'FAQ CSV isolation/no-Google/no-knowledge-import contract');
 
 release_contract_require_all($contact, array(
     'final class Parcs_HT_FAQ_Contact_1192',
@@ -189,4 +186,4 @@ release_contract_require_all($registry, array(
 
 release_contract_require_all($uninstall, array('parcs_ht_faq', 'parcs_ht_faq_revisions', 'parcs_ht_faq_contact'), 'FAQ uninstall');
 
-echo "FAQ 1.19.7 secondary rules and knowledge import contract OK.\n";
+echo "FAQ 1.19.8 secondary rules-only contract OK.\n";
