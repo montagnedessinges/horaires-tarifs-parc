@@ -1,4 +1,4 @@
-# FAQ 1.19.8 — import CSV du parc
+# FAQ 1.19.9 — import CSV du parc et boutons d’action
 
 La FAQ reste globale au parc et indépendante de toute année ou saison.
 
@@ -82,3 +82,29 @@ L’import des fiches et l’activation publique de la FAQ restent deux opérati
 - `[parc_faq_fr]`
 - `[parc_faq_en]`
 - `[parc_faq_de]`
+
+
+## Boutons d’action et liens de redirection
+
+Les colonnes multilingues de redirection sont désormais lues directement par l’import FAQ :
+
+- `Lien de redirection FR`
+- `Weiterleitungslink DE`
+- `Redirect link EN`
+
+Pour afficher volontairement un bouton sous une réponse, renseigner aussi le libellé correspondant :
+
+- `Texte bouton FR`
+- `Button-Text DE`
+- `Button text EN`
+
+Règle de rendu :
+
+- URL + texte de bouton : affiche un vrai bouton cliquable sous la réponse ;
+- URL sans texte de bouton : n’ajoute pas automatiquement un nouveau bouton sur une réponse directe ;
+- les liens dynamiques déjà prévus par la FAQ (horaires, tarifs, etc.) conservent leur comportement et sont également rendus comme boutons ;
+- le lien utilisé dépend de la langue de la FAQ ;
+- les URL Google Docs, Google Drive et Gmail internes restent refusées comme liens publics ;
+- une URL OneDrive ou un autre lien HTTPS public peut être utilisée si elle est volontairement placée dans la colonne de redirection.
+
+Les URL destinées à un bouton ne doivent plus être recopiées en clair dans le texte de la réponse.
