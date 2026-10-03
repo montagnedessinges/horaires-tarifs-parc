@@ -15,6 +15,7 @@
         var categoryButtons = Array.prototype.slice.call(root.querySelectorAll('[data-htp-faq-category]'));
         var items = Array.prototype.slice.call(root.querySelectorAll('[data-htp-faq-item]'));
         var groups = Array.prototype.slice.call(root.querySelectorAll('[data-htp-faq-group]'));
+        var secondarySections = Array.prototype.slice.call(root.querySelectorAll('[data-htp-faq-secondary]'));
         var empty = root.querySelector('[data-htp-faq-empty]');
         var contact = root.nextElementSibling && root.nextElementSibling.matches('[data-htp-faq-contact]') ? root.nextElementSibling : null;
         var activeCategory = '';
@@ -36,6 +37,12 @@
             groups.forEach(function (group) {
                 var hasVisible = !!group.querySelector('[data-htp-faq-item]:not([hidden])');
                 group.hidden = !hasVisible;
+            });
+
+            secondarySections.forEach(function (section) {
+                var hasVisible = !!section.querySelector('[data-htp-faq-item]:not([hidden])');
+                section.hidden = activeCategory !== '' || (query !== '' && !hasVisible);
+                if (query !== '' && hasVisible) section.open = true;
             });
 
             if (empty) empty.hidden = visibleCount !== 0;
