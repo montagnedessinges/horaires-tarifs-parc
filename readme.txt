@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.19.7
+Stable tag: 1.19.8
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes, FAQ et outils du parc.
 
@@ -19,6 +19,13 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.19.8 =
+* Corrige le périmètre de la catégorie secondaire « Règles du parc » : elle est alimentée uniquement par le CSV normal de l’onglet du parc.
+* Supprime l’import séparé « Connaissances singes - IA » ajouté en 1.19.7 ; cet onglet reste une base interne et n’est plus proposé dans WordPress.
+* Conserve l’affichage discret « Règles du parc », la présence dans le HTML initial et la recherche interne.
+* Les règles sont créées dans l’onglet Montagne des Singes ou Forêt des Singes avec la catégorie « Règles du parc », puis importées par le workflow CSV habituel.
+* Aucun changement sur les saisons, horaires, tarifs, devis, guides ou formulaires de contact.
 
 = 1.19.7 =
 * Ajoute un affichage secondaire discret pour la catégorie « Règles du parc » : elle n’apparaît pas dans les filtres principaux de la FAQ et reste fermée par défaut.
