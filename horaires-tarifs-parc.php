@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Gestion du parc
  * Description: Gestion centralisée des horaires, calendriers, tarifs, événements, devis et outils du parc.
- * Version: 1.20.0
+ * Version: 1.20.1
  * Update URI: https://github.com/montagnedessinges/horaires-tarifs-parc
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -12,7 +12,7 @@
 
 if (!defined('ABSPATH')) { exit; }
 
-define('PARCS_HT_VERSION', '1.20.0');
+define('PARCS_HT_VERSION', '1.20.1');
 define('PARCS_HT_FILE', __FILE__);
 define('PARCS_HT_DIR', plugin_dir_path(__FILE__));
 define('PARCS_HT_URL', plugin_dir_url(__FILE__));
@@ -42,6 +42,7 @@ require_once PARCS_HT_DIR . 'includes/class-parcs-ht-display-policy.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-public-visibility.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-public-content.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-ai-google.php';
+require_once PARCS_HT_DIR . 'includes/class-parcs-ht-calendar-semantic.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin-overview.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin-navigation.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin-year-context.php';
@@ -84,6 +85,7 @@ Parcs_HT_Display_Policy::init();
 Parcs_HT_Public_Visibility::init();
 Parcs_HT_Public_Content::init();
 Parcs_HT_AI_Google::init();
+Parcs_HT_Calendar_Semantic::init();
 Parcs_HT_Admin_Overview::init();
 Parcs_HT_Admin_Navigation::init();
 Parcs_HT_Admin_Year_Context::init();
