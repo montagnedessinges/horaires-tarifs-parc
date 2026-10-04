@@ -62,17 +62,17 @@ foreach (array('popup engine'=>$popup,'popup admin'=>$popupAdmin,'popup js'=>$po
 }
 
 release_contract_require_all($main, array(
-    "Version: 1.20.0",
-    "define('PARCS_HT_VERSION', '1.20.0')",
+    'Version: ' . $version,
+    "define('PARCS_HT_VERSION', '" . $version . "')",
     'class-parcs-ht-popup-1200.php',
     'class-parcs-ht-popup-admin-1200.php',
     'Parcs_HT_Popup_1200::init();',
     'Parcs_HT_Popup_Admin_1200::init();',
-), '1.20.0 popup wiring');
+), '1.20.0+ popup wiring');
 release_contract_forbid($main, array(
     "Parcs_HT_Alerts::init()",
     "class-parcs-ht-alerts.php';",
-), '1.20.0 obsolete public popup bootstrap');
+), '1.20.0+ obsolete public popup bootstrap');
 
 release_contract_require_all($popup, array(
     "const OPTION = 'parcs_ht_popups_1200'",
@@ -123,7 +123,7 @@ release_contract_require_all($popupCss, array(
     "max-height:92vh",
 ), '1.20.0 responsive no-crop rendering');
 
-echo "OK: 1.20.0 Communication uses one autonomous visual popup engine and keeps Advent independent.\n";
+echo "OK: 1.20.0+ Communication uses one autonomous visual popup engine and keeps Advent independent.\n";
 
 if (release_contract_at_least($version, '1.17.10')) {
     require __DIR__ . '/admin-save-integrity-11710-contract.php';

@@ -1,3 +1,13 @@
+## 1.20.1
+
+- Rend le calendrier public compréhensible directement dans le HTML initial afin d’améliorer son exploration et son indexation par Google, les autres moteurs de recherche et les assistants IA sans dépendre exclusivement du JavaScript.
+- Ajoute un renderer serveur `Parcs_HT_Calendar_Semantic` qui lit exclusivement les saisons canoniques existantes : aucun nouveau stockage, aucune seconde saisie et aucune modification du moteur interactif du calendrier.
+- Expose dans un accordéon public discret les dates de saison, horaires habituels, horaires exceptionnels, fermetures, événements, périodes repères et jours fériés réellement publiés, avec balises HTML `<time datetime>`.
+- Préserve les libellés internes : un `internal_label` n’est jamais utilisé comme repli public ; une traduction d’événement ou de période absente utilise uniquement un type générique localisé au lieu de recopier automatiquement le français.
+- Ne génère aucun faux JSON-LD `Event` sur la page calendrier multi-événements et conserve le socle 1.18.0 pour `OpeningHoursSpecification`, `specialOpeningHoursSpecification` et la protection contre les doublons avec SEOPress PRO.
+- Ajoute des contrats de régression statiques et d’exécution pour vérifier le HTML serveur, FR / EN / DE, l’absence de contenu réservé aux robots, l’absence de stockage propre et la non-exposition des libellés internes.
+- Documente le cadrage, les sources officielles Google / Schema.org / OpenAI, le point de restauration 1.20.0 et les contrôles post-déploiement dans `UPDATE-1.20.1.md`.
+
 ## 1.20.0
 
 - Refonte complète du module Pop-up autour d’un stockage autonome, sans dépendance publique aux événements, périodes ou exceptions.
