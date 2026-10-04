@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.20.0
+Stable tag: 1.20.1
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes, FAQ et outils du parc.
 
@@ -19,6 +19,15 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.20.1 =
+* Ajoute un rendu sémantique du calendrier directement dans le HTML initial afin que Google, les autres moteurs et les assistants IA puissent comprendre les données publiques sans dépendre de l’exécution JavaScript.
+* Réutilise exclusivement les saisons, horaires, exceptions, événements, périodes et jours fériés déjà enregistrés dans Gestion du parc : aucune seconde saisie ni nouveau stockage n’est créé.
+* Expose dans un accordéon public discret les horaires habituels, horaires exceptionnels, fermetures, événements et périodes réellement publiés, avec dates balisées en HTML sémantique.
+* Conserve le calendrier visuel interactif existant et son moteur JavaScript inchangés ; la nouvelle couche sert de représentation serveur complémentaire et progressive.
+* Ne transforme pas les périodes ni le calendrier multi-événements en faux schémas Event ; les données structurées horaires existantes restent gérées par le socle IA & Google et sa protection contre les doublons SEOPress PRO.
+* Respecte FR / EN / DE sans reprendre automatiquement un titre français lorsqu’une traduction publique manque.
+* Ajoute des contrats de régression statiques et d’exécution pour vérifier le HTML initial, l’absence de libellés internes et l’absence de contenu réservé aux robots.
 
 = 1.20.0 =
 * Refonte complète des pop-up : ils deviennent autonomes et ne dépendent plus des événements, périodes ou exceptions.
