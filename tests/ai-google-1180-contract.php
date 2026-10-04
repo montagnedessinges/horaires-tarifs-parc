@@ -59,4 +59,5 @@ echo "AI / Google 1.18.0 contract OK.\n";
 
 if (release_contract_at_least($version, '1.20.1')) {
     require __DIR__ . '/indexation-1201-contract.php';
+    require __DIR__ . '/indexation-1201-runtime.php';
 }
