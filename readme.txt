@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.20.1
+Stable tag: 1.20.2
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes, FAQ et outils du parc.
 
@@ -19,6 +19,16 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.20.2 =
+* Corrige la lecture des horaires groupes multi-années dans le HTML initial : une année publiée pour les groupes peut désormais être comprise sans attendre l’exécution JavaScript, même si cette année n’est pas encore publiée dans le calendrier visiteurs.
+* Supprime la seconde implémentation concurrente du portail groupes : le shortcode groupes utilise désormais un seul renderer canonique, sans double logique 2026 / 2027.
+* Rend chaque année publique du portail groupes accessible par une vraie URL de repli serveur tout en conservant le changement instantané par JavaScript pour le visiteur.
+* Rend les tarifs groupes côté serveur pour l’année publique explicitement sélectionnée et conserve `Parcs_HT_Public_Visibility` comme source de décision des années réellement publiques.
+* N’émet plus le faux texte « horaires non disponibles » dans le contenu textuel lorsque les horaires de l’année active existent réellement.
+* Réduit le payload JavaScript propre au calendrier groupes à une liste blanche de champs publics et n’y expose jamais les libellés internes.
+* Conserve l’apparence du calendrier, des tarifs et du portail groupes ; aucun nouveau stockage ni aucune double saisie n’est ajouté.
+* Ajoute des tests 1.20.2 sur le rendu serveur, l’isolation calendrier visiteurs / horaires groupes, les tarifs par année et l’absence de fuite de libellés internes.
 
 = 1.20.1 =
 * Ajoute un rendu sémantique du calendrier directement dans le HTML initial afin que Google, les autres moteurs et les assistants IA puissent comprendre les données publiques sans dépendre de l’exécution JavaScript.

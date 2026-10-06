@@ -18,8 +18,8 @@ if (!is_string($main) || !is_string($feature)) {
 }
 
 release_contract_require_all($main, array(
-    "Version: 1.20.1",
-    "define('PARCS_HT_VERSION', '1.20.1');",
+    'Version: ' . $version,
+    "define('PARCS_HT_VERSION', '" . $version . "');",
     "require_once PARCS_HT_DIR . 'includes/class-parcs-ht-calendar-semantic.php';",
     'Parcs_HT_Calendar_Semantic::init();',
 ), 'Indexation 1.20.1 bootstrap');

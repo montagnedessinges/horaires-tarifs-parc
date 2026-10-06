@@ -61,3 +61,11 @@ if (release_contract_at_least($version, '1.20.1')) {
     require __DIR__ . '/indexation-1201-contract.php';
     require __DIR__ . '/indexation-1201-runtime.php';
 }
+
+if (release_contract_at_least($version, '1.20.2')) {
+    require __DIR__ . '/public-surface-1202-contract.php';
+    $runtime = __DIR__ . '/public-surface-1202-runtime.php';
+    $command = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($runtime);
+    passthru($command, $surface_exit);
+    if ($surface_exit !== 0) exit($surface_exit);
+}

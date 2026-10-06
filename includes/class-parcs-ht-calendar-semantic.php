@@ -7,10 +7,9 @@ if (!defined('ABSPATH')) {
 /**
  * Rendu sémantique serveur du calendrier public.
  *
- * Cette couche ne possède aucun stockage. Elle lit uniquement les saisons canoniques
- * de Gestion du parc afin que les informations importantes restent compréhensibles
- * dans le HTML initial, même sans exécution JavaScript. Le même rendu pourra servir
- * de base aux améliorations d'accessibilité ultérieures.
+ * Aucun stockage propre : le rendu lit exclusivement les saisons canoniques.
+ * Il peut être limité à une liste d'années déjà validée par la politique de
+ * visibilité (par exemple les horaires groupes) sans dupliquer les données.
  */
 final class Parcs_HT_Calendar_Semantic {
     public static function init() {
@@ -155,8 +154,23 @@ final class Parcs_HT_Calendar_Semantic {
         return implode(', ', array_values(array_unique($out)));
     }
 
+    private static function normalize_years($years) {
+        if (!is_array($years)) return null;
+        $out = array();
+        foreach ($years as $year) {
+            $year = (string)$year;
+            if (preg_match('/^20\d{2}$/', $year)) $out[] = $year;
+        }
+        $out = array_values(array_unique($out));
+        sort($out, SORT_NUMERIC);
+        return $out;
+    }
+
     private static function public_season($year, $season) {
         if (!is_array($season)) return false;
+        if (class_exists('Parcs_HT_Public_Visibility') && method_exists('Parcs_HT_Public_Visibility', 'calendar_years')) {
+            return in_array((string)$year, Parcs_HT_Public_Visibility::calendar_years(), true);
+        }
         if (class_exists('Parcs_HT_Public_Visibility')) {
             $state = Parcs_HT_Public_Visibility::scheduled_state((string)$year);
             if ($state === 'on') return true;
@@ -221,8 +235,7 @@ final class Parcs_HT_Calendar_Semantic {
             if ($range === '') continue;
             $title = self::exact_translation($row['title'] ?? array(), $language);
             $type = $is_event ? $labels['event'] : $labels['period'];
-            $line = '<strong>' . esc_html($title !== '' ? $title : $type) . '</strong> — ' . $range;
-            $items[] = $line;
+            $items[] = '<strong>' . esc_html($title !== '' ? $title : $type) . '</strong> — ' . $range;
         }
         return $items;
     }
@@ -250,10 +263,11 @@ final class Parcs_HT_Calendar_Semantic {
         return $html . '</ul></section>';
     }
 
-    public static function render($language = '') {
+    public static function render($language = '', $allowed_years = null) {
         if (!class_exists('Parcs_HT_Defaults')) return '';
         $language = in_array($language, array('fr', 'en', 'de'), true) ? $language : (class_exists('Parcs_HT_Schedule') ? Parcs_HT_Schedule::language() : 'fr');
         $labels = self::labels($language);
+        $allowed_years = self::normalize_years($allowed_years);
         $all = Parcs_HT_Defaults::all_settings();
         $seasons = is_array($all['seasons'] ?? null) ? $all['seasons'] : array();
         if (!$seasons) return '';
@@ -262,7 +276,12 @@ final class Parcs_HT_Calendar_Semantic {
         $season_html = '';
 
         foreach ($seasons as $year => $season) {
-            if (!self::public_season($year, $season)) continue;
+            $year = (string)$year;
+            if (is_array($allowed_years)) {
+                if (!in_array($year, $allowed_years, true)) continue;
+            } elseif (!self::public_season($year, $season)) {
+                continue;
+            }
             $regular = self::regular_items($season, $language, $labels);
             $exceptions = self::exception_items($season, $language, $labels, false);
             $closures = self::exception_items($season, $language, $labels, true);
@@ -271,8 +290,8 @@ final class Parcs_HT_Calendar_Semantic {
             $holidays = self::holiday_items($season, $general, $language, $labels);
             if (!$regular && !$exceptions && !$closures && !$events && !$periods && !$holidays) continue;
 
-            $season_html .= '<section class="parcs-ht-calendar-semantic-season" data-htp-semantic-year="' . esc_attr((string)$year) . '">';
-            $season_html .= '<h3>' . esc_html(sprintf($labels['season'], (string)$year)) . '</h3>';
+            $season_html .= '<section class="parcs-ht-calendar-semantic-season" data-htp-semantic-year="' . esc_attr($year) . '">';
+            $season_html .= '<h3>' . esc_html(sprintf($labels['season'], $year)) . '</h3>';
             $start = (string)($season['season_start'] ?? '');
             $end = (string)($season['season_end'] ?? '');
             if (self::valid_date($start) && self::valid_date($end)) {
@@ -292,7 +311,7 @@ final class Parcs_HT_Calendar_Semantic {
     }
 
     public static function append_to_calendar_shortcodes($output, $tag, $attr, $m) {
-        unset($attr, $m);
+        unset($m);
         if (is_admin()) return $output;
         $allowed = array(
             'parc_calendrier', 'parc_calendrier_fr', 'parc_calendrier_en', 'parc_calendrier_de',
@@ -300,9 +319,14 @@ final class Parcs_HT_Calendar_Semantic {
         );
         if (!in_array((string)$tag, $allowed, true)) return $output;
         if (!apply_filters('parcs_ht_calendar_semantic_enabled', true, $tag)) return $output;
-        static $printed = false;
-        if ($printed) return $output;
-        $printed = true;
-        return $output . self::render(self::language_from_tag($tag));
+
+        $years = apply_filters('parcs_ht_calendar_semantic_years', null, $tag, is_array($attr) ? $attr : array());
+        $years = self::normalize_years($years);
+        $language = self::language_from_tag($tag);
+        $key = $language . '|' . (is_array($years) ? implode(',', $years) : 'calendar');
+        static $printed = array();
+        if (isset($printed[$key])) return $output;
+        $printed[$key] = true;
+        return $output . self::render($language, $years);
     }
 }

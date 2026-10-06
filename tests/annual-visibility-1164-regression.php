@@ -2,8 +2,8 @@
 $root = dirname(__DIR__);
 $visibility = file_get_contents($root . '/includes/class-parcs-ht-public-visibility.php');
 $composer = file_get_contents($root . '/includes/class-parcs-ht-shortcode-composer.php');
+$portal = file_get_contents($root . '/includes/class-parcs-ht-group-portal.php');
 $adminJs = file_get_contents($root . '/assets/public-visibility-admin.js');
-$groupJs = file_get_contents($root . '/assets/group-portal-sync.js');
 
 $checks = array(
     'La date de disparition coupe l’année dès le jour indiqué' => strpos($visibility, '$today >= $until') !== false,
@@ -13,11 +13,12 @@ $checks = array(
     'Les dates maîtresses pilotent les horaires groupes' => strpos($visibility, "'groups_schedule_visible'") !== false && strpos($visibility, 'group_schedule_years') !== false,
     'Les dates maîtresses pilotent les tarifs groupes' => strpos($visibility, "'group_tariffs_visible'") !== false && strpos($visibility, 'group_tariff_years') !== false,
     'Les dates maîtresses pilotent les devis groupes' => strpos($visibility, 'filter_quote_state') !== false && strpos($visibility, "'group_quotes_enabled'") !== false,
-    'Le portail groupes utilise l’union des années horaires et tarifs' => strpos($composer, 'group_portal_years') !== false,
-    'Le portail groupes réutilise le calendrier historique' => strpos($composer, "self::child('parc_calendrier'") !== false,
-    'Les horaires groupes ont leur propre jeu de saisons' => strpos($composer, 'group_schedule_payload') !== false && strpos($composer, 'settings.seasons=') !== false,
-    'Le sélecteur annuel groupes est commun' => strpos($composer, 'data-group-year=') !== false && strpos($composer, 'data-group-selected-year') !== false,
-    'La synchronisation années tarifs/calendrier existe' => strpos($groupJs, 'selectTariffs') !== false && strpos($groupJs, 'selectCalendar') !== false,
+    'Le portail groupes lit les années horaires et tarifs depuis la politique centrale' => strpos($portal, 'Parcs_HT_Public_Visibility::group_schedule_years()') !== false && strpos($portal, 'Parcs_HT_Public_Visibility::group_tariff_years()') !== false,
+    'Le portail groupes réutilise le calendrier historique' => strpos($portal, "do_shortcode('[' . $tag . ']')") !== false,
+    'Les horaires groupes injectent uniquement leur projection publique' => strpos($portal, 'schedule_payload') !== false && strpos($portal, 'public_row') !== false && strpos($portal, 'Object.assign(window.ParcsHTPData.settings.seasons') !== false,
+    'Le calendrier sémantique est limité aux années horaires groupes' => strpos($portal, "add_filter('parcs_ht_calendar_semantic_years'") !== false,
+    'Le sélecteur annuel groupes possède une URL de repli serveur' => strpos($portal, 'htp_group_year') !== false && strpos($portal, 'data-group-year=') !== false,
+    'L’assembleur historique groupes délègue au portail canonique' => strpos($composer, 'Parcs_HT_Group_Portal::render') !== false && strpos($composer, "add_shortcode('parc_groupes_horaires_tarifs'") === false,
     'Les deux dates automatiques sont visibles dans Activation de l’année' => strpos($adminJs, 'Activer automatiquement toute l’année à partir du') !== false && strpos($adminJs, 'Désactiver automatiquement toute l’année à partir du') !== false,
 );
 
