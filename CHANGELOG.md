@@ -1,3 +1,11 @@
+## 1.20.4
+
+- Réglages de présentation par événement WordPress : visibilité calendrier, couleur du marqueur et étoile/point/automatique dans une metabox du type de publication configuré.
+- Étoile par défaut pour un événement d'une journée, points pour un événement de plusieurs jours ; overrides possibles par article.
+- Jusqu'à trois marqueurs de couleurs différentes sur une date, indicateur +N au-delà ; liste détaillée toujours complète.
+- Événements masqués absents du calendrier et de la projection sémantique, mais toujours publiés dans WordPress et visibles dans les widgets propres au thème.
+- Audit du thème Montagne des Singes et non-régression sur le contrat de données ACF, sans modification du thème.
+
 ## 1.20.3
 
 - Lit les événements WordPress publiés depuis le type `evenement` (source configurable par site) : titre, dates ACF brutes `date_debut` / `date_fin` et permalien uniquement.
