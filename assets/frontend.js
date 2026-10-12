@@ -381,7 +381,7 @@
     var events=specialPeriodRows(date,true).filter(function(row){return !row.source_post_id || translatedExact(row.title,language);});
     events.forEach(function(eventRow){
       var eventTitle=translated(eventRow.title,language)||eventRow.internal_label||(isEventRow(eventRow)?d.event:'');
-      var eventWrap=document.createElement('div');eventWrap.className='parcs-ht-event-note '+(isEventRow(eventRow)?'is-event':'is-period');eventWrap.style.setProperty('--htp-event-color',isEventRow(eventRow)?'#e7c55b':(eventRow.color||'#7b61a8'));
+      var eventWrap=document.createElement('div');eventWrap.className='parcs-ht-event-note '+(isEventRow(eventRow)?'is-event':'is-period');eventWrap.style.setProperty('--htp-event-color',isEventRow(eventRow)?(eventRow.color||'#e7c55b'):(eventRow.color||'#7b61a8'));
       var eventHead=document.createElement('div');eventHead.className='parcs-ht-event-head';
       if(eventTitle){var eh=document.createElement('h4');eh.className='parcs-ht-event-title';if(isEventRow(eventRow)){var em=document.createElement('span');em.className='parcs-ht-event-title-icon';em.innerHTML=eventIconSvg('star');eh.appendChild(em);}eh.appendChild(document.createTextNode((isEventRow(eventRow)?' ':'')+eventTitle));eventHead.appendChild(eh);}
       var eventButton=translated(eventRow.button_label,language),eventUrl=translatedExact(eventRow.button_url,language);if(String(eventRow.show_button||'0')==='1'&&eventButton&&eventUrl){var ea=document.createElement('a');ea.className='parcs-ht-button parcs-ht-event-link';ea.href=eventUrl;ea.textContent=eventButton;eventHead.appendChild(ea);}
@@ -422,7 +422,20 @@
     for(var day=1;day<=daysCount;day++){
       var date=isoDate(year,month,day),status=resolveDay(date),holiday=((settings.general||{}).show_public_holidays==='1')?publicHolidayRow(date):null,events=specialPeriodRows(date,true).filter(function(row){return !row.source_post_id || translatedExact(row.title,language);}),button=document.createElement('button');button.type='button';button.className='parcs-ht-day '+(status.open?'is-open':'is-closed')+(holiday?' is-public-holiday':'')+(events.length?' is-special-event':'');if(holiday){button.style.setProperty('--htp-holiday-border',(settings.general||{}).holiday_border_color||'#e7c55b');button.style.setProperty('--htp-holiday-border-width',String((settings.general||{}).holiday_border_width||3)+'px');}button.setAttribute('data-htp-date',date);button.setAttribute('aria-label',dayAria(date,status,language));var dayNumber=document.createElement('span');dayNumber.className='parcs-ht-day-number';dayNumber.textContent=String(day);button.appendChild(dayNumber);
       if(date===now.date)button.classList.add('is-today');
-      if(status.exceptional && (!status.exception || String(status.exception.show_public_marker)!=='0')){var symbol=document.createElement('i');symbol.className='parcs-ht-symbol '+(status.type==='closed'?'is-closed':'is-hours');symbol.setAttribute('aria-hidden','true');symbol.textContent=status.type==='closed'?'×':'!';button.appendChild(symbol);}if(events.length){var eventMarker=events.find(isEventRow),periodRows=events.filter(function(r){return !isEventRow(r);});if(eventMarker){var star=document.createElement('i');var isLong=String(eventMarker.display_mode||'spot')==='long';star.className='parcs-ht-event-star is-event '+(isLong?'is-long':'is-spot');star.setAttribute('aria-hidden','true');if(isLong){star.textContent='•';}else{star.innerHTML=eventIconSvg('star');}button.appendChild(star);}periodRows.slice(0,3).forEach(function(periodRow,index){var band=document.createElement('i');band.className='parcs-ht-period-band';band.setAttribute('aria-hidden','true');band.style.setProperty('--htp-period-color',periodRow.color||'#7b61a8');band.style.setProperty('--htp-period-index',String(index));button.appendChild(band);});}
+      if(status.exceptional && (!status.exception || String(status.exception.show_public_marker)!=='0')){var symbol=document.createElement('i');symbol.className='parcs-ht-symbol '+(status.type==='closed'?'is-closed':'is-hours');symbol.setAttribute('aria-hidden','true');symbol.textContent=status.type==='closed'?'×':'!';button.appendChild(symbol);}if(events.length){var eventMarker=events.find(isEventRow),periodRows=events.filter(function(r){return !isEventRow(r);});if(eventMarker){
+          var eventRows=events.filter(isEventRow).slice().sort(function(a,b){return (String(a.display_mode||'spot')==='long'?1:0)-(String(b.display_mode||'spot')==='long'?1:0);});
+          var marks=document.createElement('span');marks.className='parcs-ht-calendar-marks';marks.setAttribute('aria-hidden','true');
+          eventRows.slice(0,3).forEach(function(row){
+            var mark=document.createElement('i'),small=String(row.display_mode||'spot')==='long',color=row.color||'#e7c55b';
+            mark.className='parcs-ht-calendar-mark '+(small?'is-dot':'is-star')+(eventRows.length>1?' is-multi':'');
+            mark.style.setProperty('--htp-event-color',color);
+            mark.style.setProperty('--htp-event-ink',contrastText(color));
+            if(!small)mark.innerHTML=eventIconSvg('star');
+            marks.appendChild(mark);
+          });
+          if(eventRows.length>3){var extra=document.createElement('span');extra.className='parcs-ht-calendar-more';extra.textContent='+'+(eventRows.length-3);marks.appendChild(extra);}
+          button.appendChild(marks);
+        }periodRows.slice(0,3).forEach(function(periodRow,index){var band=document.createElement('i');band.className='parcs-ht-period-band';band.setAttribute('aria-hidden','true');band.style.setProperty('--htp-period-color',periodRow.color||'#7b61a8');band.style.setProperty('--htp-period-index',String(index));button.appendChild(band);});}
       days.appendChild(button);
     }
     grid.appendChild(days);root.querySelector('[data-htp-month-summary]').textContent=monthSummary(monthKey,language);renderPeriodLegends(root,monthKey,language);

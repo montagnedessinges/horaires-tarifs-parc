@@ -7,9 +7,12 @@ final class Parcs_HT_WordPress_Events {
     const OPTION = 'parcs_ht_wordpress_events';
     private static $cache = array();
     private static $ids = null;
+    private static $saving_appearance = false;
 
     public static function init() {
         add_action('admin_post_parcs_ht_wordpress_events_save', array(__CLASS__, 'save'));
+        add_action('add_meta_boxes', array(__CLASS__, 'register_metabox'));
+        add_action('save_post', array(__CLASS__, 'save_metabox'), 10, 2);
         add_action('save_post', array(__CLASS__, 'invalidate'), 20);
         add_action('before_delete_post', array(__CLASS__, 'invalidate'));
         foreach (array('added_post_meta','updated_post_meta','deleted_post_meta') as $hook) {
@@ -45,7 +48,89 @@ final class Parcs_HT_WordPress_Events {
 
     public static function meta_changed($meta_id, $post_id, $key, $value) {
         unset($meta_id, $value);
-        if (in_array($key, array('date_debut','date_fin'), true)) self::invalidate($post_id);
+        if (self::$saving_appearance && strpos((string)$key, '_parcs_ht_event_calendar_') === 0) return;
+        if (in_array($key, array('date_debut','date_fin','_parcs_ht_event_calendar_enabled','_parcs_ht_event_calendar_color','_parcs_ht_event_calendar_marker'), true)) self::invalidate($post_id);
+    }
+
+    /**
+     * Presentation preferences are private post meta: the theme keeps its own
+     * ACF date_debut / date_fin, WP_Query and homepage widgets untouched.
+     */
+    public static function appearance($post_id) {
+        $visible = (string)get_post_meta($post_id, '_parcs_ht_event_calendar_enabled', true);
+        $color = (string)get_post_meta($post_id, '_parcs_ht_event_calendar_color', true);
+        $marker = (string)get_post_meta($post_id, '_parcs_ht_event_calendar_marker', true);
+        if (!preg_match('/^#[a-fA-F0-9]{6}$/D', $color)) $color = '#e7c55b';
+        if (!in_array($marker, array('auto','star','dot'), true)) $marker = 'auto';
+        return array('enabled'=>$visible !== '0', 'color'=>$color, 'marker'=>$marker);
+    }
+
+    public static function register_metabox($post_type) {
+        if ((string)$post_type !== (string)self::settings()['post_type']) return;
+        add_meta_box('parcs-ht-event-calendar-options', 'Affichage dans le calendrier', array(__CLASS__, 'render_metabox'), $post_type, 'side', 'default');
+    }
+
+    public static function render_metabox($post) {
+        $style = self::appearance($post->ID);
+        wp_nonce_field('parcs_ht_event_calendar_save', 'parcs_ht_event_calendar_nonce');
+        ?>
+        <div id="parcs-ht-event-calendar-options-fields">
+            <p><label><input type="checkbox" name="parcs_ht_event_calendar_enabled" value="1" <?php checked($style['enabled'], true); ?>> Afficher dans le calendrier du parc</label></p>
+            <p><label for="parcs-ht-event-calendar-color"><strong>Couleur du marqueur</strong></label><br>
+                <input type="color" id="parcs-ht-event-calendar-color" name="parcs_ht_event_calendar_color" value="<?php echo esc_attr($style['color']); ?>"></p>
+            <p><label for="parcs-ht-event-calendar-marker"><strong>Type de marqueur</strong></label><br>
+                <select name="parcs_ht_event_calendar_marker" id="parcs-ht-event-calendar-marker" style="width:100%">
+                    <option value="auto" <?php selected($style['marker'], 'auto'); ?>>Automatique selon la durée</option>
+                    <option value="star" <?php selected($style['marker'], 'star'); ?>>Grande étoile</option>
+                    <option value="dot" <?php selected($style['marker'], 'dot'); ?>>Petit point</option>
+                </select></p>
+            <p class="description">Automatique : étoile pour une journée, petits points pour plusieurs jours. N'affecte pas la page événement ni les blocs de la page d'accueil.</p>
+            <p><strong>Aperçu :</strong> <span id="parcs-ht-event-calendar-preview" style="display:inline-flex;gap:6px;align-items:center;vertical-align:middle"></span></p>
+        </div>
+        <script>
+        (function(){
+            var root=document.getElementById('parcs-ht-event-calendar-options-fields'); if(!root)return;
+            var color=root.querySelector('[name="parcs_ht_event_calendar_color"]');
+            var marker=root.querySelector('[name="parcs_ht_event_calendar_marker"]');
+            var preview=document.getElementById('parcs-ht-event-calendar-preview');
+            function update(){
+                preview.textContent='';
+                var mode=marker.value, shade=color.value||'#e7c55b';
+                var sample=document.createElement('span');
+                sample.style.cssText='display:inline-flex;align-items:center;justify-content:center;background:'+shade+';color:#242424;border-radius:50%;font-weight:700;line-height:1';
+                if(mode==='dot'){sample.style.width='9px';sample.style.height='9px';sample.setAttribute('aria-label','Petit point');}
+                else {sample.style.width='23px';sample.style.height='23px';sample.textContent='★';}
+                preview.appendChild(sample);
+                if(mode==='auto') preview.appendChild(document.createTextNode(' / • sur plusieurs jours'));
+            }
+            color.addEventListener('input',update);marker.addEventListener('change',update);update();
+        })();
+        </script>
+        <?php
+    }
+
+    public static function save_metabox($post_id, $post) {
+        if (!is_object($post) || $post->post_type !== self::settings()['post_type']) return;
+        if (!isset($_POST['parcs_ht_event_calendar_nonce'])) return;
+        if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
+        if (function_exists('wp_is_post_revision') && wp_is_post_revision($post_id)) return;
+        if (!current_user_can('edit_post', $post_id)) return;
+        $nonce = sanitize_text_field(wp_unslash($_POST['parcs_ht_event_calendar_nonce']));
+        if (!wp_verify_nonce($nonce, 'parcs_ht_event_calendar_save')) return;
+        $visible = isset($_POST['parcs_ht_event_calendar_enabled']) ? '1' : '0';
+        $color = isset($_POST['parcs_ht_event_calendar_color']) ? sanitize_text_field(wp_unslash($_POST['parcs_ht_event_calendar_color'])) : '';
+        if (!preg_match('/^#[a-fA-F0-9]{6}$/D', $color)) $color = '#e7c55b';
+        $marker = isset($_POST['parcs_ht_event_calendar_marker']) ? sanitize_key(sanitize_text_field(wp_unslash($_POST['parcs_ht_event_calendar_marker']))) : 'auto';
+        if (!in_array($marker, array('auto','star','dot'), true)) $marker = 'auto';
+        self::$saving_appearance = true;
+        try {
+            update_post_meta($post_id, '_parcs_ht_event_calendar_enabled', $visible);
+            update_post_meta($post_id, '_parcs_ht_event_calendar_color', $color);
+            update_post_meta($post_id, '_parcs_ht_event_calendar_marker', $marker);
+        } finally {
+            self::$saving_appearance = false;
+        }
+        // The existing save_post hook invalidates caches once after this handler.
     }
 
     public static function rows($year, $language) {
@@ -89,6 +174,8 @@ final class Parcs_HT_WordPress_Events {
             $raw_end = get_post_meta($id, 'date_fin', true);
             $end = $raw_end === '' ? $start : self::date($raw_end);
             if ($start === '' || $end === '' || $end < $start || $end < $year.'-01-01' || $start > $year.'-12-31') continue;
+            $appearance = self::appearance($id);
+            if (!$appearance['enabled']) continue;
             $title = (string)get_post_field('post_title', $id, 'raw');
             if (function_exists('qtranxf_use')) $title = qtranxf_use($language, $title, false, true);
             $title = sanitize_text_field($title);
@@ -100,7 +187,8 @@ final class Parcs_HT_WordPress_Events {
             $rows[] = array(
                 'source_post_id'=>$id, 'enabled'=>'1', 'kind'=>'event',
                 'start'=>$start, 'end'=>$end, 'title'=>array($language=>$title),
-                'color'=>'#e7c55b', 'icon'=>'star', 'display_mode'=>'spot',
+                'color'=>$appearance['color'], 'icon'=>'star',
+                'display_mode'=>($appearance['marker']==='star' ? 'spot' : (($appearance['marker']==='dot' || $end > $start) ? 'long' : 'spot')),
                 'show_on_calendar'=>'1', 'show_button'=>'1',
                 'button_label'=>array($language=>array('fr'=>'Voir l’événement','en'=>'View event','de'=>'Veranstaltung ansehen')[$language]),
                 'button_url'=>array($language=>$url),

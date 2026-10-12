@@ -376,3 +376,12 @@ Voir UPDATE-1.20.3.md.
 ### Organisation des événements — 1.20.3
 
 Les événements sont désormais gérés uniquement dans WordPress (`evenement`, dates ACF `date_debut`/`date_fin`). La saisie manuelle dans l’extension et son import CSV sont retirés. Les anciennes données restent dans les saisons comme historique inactif ; ne pas les réactiver. Les périodes repères, horaires exceptionnels et pop-ups autonomes sont conservés. Voir UPDATE-1.20.3.md.
+
+## Audit du thème 12/10/2026 / événements — 1.20.4
+
+Archive du thème Montagne des Singes fournie par l'utilisateur et analysée sans accès à l'hébergement.
+Le fichier `functions.php` déclare le type `evenement`. Les deux blocs du thème `sc-3col-txt-sld` et `block_evenements_liste` dans `templates/centre.php` lisent directement les articles WordPress et les champs ACF `date_debut`/`date_fin`.
+Ils ne dépendent pas du shortcode calendrier ni de l'adaptateur `Parcs_HT_WordPress_Events`. Ne jamais écraser ces champs ni modifier le thème dans une évolution de marqueurs.
+Le carrousel applique dans son affichage un `+1 days` historique ; défaut possible à investiguer séparément, sans correctif automatique.
+Le fichier `single-evenement.php` fourni dans le ZIP est encore la version historique. La nouvelle présentation proposée en conversation n'est pas installée.
+Voir `AUDIT-2026-10-12-THEME-EVENEMENTS.md` et `UPDATE-1.20.4.md`.
