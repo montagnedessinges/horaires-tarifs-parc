@@ -1,3 +1,12 @@
+## 1.20.3
+
+- Lit les événements WordPress publiés depuis le type `evenement` (source configurable par site) : titre, dates ACF brutes `date_debut` / `date_fin` et permalien uniquement.
+- Réutilise le calendrier interactif, le HTML serveur et le planning PDF, sans recopier les événements dans les saisons ni importer les articles et blocs ACF.
+- Conserve les événements manuels et les règles de visibilité des années visiteurs/groupes ; gère les événements sur plusieurs années, les dates invalides et la fin facultative.
+- Supprime les déclencheurs et contrôles historiques de pop-up liés aux événements et exceptions, ainsi que leur migration. Les pop-up autonomes déjà enregistrés sont conservés ; les alertes du calendrier de l’Avent restent indépendantes.
+- Invalide le cache des exports et LiteSpeed après modification d’un événement ou de ses dates.
+- Ajoute des tests bloquants sur les sources et le paquet nettoyé.
+
 ## 1.20.1
 
 - Rend le calendrier public compréhensible directement dans le HTML initial afin d’améliorer son exploration et son indexation par Google, les autres moteurs de recherche et les assistants IA sans dépendre exclusivement du JavaScript.

@@ -1,22 +1,6 @@
 (function($){
   'use strict';
 
-  function pageIsPeriods(){
-    try { return new URL(window.location.href).searchParams.get('page') === 'parcs-ht-periods'; }
-    catch(e) { return false; }
-  }
-
-  function cleanupLegacyPopupControls(){
-    if(!pageIsPeriods()) return;
-    $('.htp-popup-block').remove();
-    $('.htp-1174-card-head .description').each(function(){
-      var text=$(this).text();
-      if(text.indexOf('éventuel pop-up')!==-1){
-        $(this).text(text.replace(', sa couleur et son éventuel pop-up', ' et sa couleur'));
-      }
-    });
-  }
-
   function rowIndex(row){
     return String(row.attr('data-popup1200-index')||'');
   }
@@ -175,6 +159,6 @@
   $(document).on('click','[data-popup1200-preview]',function(){previewRow($(this).closest('[data-popup1200-row]'));});
   $(document).on('input change','[data-popup1200-row] input,[data-popup1200-row] select',function(){syncRow($(this).closest('[data-popup1200-row]'));});
 
-  cleanupLegacyPopupControls();
+
   syncAll();
 })(jQuery);

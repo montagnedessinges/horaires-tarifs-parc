@@ -297,6 +297,7 @@ final class Parcs_HT_Schedule {
         $published = array();
         foreach ($all['seasons'] as $year => $season) {
             if (!is_array($season) || (string)($season['published'] ?? '0') !== '1') continue;
+            if (class_exists('Parcs_HT_WordPress_Events')) $season = Parcs_HT_WordPress_Events::season($season, $year);
             $published[(string)$year] = array(
                 'year' => (string)$year,
                 'season_start' => isset($season['season_start']) ? $season['season_start'] : '',

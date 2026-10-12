@@ -420,31 +420,7 @@ final class Parcs_HT_Admin {
                     </div>
                 </div>
             </details>
-            <div class="htp-popup-block" data-htp-popup-block>
-                <div class="htp-check-list htp-popup-toggle"><?php self::checkbox($base . '[show_popup]', $row['show_popup'], 'Activer le pop-up'); ?></div>
-                <div class="htp-popup-settings" data-htp-popup-settings <?php echo $row['show_popup']==='1'?'':'hidden'; ?>>
-                    <div class="htp-grid htp-grid-4">
-                        <?php self::select($base . '[popup_lead_mode]', $row['popup_lead_mode'], 'Début d’affichage', array('same'=>'Au début','days_before'=>'X jours avant','custom'=>'Date/heure personnalisée')); ?>
-                        <?php self::input($base . '[popup_days_before]', $row['popup_days_before'], 'Jours avant', 'number'); ?>
-                        <?php self::input($base . '[popup_start]', $row['popup_start'], 'Début personnalisé', 'datetime-local'); ?>
-                        <?php self::input($base . '[popup_end]', $row['popup_end'], 'Fin personnalisée', 'datetime-local'); ?>
-                        <?php self::input($base . '[popup_image_url]', $row['popup_image_url'], 'Image du pop-up (URL, facultatif)', 'url'); ?>
-                    </div>
-                    <p class="description htp-popup-image-help"><strong>Taille recommandée : 800 × 450 px – format 16:9.</strong> L’image sera automatiquement adaptée aux ordinateurs et aux mobiles.</p>
-                    <div class="htp-grid htp-grid-2">
-                        <?php self::translated_input($base . '[popup_title]', $row['popup_title'], 'Titre du pop-up'); ?>
-                        <?php self::translated_textarea($base . '[popup_message]', $row['popup_message'], 'Message du pop-up'); ?>
-                        <div class="htp-button-block" data-htp-button-block>
-                            <div class="htp-check-list"><?php self::checkbox($base . '[popup_show_button]', $row['popup_show_button'], 'Afficher un bouton dans le pop-up'); ?></div>
-                            <div class="htp-button-settings" data-htp-button-settings <?php echo $row['popup_show_button']==='1'?'':'hidden'; ?>>
-                                <?php self::translated_input($base . '[popup_button_label]', $row['popup_button_label'], 'Texte du bouton'); ?>
-                                <?php self::translated_input($base . '[popup_button_url]', $row['popup_button_url'], 'Lien du bouton', 'url'); ?>
-                            </div>
-                        </div>
-                    </div>
-                    <?php self::popup_preview_controls(); ?>
-                </div>
-            </div>
+
         </div>
         <?php
     }
@@ -543,29 +519,7 @@ final class Parcs_HT_Admin {
                 <?php self::checkbox($base . '[show_public_marker]', $row['show_public_marker'], 'Afficher le pictogramme / la mention « Horaire exceptionnel » au public'); ?>
             </div>
             <div class="htp-grid htp-grid-2"><?php self::translated_input($base . '[context]', $row['context'], 'Contexte / motif facultatif'); self::translated_input($base . '[title]', $row['title'], 'Titre public facultatif'); self::translated_textarea($base . '[message]', $row['message'], 'Message public facultatif'); ?></div>
-            <div class="htp-popup-block" data-htp-popup-block>
-                <div class="htp-check-list htp-popup-toggle"><?php self::checkbox($base . '[show_popup]', $row['show_popup'], 'Activer le pop-up'); ?></div>
-                <div class="htp-popup-settings" data-htp-popup-settings <?php echo $row['show_popup']==='1'?'':'hidden'; ?>>
-                    <p class="description">Le pop-up reprend automatiquement le contexte / motif, le titre public et le message public saisis ci-dessus. Vous choisissez seulement si les dates et les horaires doivent être ajoutés.</p>
-                    <div class="htp-check-list">
-                        <?php self::checkbox($base . '[popup_show_dates]', $row['popup_show_dates'], 'Afficher les dates dans le pop-up'); ?>
-                        <?php self::checkbox($base . '[popup_show_hours]', $row['popup_show_hours'], 'Afficher les horaires dans le pop-up'); ?>
-                    </div>
-                    <div class="htp-grid htp-grid-4">
-                        <?php self::select($base . '[popup_lead_mode]', $row['popup_lead_mode'], 'Début d’affichage', array('same'=>'Au début de l’exception','days_before'=>'X jours avant','custom'=>'Date/heure personnalisée')); ?>
-                        <?php self::input($base . '[popup_days_before]', $row['popup_days_before'], 'Jours avant', 'number'); ?>
-                        <?php self::input($base . '[popup_start]', $row['popup_start'], 'Début personnalisé', 'datetime-local'); ?>
-                        <?php self::input($base . '[popup_end]', $row['popup_end'], 'Fin personnalisée', 'datetime-local'); ?>
-                    </div>
-                    <div class="htp-button-block" data-htp-button-block>
-                        <div class="htp-check-list"><?php self::checkbox($base . '[popup_show_button]', $row['popup_show_button'], 'Afficher un bouton dans le pop-up'); ?></div>
-                        <div class="htp-button-settings" data-htp-button-settings <?php echo $row['popup_show_button']==='1'?'':'hidden'; ?>>
-                            <div class="htp-grid htp-grid-2"><?php self::translated_input($base . '[popup_button_label]', $row['popup_button_label'], 'Texte du bouton'); self::translated_input($base . '[popup_button_url]', $row['popup_button_url'], 'Lien du bouton', 'url'); ?></div>
-                        </div>
-                    </div>
-                    <?php self::popup_preview_controls(); ?>
-                </div>
-            </div>
+
         </div>
         <?php
     }

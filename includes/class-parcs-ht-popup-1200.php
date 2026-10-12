@@ -234,56 +234,6 @@ final class Parcs_HT_Popup_1200 {
             $popups[] = $popup;
         }
 
-        foreach ((array)($all['seasons'] ?? array()) as $year=>$season) {
-            if (!is_array($season)) continue;
-
-            foreach ((array)($season['special_periods'] ?? array()) as $index=>$row) {
-                if (!is_array($row) || (string)($row['show_popup'] ?? '0') !== '1') continue;
-                $popup = self::default_popup();
-                $popup['id'] = 'legacy-event-' . sanitize_key((string)$year . '-' . (string)$index);
-                $popup['internal_name'] = (string)($row['internal_label'] ?? '');
-                if ($popup['internal_name'] === '') $popup['internal_name'] = self::legacy_translation($row['title'] ?? array(), 'fr');
-                if ($popup['internal_name'] === '') $popup['internal_name'] = 'Ancien pop-up événement';
-                $popup['start'] = self::legacy_popup_start($row, (string)($row['start'] ?? ''), class_exists('Parcs_HT_Schedule') ? Parcs_HT_Schedule::timezone($all) : 'Europe/Paris');
-                $popup['end'] = self::legacy_popup_end($row, (string)($row['end'] ?? ''));
-                $popup['reappear_hours'] = $reappear;
-
-                $legacy_image = esc_url_raw((string)($row['popup_image_url'] ?? ''));
-                if ($legacy_image !== '') {
-                    $attachment_id = attachment_url_to_postid($legacy_image);
-                    if ($attachment_id > 0) $popup['media']['fr']['image_id'] = $attachment_id;
-                    else $popup['media']['fr']['legacy_image_url'] = $legacy_image;
-                }
-
-                foreach (array('fr','en','de') as $lang) {
-                    $popup['media'][$lang]['alt'] = self::legacy_translation(
-                        !empty($row['popup_title']) ? $row['popup_title'] : ($row['title'] ?? array()),
-                        $lang
-                    );
-                    $links = !empty($row['popup_button_url']) ? $row['popup_button_url'] : ($row['button_url'] ?? array());
-                    $popup['media'][$lang]['link_url'] = self::legacy_translation($links, $lang);
-                }
-                $popups[] = $popup;
-            }
-
-            foreach ((array)($season['exceptions'] ?? array()) as $index=>$row) {
-                if (!is_array($row) || (string)($row['show_popup'] ?? '0') !== '1') continue;
-                $popup = self::default_popup();
-                $popup['id'] = 'legacy-exception-' . sanitize_key((string)$year . '-' . (string)$index);
-                $popup['internal_name'] = (string)($row['label'] ?? '');
-                if ($popup['internal_name'] === '') $popup['internal_name'] = self::legacy_translation($row['title'] ?? array(), 'fr');
-                if ($popup['internal_name'] === '') $popup['internal_name'] = 'Ancien pop-up exception';
-                $popup['start'] = self::legacy_popup_start($row, (string)($row['start'] ?? ''), class_exists('Parcs_HT_Schedule') ? Parcs_HT_Schedule::timezone($all) : 'Europe/Paris');
-                $popup['end'] = self::legacy_popup_end($row, (string)($row['end'] ?? ''));
-                $popup['reappear_hours'] = $reappear;
-                foreach (array('fr','en','de') as $lang) {
-                    $popup['media'][$lang]['alt'] = self::legacy_translation($row['title'] ?? array(), $lang);
-                    $popup['media'][$lang]['link_url'] = self::legacy_translation($row['popup_button_url'] ?? array(), $lang);
-                }
-                $popups[] = $popup;
-            }
-        }
-
         update_option(self::OPTION, array(
             'version'=>1,
             'popups'=>$popups,
@@ -295,30 +245,6 @@ final class Parcs_HT_Popup_1200 {
 
     private static function clean_datetime($value) {
         return preg_match('/^20\\d{2}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$/', $value) ? $value : '';
-    }
-
-    private static function legacy_popup_start($row, $event_start, $timezone) {
-        $mode = (string)($row['popup_lead_mode'] ?? 'same');
-        if ($mode === 'custom' && !empty($row['popup_start'])) return self::clean_datetime((string)$row['popup_start']);
-        if (!preg_match('/^20\\d{2}-\\d{2}-\\d{2}$/', $event_start)) return '';
-        if ($mode === 'days_before') {
-            $days = max(0, min(365, (int)($row['popup_days_before'] ?? 0)));
-            try {
-                $date = new DateTimeImmutable($event_start . ' 00:00:00', new DateTimeZone($timezone));
-                return $date->modify('-' . $days . ' days')->format('Y-m-d\\TH:i');
-            } catch (Exception $e) {
-                return $event_start . 'T00:00';
-            }
-        }
-        return $event_start . 'T00:00';
-    }
-
-    private static function legacy_popup_end($row, $event_end) {
-        if (!empty($row['popup_end'])) {
-            $custom = self::clean_datetime((string)$row['popup_end']);
-            if ($custom !== '') return $custom;
-        }
-        return preg_match('/^20\\d{2}-\\d{2}-\\d{2}$/', $event_end) ? $event_end . 'T23:59' : '';
     }
 
     private static function legacy_translation($value, $lang) {

@@ -43,21 +43,6 @@ final class Parcs_HT_Popup_Admin_1200 {
             return;
         }
 
-        if ($page === 'parcs-ht-periods') {
-            wp_enqueue_style(
-                'parcs-ht-popup-admin-1200',
-                PARCS_HT_URL . 'assets/popup-admin-1200.css',
-                array(),
-                PARCS_HT_VERSION
-            );
-            wp_enqueue_script(
-                'parcs-ht-popup-admin-1200',
-                PARCS_HT_URL . 'assets/popup-admin-1200.js',
-                array('jquery'),
-                PARCS_HT_VERSION,
-                true
-            );
-        }
     }
 
     public static function render_page() {

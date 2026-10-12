@@ -35,9 +35,6 @@ htp_1174_assert(strpos($periods, '[icon]') !== false && strpos($periods, '[color
 htp_1174_assert(strpos($periods, 'pre_update_option_parcs_ht_settings') !== false && strpos($periods, 'preserve_event_visuals') !== false, 'persistance des visuels événement absente');
 
 htp_1174_assert(strpos($periods, '[open2]') !== false && strpos($periods, '[close2]') !== false, 'second créneau exceptionnel facultatif absent');
-htp_1174_assert(strpos($periods, '[show_popup]') !== false && strpos($periods, 'data-htp-popup-settings') !== false, 'réglages conditionnels de pop-up absents');
-htp_1174_assert(strpos($periods, '[popup_show_dates]') !== false && strpos($periods, '[popup_show_hours]') !== false, 'options indépendantes dates/horaires du pop-up absentes');
-htp_1174_assert(strpos($periods, 'Source unique') !== false && strpos($periods, '[context]') !== false && strpos($periods, '[title]') !== false && strpos($periods, '[message]') !== false, 'source unique du pop-up exceptionnel non exposée');
 htp_1174_assert(strpos($periods, '[domain_rules]') !== false && strpos($periods, 'Accès temporairement limité') !== false, 'module Accès limité absent');
 htp_1174_assert(strpos($periods, 'Parcs_HT_Schedule_CSV::render_controls') !== false, 'moteur CSV commun non réutilisé');
 
@@ -49,12 +46,11 @@ htp_1174_assert(strpos($schedule, '$a_type === $b_type') !== false && strpos($sc
 htp_1174_assert(strpos($schedule, 'regular_periods') !== false, 'repli automatique vers horaires habituels absent');
 htp_1174_assert(strpos($schedule, 'domain_rules') !== false, 'moteur canonique Accès limité absent');
 
-htp_1174_assert(is_string($alerts) && strpos($alerts, "isset(\$row['context'])") !== false && strpos($alerts, "isset(\$row['title'])") !== false && strpos($alerts, "isset(\$row['message'])") !== false, 'pop-up exception ne réutilise plus les champs publics');
-htp_1174_assert(strpos($alerts, 'popup_show_dates') !== false && strpos($alerts, 'popup_show_hours') !== false, 'moteur pop-up ne respecte plus dates/horaires');
 htp_1174_assert(is_string($css) && strpos($css, '.htp-1174-periods') !== false, 'styles dédiés 1.17.4 absents');
 
 fwrite(STDOUT, "OK admin-periods-1174-contract\n");
 
 if (version_compare($version, '1.17.11', '>=')) {
     require __DIR__ . '/admin-save-11711-contract.php';
+htp_1174_assert(strpos($periods, 'data-htp-popup-block') === false && strpos($alerts, 'special_periods') === false && strpos($alerts, 'show_popup') === false, 'ancien déclenchement événementiel encore présent');
 }
