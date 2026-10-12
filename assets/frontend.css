@@ -720,3 +720,22 @@
 .parcs-ht-tariffs .parcs-ht-price-channel-label{display:block;font-size:12px!important;line-height:1.4}
 .parcs-ht-tariffs .parcs-ht-price-cell b{white-space:normal;overflow-wrap:anywhere}
 }
+
+/* 1.20.4 — Marqueurs des événements WordPress (par article, plusieurs le même jour). */
+.parcs-ht-day .parcs-ht-calendar-marks{position:absolute;left:-4px;top:-5px;z-index:6;display:flex;align-items:center;gap:2px;max-width:calc(100% + 8px);pointer-events:none}
+.parcs-ht-day .parcs-ht-calendar-mark{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;border-radius:999px;background:var(--htp-event-color,#e7c55b);color:var(--htp-event-ink,#2f2a12);box-shadow:0 1px 2px rgba(0,0,0,.18);font-style:normal;line-height:1}
+.parcs-ht-day .parcs-ht-calendar-mark.is-star{width:22px;height:22px}
+.parcs-ht-day .parcs-ht-calendar-mark.is-star svg{display:block;width:13px;height:13px;stroke:currentColor}
+.parcs-ht-day .parcs-ht-calendar-mark.is-dot{width:8px;height:8px}
+.parcs-ht-day .parcs-ht-calendar-mark.is-star.is-multi{width:17px;height:17px}
+.parcs-ht-day .parcs-ht-calendar-mark.is-star.is-multi svg{width:11px;height:11px}
+.parcs-ht-day .parcs-ht-calendar-more{font-size:10px;line-height:1;font-weight:700;background:rgba(255,255,255,.93);border-radius:3px;padding:2px;color:#242424}
+@media(max-width:640px){
+  .parcs-ht-day .parcs-ht-calendar-marks{left:-3px;top:-4px;gap:1px}
+  .parcs-ht-day .parcs-ht-calendar-mark.is-star{width:18px;height:18px}
+  .parcs-ht-day .parcs-ht-calendar-mark.is-star svg{width:11px;height:11px}
+  .parcs-ht-day .parcs-ht-calendar-mark.is-star.is-multi{width:13px;height:13px}
+  .parcs-ht-day .parcs-ht-calendar-mark.is-star.is-multi svg{width:9px;height:9px}
+  .parcs-ht-day .parcs-ht-calendar-mark.is-dot{width:7px;height:7px}
+  .parcs-ht-day .parcs-ht-calendar-more{font-size:9px}
+}
