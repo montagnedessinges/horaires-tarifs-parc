@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.20.3
+Stable tag: 1.20.4
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes, FAQ et outils du parc.
 
@@ -19,6 +19,15 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.20.4 =
+* Ajoute dans chaque événement WordPress des réglages de couleur, visibilité et marqueur (automatique, étoile ou petit point), sans changer les dates ACF ni les pages du thème.
+* Affiche les événements de plusieurs jours sous forme de petits points par défaut, avec choix manuel possible.
+* Présente jusqu'à trois marqueurs différents par jour et un indicateur pour les événements supplémentaires, sans masquer leurs détails.
+* Conserve la séparation entre le calendrier de Gestion du parc et les blocs d'événements déjà intégrés au thème.
+
+= 1.20.3 =
+* Lit directement les événements WordPress publiés (date_debut / date_fin), sans saisie manuelle redondante ni anciens déclencheurs de pop-up.
 
 = 1.20.2 =
 * Corrige la lecture des horaires groupes multi-années dans le HTML initial : une année publiée pour les groupes peut désormais être comprise sans attendre l’exécution JavaScript, même si cette année n’est pas encore publiée dans le calendrier visiteurs.
