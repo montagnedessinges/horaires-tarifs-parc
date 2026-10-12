@@ -177,3 +177,38 @@ $css=file_get_contents($root.'/assets/frontend.css');
 verify(strpos($frontend, 'parcs-ht-calendar-marks')!==false && strpos($frontend, 'eventRows.slice(0,3)')!==false,'Multiple visible event markers missing');
 verify(strpos($css, 'var(--htp-event-color,#e7c55b)')!==false,'Custom event colors unsupported');
 echo "OK: event markers, visibility, contrast and theme integration contract.\n";
+
+
+// Editing the appearance must never write to the ACF fields used by the theme.
+function current_user_can($cap, $id=0) { return ($GLOBALS['test_can_edit'] ?? true) && $cap==='edit_post'; }
+function wp_verify_nonce($nonce,$action) { return $nonce==='valid-nonce' && $action==='parcs_ht_event_calendar_save'; }
+function update_post_meta($id,$key,$value) {
+ $mapping=array('_parcs_ht_event_calendar_enabled'=>'visible','_parcs_ht_event_calendar_color'=>'color','_parcs_ht_event_calendar_marker'=>'marker');
+ verify(isset($mapping[$key]), 'Unexpected post meta write, ACF/theming must stay untouched: '.$key);
+ $GLOBALS['posts'][$id][$mapping[$key]]=$value;
+}
+$GLOBALS['options'][Parcs_HT_WordPress_Events::OPTION]=array('enabled'=>'1','post_type'=>'evenement');
+$GLOBALS['posts'][1]=array('start'=>'20261020','end'=>'','status'=>'publish','title'=>'Événement');
+$_POST=array('parcs_ht_event_calendar_nonce'=>'valid-nonce','parcs_ht_event_calendar_enabled'=>'1','parcs_ht_event_calendar_color'=>'#4ea27d','parcs_ht_event_calendar_marker'=>'star');
+Parcs_HT_WordPress_Events::save_metabox(1,(object)array('post_type'=>'evenement'));
+$style=Parcs_HT_WordPress_Events::appearance(1);
+verify($style['enabled'] && $style['color']==='#4ea27d' && $style['marker']==='star','Save with valid nonce failed');
+verify($GLOBALS['posts'][1]['start']==='20261020' && $GLOBALS['posts'][1]['end']==='', 'ACF date modified');
+$_POST['parcs_ht_event_calendar_nonce']='wrong';
+$_POST['parcs_ht_event_calendar_color']='#112233';
+Parcs_HT_WordPress_Events::save_metabox(1,(object)array('post_type'=>'evenement'));
+verify(Parcs_HT_WordPress_Events::appearance(1)['color']==='#4ea27d','Invalid nonce wrote preferences');
+$_POST['parcs_ht_event_calendar_nonce']='valid-nonce';
+$GLOBALS['test_can_edit']=false;
+Parcs_HT_WordPress_Events::save_metabox(1,(object)array('post_type'=>'evenement'));
+verify(Parcs_HT_WordPress_Events::appearance(1)['color']==='#4ea27d','Insufficient permission wrote preferences');
+$GLOBALS['test_can_edit']=true;
+unset($_POST['parcs_ht_event_calendar_enabled']);
+$_POST['parcs_ht_event_calendar_color']='not-hex';
+$_POST['parcs_ht_event_calendar_marker']='unexpected';
+Parcs_HT_WordPress_Events::save_metabox(1,(object)array('post_type'=>'evenement'));
+$style=Parcs_HT_WordPress_Events::appearance(1);
+verify(!$style['enabled'] && $style['color']==='#e7c55b' && $style['marker']==='auto','Checkbox, color and marker sanitization failed');
+verify($GLOBALS['posts'][1]['status']==='publish','Calendar hide unpublished the WordPress article');
+unset($_POST);
+echo "OK: appearance metabox saves, access checks, ACF isolation and input sanitization.\n";
