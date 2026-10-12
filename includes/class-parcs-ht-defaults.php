@@ -57,15 +57,6 @@ final class Parcs_HT_Defaults {
             if (array_key_exists('published', $row) && (string)$row['published'] !== '1') continue;
             if (!empty($row['start'])) return true;
         }
-        foreach ((array)($saved['seasons'] ?? array()) as $season) {
-            if (!is_array($season) || (string)($season['published'] ?? '0') !== '1') continue;
-            foreach ((array)($season['exceptions'] ?? array()) as $row) {
-                if (is_array($row) && (string)($row['enabled'] ?? '0') === '1' && (string)($row['show_popup'] ?? '0') === '1' && !empty($row['start']) && !empty($row['end'])) return true;
-            }
-            foreach ((array)($season['special_periods'] ?? array()) as $row) {
-                if (is_array($row) && (string)($row['enabled'] ?? '0') === '1' && (string)($row['show_popup'] ?? '0') === '1' && !empty($row['start']) && !empty($row['end'])) return true;
-            }
-        }
         return false;
     }
 

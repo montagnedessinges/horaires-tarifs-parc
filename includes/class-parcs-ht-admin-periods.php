@@ -143,12 +143,6 @@ final class Parcs_HT_Admin_Periods {
         echo '</fieldset>';
     }
 
-    private static function popup_preview_controls() {
-        ?>
-        <div class="htp-popup-preview-actions"><span>Tester le pop-up :</span><select class="htp-popup-preview-language" data-htp-popup-preview-language aria-label="Langue de prévisualisation"><option value="fr">FR</option><option value="en">EN</option><option value="de">DE</option></select><button type="button" class="button button-secondary" data-htp-popup-test>Tester le pop-up</button></div>
-        <?php
-    }
-
     private static function special_period_row($index, $row, $force_event = false) {
         $row = wp_parse_args(is_array($row) ? $row : array(), array(
             'enabled'=>'1','kind'=>$force_event?'event':'other','internal_label'=>'','title'=>array('fr'=>'','en'=>'','de'=>''),

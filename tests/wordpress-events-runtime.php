@@ -61,3 +61,30 @@ foreach (array('includes/class-parcs-ht-alerts.php','includes/class-parcs-ht-pop
 }
 foreach (array('includes/class-parcs-ht-admin.php','includes/class-parcs-ht-admin-periods.php') as $file) verify(strpos(file_get_contents($root.'/'.$file),'data-htp-popup-block')===false,'Event popup controls survived');
 echo "OK: WordPress event dates, publication, projection, languages, cache and popup isolation.\n";
+
+// qTranslate: absent translation must stay absent, and the URL follows the requested language.
+if (true) {
+ function qtranxf_use($lang,$title,$available=false,$empty=false) {
+  verify($empty===true && $available===false,'qTranslate fallback could expose the wrong language');
+  if (strpos($title,'[:')===false) return $title;
+  return preg_match('/\[:'.preg_quote($lang,'/').'\](.*?)(?=\[:)/s',$title,$m) ? $m[1] : '';
+ }
+ function qtranxf_convertURL($url,$lang) { return $url.'?lang='.$lang; }
+}
+$GLOBALS['options'][Parcs_HT_WordPress_Events::OPTION]=array('enabled'=>'1');
+$GLOBALS['posts']=array(1=>array('start'=>'20261020','end'=>'','status'=>'publish','title'=>'[:fr]Fête[:en]Festival[:]'));
+Parcs_HT_WordPress_Events::invalidate(1);
+verify(Parcs_HT_WordPress_Events::rows('2026','de')===array(),'Missing translation exposed');
+$english=Parcs_HT_WordPress_Events::rows('2026','en');
+verify($english[0]['title']['en']==='Festival' && substr($english[0]['button_url']['en'],-7)==='lang=en','Translated title/permalink mismatch');
+verify(count(Parcs_HT_WordPress_Events::season(array(),'2026')['special_periods'])===1,'Multilingual record duplicated');
+
+// The existing publication gate remains authoritative before any WordPress projection.
+class Parcs_HT_Defaults {
+ public static function select_season_year($all) { return '2026'; }
+}
+require $root.'/includes/class-parcs-ht-schedule.php';
+$public=Parcs_HT_Schedule::public_settings(array('seasons'=>array('2026'=>array('published'=>'1'),'2027'=>array('published'=>'0'))));
+verify(isset($public['seasons']['2026']) && !isset($public['seasons']['2027']),'WordPress adapter published a hidden season');
+verify(count($public['seasons']['2026']['specialPeriods'])===1,'Public calendar did not receive WordPress event');
+echo "OK: exact translations, shared language projection and published-year boundary.\n";

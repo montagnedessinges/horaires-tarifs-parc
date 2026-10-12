@@ -6,6 +6,7 @@ if (!defined('ABSPATH')) { exit; }
 final class Parcs_HT_WordPress_Events {
     const OPTION = 'parcs_ht_wordpress_events';
     private static $cache = array();
+    private static $ids = null;
 
     public static function init() {
         add_action('admin_post_parcs_ht_wordpress_events_save', array(__CLASS__, 'save'));
@@ -37,6 +38,7 @@ final class Parcs_HT_WordPress_Events {
 
     private static function purge() {
         self::$cache = array();
+        self::$ids = null;
         update_option('parcs_ht_export_revision', (int)get_option('parcs_ht_export_revision', 1) + 1, false);
         do_action('litespeed_purge_all');
     }
@@ -55,16 +57,19 @@ final class Parcs_HT_WordPress_Events {
         $key = $year.'|'.$language;
         if (isset(self::$cache[$key])) return self::$cache[$key];
         // IDs only: no article content, excerpt, image or flexible ACF blocks are projected.
-        $query = new WP_Query(array(
-            'post_type'=>$config['post_type'], 'post_status'=>'publish', 'has_password'=>false,
-            'fields'=>'ids', 'posts_per_page'=>-1, 'no_found_rows'=>true,
-            'orderby'=>'ID', 'order'=>'ASC', 'suppress_filters'=>false,
-            'lang'=>$language, 'meta_key'=>'date_debut',
-            'update_post_meta_cache'=>false, 'update_post_term_cache'=>false,
-        ));
+        if (self::$ids === null) {
+            $query = new WP_Query(array(
+                'post_type'=>$config['post_type'], 'post_status'=>'publish', 'has_password'=>false,
+                'fields'=>'ids', 'posts_per_page'=>-1, 'no_found_rows'=>true,
+                'orderby'=>'ID', 'order'=>'ASC', 'suppress_filters'=>true,
+                'lang'=>'', 'meta_key'=>'date_debut',
+                'update_post_meta_cache'=>false, 'update_post_term_cache'=>false,
+            ));
+            self::$ids = $query->posts;
+        }
         $rows = array();
         $seen = array();
-        foreach ($query->posts as $source_id) {
+        foreach (self::$ids as $source_id) {
             $id = (int)$source_id;
             if (function_exists('pll_get_post')) {
                 $id = (int)pll_get_post($id, $language);
@@ -79,7 +84,7 @@ final class Parcs_HT_WordPress_Events {
             $end = $raw_end === '' ? $start : self::date($raw_end);
             if ($start === '' || $end === '' || $end < $start || $end < $year.'-01-01' || $start > $year.'-12-31') continue;
             $title = (string)get_post_field('post_title', $id, 'raw');
-            if (function_exists('qtranxf_use')) $title = qtranxf_use($language, $title, false, false);
+            if (function_exists('qtranxf_use')) $title = qtranxf_use($language, $title, false, true);
             $title = sanitize_text_field($title);
             $url = get_permalink($id);
             if (function_exists('qtranxf_convertURL')) $url = qtranxf_convertURL($url, $language);

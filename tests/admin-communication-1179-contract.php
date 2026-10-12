@@ -114,7 +114,6 @@ release_contract_require_all($popupAdminJs, array(
     "data-popup1200-media-select",
     "data-popup1200-duplicate",
     "data-popup1200-preview",
-    "cleanupLegacyPopupControls",
 ), '1.20.0 popup admin interactions');
 
 release_contract_require_all($popupCss, array(
