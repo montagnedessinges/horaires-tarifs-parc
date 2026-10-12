@@ -115,16 +115,12 @@ final class Parcs_HT_WordPress_Events {
         if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
         if (function_exists('wp_is_post_revision') && wp_is_post_revision($post_id)) return;
         if (!current_user_can('edit_post', $post_id)) return;
-        $nonce_raw = wp_unslash($_POST['parcs_ht_event_calendar_nonce']);
-        if (!is_string($nonce_raw)) return;
-        $nonce = sanitize_text_field($nonce_raw);
+        $nonce = sanitize_text_field(wp_unslash($_POST['parcs_ht_event_calendar_nonce']));
         if (!wp_verify_nonce($nonce, 'parcs_ht_event_calendar_save')) return;
         $visible = isset($_POST['parcs_ht_event_calendar_enabled']) ? '1' : '0';
-        $color_raw = isset($_POST['parcs_ht_event_calendar_color']) ? wp_unslash($_POST['parcs_ht_event_calendar_color']) : '';
-        $color = is_string($color_raw) ? sanitize_text_field($color_raw) : '';
+        $color = isset($_POST['parcs_ht_event_calendar_color']) ? sanitize_text_field(wp_unslash($_POST['parcs_ht_event_calendar_color'])) : '';
         if (!preg_match('/^#[a-fA-F0-9]{6}$/D', $color)) $color = '#e7c55b';
-        $marker_raw = isset($_POST['parcs_ht_event_calendar_marker']) ? wp_unslash($_POST['parcs_ht_event_calendar_marker']) : 'auto';
-        $marker = is_string($marker_raw) ? sanitize_key($marker_raw) : 'auto';
+        $marker = isset($_POST['parcs_ht_event_calendar_marker']) ? sanitize_key(sanitize_text_field(wp_unslash($_POST['parcs_ht_event_calendar_marker']))) : 'auto';
         if (!in_array($marker, array('auto','star','dot'), true)) $marker = 'auto';
         self::$saving_appearance = true;
         try {
