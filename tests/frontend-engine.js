@@ -1,7 +1,7 @@
 'use strict';
 
 global.window={ParcsHTPData:{settings:{timezone:'Europe/Paris',activeSeasonYear:'2026',general:{accent_color:'#ef7b5b',last_entry_minutes:'45'},seasons:{'2026':{
-  season_start:'2026-03-01',season_end:'2026-11-30',schoolHolidays:[],specialPeriods:[],publicHolidays:[],
+  season_start:'2026-03-01',season_end:'2026-11-30',schoolHolidays:[],specialPeriods:[{source_post_id:42,enabled:'1',kind:'event',start:'2026-10-27',end:'2026-10-27',title:{fr:'Fête'}}],publicHolidays:[],
   regularPeriods:[
     {enabled:'1',start:'2026-03-01',end:'2026-09-30',weekdays:['1','2','3','4','5','6','7'],open:'10:00',close:'18:00'},
     {enabled:'1',start:'2026-10-01',end:'2026-10-23',weekdays:['1','2','3','4','5','6','7'],open:'13:00',close:'17:00'},
@@ -10,7 +10,7 @@ global.window={ParcsHTPData:{settings:{timezone:'Europe/Paris',activeSeasonYear:
   ],
   exceptions:[{enabled:'1',type:'closed',start:'2026-11-02',end:'2026-11-06',priority:'30'}],
   domainRules:[{enabled:'1',start:'2026-03-01',end:'2026-11-30',weekdays:['1','2','3','4','5','6','7'],exclude_weekends:'0',exclude_school_holidays:'0',exclude_public_holidays:'0'}]
-}}},dictionary:{fr:{monthHours:'Horaires du mois : {hours}',closed:'Fermé'}}}};
+}}},dictionary:{fr:{monthHours:'Horaires du mois : {hours}',closed:'Fermé',event:'Événement'},en:{event:'Event'}}}};
 global.document={readyState:'loading',addEventListener:function(){},querySelectorAll:function(){return[];},body:{classList:{add:function(){},remove:function(){}}}};
 require('../assets/frontend.js');
 
@@ -26,4 +26,6 @@ assert(window.ParcsHTP.lastEntryTime(split)==='17:15','la dernière entrée doit
 var october=window.ParcsHTP.monthSummary('2026-10','fr');
 assert(october.indexOf('13 h–17 h')!==-1&&october.indexOf('10 h–12 h / 14 h–18 h')!==-1,'le résumé mensuel doit lister tous les horaires distincts');
 assert(window.ParcsHTP.dayAria('2026-10-27',split,'fr').indexOf('10 h–12 h / 14 h–18 h')!==-1,'le libellé accessible doit annoncer les deux créneaux');
+assert(window.ParcsHTP.dayAria('2026-10-27',split,'fr').includes('Événement'),'le lecteur d’écran doit annoncer un événement traduit');
+assert(!window.ParcsHTP.dayAria('2026-10-27',split,'en').includes('Event'),'le lecteur d’écran ne doit pas annoncer un événement sans traduction');
 process.stdout.write('Tests métier JavaScript réussis.\n');

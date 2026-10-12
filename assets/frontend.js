@@ -264,7 +264,7 @@
   }
   function dayAria(date,status,language) {
     var d=dictionary(language),label=dateLabel(date,language);
-    var events=specialPeriodRows(date),suffix=(events.length?', '+(translated((settings.general||{}).event_legend_label,language)||d.event):'');
+    var events=specialPeriodRows(date).filter(function(row){return !row.source_post_id || translatedExact(row.title,language);}),suffix=(events.length?', '+(translated((settings.general||{}).event_legend_label,language)||d.event):'');
     if(!status.open)return label+', '+(status.exceptional && (!status.exception || String(status.exception.show_public_marker)!=='0')?d.exceptionalClosure:d.closed)+suffix;
     return label+', '+dayRanges(status,language)+(status.exceptional && (!status.exception || String(status.exception.show_public_marker)!=='0')?', '+d.exceptionalHours:'')+suffix;
   }
