@@ -82,7 +82,8 @@ final class Parcs_HT_Verifier {
     private static function check_internal_contexts($settings,&$errors) {
         foreach ((array)($settings['special_periods']??array()) as $i=>$row) {
             if ((string)($row['enabled']??'0')!=='1') continue;
-            $name=self::row_name('Période / événement',$row,$i);
+            if ((string)($row['kind'] ?? 'event') === 'event') continue;
+            $name=self::row_name('Période',$row,$i);
             if(trim((string)($row['internal_label']??''))==='') $errors[]='Repère interne manquant : '.$name.' → nom interne FR obligatoire.';
         }
         foreach ((array)($settings['exceptions']??array()) as $i=>$row) {
@@ -108,8 +109,6 @@ final class Parcs_HT_Verifier {
     private static function check_popups($settings,&$errors,&$warnings) {
         $langs=self::active_languages($settings);$sources=array();
         foreach((array)($settings['alerts']??array()) as $i=>$row)if((string)($row['enabled']??'0')==='1')$sources[]=array('label'=>self::row_name('Alerte',$row,$i),'title'=>$row['title']??array(),'message'=>$row['message']??array());
-        foreach((array)($settings['exceptions']??array()) as $i=>$row)if((string)($row['enabled']??'0')==='1'&&(string)($row['show_popup']??'0')==='1')$sources[]=array('label'=>self::row_name('Exception',$row,$i),'title'=>$row['title']??array(),'message'=>$row['message']??array(),'context'=>$row['context']??array());
-        foreach((array)($settings['special_periods']??array()) as $i=>$row)if((string)($row['enabled']??'0')==='1'&&(string)($row['show_popup']??'0')==='1')$sources[]=array('label'=>self::row_name('Période / événement',$row,$i),'title'=>$row['popup_title']??($row['title']??array()),'message'=>$row['popup_message']??($row['message']??array()));
         foreach($sources as $s)foreach($langs as $lang){$title=trim((string)(is_array($s['title'])?($s['title'][$lang]??''):''));$message=trim((string)(is_array($s['message'])?($s['message'][$lang]??''):''));$context=trim((string)(isset($s['context'])&&is_array($s['context'])?($s['context'][$lang]??''):''));if($title===''&&$message===''&&$context==='')$errors[]='Pop-up '.$s['label'].' : aucun contenu en '.strtoupper($lang).'.';}
         $warnings[]=function_exists('qtranxf_getLanguage')?'Pop-up : langue de page pilotée par qTranslate-XT.':'Pop-up : qTranslate-XT non détecté ; fallback sur la locale WordPress.';
     }

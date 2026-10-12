@@ -126,3 +126,19 @@ foreach (array('montagne','foret') as $park) {
  verify($other_year===array('special_periods'=>array($history)), 'Other season mutated');
 }
 echo "OK: reference period saves/deletion preserve history and reject manual event creation.\n";
+
+// Retired sources must not produce admin validation errors or audit counts.
+require $root.'/includes/class-parcs-ht-verifier.php';
+$legacy = array('special_periods'=>array(array('enabled'=>'1','kind'=>'event','show_popup'=>'1')), 'exceptions'=>array(array('enabled'=>'1','show_popup'=>'1')));
+$errors = array(); $warnings = array();
+$method = new ReflectionMethod('Parcs_HT_Verifier', 'check_popups'); $method->setAccessible(true);
+$method->invokeArgs(null, array($legacy, &$errors, &$warnings));
+verify(!$errors, 'Archived event/exception still triggers popup validation');
+$method = new ReflectionMethod('Parcs_HT_Verifier', 'check_internal_contexts'); $method->setAccessible(true);
+$method->invokeArgs(null, array(array('special_periods'=>$legacy['special_periods']), &$errors));
+verify(!$errors, 'Archived event still requires an internal label');
+$legacy['season_start']='2026-10-20'; $legacy['season_end']='2026-10-20'; $legacy['exceptions']=array();
+$GLOBALS['options'][Parcs_HT_WordPress_Events::OPTION]=array('enabled'=>'0');
+$audit=Parcs_HT_Schedule::audit_season($legacy);
+verify($audit['summary']['events']===0, 'Admin audit counted an archived event');
+echo "OK: retired sources excluded from admin diagnostics.\n";
