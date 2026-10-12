@@ -9,13 +9,15 @@ L’utilisateur demande une intégration minimale, commune à La Montagne des Si
 - Dans Périodes / événements, « Événements WordPress » permet de sélectionner le type de publication et d’activer/désactiver la lecture. Par défaut : `evenement`, activé ; aucun résultat si ce type n’est pas enregistré et publiquement consultable.
 - L’adaptateur lit les publications publiques non protégées et seulement les dates ACF brutes, le titre et le permalien. Aucun contenu, extrait, image ou bloc flexible n’est transféré au calendrier.
 - Formats de dates acceptés : Ymd (stockage ACF Date Picker) et Y-m-d. Fin vide : événement d’un jour. Date invalide ou intervalle inversé : ignoré. Les formats ambigus ne sont pas devinés.
-- Une projection en mémoire complète les événements manuels dans les saisons déjà autorisées. Aucun événement n’est enregistré dans `parcs_ht_settings`. Le calendrier interactif, le HTML sémantique et le PDF lisent cette même adaptation.
+- Une projection en mémoire fournit uniquement les événements WordPress dans les saisons déjà autorisées. Les anciens événements manuels ne sont plus affichés ; les périodes repères sont conservées. Aucun événement n’est enregistré dans `parcs_ht_settings`. Le calendrier interactif, le HTML sémantique et le PDF lisent cette même adaptation.
 - Le clic sur une date garde le détail existant ; chaque événement possède un bouton vers son article. La pastille jaune actuelle reste inchangée.
 - Les événements à cheval sur deux années sont disponibles dans chacune, sans rendre une année non publiée visible. Les horaires à un/deux créneaux ne sont pas modifiés.
 - Les titres et liens sont adaptés avec qTranslate-XT, Polylang ou WPML lorsque disponibles. Une traduction distincte absente n’est pas remplacée automatiquement par un autre article. La validation dans les thèmes réels reste à faire avant de conclure à une validation de production.
 - La modification/dépublication/suppression d’un événement ou de ses dates invalide les exports et demande une purge LiteSpeed. Les autres caches de pages/CDN doivent suivre leurs mécanismes habituels de purge WordPress.
 
 ## Suppression du chemin historique
+
+La saisie manuelle des événements et son ancien formulaire sont retirés. Le CSV ne propose plus de type `event` et refuse explicitement les anciennes lignes de ce type avant toute écriture. Les périodes, vacances scolaires et exceptions restent modifiables. Aucun événement WordPress n’est créé automatiquement à partir des anciennes données.
 
 Les boucles événement/période/exception ont été supprimées de `Parcs_HT_Alerts`, avec leurs méthodes de génération de dates/messages. Les formulaires PHP n’émettent plus les contrôles correspondants : aucun masquage CSS/JS n’est nécessaire. La migration événement/exception du module 1.20.0 est retirée. Les données anciennes de saisons sont conservées pour éviter une migration destructive, mais ne constituent plus une source exécutable de pop-up.
 
@@ -31,4 +33,4 @@ La validation automatisée ne prouve pas l’installation ou la configuration de
 
 Aucun changement de `single-evenement.php` n’est requis pour alimenter le calendrier : la lecture a lieu directement dans WordPress. La présentation des dates dans ce fichier peut être revue ensuite, après sauvegarde de sa version exacte actuelle. Ne pas supprimer ses blocs ACF `singleevenements` ni son contenu d’article.
 
-Point de restauration : v1.20.2. Désactiver la lecture WordPress dans l’écran Périodes revient aux seuls événements manuels, sans perte de données.
+Point de restauration : v1.20.2. Désactiver la lecture WordPress masque les événements sans réactiver l’ancien système. Les données historiques restent conservées dans les saisons, y compris après une sauvegarde des périodes ou un import CSV.

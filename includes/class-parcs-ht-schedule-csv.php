@@ -28,11 +28,11 @@ final class Parcs_HT_Schedule_CSV {
         ?>
         <div class="htp-subsection htp-schedule-csv" data-htp-csv-tool>
             <h3>CSV — horaires & calendrier</h3>
-            <p class="description">Importez ou exportez les horaires, exceptions, jours fériés, périodes repères, événements et règles d’accès temporairement limité de la saison <?php echo esc_html($year); ?>. L’import valide tout le fichier avant écriture et ne remplace que les catégories réellement présentes dans le CSV.</p>
+            <p class="description">Importez ou exportez les horaires, exceptions, jours fériés, périodes repères et règles d’accès temporairement limité de la saison <?php echo esc_html($year); ?>. L’import valide tout le fichier avant écriture et ne remplace que les catégories réellement présentes dans le CSV.</p>
             <p class="htp-csv-actions"><a class="button" href="<?php echo esc_url($template_url); ?>">Télécharger le modèle CSV</a> <a class="button" href="<?php echo esc_url($export_url); ?>">Exporter les données <?php echo esc_html($year); ?></a></p>
             <label class="htp-field"><span>Fichier CSV</span><input type="file" name="schedule_csv" accept=".csv,text/csv,text/plain" required form="htp-schedule-csv-form"></label>
             <p><button class="button button-primary" type="submit" form="htp-schedule-csv-form">Importer dans <?php echo esc_html($year); ?></button></p>
-            <p class="description">Types disponibles : <code>regular</code>, <code>exception_hours</code>, <code>exception_closed</code>, <code>holiday</code>, <code>period</code>, <code>school_holiday</code>, <code>event</code>, <code>limited_access</code>.</p>
+            <p class="description">Types disponibles : <code>regular</code>, <code>exception_hours</code>, <code>exception_closed</code>, <code>holiday</code>, <code>period</code>, <code>school_holiday</code>, <code>limited_access</code>.</p>
         </div>
         <style>
         .htp-list-search{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 12px;padding:8px 10px;border:1px solid #dcdcde;border-radius:6px;background:#fff}
@@ -183,9 +183,6 @@ final class Parcs_HT_Schedule_CSV {
         $row = self::empty_export_row('exception_closed');
         $row = array_merge($row, array('enabled'=>'1','label'=>'Fermeture exceptionnelle','start'=>$year.'-11-15','end'=>$year.'-11-15','priority'=>'200','context_fr'=>'Fermeture exceptionnelle','title_fr'=>'Fermeture exceptionnelle','message_fr'=>'Parc fermé ce jour','show_public_marker'=>'1'));
         self::output_row($out, $row);
-        $row = self::empty_export_row('event');
-        $row = array_merge($row, array('enabled'=>'1','label'=>'Animation spéciale','start'=>$year.'-10-20','end'=>$year.'-10-20','title_fr'=>'Animation spéciale','title_en'=>'Special event','title_de'=>'Sonderveranstaltung','message_fr'=>'Informations à compléter','show_on_calendar'=>'1','display_mode'=>'spot'));
-        self::output_row($out, $row);
         $row = self::empty_export_row('limited_access');
         $row = array_merge($row, array('enabled'=>'1','label'=>'Pause équipe','start'=>$year.'-07-01','end'=>$year.'-08-31','weekdays'=>'1,2,3,4,5','pause_start'=>'12:00','resume'=>'13:00','last_entry'=>'11:45','color'=>'#e7c55b','auto_details'=>'1','show_tooltip'=>'1','public_title_fr'=>'Accès temporairement limité'));
         self::output_row($out, $row);
@@ -226,8 +223,9 @@ final class Parcs_HT_Schedule_CSV {
             self::output_row($out, $row);
         }
         foreach ((array)($season['special_periods'] ?? array()) as $item) {
-            $kind = (string)($item['kind'] ?? 'other');
-            $type = $kind === 'event' ? 'event' : ($kind === 'school_holiday' ? 'school_holiday' : 'period');
+            $kind = (string)($item['kind'] ?? 'event');
+            if ($kind === 'event') continue;
+            $type = $kind === 'school_holiday' ? 'school_holiday' : 'period';
             $row = self::empty_export_row($type);
             $row = array_merge($row, array('enabled'=>(string)($item['enabled'] ?? '1'),'label'=>(string)($item['internal_label'] ?? ''),'start'=>(string)($item['start'] ?? ''),'end'=>(string)($item['end'] ?? ''),'color'=>(string)($item['color'] ?? ''),'show_on_calendar'=>(string)($item['show_on_calendar'] ?? '1'),'display_mode'=>(string)($item['display_mode'] ?? 'spot'),'skip_domain_rules'=>(string)($item['skip_domain_rules'] ?? '0'),'show_button'=>(string)($item['show_button'] ?? '0'),'show_popup'=>(string)($item['show_popup'] ?? '0'),'popup_lead_mode'=>(string)($item['popup_lead_mode'] ?? 'days_before'),'popup_days_before'=>(string)($item['popup_days_before'] ?? '14'),'popup_start'=>(string)($item['popup_start'] ?? ''),'popup_end'=>(string)($item['popup_end'] ?? ''),'popup_show_button'=>(string)($item['popup_show_button'] ?? '0'),'popup_image_url'=>(string)($item['popup_image_url'] ?? '')));
             foreach (array('title','message','button_label','button_url','popup_title','popup_message','popup_button_label','popup_button_url') as $prefix) self::export_translation($row, $prefix, $item[$prefix] ?? array());
@@ -309,13 +307,14 @@ final class Parcs_HT_Schedule_CSV {
 
         $regular = array(); $exceptions = array(); $holidays = array(); $special = array(); $domain = array();
         $seen = array(); $errors = array(); $line = 1;
-        $allowed_types = array('regular','exception_hours','exception_closed','holiday','period','school_holiday','event','limited_access');
+        $allowed_types = array('regular','exception_hours','exception_closed','holiday','period','school_holiday','limited_access');
         while (($values = fgetcsv($handle, 0, $delimiter)) !== false) {
             $line++;
             if (!array_filter($values, static function($v){ return trim((string)$v) !== ''; })) continue;
             $row = array();
             foreach ($header as $i=>$key) if ($key !== '') $row[$key] = isset($values[$i]) ? trim((string)$values[$i]) : '';
             $type = sanitize_key((string)($row['type'] ?? ''));
+            if ($type === 'event') { $errors[] = 'Ligne '.$line.' : les événements sont gérés uniquement dans WordPress.'; continue; }
             if (!in_array($type, $allowed_types, true)) { $errors[] = 'Ligne '.$line.' : type inconnu « '.$type.' ».'; continue; }
             $start = self::date_value($row['start'] ?? '');
             $end = self::date_value(($row['end'] ?? '') !== '' ? $row['end'] : ($row['start'] ?? ''));
@@ -354,7 +353,7 @@ final class Parcs_HT_Schedule_CSV {
                 continue;
             }
 
-            $kind = $type === 'event' ? 'event' : ($type === 'school_holiday' ? 'school_holiday' : 'other');
+            $kind = $type === 'school_holiday' ? 'school_holiday' : 'other';
             $display_mode = in_array((string)($row['display_mode'] ?? ''), array('spot','long'), true) ? (string)$row['display_mode'] : 'spot';
             $special[] = array('enabled'=>$enabled,'kind'=>$kind,'internal_label'=>$label,'title'=>self::translations($row,'title'),'start'=>$start,'end'=>$end,'color'=>$kind==='event'?'#e7c55b':$color,'icon'=>'star','display_mode'=>$display_mode,'message'=>self::translations($row,'message',true),'button_label'=>self::translations($row,'button_label'),'button_url'=>self::translations($row,'button_url'),'show_button'=>self::flag($row['show_button'] ?? '0','0'),'show_on_calendar'=>self::flag($row['show_on_calendar'] ?? '1'),'skip_domain_rules'=>self::flag($row['skip_domain_rules'] ?? '0','0'),'show_popup'=>self::flag($row['show_popup'] ?? '0','0'),'popup_lead_mode'=>in_array((string)($row['popup_lead_mode']??''),array('same','days_before','custom'),true)?(string)$row['popup_lead_mode']:'days_before','popup_days_before'=>preg_match('/^\d+$/',(string)($row['popup_days_before']??''))?(string)(int)$row['popup_days_before']:'14','popup_start'=>sanitize_text_field((string)($row['popup_start']??'')),'popup_end'=>sanitize_text_field((string)($row['popup_end']??'')),'popup_title'=>self::translations($row,'popup_title'),'popup_message'=>self::translations($row,'popup_message',true),'popup_button_label'=>self::translations($row,'popup_button_label'),'popup_button_url'=>self::translations($row,'popup_button_url'),'popup_show_button'=>self::flag($row['popup_show_button'] ?? '0','0'),'popup_image_url'=>esc_url_raw((string)($row['popup_image_url']??'')));
         }
@@ -368,8 +367,9 @@ final class Parcs_HT_Schedule_CSV {
         if (isset($seen['regular'])) $season['regular_periods'] = $regular;
         if (isset($seen['exception_hours']) || isset($seen['exception_closed'])) $season['exceptions'] = $exceptions;
         if (isset($seen['holiday'])) $season['public_holidays'] = $holidays;
-        if (isset($seen['period']) || isset($seen['school_holiday']) || isset($seen['event'])) {
-            $season['special_periods'] = $special;
+        if (isset($seen['period']) || isset($seen['school_holiday'])) {
+            $history = array_values(array_filter((array)($season['special_periods'] ?? array()), static function($item) { return is_array($item) && (string)($item['kind'] ?? 'event') === 'event'; }));
+            $season['special_periods'] = array_merge($special, $history);
             $season['school_holidays'] = array();
             foreach ($special as $item) if ($item['enabled']==='1' && $item['kind']==='school_holiday') $season['school_holidays'][] = array('enabled'=>'1','label'=>$item['internal_label'],'start'=>$item['start'],'end'=>$item['end']);
         }

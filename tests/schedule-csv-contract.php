@@ -21,7 +21,7 @@ $checks = array(
     'closed exceptions supported' => strpos($csv, "'exception_closed'") !== false,
     'holidays supported' => strpos($csv, "'holiday'") !== false,
     'school holidays supported' => strpos($csv, "'school_holiday'") !== false,
-    'events supported' => strpos($csv, "'event'") !== false,
+    'manual event CSV creation removed' => strpos($csv, "empty_export_row('event')") === false && strpos($csv, 'les événements sont gérés uniquement dans WordPress') !== false,
     'limited access supported' => strpos($csv, "'limited_access'") !== false && strpos($csv, "['domain_rules'] = \$domain") !== false,
     'limited access translations supported' => strpos($csv, "'public_title_fr'") !== false && strpos($csv, "'access_message_fr'") !== false && strpos($csv, "'tooltip_text_fr'") !== false,
     'CSV export is reimportable by canonical headers' => strpos($csv, 'self::output_row($out, $row)') !== false && strpos($csv, 'self::headers()') !== false,

@@ -58,14 +58,20 @@ final class Parcs_HT_WordPress_Events {
         if (isset(self::$cache[$key])) return self::$cache[$key];
         // IDs only: no article content, excerpt, image or flexible ACF blocks are projected.
         if (self::$ids === null) {
-            $query = new WP_Query(array(
+            $wpml = has_filter('wpml_object_id');
+            if ($wpml) do_action('wpml_switch_language', 'all');
+            try {
+                $query = new WP_Query(array(
                 'post_type'=>$config['post_type'], 'post_status'=>'publish', 'has_password'=>false,
                 'fields'=>'ids', 'posts_per_page'=>-1, 'no_found_rows'=>true,
-                'orderby'=>'ID', 'order'=>'ASC', 'suppress_filters'=>true,
+                'orderby'=>'ID', 'order'=>'ASC', 'suppress_filters'=>false,
                 'lang'=>'', 'meta_key'=>'date_debut',
                 'update_post_meta_cache'=>false, 'update_post_term_cache'=>false,
             ));
-            self::$ids = $query->posts;
+                self::$ids = $query->posts;
+            } finally {
+                if ($wpml) do_action('wpml_switch_language', null);
+            }
         }
         $rows = array();
         $seen = array();
@@ -115,8 +121,8 @@ final class Parcs_HT_WordPress_Events {
             }
         }
         $manual = (array)($season['special_periods'] ?? array());
-        // Repeated projections never duplicate adapter rows; manual entries are preserved.
-        $manual = array_values(array_filter($manual, static function($row) { return !isset($row['source_post_id']); }));
+        // Only reference periods survive; historical manual events remain stored but are never projected.
+        $manual = array_values(array_filter($manual, static function($row) { return is_array($row) && !isset($row['source_post_id']) && (string)($row['kind'] ?? 'event') !== 'event'; }));
         $season['special_periods'] = array_merge($manual, array_values($imported));
         return $season;
     }
@@ -126,7 +132,7 @@ final class Parcs_HT_WordPress_Events {
         ?>
         <section class="htp-card">
             <h2>Événements WordPress</h2>
-            <p>Les événements publiés alimentent le calendrier avec leur titre, leurs dates et leur lien. Aucun contenu d’article ni pop-up n’est importé. Les événements saisis ci-dessous restent disponibles.</p>
+            <p>Les événements publiés alimentent le calendrier avec leur titre, leurs dates et leur lien. Aucun contenu d’article ni pop-up n’est importé. Créez et modifiez vos événements uniquement dans WordPress. Les anciennes saisies manuelles sont conservées en historique, sans affichage.</p>
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                 <input type="hidden" name="action" value="parcs_ht_wordpress_events_save">
                 <input type="hidden" name="season" value="<?php echo esc_attr($year); ?>">

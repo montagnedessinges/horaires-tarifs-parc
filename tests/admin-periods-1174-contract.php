@@ -28,11 +28,8 @@ htp_1174_assert(strpos($periods, 'name="action" value="parcs_ht_save"') !== fals
 htp_1174_assert(strpos($periods, 'parcs_ht_save_periods_1174') === false, 'second moteur de sauvegarde détecté');
 htp_1174_assert(strpos($periods, 'settings[_complete][holidays]') !== false && strpos($periods, 'settings[_complete][exceptions]') !== false && strpos($periods, 'settings[_complete][domain_rules]') !== false, 'sauvegarde ciblée des trois sections absente');
 
-foreach (array('star','camera','calendar','gift','music','leaf','flag','heart','info') as $icon) {
-    htp_1174_assert(strpos($periods, "'{$icon}'") !== false, 'pictogramme événement manquant : ' . $icon);
-}
-htp_1174_assert(strpos($periods, '[icon]') !== false && strpos($periods, '[color]') !== false, 'couleur ou pictogramme événement non éditable');
-htp_1174_assert(strpos($periods, 'pre_update_option_parcs_ht_settings') !== false && strpos($periods, 'preserve_event_visuals') !== false, 'persistance des visuels événement absente');
+htp_1174_assert(strpos($periods, 'htp-template-event') === false && strpos($periods, 'preserve_event_visuals') === false, 'ancien éditeur événement encore présent');
+htp_1174_assert(strpos($periods, '[color]') !== false && strpos($periods, 'htp-template-special-period') !== false, 'édition des périodes repères perdue');
 
 htp_1174_assert(strpos($periods, '[open2]') !== false && strpos($periods, '[close2]') !== false, 'second créneau exceptionnel facultatif absent');
 htp_1174_assert(strpos($periods, '[domain_rules]') !== false && strpos($periods, 'Accès temporairement limité') !== false, 'module Accès limité absent');

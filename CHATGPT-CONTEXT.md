@@ -372,3 +372,7 @@ Décision utilisateur du 12/10/2026 : supprimer réellement l’ancien déclench
 Le fichier du thème confirmé par l’utilisateur est `single-evenement.php`. Le modèle fourni dans le chat lit `date_debut`, `date_fin`, le titre et le permalien. L’adaptateur lit les métadonnées brutes ACF Ymd (ou ISO), sans dépendre du format de retour configuré dans ACF et sans importer le contenu. La source est configurable dans Périodes/événements, séparément sur chaque site. Aucun changement du thème n’est nécessaire pour cette lecture. Une éventuelle correction de présentation de single-evenement.php est une étape séparée, avec sauvegarde de sa version originale avant modification.
 
 Voir UPDATE-1.20.3.md.
+
+### Organisation des événements — 1.20.3
+
+Les événements sont désormais gérés uniquement dans WordPress (`evenement`, dates ACF `date_debut`/`date_fin`). La saisie manuelle dans l’extension et son import CSV sont retirés. Les anciennes données restent dans les saisons comme historique inactif ; ne pas les réactiver. Les périodes repères, horaires exceptionnels et pop-ups autonomes sont conservés. Voir UPDATE-1.20.3.md.

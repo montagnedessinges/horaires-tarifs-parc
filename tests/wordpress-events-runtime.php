@@ -29,6 +29,7 @@ function esc_url_raw($value) { return $value; }
 class WP_Query {
  public $posts;
  public function __construct($args) {
+  verify($args['suppress_filters']===false, 'WordPress query filters disabled');
   verify($args['fields']==='ids' && $args['post_status']==='publish' && $args['has_password']===false,'Unsafe query');
   $this->posts=array_keys($GLOBALS['posts']);
  }
@@ -42,9 +43,10 @@ verify(count($rows)===3,'Invalid, private or draft rows exposed');
 verify($rows[2]['start']===$rows[2]['end'],'Missing end not normalized');
 verify(count(Parcs_HT_WordPress_Events::rows('2027','fr'))===1,'Cross-year event lost');
 verify(count(Parcs_HT_WordPress_Events::rows('2028','fr'))===0,'Wrong year exposed');
-$manual=array('special_periods'=>array(array('enabled'=>'1','title'=>array('fr'=>'Manuel'))),'regular_periods'=>array('unchanged'));
+$manual=array('special_periods'=>array(array('enabled'=>'1','kind'=>'other','title'=>array('fr'=>'Période')),array('enabled'=>'1','kind'=>'event','title'=>array('fr'=>'Ancien événement'))),'regular_periods'=>array('unchanged'));
 $projected=Parcs_HT_WordPress_Events::season($manual,'2026');
-verify(count($projected['special_periods'])===4 && $projected['regular_periods']===$manual['regular_periods'],'Manual data altered');
+verify(count($manual['special_periods'])===2, 'Source history modified');
+verify(count($projected['special_periods'])===4 && $projected['regular_periods']===$manual['regular_periods'],'Reference period altered or historical event displayed');
 verify(Parcs_HT_WordPress_Events::season($projected,'2026')===$projected,'Projection duplicated events');
 verify(isset($projected['special_periods'][1]['button_url']['de']),'Explicit shortcode language missing');
 $GLOBALS['posts'][1]['status']='draft';
@@ -55,6 +57,7 @@ Parcs_HT_WordPress_Events::meta_changed(1,3,'date_debut','20271023');
 verify(count(Parcs_HT_WordPress_Events::rows('2026','fr'))===1,'Date change not reflected');
 $GLOBALS['options'][Parcs_HT_WordPress_Events::OPTION]=array('enabled'=>'0');
 verify(Parcs_HT_WordPress_Events::rows('2026','fr')===array(),'Disabled adapter active');
+verify(count(Parcs_HT_WordPress_Events::season($manual,'2026')['special_periods'])===1,'Disabling WordPress revived manual events');
 foreach (array('includes/class-parcs-ht-alerts.php','includes/class-parcs-ht-popup-1200.php') as $file) {
  $source=file_get_contents($root.'/'.$file);
  verify(strpos($source,'special_periods')===false && strpos($source,'show_popup')===false,'Event popup path survived');
@@ -83,6 +86,8 @@ verify(count(Parcs_HT_WordPress_Events::season(array(),'2026')['special_periods'
 
 // The existing publication gate remains authoritative before any WordPress projection.
 class Parcs_HT_Defaults {
+ const SCHEMA_VERSION = 'test';
+ public static function get() { return array('site_type'=>$GLOBALS['test_park'] ?? 'montagne'); }
  public static function select_season_year($all) { return '2026'; }
 }
 require $root.'/includes/class-parcs-ht-schedule.php';
@@ -90,3 +95,34 @@ $public=Parcs_HT_Schedule::public_settings(array('seasons'=>array('2026'=>array(
 verify(isset($public['seasons']['2026']) && !isset($public['seasons']['2027']),'WordPress adapter published a hidden season');
 verify(count($public['seasons']['2026']['specialPeriods'])===1,'Public calendar did not receive WordPress event');
 echo "OK: exact translations, shared language projection and published-year boundary.\n";
+
+// Exercise the canonical save sanitizer: editing periods must retain immutable event history.
+function wp_unslash($v) { return $v; }
+function sanitize_key($v) { return preg_replace('/[^a-z0-9_\-]/', '', strtolower($v)); }
+function sanitize_textarea_field($v) { return strip_tags($v); }
+function sanitize_hex_color($v) { return preg_match('/^#[a-fA-F0-9]{6}$/', $v) ? $v : ''; }
+function sanitize_email($v) { return $v; }
+function get_bloginfo($key) { return 'Parc'; }
+function wp_strip_all_tags($v) { return strip_tags($v); }
+require $root.'/includes/class-parcs-ht-admin.php';
+$sanitize = new ReflectionMethod('Parcs_HT_Admin', 'sanitize');
+$sanitize->setAccessible(true);
+$history = array('kind'=>'event','enabled'=>'1','title'=>array('fr'=>'Historique'),'color'=>'#123456','extra'=>'keep');
+$other_year = array('special_periods'=>array($history));
+$current = $other_year;
+$period = array('kind'=>'other','enabled'=>'1','start'=>'2026-10-01','end'=>'2026-10-31','title'=>array('fr'=>'Période'));
+$raw = array('_complete'=>array('holidays'=>'1'),'special_periods'=>array($period,array('kind'=>'event','title'=>array('fr'=>'Injection'))));
+foreach (array('montagne','foret') as $park) {
+ $GLOBALS['test_park'] = $park;
+ $current = $other_year;
+ foreach (array('1','0') as $enabled) {
+  $raw['special_periods'][0]['enabled'] = $enabled;
+  $current = $sanitize->invoke(null, $raw, $current);
+  verify(count($current['special_periods'])===2 && $current['special_periods'][1]===$history, 'Save altered history or accepted manual event');
+  verify($current['special_periods'][0]['enabled']===$enabled, 'Reference period save lost');
+ }
+ $current = $sanitize->invoke(null, array('_complete'=>array('holidays'=>'1')), $current);
+ verify($current['special_periods']===array($history), 'Deleting a reference period deleted historical events');
+ verify($other_year===array('special_periods'=>array($history)), 'Other season mutated');
+}
+echo "OK: reference period saves/deletion preserve history and reject manual event creation.\n";
