@@ -226,11 +226,11 @@ final class Parcs_HT_Admin_Periods {
         <div class="wrap htp-admin htp-1174-periods">
             <div class="htp-1174-title"><div><h1>Périodes, événements, exceptions & accès limité</h1><p class="description">Un seul écran annuel pour gérer les informations qui complètent les horaires habituels, sans mélanger leurs règles métier.</p></div><span>Interface 1.17.4</span></div>
             <?php if (class_exists('Parcs_HT_Admin_Navigation') && method_exists('Parcs_HT_Admin_Navigation', 'render_year_context')) Parcs_HT_Admin_Navigation::render_year_context(self::PAGE, $year); ?>
-            <?php if (isset($_GET['updated'])) : /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- message visuel uniquement. */ ?><div class="notice notice-success is-dismissible"><p>Les périodes, événements, exceptions et règles d’accès ont été enregistrés.</p></div><?php endif; ?>
+            <?php if (isset($_GET['updated'])) : /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- message visuel uniquement. */ ?><div class="notice notice-success is-dismissible"><p>Les périodes, exceptions et règles d’accès ont été enregistrés.</p></div><?php endif; ?>
 
             <?php Parcs_HT_WordPress_Events::admin_form($year); ?>
             <section class="htp-1174-summary"><div><span>Année</span><strong><?php echo esc_html($year); ?></strong></div><div><span>Périodes repères</span><strong><?php echo esc_html((string)$period_count); ?></strong></div><div><span>Exceptions</span><strong><?php echo esc_html((string)count($exceptions)); ?></strong></div><div><span>Règles d’accès</span><strong><?php echo esc_html((string)count($domains)); ?></strong></div></section>
-            <nav class="htp-1174-anchor-nav" aria-label="Sections"><a class="button" href="#htp-1174-periods-events">Périodes & événements</a><a class="button" href="#htp-1174-exceptions">Exceptions</a><a class="button" href="#htp-1174-access">Accès limité</a></nav>
+            <nav class="htp-1174-anchor-nav" aria-label="Sections"><a class="button" href="#htp-1174-periods-events">Périodes repères</a><a class="button" href="#htp-1174-exceptions">Exceptions</a><a class="button" href="#htp-1174-access">Accès limité</a></nav>
 
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" data-htp-1174-form>
                 <input type="hidden" name="action" value="parcs_ht_save">
@@ -243,7 +243,7 @@ final class Parcs_HT_Admin_Periods {
                 <?php wp_nonce_field('parcs_ht_save'); ?>
 
                 <section id="htp-1174-periods-events" class="htp-card htp-1174-card">
-                    <div class="htp-1174-card-head"><div><h2>Périodes repères & événements</h2><p class="description">Les périodes repères décrivent un contexte (vacances, forte affluence…). Les événements sont gérés dans WordPress et affichés automatiquement dans le calendrier.</p></div></div>
+                    <div class="htp-1174-card-head"><div><h2>Périodes repères</h2><p class="description">Les périodes repères décrivent un contexte (vacances, forte affluence…). Les événements sont gérés dans WordPress et affichés automatiquement dans le calendrier.</p></div></div>
                     <div class="htp-subsection"><h3>Périodes repères</h3><div class="htp-repeater" data-template="htp-template-special-period"><div class="htp-repeater-rows"><?php foreach ($specials as $index=>$row) if ((string)($row['kind'] ?? 'event') !== 'event') self::special_period_row($index, $row); ?></div><button type="button" class="button htp-add-row">Ajouter une période repère</button></div></div>
                     <script type="text/html" id="htp-template-special-period"><?php self::special_period_row('__INDEX__', array('kind'=>'other')); ?></script>
                     <details class="htp-advanced htp-1174-wide-details"><summary>Jours fériés et légende du calendrier</summary><div class="htp-details-content">
@@ -270,7 +270,7 @@ final class Parcs_HT_Admin_Periods {
 
                 <?php if (class_exists('Parcs_HT_Schedule_CSV')) : ?><section class="htp-card htp-1174-card"><h2>Import / export CSV</h2><p class="description">L’outil CSV couvre les périodes, exceptions et règles d’accès de cette saison. Les événements sont gérés dans WordPress.</p><?php Parcs_HT_Schedule_CSV::render_controls($year); ?></section><?php endif; ?>
 
-                <div class="htp-1174-save"><button type="submit" name="htp_save_active" value="1" class="button button-primary button-large">Enregistrer Périodes & événements</button></div>
+                <div class="htp-1174-save"><button type="submit" name="htp_save_active" value="1" class="button button-primary button-large">Enregistrer les périodes et exceptions</button></div>
             </form>
             <?php if (class_exists('Parcs_HT_Schedule_CSV')) Parcs_HT_Schedule_CSV::render_external_form($year); ?>
         </div>

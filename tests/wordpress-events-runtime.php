@@ -102,7 +102,7 @@ function sanitize_key($v) { return preg_replace('/[^a-z0-9_\-]/', '', strtolower
 function sanitize_textarea_field($v) { return strip_tags($v); }
 function sanitize_hex_color($v) { return preg_match('/^#[a-fA-F0-9]{6}$/', $v) ? $v : ''; }
 function sanitize_email($v) { return $v; }
-function get_bloginfo($key) { return 'Parc'; }
+function get_bloginfo($key) { return $key==='charset' ? 'UTF-8' : 'Parc'; }
 function wp_strip_all_tags($v) { return strip_tags($v); }
 require $root.'/includes/class-parcs-ht-admin.php';
 $sanitize = new ReflectionMethod('Parcs_HT_Admin', 'sanitize');

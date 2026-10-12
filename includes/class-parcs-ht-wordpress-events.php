@@ -62,12 +62,12 @@ final class Parcs_HT_WordPress_Events {
             if ($wpml) do_action('wpml_switch_language', 'all');
             try {
                 $query = new WP_Query(array(
-                'post_type'=>$config['post_type'], 'post_status'=>'publish', 'has_password'=>false,
-                'fields'=>'ids', 'posts_per_page'=>-1, 'no_found_rows'=>true,
-                'orderby'=>'ID', 'order'=>'ASC', 'suppress_filters'=>false,
-                'lang'=>'', 'meta_key'=>'date_debut',
-                'update_post_meta_cache'=>false, 'update_post_term_cache'=>false,
-            ));
+                    'post_type'=>$config['post_type'], 'post_status'=>'publish', 'has_password'=>false,
+                    'fields'=>'ids', 'posts_per_page'=>-1, 'no_found_rows'=>true,
+                    'orderby'=>'ID', 'order'=>'ASC', 'suppress_filters'=>false,
+                    'lang'=>'', 'meta_key'=>'date_debut',
+                    'update_post_meta_cache'=>false, 'update_post_term_cache'=>false,
+                ));
                 self::$ids = $query->posts;
             } finally {
                 if ($wpml) do_action('wpml_switch_language', null);
@@ -133,6 +133,9 @@ final class Parcs_HT_WordPress_Events {
         <section class="htp-card">
             <h2>Événements WordPress</h2>
             <p>Les événements publiés alimentent le calendrier avec leur titre, leurs dates et leur lien. Aucun contenu d’article ni pop-up n’est importé. Créez et modifiez vos événements uniquement dans WordPress. Les anciennes saisies manuelles sont conservées en historique, sans affichage.</p>
+            <?php if (get_post_type_object($config['post_type'])) : ?>
+            <p><a class="button" href="<?php echo esc_url(add_query_arg('post_type', $config['post_type'], admin_url('edit.php'))); ?>">Gérer les événements dans WordPress</a></p>
+            <?php endif; ?>
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                 <input type="hidden" name="action" value="parcs_ht_wordpress_events_save">
                 <input type="hidden" name="season" value="<?php echo esc_attr($year); ?>">
