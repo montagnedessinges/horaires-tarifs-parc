@@ -20,7 +20,11 @@ function do_action($name) {}
 function get_post_type($id) { return 'evenement'; }
 function get_post_type_object($name) { return $name==='evenement' ? (object)array('publicly_queryable'=>true) : false; }
 function get_post_status($id) { return $GLOBALS['posts'][$id]['status']; }
-function get_post_meta($id,$key,$single) { verify(in_array($key,array('date_debut','date_fin'),true),'Unexpected ACF read'); return $GLOBALS['posts'][$id][$key==='date_debut'?'start':'end']; }
+function get_post_meta($id,$key,$single) {
+ $map=array('date_debut'=>'start','date_fin'=>'end','_parcs_ht_event_calendar_enabled'=>'visible','_parcs_ht_event_calendar_color'=>'color','_parcs_ht_event_calendar_marker'=>'marker');
+ verify(isset($map[$key]),'Unexpected WordPress meta read: '.$key);
+ return $GLOBALS['posts'][$id][$map[$key]] ?? '';
+}
 function get_post_field($field,$id,$context) { verify(in_array($field,array('post_title','post_password'),true),'Article content read'); return $GLOBALS['posts'][$id][$field==='post_title'?'title':'password'] ?? ''; }
 function get_permalink($id) { return 'https://example.test/event/'.$id; }
 function has_filter($name) { return false; }
@@ -40,6 +44,25 @@ verify(Parcs_HT_WordPress_Events::date('2026-10-12')==='2026-10-12','ISO date');
 verify(Parcs_HT_WordPress_Events::date('12/10/2026')==='','Ambiguous date accepted');
 $rows=Parcs_HT_WordPress_Events::rows('2026','fr');
 verify(count($rows)===3,'Invalid, private or draft rows exposed');
+verify($rows[0]['display_mode']==='long' && $rows[0]['color']==='#e7c55b','Multi-day event should show dots by default');
+verify($rows[2]['display_mode']==='spot','Single-day event should show a star by default');
+$GLOBALS['posts'][1]['marker']='star';
+$GLOBALS['posts'][1]['color']='#418a6b';
+Parcs_HT_WordPress_Events::invalidate(1);
+$rows=Parcs_HT_WordPress_Events::rows('2026','fr');
+verify($rows[0]['display_mode']==='spot' && $rows[0]['color']==='#418a6b','Individual star/color override ignored');
+$GLOBALS['posts'][1]['marker']='dot';
+$GLOBALS['posts'][1]['color']='not-a-color';
+Parcs_HT_WordPress_Events::invalidate(1);
+$rows=Parcs_HT_WordPress_Events::rows('2026','fr');
+verify($rows[0]['display_mode']==='long' && $rows[0]['color']==='#e7c55b','Dot/invalid color fallback ignored');
+$GLOBALS['posts'][1]['visible']='0';
+Parcs_HT_WordPress_Events::invalidate(1);
+verify(count(Parcs_HT_WordPress_Events::rows('2026','fr'))===2,'Hidden event leaked into public projections');
+verify(count(Parcs_HT_WordPress_Events::season(array(),'2026')['special_periods'])===2,'Hidden event leaked into HTML/calendar season');
+$GLOBALS['posts'][1]['visible']='1';
+Parcs_HT_WordPress_Events::invalidate(1);
+$rows=Parcs_HT_WordPress_Events::rows('2026','fr');
 verify($rows[2]['start']===$rows[2]['end'],'Missing end not normalized');
 verify(count(Parcs_HT_WordPress_Events::rows('2027','fr'))===1,'Cross-year event lost');
 verify(count(Parcs_HT_WordPress_Events::rows('2028','fr'))===0,'Wrong year exposed');
@@ -142,3 +165,15 @@ $GLOBALS['options'][Parcs_HT_WordPress_Events::OPTION]=array('enabled'=>'0');
 $audit=Parcs_HT_Schedule::audit_season($legacy);
 verify($audit['summary']['events']===0, 'Admin audit counted an archived event');
 echo "OK: retired sources excluded from admin diagnostics.\n";
+
+
+// Theme contract from the Montagne des Singes ZIP (2026-10-12):
+// the homepage queries CPT evenement and only ACF date_debut/date_fin.
+$adapter=file_get_contents($root.'/includes/class-parcs-ht-wordpress-events.php');
+verify(strpos($adapter, '_parcs_ht_event_calendar_color')!==false && strpos($adapter, '_parcs_ht_event_calendar_marker')!==false,'Dedicated post meta missing');
+verify(strpos($adapter, "update_post_meta(") !== false,'Calendar preferences not saved');
+$frontend=file_get_contents($root.'/assets/frontend.js');
+$css=file_get_contents($root.'/assets/frontend.css');
+verify(strpos($frontend, 'parcs-ht-calendar-marks')!==false && strpos($frontend, 'eventRows.slice(0,3)')!==false,'Multiple visible event markers missing');
+verify(strpos($css, 'var(--htp-event-color,#e7c55b)')!==false,'Custom event colors unsupported');
+echo "OK: event markers, visibility, contrast and theme integration contract.\n";
