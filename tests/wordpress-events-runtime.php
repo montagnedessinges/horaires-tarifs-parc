@@ -60,6 +60,8 @@ foreach (array('includes/class-parcs-ht-alerts.php','includes/class-parcs-ht-pop
  verify(strpos($source,'special_periods')===false && strpos($source,'show_popup')===false,'Event popup path survived');
 }
 foreach (array('includes/class-parcs-ht-admin.php','includes/class-parcs-ht-admin-periods.php') as $file) verify(strpos(file_get_contents($root.'/'.$file),'data-htp-popup-block')===false,'Event popup controls survived');
+verify(strpos(file_get_contents($root.'/assets/admin.js'), 'exceptionAutoMessage')===false, 'Legacy event popup preview survived');
+verify(strpos(file_get_contents($root.'/includes/class-parcs-ht-admin-communication-1179.php'), 'popup_source_counts')===false, 'Legacy popup source screen survived');
 echo "OK: WordPress event dates, publication, projection, languages, cache and popup isolation.\n";
 
 // qTranslate: absent translation must stay absent, and the URL follows the requested language.

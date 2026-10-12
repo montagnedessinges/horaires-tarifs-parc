@@ -65,17 +65,6 @@
   }
 
 
-  function syncPopupBlock(block) {
-    if (!block) return;
-    var toggle = block.querySelector('input[type="checkbox"][name$="[show_popup]"]');
-    var settings = block.querySelector('[data-htp-popup-settings]');
-    if (!toggle || !settings) return;
-    settings.hidden = !toggle.checked;
-  }
-  function initPopupBlocks(root) {
-    (root || document).querySelectorAll('[data-htp-popup-block]').forEach(syncPopupBlock);
-  }
-
   function syncButtonBlock(block) {
     if (!block) return;
     var toggle = block.querySelector('input[type="checkbox"][name$="[show_button]"], input[type="checkbox"][name$="[popup_show_button]"]');
@@ -248,57 +237,6 @@
     return el ? el.checked : fallback;
   }
 
-  function formatPreviewDate(value, language) {
-    var match = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (!match) return String(value || '');
-    var date = new Date(Date.UTC(parseInt(match[1], 10), parseInt(match[2], 10) - 1, parseInt(match[3], 10), 12, 0, 0));
-    var locale = language === 'en' ? 'en-GB' : (language === 'de' ? 'de-DE' : 'fr-FR');
-    try {
-      return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(date);
-    } catch (error) {
-      return match[3] + '/' + match[2] + '/' + match[1];
-    }
-  }
-
-  function formatPreviewTime(value, language) {
-    var match = String(value || '').match(/^(\d{1,2}):(\d{2})$/);
-    if (!match) return String(value || '');
-    var hour = parseInt(match[1], 10);
-    var minute = parseInt(match[2], 10);
-    if (language === 'en') {
-      var suffix = hour >= 12 ? 'PM' : 'AM';
-      var displayHour = hour % 12 || 12;
-      return displayHour + (minute ? ':' + String(minute).padStart(2, '0') : '') + ' ' + suffix;
-    }
-    if (language === 'de') return hour + (minute ? ':' + String(minute).padStart(2, '0') : '') + ' Uhr';
-    return hour + ' h' + (minute ? ' ' + String(minute).padStart(2, '0') : '');
-  }
-
-  function exceptionDefaultTitle(row, language) {
-    var closed = plainValue(row, 'type') === 'closed';
-    if (language === 'en') return closed ? 'Exceptional closure' : 'Exceptional opening hours';
-    if (language === 'de') return closed ? 'Außergewöhnliche Schließung' : 'Außergewöhnliche Öffnungszeiten';
-    return closed ? 'Fermeture exceptionnelle' : 'Horaires exceptionnels';
-  }
-
-  function exceptionAutoMessage(row, language) {
-    var start = formatPreviewDate(plainValue(row, 'start'), language);
-    var end = formatPreviewDate(plainValue(row, 'end'), language);
-    var open = formatPreviewTime(plainValue(row, 'open'), language);
-    var close = formatPreviewTime(plainValue(row, 'close'), language);
-    var closed = plainValue(row, 'type') === 'closed';
-    if (language === 'en') {
-      if (closed) return 'The park is closed from ' + start + ' to ' + end + '.';
-      return 'From ' + start + ' to ' + end + ', the park is open from ' + open + ' to ' + close + '.';
-    }
-    if (language === 'de') {
-      if (closed) return 'Der Park ist vom ' + start + ' bis ' + end + ' geschlossen.';
-      return 'Vom ' + start + ' bis ' + end + ' ist der Park von ' + open + ' bis ' + close + ' geöffnet.';
-    }
-    if (closed) return 'Le parc est fermé du ' + start + ' au ' + end + '.';
-    return 'Du ' + start + ' au ' + end + ', le parc est ouvert de ' + open + ' à ' + close + '.';
-  }
-
   function popupPreviewData(trigger, language) {
     var row = trigger ? trigger.closest('.htp-repeat-row') : null;
     if (!row) return null;
@@ -314,42 +252,7 @@
       };
     }
 
-    var isException = !!row.querySelector('[name^="settings[exceptions]"]');
-    if (isException) {
-      var mode = plainValue(row, 'popup_mode') || 'auto';
-      var customTitle = translatedValue(row, 'popup_title', language);
-      var customMessage = translatedValue(row, 'popup_message', language);
-      var context = translatedValue(row, 'context', language);
-      var title = '';
-      var message = '';
-
-      if (mode === 'custom') {
-        title = customTitle || context;
-        message = customMessage;
-      } else {
-        title = customTitle || context || exceptionDefaultTitle(row, language);
-        message = exceptionAutoMessage(row, language);
-        if (customMessage) message = (message ? message + '\n' : '') + customMessage;
-      }
-
-      return {
-        title: title,
-        message: message,
-        buttonLabel: translatedValue(row, 'popup_button_label', language),
-        buttonUrl: translatedValue(row, 'popup_button_url', language),
-        showButton: checkedValue(row, 'popup_show_button', false),
-        imageUrl: ''
-      };
-    }
-
-    return {
-      title: translatedValue(row, 'popup_title', language) || translatedValue(row, 'title', language),
-      message: translatedValue(row, 'popup_message', language) || translatedValue(row, 'message', language),
-      buttonLabel: translatedValue(row, 'popup_button_label', language),
-      buttonUrl: translatedValue(row, 'popup_button_url', language),
-      showButton: checkedValue(row, 'popup_show_button', false),
-      imageUrl: plainValue(row, 'popup_image_url')
-    };
+    return null;
   }
 
   function previewPopup(trigger, language) {
@@ -659,7 +562,6 @@
   }
 
   document.addEventListener('change', function (event) {
-    if (event.target.matches('input[type="checkbox"][name$="[show_popup]"]')) { syncPopupBlock(event.target.closest('[data-htp-popup-block]')); }
     if (event.target.matches('input[type="checkbox"][name$="[show_button]"], input[type="checkbox"][name$="[popup_show_button]"]')) { syncButtonBlock(event.target.closest('[data-htp-button-block]')); }
     if (event.target.matches('input[type="checkbox"][name$="[show_tooltip]"]')) { syncDomainTooltipBlock(event.target.closest('[data-htp-domain-tooltip-block]')); }
     if (event.target.matches('select[name$="[row_type]"]')) { syncSpecialOfferRow(event.target.closest('[data-htp-tariff-row]')); }
@@ -715,7 +617,6 @@
       repeater.querySelector(':scope > .htp-repeater-rows').insertAdjacentHTML('beforeend', html);
       initLocalTranslations(repeater);
       initOptionalColors(repeater);
-      initPopupBlocks(repeater);
       initButtonBlocks(repeater);
       initDomainTooltipBlocks(repeater);
       initQuoteSortables();
@@ -765,7 +666,6 @@
     initOptionalColors(document);
     initLocalTranslations(document);
     hydrateAllWeekdays(document);
-    initPopupBlocks(document);
     initButtonBlocks(document);
     initDomainTooltipBlocks(document);
     initSpecialOfferRows(document);
