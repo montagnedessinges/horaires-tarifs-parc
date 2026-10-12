@@ -264,7 +264,7 @@
   }
   function dayAria(date,status,language) {
     var d=dictionary(language),label=dateLabel(date,language);
-    var events=specialPeriodRows(date),suffix=(events.length?', '+(translated((settings.general||{}).event_legend_label,language)||d.event):'');
+    var events=specialPeriodRows(date).filter(function(row){return !row.source_post_id || translatedExact(row.title,language);}),suffix=(events.length?', '+(translated((settings.general||{}).event_legend_label,language)||d.event):'');
     if(!status.open)return label+', '+(status.exceptional && (!status.exception || String(status.exception.show_public_marker)!=='0')?d.exceptionalClosure:d.closed)+suffix;
     return label+', '+dayRanges(status,language)+(status.exceptional && (!status.exception || String(status.exception.show_public_marker)!=='0')?', '+d.exceptionalHours:'')+suffix;
   }
@@ -378,7 +378,7 @@
         if(domain.childNodes.length)box.appendChild(domain);
       }
     }
-    var events=specialPeriodRows(date,true);
+    var events=specialPeriodRows(date,true).filter(function(row){return !row.source_post_id || translatedExact(row.title,language);});
     events.forEach(function(eventRow){
       var eventTitle=translated(eventRow.title,language)||eventRow.internal_label||(isEventRow(eventRow)?d.event:'');
       var eventWrap=document.createElement('div');eventWrap.className='parcs-ht-event-note '+(isEventRow(eventRow)?'is-event':'is-period');eventWrap.style.setProperty('--htp-event-color',isEventRow(eventRow)?'#e7c55b':(eventRow.color||'#7b61a8'));
@@ -395,6 +395,7 @@
     var monthStart=monthKey+'-01',y=Number(monthKey.slice(0,4)),m=Number(monthKey.slice(5,7)),monthEnd=isoDate(y,m,new Date(Date.UTC(y,m,0)).getUTCDate());
     var hasVisibleEvent=false,seen={};(settings.specialPeriods||[]).forEach(function(row){
       if(!enabled(row)||String(row.show_on_calendar)==='0'||!row.start||!row.end)return;
+      if(row.source_post_id && !translatedExact(row.title,language))return;
       if(row.end<monthStart||row.start>monthEnd)return;
       if(isEventRow(row)){hasVisibleEvent=true;return;}
       var label=translated(row.title,language)||row.internal_label||'';if(!label||seen[label])return;seen[label]=true;
@@ -419,7 +420,7 @@
     for(var blank=1;blank<firstWeekday;blank++){var empty=document.createElement('span');empty.className='parcs-ht-empty';empty.setAttribute('aria-hidden','true');days.appendChild(empty);}
     var selectedDate=(now.date.slice(0,7)===monthKey)?now.date:'';
     for(var day=1;day<=daysCount;day++){
-      var date=isoDate(year,month,day),status=resolveDay(date),holiday=((settings.general||{}).show_public_holidays==='1')?publicHolidayRow(date):null,events=specialPeriodRows(date,true),button=document.createElement('button');button.type='button';button.className='parcs-ht-day '+(status.open?'is-open':'is-closed')+(holiday?' is-public-holiday':'')+(events.length?' is-special-event':'');if(holiday){button.style.setProperty('--htp-holiday-border',(settings.general||{}).holiday_border_color||'#e7c55b');button.style.setProperty('--htp-holiday-border-width',String((settings.general||{}).holiday_border_width||3)+'px');}button.setAttribute('data-htp-date',date);button.setAttribute('aria-label',dayAria(date,status,language));var dayNumber=document.createElement('span');dayNumber.className='parcs-ht-day-number';dayNumber.textContent=String(day);button.appendChild(dayNumber);
+      var date=isoDate(year,month,day),status=resolveDay(date),holiday=((settings.general||{}).show_public_holidays==='1')?publicHolidayRow(date):null,events=specialPeriodRows(date,true).filter(function(row){return !row.source_post_id || translatedExact(row.title,language);}),button=document.createElement('button');button.type='button';button.className='parcs-ht-day '+(status.open?'is-open':'is-closed')+(holiday?' is-public-holiday':'')+(events.length?' is-special-event':'');if(holiday){button.style.setProperty('--htp-holiday-border',(settings.general||{}).holiday_border_color||'#e7c55b');button.style.setProperty('--htp-holiday-border-width',String((settings.general||{}).holiday_border_width||3)+'px');}button.setAttribute('data-htp-date',date);button.setAttribute('aria-label',dayAria(date,status,language));var dayNumber=document.createElement('span');dayNumber.className='parcs-ht-day-number';dayNumber.textContent=String(day);button.appendChild(dayNumber);
       if(date===now.date)button.classList.add('is-today');
       if(status.exceptional && (!status.exception || String(status.exception.show_public_marker)!=='0')){var symbol=document.createElement('i');symbol.className='parcs-ht-symbol '+(status.type==='closed'?'is-closed':'is-hours');symbol.setAttribute('aria-hidden','true');symbol.textContent=status.type==='closed'?'×':'!';button.appendChild(symbol);}if(events.length){var eventMarker=events.find(isEventRow),periodRows=events.filter(function(r){return !isEventRow(r);});if(eventMarker){var star=document.createElement('i');var isLong=String(eventMarker.display_mode||'spot')==='long';star.className='parcs-ht-event-star is-event '+(isLong?'is-long':'is-spot');star.setAttribute('aria-hidden','true');if(isLong){star.textContent='•';}else{star.innerHTML=eventIconSvg('star');}button.appendChild(star);}periodRows.slice(0,3).forEach(function(periodRow,index){var band=document.createElement('i');band.className='parcs-ht-period-band';band.setAttribute('aria-hidden','true');band.style.setProperty('--htp-period-color',periodRow.color||'#7b61a8');band.style.setProperty('--htp-period-index',String(index));button.appendChild(band);});}
       days.appendChild(button);

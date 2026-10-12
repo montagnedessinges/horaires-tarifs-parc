@@ -89,24 +89,6 @@ final class Parcs_HT_Admin_Communication_1179 {
         echo '</nav>';
     }
 
-    private static function popup_source_counts() {
-        $all = Parcs_HT_Defaults::all_settings();
-        $counts = array('alerts'=>0,'exceptions'=>0,'events'=>0);
-        foreach ((array)($all['alerts'] ?? array()) as $row) {
-            if (is_array($row) && (string)($row['enabled'] ?? '0') === '1') $counts['alerts']++;
-        }
-        foreach ((array)($all['seasons'] ?? array()) as $season) {
-            if (!is_array($season)) continue;
-            foreach ((array)($season['exceptions'] ?? array()) as $row) {
-                if (is_array($row) && (string)($row['enabled'] ?? '0') === '1' && (string)($row['show_popup'] ?? '0') === '1') $counts['exceptions']++;
-            }
-            foreach ((array)($season['special_periods'] ?? array()) as $row) {
-                if (is_array($row) && (string)($row['enabled'] ?? '0') === '1' && (string)($row['show_popup'] ?? '0') === '1') $counts['events']++;
-            }
-        }
-        return $counts;
-    }
-
     private static function notices() {
         // phpcs:disable WordPress.Security.NonceVerification.Recommended -- messages de confirmation uniquement.
         if (isset($_GET['updated'])) echo '<div class="notice notice-success is-dismissible"><p>Les réglages du pop-up ont été enregistrés.</p></div>';
@@ -115,55 +97,7 @@ final class Parcs_HT_Admin_Communication_1179 {
     }
 
     public static function popup_page() {
-        if (class_exists('Parcs_HT_Popup_Admin_1200')) {
-            Parcs_HT_Popup_Admin_1200::render_page();
-            return;
-        }
-        if (!current_user_can('manage_options')) return;
-        $settings = Parcs_HT_Defaults::settings(self::active_year());
-        $alerts = isset($settings['alerts']) && is_array($settings['alerts']) ? $settings['alerts'] : array();
-        $general = isset($settings['general']) && is_array($settings['general']) ? $settings['general'] : array();
-        $counts = self::popup_source_counts();
-        $periods_url = class_exists('Parcs_HT_Admin_Navigation')
-            ? self::page_url(Parcs_HT_Admin_Navigation::PERIODS_PAGE)
-            : admin_url('admin.php');
-        ?>
-        <div class="wrap htp-1179 htp-1179-popup">
-            <h1>Pop-up</h1>
-            <p class="description">Gérez ici uniquement les alertes autonomes. Les pop-up d’événements et d’horaires exceptionnels restent attachés à leur contenu d’origine afin d’éviter toute duplication.</p>
-            <?php self::notices(); self::communication_nav('popup'); ?>
-
-            <section class="htp-1179-card">
-                <div class="htp-1179-card-head"><div><h2>Sources du moteur de pop-up</h2><p>Le moteur public commun reste inchangé.</p></div></div>
-                <div class="htp-1179-stats">
-                    <div><strong><?php echo (int)$counts['alerts']; ?></strong><span>alertes autonomes actives</span></div>
-                    <div><strong><?php echo (int)$counts['events']; ?></strong><span>événements avec pop-up</span></div>
-                    <div><strong><?php echo (int)$counts['exceptions']; ?></strong><span>exceptions avec pop-up</span></div>
-                </div>
-                <p><a class="button" href="<?php echo esc_url($periods_url); ?>">Gérer les événements et exceptions</a></p>
-            </section>
-
-            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" data-htp-popup-1179>
-                <input type="hidden" name="action" value="parcs_ht_save">
-                <input type="hidden" name="season_year" value="<?php echo esc_attr(self::active_year()); ?>">
-                <input type="hidden" name="htp_active_tab" value="htp-alerts">
-                <input type="hidden" name="htp_save_active" value="1">
-                <input type="hidden" name="settings[_complete][alerts]" value="1">
-                <?php wp_nonce_field('parcs_ht_save'); ?>
-
-                <section class="htp-1179-card">
-                    <div class="htp-1179-card-head"><div><h2>Alertes autonomes</h2><p>Une alerte désactivée reste enregistrée, mais tous ses réglages détaillés sont masqués.</p></div><button type="button" class="button button-primary" data-popup-add>Ajouter un pop-up</button></div>
-                    <div class="htp-1179-popup-list" data-popup-list>
-                        <?php foreach ($alerts as $index=>$row) self::popup_row($index, $row); ?>
-                    </div>
-                    <template data-popup-template><?php self::popup_row('__INDEX__', array('enabled'=>'0','published'=>'0','start'=>'','end'=>'','title'=>array(),'message'=>array(),'button_label'=>array(),'button_url'=>array(),'show_button'=>'0'), true); ?></template>
-                </section>
-
-                <?php self::popup_appearance($general); ?>
-                <div class="htp-1179-save"><?php submit_button('Enregistrer les pop-up', 'primary', 'submit', false); ?></div>
-            </form>
-        </div>
-        <?php
+        Parcs_HT_Popup_Admin_1200::render_page();
     }
 
     private static function popup_row($index, $row, $template = false) {

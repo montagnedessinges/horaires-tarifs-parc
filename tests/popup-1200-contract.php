@@ -89,12 +89,10 @@ release_contract_require_all($frontCss, array(
 
 release_contract_require_all($adminJs, array(
     'wp.media',
-    'cleanupLegacyPopupControls',
     'data-popup1200-media-select',
 ), 'popup admin media and legacy cleanup');
 
 release_contract_require_all($adminCss, array(
-    '.htp-1174-periods .htp-popup-block{display:none!important}',
     'object-fit:contain',
 ), 'popup admin visual isolation');
 

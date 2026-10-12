@@ -504,6 +504,8 @@ final class Parcs_HT_Shortcodes {
         $season = ($year !== '' && isset($all['seasons'][$year]) && is_array($all['seasons'][$year]))
             ? $all['seasons'][$year] : array();
 
+        if (class_exists('Parcs_HT_WordPress_Events')) $season = Parcs_HT_WordPress_Events::season($season, $year, $language);
+
         $park = Parcs_HT_Schedule::translation($all['general']['park_name'] ?? array(), $language, '');
         if ($language === 'fr') {
             $plain = function_exists('remove_accents') ? strtolower(remove_accents($park)) : strtolower($park);

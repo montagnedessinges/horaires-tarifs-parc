@@ -13,6 +13,7 @@ foreach (array(
     'parcs_ht_settings_backup_pre_1_1_0',
     'parcs_ht_has_popup_source',
     'parcs_ht_popups_1200',
+    'parcs_ht_wordpress_events',
     'parcs_ht_popups_1200_migrated',
     'parcs_ht_popups_1200_migration_notice_seen',
     'parcs_ht_export_revision',

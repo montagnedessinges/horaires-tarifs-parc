@@ -12,21 +12,8 @@ if (!defined('ABSPATH')) { exit; }
 final class Parcs_HT_Admin_Periods {
     const PAGE = 'parcs-ht-periods';
 
-    private static $event_icons = array(
-        'star'     => 'Étoile',
-        'camera'   => 'Appareil photo',
-        'calendar' => 'Calendrier',
-        'gift'     => 'Cadeau',
-        'music'    => 'Musique',
-        'leaf'     => 'Feuille',
-        'flag'     => 'Drapeau',
-        'heart'    => 'Cœur',
-        'info'     => 'Information',
-    );
-
     public static function init() {
         add_action('admin_enqueue_scripts', array(__CLASS__, 'assets'));
-        add_filter('pre_update_option_parcs_ht_settings', array(__CLASS__, 'preserve_event_visuals'), 10, 3);
     }
 
     private static function selected_year($all = null) {
@@ -56,37 +43,6 @@ final class Parcs_HT_Admin_Periods {
         )) . ';', 'before');
         wp_enqueue_script('parcs-ht-admin', PARCS_HT_URL . 'assets/admin.js', array('parcs-ht-preview-engine', 'jquery-ui-sortable'), PARCS_HT_VERSION, true);
         wp_add_inline_script('parcs-ht-admin', 'window.ParcsHTAdmin=' . wp_json_encode(array('language'=>'fr')) . ';', 'before');
-    }
-
-    /**
-     * Le sanitizer historique forçait encore les événements à une étoile jaune.
-     * La 1.17.4 conserve le sanitizer canonique puis restaure uniquement les deux
-     * attributs visuels explicitement autorisés par ce nouvel écran.
-     */
-    public static function preserve_event_visuals($value, $old_value, $option) {
-        unset($old_value, $option);
-        if (!is_admin() || !is_array($value)) return $value;
-        $workspace = isset($_POST['parcs_ht_1174_workspace']) ? sanitize_text_field(wp_unslash($_POST['parcs_ht_1174_workspace'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- filtre exécuté pendant l'action parcs_ht_save, dont le nonce est contrôlé par Parcs_HT_Admin::save().
-        if ($workspace !== '1') return $value;
-        $year = isset($_POST['season_year']) ? sanitize_text_field(wp_unslash($_POST['season_year'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce contrôlé par l'action de sauvegarde canonique.
-        if (!preg_match('/^20\d{2}$/', $year) || empty($value['seasons'][$year]['special_periods']) || !is_array($value['seasons'][$year]['special_periods'])) return $value;
-        $settings = isset($_POST['settings']) && is_array($_POST['settings']) ? wp_unslash($_POST['settings']) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized,WordPress.Security.NonceVerification.Missing -- seules color/icon sont lues puis validées ci-dessous ; nonce contrôlé en amont.
-        $rows = isset($settings['special_periods']) && is_array($settings['special_periods']) ? $settings['special_periods'] : array();
-        $target = 0;
-        foreach ($rows as $row) {
-            if (!is_array($row)) continue;
-            if (!isset($value['seasons'][$year]['special_periods'][$target])) break;
-            $kind = isset($row['kind']) ? sanitize_key((string)$row['kind']) : 'event';
-            if ($kind === 'event') {
-                $icon = isset($row['icon']) ? sanitize_key((string)$row['icon']) : 'star';
-                if (!isset(self::$event_icons[$icon])) $icon = 'star';
-                $color = isset($row['color']) ? sanitize_hex_color((string)$row['color']) : '';
-                $value['seasons'][$year]['special_periods'][$target]['icon'] = $icon;
-                $value['seasons'][$year]['special_periods'][$target]['color'] = $color ? $color : '#e7c55b';
-            }
-            $target++;
-        }
-        return $value;
     }
 
     private static function input($name, $value, $label, $type = 'text', $attrs = '') {
@@ -143,49 +99,34 @@ final class Parcs_HT_Admin_Periods {
         echo '</fieldset>';
     }
 
-    private static function popup_preview_controls() {
-        ?>
-        <div class="htp-popup-preview-actions"><span>Tester le pop-up :</span><select class="htp-popup-preview-language" data-htp-popup-preview-language aria-label="Langue de prévisualisation"><option value="fr">FR</option><option value="en">EN</option><option value="de">DE</option></select><button type="button" class="button button-secondary" data-htp-popup-test>Tester le pop-up</button></div>
-        <?php
-    }
-
-    private static function special_period_row($index, $row, $force_event = false) {
+    private static function special_period_row($index, $row) {
         $row = wp_parse_args(is_array($row) ? $row : array(), array(
-            'enabled'=>'1','kind'=>$force_event?'event':'other','internal_label'=>'','title'=>array('fr'=>'','en'=>'','de'=>''),
-            'start'=>'','end'=>'','color'=>$force_event?'#e7c55b':'#7b61a8','icon'=>'star','display_mode'=>'spot','message'=>array('fr'=>'','en'=>'','de'=>''),
+            'enabled'=>'1','kind'=>'other','internal_label'=>'','title'=>array('fr'=>'','en'=>'','de'=>''),
+            'start'=>'','end'=>'','color'=>'#7b61a8','icon'=>'star','display_mode'=>'spot','message'=>array('fr'=>'','en'=>'','de'=>''),
             'button_label'=>array('fr'=>'','en'=>'','de'=>''),'button_url'=>array('fr'=>'','en'=>'','de'=>''),'show_button'=>'0','show_on_calendar'=>'1','skip_domain_rules'=>'0',
             'show_popup'=>'0','popup_lead_mode'=>'days_before','popup_days_before'=>'14','popup_start'=>'','popup_end'=>'',
             'popup_title'=>array('fr'=>'','en'=>'','de'=>''),'popup_message'=>array('fr'=>'','en'=>'','de'=>''),
             'popup_button_label'=>array('fr'=>'','en'=>'','de'=>''),'popup_button_url'=>array('fr'=>'','en'=>'','de'=>''),'popup_show_button'=>'0','popup_image_url'=>''
         ));
-        if ($force_event) $row['kind'] = 'event';
-        $is_event = (string)$row['kind'] === 'event';
         $base = 'settings[special_periods][' . $index . ']';
         ?>
         <div class="htp-repeat-row htp-special-row htp-1174-row" data-htp-special-kind="<?php echo esc_attr($row['kind']); ?>">
-            <?php if ($is_event) : ?><input type="hidden" name="<?php echo esc_attr($base . '[kind]'); ?>" value="event"><?php endif; ?>
-            <div class="htp-row-head"><strong><?php echo esc_html($is_event ? 'Événement' : 'Période repère'); ?></strong><?php self::enabled($base . '[enabled]', $row['enabled']); ?><button type="button" class="button-link-delete htp-remove-row">Supprimer</button></div>
+            <div class="htp-row-head"><strong><?php echo esc_html('Période repère'); ?></strong><?php self::enabled($base . '[enabled]', $row['enabled']); ?><button type="button" class="button-link-delete htp-remove-row">Supprimer</button></div>
             <div class="htp-grid htp-grid-4">
                 <?php self::input($base . '[internal_label]', $row['internal_label'], 'Nom interne'); ?>
                 <?php self::input($base . '[start]', $row['start'], 'Du', 'date'); ?>
                 <?php self::input($base . '[end]', $row['end'], 'Au', 'date'); ?>
-                <?php if ($is_event) : ?>
-                    <?php self::select($base . '[icon]', $row['icon'], 'Pictogramme', self::$event_icons); ?>
-                    <?php self::input($base . '[color]', $row['color'], 'Couleur du marqueur', 'color'); ?>
-                    <?php self::select($base . '[display_mode]', $row['display_mode'], 'Affichage dans le calendrier', array('spot'=>'Ponctuel — marqueur visible','long'=>'Long — marqueur discret')); ?>
-                <?php else : ?>
-                    <?php self::select($base . '[kind]', $row['kind'], 'Type de période', array('school_holiday'=>'Vacances scolaires','other'=>'Autre période repère')); ?>
-                    <?php self::input($base . '[color]', $row['color'], 'Couleur du marqueur', 'color'); ?>
-                <?php endif; ?>
+                <?php self::select($base . '[kind]', $row['kind'], 'Type de période', array('school_holiday'=>'Vacances scolaires','other'=>'Autre période repère')); ?>
+                <?php self::input($base . '[color]', $row['color'], 'Couleur du marqueur', 'color'); ?>
             </div>
             <div class="htp-check-list">
-                <?php self::checkbox($base . '[show_on_calendar]', $row['show_on_calendar'], $is_event ? 'Afficher cet événement dans le calendrier' : 'Afficher cette période dans le calendrier'); ?>
-                <?php if (!$is_event) self::checkbox($base . '[skip_domain_rules]', $row['skip_domain_rules'], 'Ignorer « Accès temporairement limité » pendant cette période'); ?>
+                <?php self::checkbox($base . '[show_on_calendar]', $row['show_on_calendar'], 'Afficher cette période dans le calendrier'); ?>
+                <?php self::checkbox($base . '[skip_domain_rules]', $row['skip_domain_rules'], 'Ignorer « Accès temporairement limité » pendant cette période'); ?>
             </div>
             <details class="htp-row-details">
                 <summary>Contenu public FR / EN / DE</summary>
                 <div class="htp-grid htp-grid-2 htp-details-content">
-                    <?php self::translated_input($base . '[title]', $row['title'], $is_event ? 'Nom public de l’événement' : 'Nom public de la période'); ?>
+                    <?php self::translated_input($base . '[title]', $row['title'], 'Nom public de la période'); ?>
                     <?php self::translated_textarea($base . '[message]', $row['message'], 'Message public facultatif'); ?>
                     <div class="htp-button-block" data-htp-button-block>
                         <div class="htp-check-list"><?php self::checkbox($base . '[show_button]', $row['show_button'], 'Afficher un bouton dans le détail'); ?></div>
@@ -196,30 +137,7 @@ final class Parcs_HT_Admin_Periods {
                     </div>
                 </div>
             </details>
-            <div class="htp-popup-block" data-htp-popup-block>
-                <div class="htp-check-list htp-popup-toggle"><?php self::checkbox($base . '[show_popup]', $row['show_popup'], 'Activer le pop-up'); ?></div>
-                <div class="htp-popup-settings" data-htp-popup-settings <?php echo $row['show_popup'] === '1' ? '' : 'hidden'; ?>>
-                    <p class="description">Par défaut, le pop-up réutilise le nom et le message publics ci-dessus. Les champs de personnalisation restent facultatifs.</p>
-                    <div class="htp-grid htp-grid-4">
-                        <?php self::select($base . '[popup_lead_mode]', $row['popup_lead_mode'], 'Début d’affichage', array('same'=>'Au début','days_before'=>'X jours avant','custom'=>'Date/heure personnalisée')); ?>
-                        <?php self::input($base . '[popup_days_before]', $row['popup_days_before'], 'Jours avant', 'number', 'min="0" max="365"'); ?>
-                        <?php self::input($base . '[popup_start]', $row['popup_start'], 'Début personnalisé', 'datetime-local'); ?>
-                        <?php self::input($base . '[popup_end]', $row['popup_end'], 'Fin personnalisée', 'datetime-local'); ?>
-                        <?php self::input($base . '[popup_image_url]', $row['popup_image_url'], 'Image du pop-up (URL)', 'url'); ?>
-                    </div>
-                    <details class="htp-advanced"><summary>Personnaliser le contenu du pop-up</summary><div class="htp-grid htp-grid-2 htp-details-content">
-                        <?php self::translated_input($base . '[popup_title]', $row['popup_title'], 'Titre du pop-up (vide = nom public)'); ?>
-                        <?php self::translated_textarea($base . '[popup_message]', $row['popup_message'], 'Message du pop-up (vide = message public)'); ?>
-                    </div></details>
-                    <div class="htp-button-block" data-htp-button-block>
-                        <div class="htp-check-list"><?php self::checkbox($base . '[popup_show_button]', $row['popup_show_button'], 'Afficher un bouton dans le pop-up'); ?></div>
-                        <div class="htp-button-settings" data-htp-button-settings <?php echo $row['popup_show_button'] === '1' ? '' : 'hidden'; ?>>
-                            <div class="htp-grid htp-grid-2"><?php self::translated_input($base . '[popup_button_label]', $row['popup_button_label'], 'Texte du bouton'); ?><?php self::translated_input($base . '[popup_button_url]', $row['popup_button_url'], 'Lien du bouton', 'url'); ?></div>
-                        </div>
-                    </div>
-                    <?php self::popup_preview_controls(); ?>
-                </div>
-            </div>
+
         </div>
         <?php
     }
@@ -263,23 +181,7 @@ final class Parcs_HT_Admin_Periods {
                 <?php self::input($base . '[priority]', $row['priority'], 'Priorité', 'number', 'min="0" max="9999"'); ?>
                 <div class="htp-check-list"><?php self::checkbox($base . '[apply_domain_rules]', $row['apply_domain_rules'], 'Appliquer les règles d’accès limité'); ?><?php self::checkbox($base . '[show_public_marker]', $row['show_public_marker'], 'Afficher la mention « Horaire exceptionnel »'); ?></div>
             </div></details>
-            <div class="htp-popup-block" data-htp-popup-block>
-                <div class="htp-check-list htp-popup-toggle"><?php self::checkbox($base . '[show_popup]', $row['show_popup'], 'Activer le pop-up'); ?></div>
-                <div class="htp-popup-settings" data-htp-popup-settings <?php echo $row['show_popup'] === '1' ? '' : 'hidden'; ?>>
-                    <p class="description"><strong>Source unique :</strong> le pop-up reprend le contexte / motif, le titre public et le message public saisis ci-dessus. Aucun second texte n’est à ressaisir.</p>
-                    <div class="htp-check-list"><?php self::checkbox($base . '[popup_show_dates]', $row['popup_show_dates'], 'Afficher les dates dans le pop-up'); ?><?php self::checkbox($base . '[popup_show_hours]', $row['popup_show_hours'], 'Afficher les horaires dans le pop-up'); ?></div>
-                    <div class="htp-grid htp-grid-4">
-                        <?php self::select($base . '[popup_lead_mode]', $row['popup_lead_mode'], 'Début d’affichage', array('same'=>'Au début de l’exception','days_before'=>'X jours avant','custom'=>'Date/heure personnalisée')); ?>
-                        <?php self::input($base . '[popup_days_before]', $row['popup_days_before'], 'Jours avant', 'number', 'min="0" max="365"'); ?>
-                        <?php self::input($base . '[popup_start]', $row['popup_start'], 'Début personnalisé', 'datetime-local'); ?>
-                        <?php self::input($base . '[popup_end]', $row['popup_end'], 'Fin personnalisée', 'datetime-local'); ?>
-                    </div>
-                    <input type="hidden" name="<?php echo esc_attr($base . '[popup_mode]'); ?>" value="<?php echo esc_attr($row['popup_mode']); ?>">
-                    <?php self::hidden_translations($base . '[popup_title]', $row['popup_title']); ?>
-                    <?php self::hidden_translations($base . '[popup_message]', $row['popup_message']); ?>
-                    <div class="htp-button-block" data-htp-button-block><div class="htp-check-list"><?php self::checkbox($base . '[popup_show_button]', $row['popup_show_button'], 'Afficher un bouton dans le pop-up'); ?></div><div class="htp-button-settings" data-htp-button-settings <?php echo $row['popup_show_button'] === '1' ? '' : 'hidden'; ?>><div class="htp-grid htp-grid-2"><?php self::translated_input($base . '[popup_button_label]', $row['popup_button_label'], 'Texte du bouton'); ?><?php self::translated_input($base . '[popup_button_url]', $row['popup_button_url'], 'Lien du bouton', 'url'); ?></div></div></div>
-                </div>
-            </div>
+
         </div>
         <?php
     }
@@ -315,8 +217,7 @@ final class Parcs_HT_Admin_Periods {
         $settings = Parcs_HT_Defaults::settings($year);
         $specials = isset($settings['special_periods']) && is_array($settings['special_periods']) ? $settings['special_periods'] : array();
         $period_count = 0;
-        $event_count = 0;
-        foreach ($specials as $row) ((string)($row['kind'] ?? 'event') === 'event') ? $event_count++ : $period_count++;
+        foreach ($specials as $row) if ((string)($row['kind'] ?? 'event') !== 'event') $period_count++;
         $exceptions = isset($settings['exceptions']) && is_array($settings['exceptions']) ? $settings['exceptions'] : array();
         $domains = isset($settings['domain_rules']) && is_array($settings['domain_rules']) ? $settings['domain_rules'] : array();
         $holidays = isset($settings['public_holidays']) && is_array($settings['public_holidays']) ? $settings['public_holidays'] : array();
@@ -325,10 +226,11 @@ final class Parcs_HT_Admin_Periods {
         <div class="wrap htp-admin htp-1174-periods">
             <div class="htp-1174-title"><div><h1>Périodes, événements, exceptions & accès limité</h1><p class="description">Un seul écran annuel pour gérer les informations qui complètent les horaires habituels, sans mélanger leurs règles métier.</p></div><span>Interface 1.17.4</span></div>
             <?php if (class_exists('Parcs_HT_Admin_Navigation') && method_exists('Parcs_HT_Admin_Navigation', 'render_year_context')) Parcs_HT_Admin_Navigation::render_year_context(self::PAGE, $year); ?>
-            <?php if (isset($_GET['updated'])) : /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- message visuel uniquement. */ ?><div class="notice notice-success is-dismissible"><p>Les périodes, événements, exceptions et règles d’accès ont été enregistrés.</p></div><?php endif; ?>
+            <?php if (isset($_GET['updated'])) : /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- message visuel uniquement. */ ?><div class="notice notice-success is-dismissible"><p>Les périodes, exceptions et règles d’accès ont été enregistrés.</p></div><?php endif; ?>
 
-            <section class="htp-1174-summary"><div><span>Année</span><strong><?php echo esc_html($year); ?></strong></div><div><span>Périodes repères</span><strong><?php echo esc_html((string)$period_count); ?></strong></div><div><span>Événements</span><strong><?php echo esc_html((string)$event_count); ?></strong></div><div><span>Exceptions</span><strong><?php echo esc_html((string)count($exceptions)); ?></strong></div><div><span>Règles d’accès</span><strong><?php echo esc_html((string)count($domains)); ?></strong></div></section>
-            <nav class="htp-1174-anchor-nav" aria-label="Sections"><a class="button" href="#htp-1174-periods-events">Périodes & événements</a><a class="button" href="#htp-1174-exceptions">Exceptions</a><a class="button" href="#htp-1174-access">Accès limité</a></nav>
+            <?php Parcs_HT_WordPress_Events::admin_form($year); ?>
+            <section class="htp-1174-summary"><div><span>Année</span><strong><?php echo esc_html($year); ?></strong></div><div><span>Périodes repères</span><strong><?php echo esc_html((string)$period_count); ?></strong></div><div><span>Exceptions</span><strong><?php echo esc_html((string)count($exceptions)); ?></strong></div><div><span>Règles d’accès</span><strong><?php echo esc_html((string)count($domains)); ?></strong></div></section>
+            <nav class="htp-1174-anchor-nav" aria-label="Sections"><a class="button" href="#htp-1174-periods-events">Périodes repères</a><a class="button" href="#htp-1174-exceptions">Exceptions</a><a class="button" href="#htp-1174-access">Accès limité</a></nav>
 
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" data-htp-1174-form>
                 <input type="hidden" name="action" value="parcs_ht_save">
@@ -341,11 +243,9 @@ final class Parcs_HT_Admin_Periods {
                 <?php wp_nonce_field('parcs_ht_save'); ?>
 
                 <section id="htp-1174-periods-events" class="htp-card htp-1174-card">
-                    <div class="htp-1174-card-head"><div><h2>Périodes repères & événements</h2><p class="description">Les périodes repères décrivent un contexte (vacances, forte affluence…). Les événements sont des informations publiques indépendantes, chacune avec son marqueur, sa couleur et son éventuel pop-up.</p></div></div>
+                    <div class="htp-1174-card-head"><div><h2>Périodes repères</h2><p class="description">Les périodes repères décrivent un contexte (vacances, forte affluence…). Les événements sont gérés dans WordPress et affichés automatiquement dans le calendrier.</p></div></div>
                     <div class="htp-subsection"><h3>Périodes repères</h3><div class="htp-repeater" data-template="htp-template-special-period"><div class="htp-repeater-rows"><?php foreach ($specials as $index=>$row) if ((string)($row['kind'] ?? 'event') !== 'event') self::special_period_row($index, $row); ?></div><button type="button" class="button htp-add-row">Ajouter une période repère</button></div></div>
-                    <div class="htp-subsection"><h3>Événements</h3><div class="htp-repeater" data-template="htp-template-event"><div class="htp-repeater-rows"><?php foreach ($specials as $index=>$row) if ((string)($row['kind'] ?? 'event') === 'event') self::special_period_row($index, $row, true); ?></div><button type="button" class="button htp-add-row">Ajouter un événement</button></div></div>
                     <script type="text/html" id="htp-template-special-period"><?php self::special_period_row('__INDEX__', array('kind'=>'other')); ?></script>
-                    <script type="text/html" id="htp-template-event"><?php self::special_period_row('__INDEX__', array('kind'=>'event'), true); ?></script>
                     <details class="htp-advanced htp-1174-wide-details"><summary>Jours fériés et légende du calendrier</summary><div class="htp-details-content">
                         <div class="htp-repeater" data-template="htp-template-public-holiday"><div class="htp-repeater-rows"><?php foreach ($holidays as $index=>$row) self::public_holiday_row($index, $row); ?></div><button type="button" class="button htp-add-row">Ajouter une journée particulière</button></div>
                         <script type="text/html" id="htp-template-public-holiday"><?php self::public_holiday_row('__INDEX__', array()); ?></script>
@@ -368,9 +268,9 @@ final class Parcs_HT_Admin_Periods {
                     <script type="text/html" id="htp-template-domain"><?php self::domain_row('__INDEX__', array()); ?></script>
                 </section>
 
-                <?php if (class_exists('Parcs_HT_Schedule_CSV')) : ?><section class="htp-card htp-1174-card"><h2>Import / export CSV</h2><p class="description">L’outil CSV commun couvre aussi les périodes, événements, exceptions et règles d’accès de cette saison.</p><?php Parcs_HT_Schedule_CSV::render_controls($year); ?></section><?php endif; ?>
+                <?php if (class_exists('Parcs_HT_Schedule_CSV')) : ?><section class="htp-card htp-1174-card"><h2>Import / export CSV</h2><p class="description">L’outil CSV couvre les périodes, exceptions et règles d’accès de cette saison. Les événements sont gérés dans WordPress.</p><?php Parcs_HT_Schedule_CSV::render_controls($year); ?></section><?php endif; ?>
 
-                <div class="htp-1174-save"><button type="submit" name="htp_save_active" value="1" class="button button-primary button-large">Enregistrer Périodes & événements</button></div>
+                <div class="htp-1174-save"><button type="submit" name="htp_save_active" value="1" class="button button-primary button-large">Enregistrer les périodes et exceptions</button></div>
             </form>
             <?php if (class_exists('Parcs_HT_Schedule_CSV')) Parcs_HT_Schedule_CSV::render_external_form($year); ?>
         </div>

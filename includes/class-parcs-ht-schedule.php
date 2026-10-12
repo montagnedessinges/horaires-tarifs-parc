@@ -218,6 +218,7 @@ final class Parcs_HT_Schedule {
             'domain_rules'=>(array)($settings['domain_rules'] ?? array()),
             'exceptions'=>(array)($settings['exceptions'] ?? array()),
         );
+        if (class_exists('Parcs_HT_WordPress_Events')) $season = Parcs_HT_WordPress_Events::season($season, substr($season['season_start'], 0, 4));
         $timezone = self::timezone($settings);
         $report = array(
             'valid'=>true, 'errors'=>array(), 'warnings'=>array(),
@@ -279,6 +280,7 @@ final class Parcs_HT_Schedule {
             $report['warnings'][] = 'Horaires habituels superposés aux dates suivantes : '.implode(', ', $conflict_dates).(count($conflict_dates) === 20 ? '…' : '').'.';
         }
         foreach ($season['special_periods'] as $row) {
+            if (isset($row['source_post_id'])) continue;
             if (!is_array($row) || (string)($row['enabled'] ?? '0') !== '1' || (string)($row['show_on_calendar'] ?? '1') === '0') continue;
             $titles = is_array($row['title'] ?? null) ? $row['title'] : array();
             foreach (array('fr','en','de') as $language) {
@@ -297,6 +299,7 @@ final class Parcs_HT_Schedule {
         $published = array();
         foreach ($all['seasons'] as $year => $season) {
             if (!is_array($season) || (string)($season['published'] ?? '0') !== '1') continue;
+            if (class_exists('Parcs_HT_WordPress_Events')) $season = Parcs_HT_WordPress_Events::season($season, $year);
             $published[(string)$year] = array(
                 'year' => (string)$year,
                 'season_start' => isset($season['season_start']) ? $season['season_start'] : '',

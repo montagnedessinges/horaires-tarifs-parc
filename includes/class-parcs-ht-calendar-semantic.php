@@ -235,7 +235,11 @@ final class Parcs_HT_Calendar_Semantic {
             if ($range === '') continue;
             $title = self::exact_translation($row['title'] ?? array(), $language);
             $type = $is_event ? $labels['event'] : $labels['period'];
-            $items[] = '<strong>' . esc_html($title !== '' ? $title : $type) . '</strong> — ' . $range;
+            $line = '<strong>' . esc_html($title !== '' ? $title : $type) . '</strong> — ' . $range;
+            $url = self::exact_translation($row['button_url'] ?? array(), $language);
+            $label = self::exact_translation($row['button_label'] ?? array(), $language);
+            if ((string)($row['show_button'] ?? '0') === '1' && $url !== '' && $label !== '') $line .= ' — <a href="' . esc_url($url) . '">' . esc_html($label) . '</a>';
+            $items[] = $line;
         }
         return $items;
     }
@@ -282,6 +286,7 @@ final class Parcs_HT_Calendar_Semantic {
             } elseif (!self::public_season($year, $season)) {
                 continue;
             }
+            if (class_exists('Parcs_HT_WordPress_Events')) $season = Parcs_HT_WordPress_Events::season($season, $year, $language);
             $regular = self::regular_items($season, $language, $labels);
             $exceptions = self::exception_items($season, $language, $labels, false);
             $closures = self::exception_items($season, $language, $labels, true);

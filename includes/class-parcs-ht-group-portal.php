@@ -61,13 +61,14 @@ final class Parcs_HT_Group_Portal {
             $year = (string)$year;
             $season = class_exists('Parcs_HT_Public_Visibility') ? Parcs_HT_Public_Visibility::raw_season($year) : Parcs_HT_Display_Policy::raw_season($year);
             if (!$season) continue;
+            if (class_exists('Parcs_HT_WordPress_Events')) $season = Parcs_HT_WordPress_Events::season($season, $year);
 
             $special = array();
             foreach ((array)($season['special_periods'] ?? array()) as $row) {
                 if (!is_array($row) || (string)($row['enabled'] ?? '0') !== '1') continue;
-                $fields = array('start','end','kind','show_on_calendar','skip_domain_rules');
+                $fields = array('source_post_id','start','end','kind','show_on_calendar','skip_domain_rules');
                 if ((string)($row['show_on_calendar'] ?? '1') !== '0') {
-                    $fields = array_merge($fields, array('title','color','icon','show_button','button_label','button_url','message'));
+                    $fields = array_merge($fields, array('title','color','icon','display_mode','show_button','button_label','button_url','message'));
                 }
                 $item = self::public_row($row, $fields);
                 if ($item) $special[] = $item;
