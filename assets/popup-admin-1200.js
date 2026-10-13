@@ -60,6 +60,8 @@
     var index=uniqueIndex();
     var html=template.replaceAll('__INDEX__',index);
     var row=$(html);
+    // The HTML template is hidden by CSS; reveal every newly added row.
+    row.removeClass('is-template');
     $('[data-popup1200-list]').append(row);
     syncRow(row);
     row.find('[data-popup1200-name]').trigger('focus');
