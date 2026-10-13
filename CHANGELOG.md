@@ -1,3 +1,8 @@
+## 1.20.5
+
+- Corrige la création des pop-ups autonomes : retirer `is-template` sur la nouvelle carte empêche son masquage par le CSS de l’administration.
+- Ajoute un test de non-régression de la création et de la duplication des cartes dans le navigateur simulé, sans modifier le stockage existant.
+
 ## 1.20.4
 
 - Réglages de présentation par événement WordPress : visibilité calendrier, couleur du marqueur et étoile/point/automatique dans une metabox du type de publication configuré.

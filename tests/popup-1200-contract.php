@@ -88,6 +88,7 @@ release_contract_require_all($frontCss, array(
 ), 'popup no-crop responsive CSS');
 
 release_contract_require_all($adminJs, array(
+    "row.removeClass('is-template');",
     'wp.media',
     'data-popup1200-media-select',
 ), 'popup admin media and legacy cleanup');

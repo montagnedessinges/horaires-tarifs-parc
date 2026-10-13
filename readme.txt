@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.20.4
+Stable tag: 1.20.5
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes, FAQ et outils du parc.
 
@@ -19,6 +19,10 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.20.5 =
+* Corrige le bouton « Ajouter un pop-up » : les nouveaux blocs ne restent plus masqués par la classe réservée au modèle de formulaire.
+* Ajoute un test de régression de la création et de la duplication des pop-ups dans l’administration.
 
 = 1.20.4 =
 * Ajoute dans chaque événement WordPress des réglages de couleur, visibilité et marqueur (automatique, étoile ou petit point), sans changer les dates ACF ni les pages du thème.
