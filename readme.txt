@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.20.5
+Stable tag: 1.20.6
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes, FAQ et outils du parc.
 
@@ -19,6 +19,11 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.20.6 =
+* Ajoute les bons découverte scolaires paramétrables par parc, avec vérification du code postal, liaison CF7 et shortcode.
+* Les textes sont modifiables ; aucune attribution de bon n'est automatique.
+
 
 = 1.20.5 =
 * Corrige le bouton « Ajouter un pop-up » : les nouveaux blocs ne restent plus masqués par la classe réservée au modèle de formulaire.
