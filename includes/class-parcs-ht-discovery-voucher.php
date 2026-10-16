@@ -162,7 +162,7 @@ final class Parcs_HT_Discovery_Voucher {
         check_ajax_referer('parcs_ht_discovery_postcode', 'nonce');
         $settings = self::settings();
         $zip = isset($_POST['postcode']) && is_string($_POST['postcode'])
-            ? trim(wp_unslash($_POST['postcode'])) : '';
+            ? sanitize_text_field(wp_unslash($_POST['postcode'])) : '';
         wp_send_json_success(array('eligible' => self::eligible($zip, $settings)));
     }
 
@@ -178,13 +178,16 @@ final class Parcs_HT_Discovery_Voucher {
     private static function is_target_cf7() {
         if (!class_exists('WPCF7_ContactForm')) return false;
         $form_id = self::form_id(self::settings());
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Identifiant CF7 lu pour vérifier le formulaire ciblé, aucune écriture ; CF7 gère son propre cycle de soumission.
         $posted_id = isset($_POST['_wpcf7']) && is_scalar($_POST['_wpcf7']) ? absint(wp_unslash($_POST['_wpcf7'])) : 0;
         return $form_id > 0 && $form_id === $posted_id;
     }
 
     private static function submitted_is_eligible() {
+        // phpcs:disable WordPress.Security.NonceVerification.Missing -- Validation de la soumission publique orchestrée par Contact Form 7, sans écriture.
         $code = isset($_POST[self::FIELD]) && is_string($_POST[self::FIELD])
-            ? trim(wp_unslash($_POST[self::FIELD])) : '';
+            ? sanitize_text_field(wp_unslash($_POST[self::FIELD])) : '';
+        // phpcs:enable WordPress.Security.NonceVerification.Missing
         return self::eligible($code, self::settings());
     }
 
@@ -215,6 +218,7 @@ final class Parcs_HT_Discovery_Voucher {
     public static function save() {
         if (!current_user_can('manage_options')) wp_die('Accès refusé.');
         check_admin_referer('parcs_ht_save_discovery_voucher');
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Tous les champs de ce tableau sont normalisés ou nettoyés individuellement avant update_option.
         $raw = isset($_POST['voucher']) && is_array($_POST['voucher']) ? wp_unslash($_POST['voucher']) : array();
         $old = self::settings();
         $new = $old;
@@ -246,7 +250,8 @@ final class Parcs_HT_Discovery_Voucher {
         <div class="wrap">
             <h1>Bons découverte — établissements scolaires</h1>
             <p>Ce module vérifie un code postal, puis affiche votre formulaire Contact Form 7. Aucun bon n’est attribué automatiquement. Chaque parc conserve ses propres réglages.</p>
-            <?php if (isset($_GET['saved'])) : ?><div class="notice notice-success"><p>Réglages enregistrés.</p></div><?php endif; ?>
+            <?php // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Flag de message d'information, sans mutation.
+            if (isset($_GET['saved'])) : ?><div class="notice notice-success"><p>Réglages enregistrés.</p></div><?php endif; ?>
             <p><strong>Shortcode :</strong> <code>[parc_bon_decouverte]</code> (également <code>_fr</code>, <code>_en</code> et <code>_de</code>).</p>
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                 <input type="hidden" name="action" value="parcs_ht_save_discovery_voucher">
