@@ -385,3 +385,13 @@ Ils ne dépendent pas du shortcode calendrier ni de l'adaptateur `Parcs_HT_WordP
 Le carrousel applique dans son affichage un `+1 days` historique ; défaut possible à investiguer séparément, sans correctif automatique.
 Le fichier `single-evenement.php` fourni dans le ZIP est encore la version historique. La nouvelle présentation proposée en conversation n'est pas installée.
 Voir `AUDIT-2026-10-12-THEME-EVENEMENTS.md` et `UPDATE-1.20.4.md`.
+
+## Bons découverte scolaires — version 1.20.6 (16 octobre 2026)
+
+- Module indépendant des devis groupes, associé à CF7 : `[parc_bon_decouverte]` et variantes FR/EN/DE ; une première étape vérifie un code postal puis révèle CF7 sans changer de page.
+- Administration via Gestion du parc → Groupes → Bons découverte ; titres, messages et traductions sont éditables ; liste des départements laissée vide à installer manuellement et activation désactivée à l’installation.
+- Une configuration différente est enregistrée dans les options WordPress de chaque parc ; ne jamais préremplir les départements de la Forêt des Singes à partir de ceux de la Montagne des Singes.
+- Réception CF7 et copie de confirmation uniquement : aucune attribution, génération ou livraison de bon automatique. L’équipe contrôle les bons papier déjà utilisés et les éventuels doublons.
+- Une analyse séparée dans Google Sheets pourra ensuite rapprocher établissements (UAI), bons papier et numériques, campagnes Brevo, devis et réservations 2027+, sans modifier le classeur existant de réservations.
+- Le formulaire CF7 doit contenir `[text* bon_code_postal readonly]`, et ne peut être envoyé pour l’offre si le serveur refuse le code postal. Le filtrage navigateur n’est pas une règle de sécurité suffisante à lui seul.
+- Mode d’emploi et modèle CF7 : `docs/BONS-DECOUVERTE-SCOLAIRES.md`.

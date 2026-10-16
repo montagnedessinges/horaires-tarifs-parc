@@ -73,6 +73,7 @@ jobs:
           php tests/group-tariff-publication-contract.php
           php tests/group-tariff-shortcode-runtime.php
           php tests/shortcode-registry-contract.php
+          php tests/discovery-voucher-contract.php
           php tests/admin-shortcode-previews-contract.php
           php tests/admin-shortcode-preview-script-regression.php
           php tests/admin-season-status-contract.php

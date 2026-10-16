@@ -1,3 +1,11 @@
+## 1.20.6
+
+- Ajoute dans Gestion du parc → Groupes une rubrique « Bons découverte » distincte des devis et des guides pédagogiques, désactivée par défaut et configurable indépendamment sur chaque site.
+- Ajoute le shortcode `[parc_bon_decouverte]` et ses variantes FR/EN/DE, avec contrôle de code postal avant dévoilement d’un formulaire Contact Form 7 existant.
+- Permet de modifier les départements éligibles (liste vide par défaut), les libellés, messages, traductions, date de fin facultative et shortcode CF7 depuis WordPress.
+- Revérifie les codes postaux lors de la soumission CF7 et bloque également les envois d’un formulaire cible mal configuré. Aucun bon ni PDF n’est envoyé automatiquement : vérification et attribution manuelles.
+- Ajoute une documentation du formulaire et un test de non-régression, sans modifier les systèmes de devis/réservations des deux parcs.
+
 ## 1.20.5
 
 - Corrige la création des pop-ups autonomes : retirer `is-template` sur la nouvelle carte empêche son masquage par le CSS de l’administration.

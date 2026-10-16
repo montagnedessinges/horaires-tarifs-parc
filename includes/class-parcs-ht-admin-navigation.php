@@ -237,11 +237,12 @@ final class Parcs_HT_Admin_Navigation {
     public static function groups_page() {
         if (!current_user_can('manage_options')) return;
         $year = self::requested_year();
-        self::landing_header('Groupes', 'Les tarifs groupes, les devis et les guides pédagogiques sont regroupés ici, tout en restant des écrans séparés.');
+        self::landing_header('Groupes', 'Les tarifs groupes, les devis, les guides pédagogiques et les bons découverte sont regroupés ici, tout en restant des écrans séparés.');
         echo '<div class="htp-1172-grid">';
         self::card('Tarifs groupes', 'Tarifs, moyens de paiement, informations et apparence propres aux groupes.', self::legacy_url('htp-tariffs-groups', $year));
         self::card('Devis groupes', 'Disponibilité, formulaire et règles de devis.', self::legacy_url('htp-quote', $year));
         self::card('Guides pédagogiques', 'Documents scolaires, langues, cycles et statistiques.', self::legacy_url('htp-guides', $year));
+        self::card('Bons découverte', 'Offres scolaires, départements autorisés, formulaire CF7 et textes modifiables.', admin_url('admin.php?page=' . Parcs_HT_Discovery_Voucher::PAGE));
         echo '</div></div>';
     }
 

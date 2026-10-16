@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Gestion du parc
  * Description: Gestion centralisée des horaires, calendriers, tarifs, événements, devis et outils du parc.
- * Version: 1.20.5
+ * Version: 1.20.6
  * Update URI: https://github.com/montagnedessinges/horaires-tarifs-parc
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -12,7 +12,7 @@
 
 if (!defined('ABSPATH')) { exit; }
 
-define('PARCS_HT_VERSION', '1.20.5');
+define('PARCS_HT_VERSION', '1.20.6');
 define('PARCS_HT_FILE', __FILE__);
 define('PARCS_HT_DIR', plugin_dir_path(__FILE__));
 define('PARCS_HT_URL', plugin_dir_url(__FILE__));
@@ -65,6 +65,7 @@ require_once PARCS_HT_DIR . 'includes/class-parcs-ht-tariff-public-fixes.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-tariff-shared-1168.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-guide-stats.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-pedagogical-guides.php';
+require_once PARCS_HT_DIR . 'includes/class-parcs-ht-discovery-voucher.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-guide-appearance.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-save-integrity.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-admin-shortcode-preview.php';
@@ -232,6 +233,7 @@ add_action('plugins_loaded', static function () {
     Parcs_HT_Tariff_Shared_1168::init();
     Parcs_HT_Guide_Stats::init();
     Parcs_HT_Pedagogical_Guides::init();
+    Parcs_HT_Discovery_Voucher::init();
     Parcs_HT_Guide_Appearance::init();
     Parcs_HT_Group_Quotes::init();
     add_action('wp_enqueue_scripts', array('Parcs_HT_Group_Quotes', 'assets'), 30);
