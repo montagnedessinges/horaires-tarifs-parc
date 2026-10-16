@@ -1,15 +1,15 @@
-# Bons découverte scolaires (1.20.6)
+# Bons découverte scolaires (1.20.7)
 
 Le module « Gestion du parc → Groupes → Bons découverte » permet d'afficher un bloc de demande, de vérifier le code postal puis de dévoiler un formulaire Contact Form 7 déjà créé. Il ne génère ni n'envoie aucun bon.
 
 ## Mise en place (à faire pour chaque parc)
 
-1. Installer la release GitHub 1.20.6.
+1. Installer la release GitHub 1.20.7.
 2. Ouvrir Gestion du parc → Groupes → Bons découverte.
 3. Saisir manuellement les départements éligibles de CE parc, séparés par virgules (exemple : 67, 68). Deux chiffres métropolitains, ou trois chiffres pour les DROM. Une liste vide n'autorise aucune demande.
 4. Régler si nécessaire la date de fin de l'offre ; laisser vide pour aucune fermeture automatique.
 5. Créer un nouveau Contact Form 7 distinct des devis groupes avec le modèle ci-dessous et renseigner son shortcode dans les réglages du module.
-6. Personnaliser les titres, descriptions, boutons, messages et conditions en FR, EN et DE. Les traductions laissées vides utilisent le français.
+6. Personnaliser les titres, descriptions, boutons, messages et conditions du bloc en français.
 7. Tester, puis activer le bloc public. Chaque installation WordPress a ses propres réglages ; ne pas recopier les départements d'un parc à l'autre.
 
 ## Modèle Contact Form 7
@@ -39,7 +39,7 @@ Adapter le nom du parc pour La Forêt des Singes. Un consentement aux futures pr
 
 ## Afficher le bloc et lier Brevo
 
-Ajouter le shortcode [parc_bon_decouverte] dans la page WordPress, ou [parc_bon_decouverte_fr], [parc_bon_decouverte_en], [parc_bon_decouverte_de] pour une langue précise.
+Ajouter le shortcode [parc_bon_decouverte] dans la page WordPress. Le module Bons découverte est en français uniquement.
 
 L'enseignant vérifie son code postal puis le CF7 apparaît au même endroit, sans redirection. Le bouton de l'e-mail Brevo doit pointer vers cette page WordPress.
 

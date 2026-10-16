@@ -21,7 +21,7 @@ final class Parcs_HT_Shortcode_Registry {
             'parc_devis_groupe' => array('label'=>'Devis groupe autour du formulaire Contact Form 7','kind'=>'core','module'=>'quote_page','preview'=>true),
             'parc_devis' => array('label'=>'Alias compatible du module Devis groupe','kind'=>'core','module'=>'quote_page','preview'=>true),
             'parc_guides_pedagogiques' => array('label'=>'Guides pédagogiques','kind'=>'guides','module'=>'guides','preview'=>true),
-            'parc_bon_decouverte' => array('label'=>'Bon découverte — formulaire CF7 après code postal','kind'=>'voucher','module'=>'voucher','preview'=>false),
+            'parc_bon_decouverte' => array('label'=>'Bon découverte — formulaire CF7 après code postal','kind'=>'voucher','module'=>'voucher','preview'=>false,'single_language'=>true),
             'parc_faq' => array('label'=>'FAQ','kind'=>'faq','module'=>'faq','preview'=>true),
             'parc_faq_contact' => array('label'=>'FAQ + formulaire de contact','kind'=>'faq_contact','module'=>'faq_contact','preview'=>true),
         );
@@ -88,7 +88,8 @@ final class Parcs_HT_Shortcode_Registry {
                 'shortcodes'=>array('auto'=>self::shortcode($base)),
             );
             foreach (self::languages() as $language) {
-                $row['shortcodes'][$language] = self::shortcode($base, $language);
+                // La ligne du bon découverte reste sans déclinaisons linguistiques.
+                $row['shortcodes'][$language] = !empty($definition['single_language']) ? '' : self::shortcode($base, $language);
             }
             $out[] = $row;
         }

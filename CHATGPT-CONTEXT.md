@@ -395,3 +395,9 @@ Voir `AUDIT-2026-10-12-THEME-EVENEMENTS.md` et `UPDATE-1.20.4.md`.
 - Une analyse séparée dans Google Sheets pourra ensuite rapprocher établissements (UAI), bons papier et numériques, campagnes Brevo, devis et réservations 2027+, sans modifier le classeur existant de réservations.
 - Le formulaire CF7 doit contenir `[text* bon_code_postal readonly]`, et ne peut être envoyé pour l’offre si le serveur refuse le code postal. Le filtrage navigateur n’est pas une règle de sécurité suffisante à lui seul.
 - Mode d’emploi et modèle CF7 : `docs/BONS-DECOUVERTE-SCOLAIRES.md`.
+
+## Simplification Bons découverte — 1.20.7 (16 octobre 2026)
+
+- L'offre Bons découverte est réservée à la communication française. Aucune interface de traduction ni message public indiquant que d'autres langues ne sont pas disponibles.
+- Seul le jeu de champs éditoriaux FR est présenté à l'administrateur et lu au rendu. Les anciens réglages EN/DE ne sont pas supprimés de la base, pour compatibilité, mais ignorés par ce module.
+- Le shortcode à publier est `[parc_bon_decouverte]`. Les aliases existants FR/EN/DE restent enregistrés comme précaution technique mais rendent désormais tous le bloc français. Le registre n'annonce que le shortcode standard pour ce module.

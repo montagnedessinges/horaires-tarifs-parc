@@ -19,10 +19,10 @@ final class Parcs_HT_Discovery_Voucher {
         add_action('wp_ajax_nopriv_parcs_ht_discovery_postcode', array(__CLASS__, 'check_postcode'));
         add_filter('wpcf7_validate_text*', array(__CLASS__, 'validate_cf7_postcode'), 20, 2);
         add_filter('wpcf7_spam', array(__CLASS__, 'block_invalid_cf7_postcode'), 20, 1);
+        // Les anciens shortcodes de langue restent des alias pour ne casser aucune page existante.
+        // Le contenu de l'offre est volontairement proposé uniquement en français.
         foreach (array('fr', 'en', 'de') as $lang) {
-            add_shortcode('parc_bon_decouverte_' . $lang, static function () use ($lang) {
-                return Parcs_HT_Discovery_Voucher::render($lang);
-            });
+            add_shortcode('parc_bon_decouverte_' . $lang, array(__CLASS__, 'shortcode'));
         }
         add_shortcode('parc_bon_decouverte', array(__CLASS__, 'shortcode'));
     }
@@ -61,8 +61,6 @@ final class Parcs_HT_Discovery_Voucher {
                     'conditions' => 'Un seul bon par établissement, sous réserve de vérification par notre équipe. Le bon n’est pas envoyé automatiquement.',
                     'expired' => 'Cette offre n’est plus disponible.',
                 ),
-                'en' => array(),
-                'de' => array(),
             ),
         );
     }
@@ -72,18 +70,16 @@ final class Parcs_HT_Discovery_Voucher {
         if (!is_array($saved)) $saved = array();
         $settings = array_merge(self::defaults(), $saved);
         if (empty($saved['texts']) || !is_array($saved['texts'])) return $settings;
-        foreach (array('fr', 'en', 'de') as $language) {
-            $settings['texts'][$language] = array_merge(
-                self::defaults()['texts'][$language],
-                isset($saved['texts'][$language]) && is_array($saved['texts'][$language]) ? $saved['texts'][$language] : array()
-            );
-        }
+        // Seuls les textes français sont lus et modifiables. Les anciennes traductions
+        // stockées dans les options ne sont pas supprimées par mesure de compatibilité.
+        $settings['texts']['fr'] = array_merge(
+            self::defaults()['texts']['fr'],
+            isset($saved['texts']['fr']) && is_array($saved['texts']['fr']) ? $saved['texts']['fr'] : array()
+        );
         return $settings;
     }
 
-    public static function text($settings, $key, $language) {
-        $translated = trim((string)($settings['texts'][$language][$key] ?? ''));
-        if ($translated !== '') return $translated;
+    public static function text($settings, $key) {
         return trim((string)($settings['texts']['fr'][$key] ?? ''));
     }
 
@@ -110,8 +106,7 @@ final class Parcs_HT_Discovery_Voucher {
     }
 
     public static function shortcode() {
-        $lang = class_exists('Parcs_HT_Schedule') ? Parcs_HT_Schedule::language() : 'fr';
-        return self::render(in_array($lang, array('fr', 'en', 'de'), true) ? $lang : 'fr');
+        return self::render();
     }
 
     public static function render($lang = 'fr') {
@@ -123,13 +118,12 @@ final class Parcs_HT_Discovery_Voucher {
         if (!class_exists('WPCF7_ContactForm') || !self::form_id($settings)) {
             return current_user_can('manage_options') ? '<p>Bon découverte : formulaire Contact Form 7 non disponible ou shortcode incorrect.</p>' : '';
         }
-        $lang = in_array($lang, array('fr', 'en', 'de'), true) ? $lang : 'fr';
         self::$instance++;
         $id = 'parcs-voucher-' . self::$instance;
         wp_enqueue_script('parcs-ht-discovery-voucher', PARCS_HT_URL . 'assets/discovery-voucher.js', array(), PARCS_HT_VERSION, true);
         wp_enqueue_style('parcs-ht-discovery-voucher', PARCS_HT_URL . 'assets/discovery-voucher.css', array(), PARCS_HT_VERSION);
-        $t = static function ($key) use ($settings, $lang) {
-            return Parcs_HT_Discovery_Voucher::text($settings, $key, $lang);
+        $t = static function ($key) use ($settings) {
+            return Parcs_HT_Discovery_Voucher::text($settings, $key);
         };
         ob_start();
         ?>
@@ -231,11 +225,9 @@ final class Parcs_HT_Discovery_Voucher {
             ? $raw['expires_on'] : '';
         $code = isset($raw['form_shortcode']) && is_string($raw['form_shortcode']) ? $raw['form_shortcode'] : '';
         $new['form_shortcode'] = self::clean_form_shortcode($code);
-        foreach (array('fr', 'en', 'de') as $lang) {
-            foreach (array_keys(self::labels()) as $key) {
-                if (isset($raw['texts'][$lang][$key]) && is_string($raw['texts'][$lang][$key])) {
-                    $new['texts'][$lang][$key] = sanitize_textarea_field($raw['texts'][$lang][$key]);
-                }
+        foreach (array_keys(self::labels()) as $key) {
+            if (isset($raw['texts']['fr'][$key]) && is_string($raw['texts']['fr'][$key])) {
+                $new['texts']['fr'][$key] = sanitize_textarea_field($raw['texts']['fr'][$key]);
             }
         }
         update_option(self::OPTION, $new, false);
@@ -252,7 +244,7 @@ final class Parcs_HT_Discovery_Voucher {
             <p>Ce module vérifie un code postal, puis affiche votre formulaire Contact Form 7. Aucun bon n’est attribué automatiquement. Chaque parc conserve ses propres réglages.</p>
             <?php // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Flag de message d'information, sans mutation.
             if (isset($_GET['saved'])) : ?><div class="notice notice-success"><p>Réglages enregistrés.</p></div><?php endif; ?>
-            <p><strong>Shortcode :</strong> <code>[parc_bon_decouverte]</code> (également <code>_fr</code>, <code>_en</code> et <code>_de</code>).</p>
+            <p><strong>Shortcode :</strong> <code>[parc_bon_decouverte]</code>.</p>
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                 <input type="hidden" name="action" value="parcs_ht_save_discovery_voucher">
                 <?php wp_nonce_field('parcs_ht_save_discovery_voucher'); ?>
@@ -264,19 +256,14 @@ final class Parcs_HT_Discovery_Voucher {
                     <tr><th><label for="voucher-shortcode">Formulaire Contact Form 7</label></th><td><input id="voucher-shortcode" class="large-text" name="voucher[form_shortcode]" value="<?php echo esc_attr($settings['form_shortcode']); ?>" placeholder='[contact-form-7 id="123" title="Bon découverte"]'><p class="description">Créer le formulaire dans CF7, avec impérativement un champ <code>[text* bon_code_postal readonly]</code>, puis copier son shortcode ici. Configurer deux e-mails dans CF7 : notification interne et copie de confirmation au demandeur. Aucun PDF joint.</p></td></tr>
                 </table>
                 <h2>Textes publics modifiables</h2>
-                <p>Les traductions vides utilisent le texte français. Les messages de confirmation après envoi se règlent dans Contact Form 7.</p>
-                <?php foreach (array('fr'=>'Français','en'=>'Anglais','de'=>'Allemand') as $lang=>$label) : ?>
-                <details <?php if ($lang === 'fr') echo 'open'; ?> style="border:1px solid #c3c4c7;padding:12px 16px;margin:12px 0;background:#fff">
-                    <summary style="font-weight:600;cursor:pointer"><?php echo esc_html($label); ?></summary>
-                    <table class="form-table" role="presentation">
-                        <?php foreach (self::labels() as $key=>$label_field) : $value = (string)($settings['texts'][$lang][$key] ?? ''); ?>
-                        <tr><th><label for="<?php echo esc_attr('voucher-'.$lang.'-'.$key); ?>"><?php echo esc_html($label_field); ?></label></th><td>
-                            <textarea id="<?php echo esc_attr('voucher-'.$lang.'-'.$key); ?>" name="voucher[texts][<?php echo esc_attr($lang); ?>][<?php echo esc_attr($key); ?>]" class="large-text" rows="<?php echo in_array($key, array('intro','conditions'), true) ? '3' : '2'; ?>"><?php echo esc_textarea($value); ?></textarea>
-                        </td></tr>
-                        <?php endforeach; ?>
-                    </table>
-                </details>
-                <?php endforeach; ?>
+                <p>Les messages de confirmation après envoi se règlent dans Contact Form 7.</p>
+                <table class="form-table" role="presentation">
+                    <?php foreach (self::labels() as $key=>$label_field) : $value = (string)($settings['texts']['fr'][$key] ?? ''); ?>
+                    <tr><th><label for="<?php echo esc_attr('voucher-'.$key); ?>"><?php echo esc_html($label_field); ?></label></th><td>
+                        <textarea id="<?php echo esc_attr('voucher-'.$key); ?>" name="voucher[texts][fr][<?php echo esc_attr($key); ?>]" class="large-text" rows="<?php echo in_array($key, array('intro','conditions'), true) ? '3' : '2'; ?>"><?php echo esc_textarea($value); ?></textarea>
+                    </td></tr>
+                    <?php endforeach; ?>
+                </table>
                 <?php submit_button('Enregistrer les bons découverte'); ?>
             </form>
         </div>

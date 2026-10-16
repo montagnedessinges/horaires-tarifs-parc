@@ -1,3 +1,9 @@
+## 1.20.7
+
+- Simplifie la rubrique Bons découverte : seuls les textes français sont modifiables et affichés. Retire les sections de langue de l’administration du module.
+- Affiche uniquement le shortcode principal dans le registre ; conserve les anciens shortcodes avec suffixe comme alias techniques afin de ne pas casser les contenus existants.
+- Préserve les réglages déjà enregistrés et les fonctions actuelles des autres modules, sans ajout d’un message public sur la disponibilité linguistique.
+
 ## 1.20.6
 
 - Ajoute dans Gestion du parc → Groupes une rubrique « Bons découverte » distincte des devis et des guides pédagogiques, désactivée par défaut et configurable indépendamment sur chaque site.
