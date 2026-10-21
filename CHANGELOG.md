@@ -5,6 +5,9 @@
 - Export/import CSV de données structurées pour horaires, tarifs visiteurs et tarifs groupes avec préservation des identifiants, colonnes et traductions.
 - Aperçu avant import, contrôle du parc et de l'année, révision de sécurité et prévention d’écrasement si les données ont changé pendant l’aperçu.
 - Aucune modification automatique des autres saisons lors d'un import CSV ; les données individuelles de devis, statistiques, journaux et secrets ne sont pas exportées.
+- Horaires habituels : aucun jour coché signifie tous les jours ; les sept jours apparaissent cochés après sauvegarde ou import CSV. Les jours invalides sont refusés avec une erreur.
+- Deux champs indépendants pour les dernières entrées des créneaux 1 et 2 ; préservation des anciens délais et propagation du même réglage dans les exports CSV.
+- CSV horaires : deux colonnes facultatives supplémentaires, compatibilité des anciens fichiers, aperçu explicite des jours et heures avant import et validation à deux étapes.
 
 ## 1.20.7
 
