@@ -1640,7 +1640,7 @@ final class Parcs_HT_Admin {
         foreach ($settings['regular_periods'] as $row) {
             if ($row['enabled'] !== '1') continue;
             if (!$row['start'] || !$row['end'] || !$row['open'] || !$row['close']) $warnings[] = 'Une période habituelle active est incomplète.';
-            if (empty($row['weekdays'])) $warnings[] = 'Une période habituelle active ne contient aucun jour concerné.';
+            // Une sélection vide signifie désormais « tous les jours » ; ce n'est pas une anomalie.
             if ($row['start'] && $row['end'] && $row['end'] < $row['start']) $warnings[] = 'Une période habituelle se termine avant de commencer.';
         }
         for ($i = 0; $i < count($settings['regular_periods']); $i++) {
@@ -1648,7 +1648,9 @@ final class Parcs_HT_Admin {
             for ($j = $i + 1; $j < count($settings['regular_periods']); $j++) {
                 $b = $settings['regular_periods'][$j]; if ($b['enabled'] !== '1') continue;
                 $dates_overlap = $a['start'] && $a['end'] && $b['start'] && $b['end'] && $a['start'] <= $b['end'] && $b['start'] <= $a['end'];
-                if ($dates_overlap && array_intersect((array)$a['weekdays'], (array)$b['weekdays'])) $warnings[] = 'Deux périodes habituelles actives se chevauchent sur les mêmes jours.';
+                $days_a = empty($a['weekdays']) ? array('1','2','3','4','5','6','7') : (array)$a['weekdays'];
+                $days_b = empty($b['weekdays']) ? array('1','2','3','4','5','6','7') : (array)$b['weekdays'];
+                if ($dates_overlap && array_intersect($days_a, $days_b)) $warnings[] = 'Deux périodes habituelles actives se chevauchent sur les mêmes jours.';
             }
         }
         foreach ($settings['school_holidays'] as $row) if ($row['enabled'] === '1' && $row['start'] && $row['end'] && $row['end'] < $row['start']) $warnings[] = 'Une période de vacances se termine avant de commencer.';
