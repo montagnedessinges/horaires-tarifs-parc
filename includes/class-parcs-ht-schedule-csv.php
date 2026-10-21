@@ -10,6 +10,7 @@ final class Parcs_HT_Schedule_CSV {
         add_action('admin_post_parcs_ht_schedule_csv_template', array(__CLASS__, 'download_template'));
         add_action('admin_post_parcs_ht_schedule_csv_export', array(__CLASS__, 'export_csv'));
         add_action('admin_post_parcs_ht_schedule_csv_import', array(__CLASS__, 'import_csv'));
+        add_action('admin_post_parcs_ht_schedule_csv_apply', array(__CLASS__, 'apply_csv'));
     }
 
     public static function render_controls($year) {
@@ -143,7 +144,8 @@ final class Parcs_HT_Schedule_CSV {
             'context_fr','context_en','context_de','title_fr','title_en','title_de','message_fr','message_en','message_de','show_on_calendar',
             'apply_domain_rules','show_public_marker','display_mode','skip_domain_rules','show_button','button_label_fr','button_label_en','button_label_de','button_url_fr','button_url_en','button_url_de',
             'show_popup','popup_show_dates','popup_show_hours','popup_lead_mode','popup_days_before','popup_start','popup_end','popup_title_fr','popup_title_en','popup_title_de','popup_message_fr','popup_message_en','popup_message_de','popup_show_button','popup_button_label_fr','popup_button_label_en','popup_button_label_de','popup_button_url_fr','popup_button_url_en','popup_button_url_de','popup_image_url',
-            'pause_start','resume','last_entry','exclude_weekends','exclude_school_holidays','exclude_public_holidays','auto_details','public_title_fr','public_title_en','public_title_de','access_message_fr','access_message_en','access_message_de','details_message_fr','details_message_en','details_message_de','show_tooltip','tooltip_text_fr','tooltip_text_en','tooltip_text_de','info_fr','info_en','info_de'
+            'pause_start','resume','last_entry','exclude_weekends','exclude_school_holidays','exclude_public_holidays','auto_details','public_title_fr','public_title_en','public_title_de','access_message_fr','access_message_en','access_message_de','details_message_fr','details_message_en','details_message_de','show_tooltip','tooltip_text_fr','tooltip_text_en','tooltip_text_de','info_fr','info_en','info_de',
+            'last_entry_minutes_slot1','last_entry_minutes_slot2'
         );
     }
 
@@ -178,7 +180,7 @@ final class Parcs_HT_Schedule_CSV {
         fputcsv($out, self::headers(), ';');
 
         $row = self::empty_export_row('regular');
-        $row = array_merge($row, array('enabled'=>'1','label'=>'Haute saison','start'=>$year.'-07-01','end'=>$year.'-08-31','weekdays'=>'1,2,3,4,5,6,7','open'=>'09:30','close'=>'18:00','last_entry_minutes'=>'30','color'=>'#9AAA8B'));
+        $row = array_merge($row, array('enabled'=>'1','label'=>'Haute saison','start'=>$year.'-07-01','end'=>$year.'-08-31','weekdays'=>'1,2,3,4,5,6,7','open'=>'09:30','close'=>'18:00','last_entry_minutes'=>'30','last_entry_minutes_slot1'=>'30','last_entry_minutes_slot2'=>'','color'=>'#9AAA8B'));
         self::output_row($out, $row);
         $row = self::empty_export_row('exception_closed');
         $row = array_merge($row, array('enabled'=>'1','label'=>'Fermeture exceptionnelle','start'=>$year.'-11-15','end'=>$year.'-11-15','priority'=>'200','context_fr'=>'Fermeture exceptionnelle','title_fr'=>'Fermeture exceptionnelle','message_fr'=>'Parc fermé ce jour','show_public_marker'=>'1'));
@@ -208,12 +210,12 @@ final class Parcs_HT_Schedule_CSV {
 
         foreach ((array)($season['regular_periods'] ?? array()) as $item) {
             $row = self::empty_export_row('regular');
-            $row = array_merge($row, array('enabled'=>(string)($item['enabled'] ?? '1'),'label'=>(string)($item['label'] ?? ''),'start'=>(string)($item['start'] ?? ''),'end'=>(string)($item['end'] ?? ''),'weekdays'=>implode(',', (array)($item['weekdays'] ?? array())),'open'=>(string)($item['open'] ?? ''),'close'=>(string)($item['close'] ?? ''),'open2'=>(string)($item['open2'] ?? ''),'close2'=>(string)($item['close2'] ?? ''),'last_entry_minutes'=>(string)($item['last_entry_minutes'] ?? ''),'color'=>(string)($item['color'] ?? '')));
+            $row = array_merge($row, array('enabled'=>(string)($item['enabled'] ?? '1'),'label'=>(string)($item['label'] ?? ''),'start'=>(string)($item['start'] ?? ''),'end'=>(string)($item['end'] ?? ''),'weekdays'=>implode(',', (array)(!empty($item['weekdays']) ? $item['weekdays'] : array('1','2','3','4','5','6','7'))),'open'=>(string)($item['open'] ?? ''),'close'=>(string)($item['close'] ?? ''),'open2'=>(string)($item['open2'] ?? ''),'close2'=>(string)($item['close2'] ?? ''),'last_entry_minutes'=>(string)($item['last_entry_minutes'] ?? ''),'last_entry_minutes_slot1'=>(string)($item['last_entry_minutes_slot1'] ?? $item['last_entry_minutes'] ?? ''),'last_entry_minutes_slot2'=>(string)($item['last_entry_minutes_slot2'] ?? $item['last_entry_minutes'] ?? ''),'color'=>(string)($item['color'] ?? '')));
             self::output_row($out, $row);
         }
         foreach ((array)($season['exceptions'] ?? array()) as $item) {
             $row = self::empty_export_row(((string)($item['type'] ?? 'hours') === 'closed') ? 'exception_closed' : 'exception_hours');
-            $row = array_merge($row, array('enabled'=>(string)($item['enabled'] ?? '1'),'label'=>(string)($item['label'] ?? ''),'start'=>(string)($item['start'] ?? ''),'end'=>(string)($item['end'] ?? ''),'open'=>(string)($item['open'] ?? ''),'close'=>(string)($item['close'] ?? ''),'open2'=>(string)($item['open2'] ?? ''),'close2'=>(string)($item['close2'] ?? ''),'last_entry_minutes'=>(string)($item['last_entry_minutes'] ?? ''),'priority'=>(string)($item['priority'] ?? '100'),'apply_domain_rules'=>(string)($item['apply_domain_rules'] ?? '1'),'show_public_marker'=>(string)($item['show_public_marker'] ?? '1'),'show_popup'=>(string)($item['show_popup'] ?? '0'),'popup_show_dates'=>(string)($item['popup_show_dates'] ?? '1'),'popup_show_hours'=>(string)($item['popup_show_hours'] ?? '1'),'popup_lead_mode'=>(string)($item['popup_lead_mode'] ?? 'days_before'),'popup_days_before'=>(string)($item['popup_days_before'] ?? '1'),'popup_start'=>(string)($item['popup_start'] ?? ''),'popup_end'=>(string)($item['popup_end'] ?? ''),'popup_show_button'=>(string)($item['popup_show_button'] ?? '0')));
+            $row = array_merge($row, array('enabled'=>(string)($item['enabled'] ?? '1'),'label'=>(string)($item['label'] ?? ''),'start'=>(string)($item['start'] ?? ''),'end'=>(string)($item['end'] ?? ''),'open'=>(string)($item['open'] ?? ''),'close'=>(string)($item['close'] ?? ''),'open2'=>(string)($item['open2'] ?? ''),'close2'=>(string)($item['close2'] ?? ''),'last_entry_minutes'=>(string)($item['last_entry_minutes'] ?? ''),'last_entry_minutes_slot1'=>(string)($item['last_entry_minutes_slot1'] ?? $item['last_entry_minutes'] ?? ''),'last_entry_minutes_slot2'=>(string)($item['last_entry_minutes_slot2'] ?? $item['last_entry_minutes'] ?? ''),'priority'=>(string)($item['priority'] ?? '100'),'apply_domain_rules'=>(string)($item['apply_domain_rules'] ?? '1'),'show_public_marker'=>(string)($item['show_public_marker'] ?? '1'),'show_popup'=>(string)($item['show_popup'] ?? '0'),'popup_show_dates'=>(string)($item['popup_show_dates'] ?? '1'),'popup_show_hours'=>(string)($item['popup_show_hours'] ?? '1'),'popup_lead_mode'=>(string)($item['popup_lead_mode'] ?? 'days_before'),'popup_days_before'=>(string)($item['popup_days_before'] ?? '1'),'popup_start'=>(string)($item['popup_start'] ?? ''),'popup_end'=>(string)($item['popup_end'] ?? ''),'popup_show_button'=>(string)($item['popup_show_button'] ?? '0')));
             self::export_translation($row, 'context', $item['context'] ?? array()); self::export_translation($row, 'title', $item['title'] ?? array()); self::export_translation($row, 'message', $item['message'] ?? array()); self::export_translation($row, 'popup_button_label', $item['popup_button_label'] ?? array()); self::export_translation($row, 'popup_button_url', $item['popup_button_url'] ?? array());
             self::output_row($out, $row);
         }
@@ -276,9 +278,30 @@ final class Parcs_HT_Schedule_CSV {
         );
     }
 
+    /** Chaîne vide = valeur par défaut ; un jour mal saisi provoque une erreur. */
     private static function weekdays_value($value, $default = array('1','2','3','4','5','6','7')) {
-        $days = array_values(array_intersect(array('1','2','3','4','5','6','7'), preg_split('/\s*[,|]\s*/', (string)$value)));
-        return $days ? $days : $default;
+        $value = trim((string)$value);
+        if ($value === '') return $default;
+        $parts = preg_split('/\s*[,|]\s*/', $value);
+        foreach ($parts as $day) if (!in_array($day, array('1','2','3','4','5','6','7'), true)) return false;
+        return array_values(array_intersect(array('1','2','3','4','5','6','7'), $parts));
+    }
+
+    private static function offset_value($value) {
+        $value = trim((string)$value);
+        if ($value === '') return '';
+        if (!preg_match('/^\d{1,4}$/', $value) || (int)$value > 1440) return false;
+        return (string)(int)$value;
+    }
+
+    /** Les anciens CSV sans les deux nouvelles colonnes recopient le délai historique. */
+    private static function slot_values($row) {
+        $legacy = self::offset_value($row['last_entry_minutes'] ?? '');
+        if ($legacy === false) return false;
+        $one = self::offset_value(array_key_exists('last_entry_minutes_slot1', $row) ? $row['last_entry_minutes_slot1'] : $legacy);
+        $two = self::offset_value(array_key_exists('last_entry_minutes_slot2', $row) ? $row['last_entry_minutes_slot2'] : $legacy);
+        if ($one === false || $two === false) return false;
+        return array('last_entry_minutes'=>$two !== '' ? $two : ($one !== '' ? $one : $legacy), 'last_entry_minutes_slot1'=>$one, 'last_entry_minutes_slot2'=>$two);
     }
 
     public static function import_csv() {
@@ -329,7 +352,11 @@ final class Parcs_HT_Schedule_CSV {
                 $open = self::time_value($row['open'] ?? ''); $close = self::time_value($row['close'] ?? '');
                 $open2 = self::time_value($row['open2'] ?? ''); $close2 = self::time_value($row['close2'] ?? '');
                 if ($open === false || $close === false || $open === '' || $close === '' || $open2 === false || $close2 === false) { $errors[] = 'Ligne '.$line.' : horaires invalides.'; continue; }
-                $regular[] = array('enabled'=>$enabled,'label'=>$label,'start'=>$start,'end'=>$end,'weekdays'=>self::weekdays_value($row['weekdays'] ?? ''),'open'=>$open,'close'=>$close,'open2'=>$open2,'close2'=>$close2,'last_entry_minutes'=>preg_match('/^\d{1,4}$/',(string)($row['last_entry_minutes']??''))?(string)(int)$row['last_entry_minutes']:'','color'=>$color);
+                $days = self::weekdays_value($row['weekdays'] ?? '');
+                if ($days === false) { $errors[] = 'Ligne '.$line.' : jours incorrects (1 = lundi ... 7 = dimanche).'; continue; }
+                $slots = self::slot_values($row);
+                if ($slots === false) { $errors[] = 'Ligne '.$line.' : délais de dernière entrée incorrects (0 à 1440 minutes).'; continue; }
+                $regular[] = array_merge(array('enabled'=>$enabled,'label'=>$label,'start'=>$start,'end'=>$end,'weekdays'=>$days,'open'=>$open,'close'=>$close,'open2'=>$open2,'close2'=>$close2,'color'=>$color), $slots);
                 continue;
             }
 
@@ -337,7 +364,9 @@ final class Parcs_HT_Schedule_CSV {
                 $open = self::time_value($row['open'] ?? ''); $close = self::time_value($row['close'] ?? '');
                 $open2 = self::time_value($row['open2'] ?? ''); $close2 = self::time_value($row['close2'] ?? '');
                 if ($type === 'exception_hours' && ($open === false || $close === false || $open === '' || $close === '')) { $errors[] = 'Ligne '.$line.' : horaires exceptionnels invalides.'; continue; }
-                $exceptions[] = array('enabled'=>$enabled,'type'=>$type==='exception_closed'?'closed':'hours','label'=>$label,'start'=>$start,'end'=>$end,'open'=>$open===false?'':$open,'close'=>$close===false?'':$close,'open2'=>$open2===false?'':$open2,'close2'=>$close2===false?'':$close2,'last_entry_minutes'=>preg_match('/^\d{1,4}$/',(string)($row['last_entry_minutes']??''))?(string)(int)$row['last_entry_minutes']:'','priority'=>preg_match('/^\d+$/',(string)($row['priority']??''))?(string)(int)$row['priority']:'100','apply_domain_rules'=>self::flag($row['apply_domain_rules'] ?? '1'),'show_public_marker'=>self::flag($row['show_public_marker'] ?? '1'),'context'=>self::translations($row,'context'),'title'=>self::translations($row,'title'),'message'=>self::translations($row,'message',true),'show_popup'=>self::flag($row['show_popup'] ?? '0','0'),'popup_show_dates'=>self::flag($row['popup_show_dates'] ?? '1'),'popup_show_hours'=>self::flag($row['popup_show_hours'] ?? '1'),'popup_mode'=>'auto','popup_title'=>array('fr'=>'','en'=>'','de'=>''),'popup_message'=>array('fr'=>'','en'=>'','de'=>''),'popup_button_label'=>self::translations($row,'popup_button_label'),'popup_button_url'=>self::translations($row,'popup_button_url'),'popup_show_button'=>self::flag($row['popup_show_button'] ?? '0','0'),'popup_lead_mode'=>in_array((string)($row['popup_lead_mode']??''),array('same','days_before','custom'),true)?(string)$row['popup_lead_mode']:'days_before','popup_days_before'=>preg_match('/^\d+$/',(string)($row['popup_days_before']??''))?(string)(int)$row['popup_days_before']:'1','popup_start'=>sanitize_text_field((string)($row['popup_start']??'')),'popup_end'=>sanitize_text_field((string)($row['popup_end']??'')));
+                $slots = self::slot_values($row);
+                if ($slots === false) { $errors[] = 'Ligne '.$line.' : délais de dernière entrée incorrects (0 à 1440 minutes).'; continue; }
+                $exceptions[] = array('enabled'=>$enabled,'type'=>$type==='exception_closed'?'closed':'hours','label'=>$label,'start'=>$start,'end'=>$end,'open'=>$open===false?'':$open,'close'=>$close===false?'':$close,'open2'=>$open2===false?'':$open2,'close2'=>$close2===false?'':$close2,'last_entry_minutes'=>$slots['last_entry_minutes'],'last_entry_minutes_slot1'=>$slots['last_entry_minutes_slot1'],'last_entry_minutes_slot2'=>$slots['last_entry_minutes_slot2'],'priority'=>preg_match('/^\d+$/',(string)($row['priority']??''))?(string)(int)$row['priority']:'100','apply_domain_rules'=>self::flag($row['apply_domain_rules'] ?? '1'),'show_public_marker'=>self::flag($row['show_public_marker'] ?? '1'),'context'=>self::translations($row,'context'),'title'=>self::translations($row,'title'),'message'=>self::translations($row,'message',true),'show_popup'=>self::flag($row['show_popup'] ?? '0','0'),'popup_show_dates'=>self::flag($row['popup_show_dates'] ?? '1'),'popup_show_hours'=>self::flag($row['popup_show_hours'] ?? '1'),'popup_mode'=>'auto','popup_title'=>array('fr'=>'','en'=>'','de'=>''),'popup_message'=>array('fr'=>'','en'=>'','de'=>''),'popup_button_label'=>self::translations($row,'popup_button_label'),'popup_button_url'=>self::translations($row,'popup_button_url'),'popup_show_button'=>self::flag($row['popup_show_button'] ?? '0','0'),'popup_lead_mode'=>in_array((string)($row['popup_lead_mode']??''),array('same','days_before','custom'),true)?(string)$row['popup_lead_mode']:'days_before','popup_days_before'=>preg_match('/^\d+$/',(string)($row['popup_days_before']??''))?(string)(int)$row['popup_days_before']:'1','popup_start'=>sanitize_text_field((string)($row['popup_start']??'')),'popup_end'=>sanitize_text_field((string)($row['popup_end']??'')));
                 continue;
             }
 
@@ -349,7 +378,9 @@ final class Parcs_HT_Schedule_CSV {
             if ($type === 'limited_access') {
                 $pause = self::time_value($row['pause_start'] ?? ''); $resume = self::time_value($row['resume'] ?? ''); $last = self::time_value($row['last_entry'] ?? '');
                 if ($pause === false || $resume === false || $last === false) { $errors[] = 'Ligne '.$line.' : horaires d’accès limité invalides.'; continue; }
-                $domain[] = array('enabled'=>$enabled,'label'=>$label,'public_title'=>self::translations($row,'public_title'),'start'=>$start,'end'=>$end,'weekdays'=>self::weekdays_value($row['weekdays'] ?? '',array('1','2','3','4','5')),'pause_start'=>$pause,'resume'=>$resume,'last_entry'=>$last,'exclude_weekends'=>self::flag($row['exclude_weekends'] ?? '0','0'),'exclude_school_holidays'=>self::flag($row['exclude_school_holidays'] ?? '0','0'),'exclude_public_holidays'=>self::flag($row['exclude_public_holidays'] ?? '0','0'),'auto_details'=>self::flag($row['auto_details'] ?? '1'),'color'=>sanitize_hex_color((string)($row['color'] ?? '')) ?: '#e7c55b','access_message'=>self::translations($row,'access_message'),'details_message'=>self::translations($row,'details_message'),'show_tooltip'=>self::flag($row['show_tooltip'] ?? '1'),'tooltip_text'=>self::translations($row,'tooltip_text',true),'info'=>self::translations($row,'info',true));
+                $days = self::weekdays_value($row['weekdays'] ?? '', array('1','2','3','4','5'));
+                if ($days === false) { $errors[] = 'Ligne '.$line.' : jours d’accès limité incorrects.'; continue; }
+                $domain[] = array('enabled'=>$enabled,'label'=>$label,'public_title'=>self::translations($row,'public_title'),'start'=>$start,'end'=>$end,'weekdays'=>$days,'pause_start'=>$pause,'resume'=>$resume,'last_entry'=>$last,'exclude_weekends'=>self::flag($row['exclude_weekends'] ?? '0','0'),'exclude_school_holidays'=>self::flag($row['exclude_school_holidays'] ?? '0','0'),'exclude_public_holidays'=>self::flag($row['exclude_public_holidays'] ?? '0','0'),'auto_details'=>self::flag($row['auto_details'] ?? '1'),'color'=>sanitize_hex_color((string)($row['color'] ?? '')) ?: '#e7c55b','access_message'=>self::translations($row,'access_message'),'details_message'=>self::translations($row,'details_message'),'show_tooltip'=>self::flag($row['show_tooltip'] ?? '1'),'tooltip_text'=>self::translations($row,'tooltip_text',true),'info'=>self::translations($row,'info',true));
                 continue;
             }
 
