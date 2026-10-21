@@ -51,6 +51,8 @@ jobs:
           php tests/public-tariff-1168-groups-contract.php
           php tests/public-content-1170-contract.php
           php tests/admin-overview-1170-contract.php
+          php tests/overview-check-updates-1209-contract.php
+          php tests/wp-native-updates-1209-runtime.php
           php tests/admin-schedule-1173-contract.php
           php tests/admin-periods-1174-contract.php
           php tests/admin-tariffs-1175-contract.php
@@ -114,6 +116,8 @@ jobs:
           PLUGIN_ROOT=/tmp/htp-production-test php tests/public-tariff-1168-groups-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/public-content-1170-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/admin-overview-1170-contract.php
+          PLUGIN_ROOT=/tmp/htp-production-test php tests/overview-check-updates-1209-contract.php
+          PLUGIN_ROOT=/tmp/htp-production-test php tests/wp-native-updates-1209-runtime.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/admin-schedule-1173-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/admin-periods-1174-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/admin-tariffs-1175-contract.php
@@ -198,8 +202,11 @@ jobs:
           zipinfo -1 horaires-tarifs-parc.zip | grep -qx 'horaires-tarifs-parc/readme.txt'
           unzip -p horaires-tarifs-parc.zip horaires-tarifs-parc/horaires-tarifs-parc.php > /tmp/htp-install-header.php
           grep -q 'Plugin Name: Gestion du parc' /tmp/htp-install-header.php
-          grep -qE 'Version: 1[.]20[.]8([[:space:]]|$)' /tmp/htp-install-header.php
-          grep -q "define('PARCS_HT_VERSION', '1.20.8')" /tmp/htp-install-header.php
+          PACKAGE_VERSION=$(php -r '$s=file_get_contents("/tmp/htp-install-header.php"); preg_match("/Version:\\s*([0-9.]+)/",$s,$m); echo $m[1] ?? "";')
+          SOURCE_VERSION=$(php -r '$s=file_get_contents("horaires-tarifs-parc.php"); preg_match("/Version:\\s*([0-9.]+)/",$s,$m); echo $m[1] ?? "";')
+          test -n "$PACKAGE_VERSION"
+          test "$PACKAGE_VERSION" = "$SOURCE_VERSION"
+          grep -Fq "define('PARCS_HT_VERSION', '$PACKAGE_VERSION')" /tmp/htp-install-header.php
           if zipinfo -1 horaires-tarifs-parc.zip | grep -Ei '\.(md|map|ts|tsx|jsx|scss|sass|less)$|/(tests|tools|vendor|\.github|\.git)/|/(composer\.(json|lock)|phpcs\.xml\.dist|package(-lock)?\.json|yarn\.lock|pnpm-lock\.yaml)$'; then
             echo 'Source de développement détectée dans le ZIP WordPress.' >&2
             exit 1
@@ -211,7 +218,7 @@ jobs:
       - name: Provide installable ZIP for manual validation
         uses: actions/upload-artifact@v4
         with:
-          name: installation-wordpress-1.20.8
+          name: installation-wordpress-validation
           path: |
             horaires-tarifs-parc.zip
             horaires-tarifs-parc.zip.sha256
