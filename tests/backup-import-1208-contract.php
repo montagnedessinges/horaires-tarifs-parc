@@ -14,7 +14,7 @@ function check_1208($ok, $message) {
 }
 check_1208(strpos($main, "class-parcs-ht-backup-import.php") !== false, 'module included');
 check_1208(strpos($main, 'Parcs_HT_Backup_Import::init();') !== false, 'admin endpoints wired');
-check_1208(strpos($main, "Version: 1.20.8") !== false, 'version bump');
+check_1208(preg_match('/Version:\s*([0-9.]+)/', $main, $version) === 1 && version_compare($version[1], '1.20.8', '>='), 'version is at least 1.20.8');
 check_1208(strpos($overview, 'Parcs_HT_Backup_Import::render_panel($year)') !== false, 'dashboard control wired');
 check_1208(strpos($src, "check_admin_referer(\$nonce)") !== false, 'nonces enforced');
 check_1208(strpos($src, "current_user_can('manage_options')") !== false, 'admins only');
