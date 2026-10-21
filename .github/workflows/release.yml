@@ -171,8 +171,6 @@ jobs:
             accessibility
           ignore-warnings: true
           include-experimental: false
-  # La branche de préparation doit fournir un véritable ZIP WordPress,
-  # et pas le ZIP « Code > Download ZIP » de GitHub.
   installer-preview:
     if: github.event_name == 'pull_request'
     needs: [quality, plugin-check]
@@ -196,250 +194,13 @@ jobs:
           set -euo pipefail
           unzip -tq horaires-tarifs-parc.zip
           test "$(zipinfo -1 horaires-tarifs-parc.zip | cut -d/ -f1 | sort -u)" = "horaires-tarifs-parc"
-          test "$(zipinfo -1 horaires-tarifs-parc.zip | grep -c '^horaires-tarifs-parc/horaires-tarifs-parc.php
-    needs: [quality, plugin-check]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Read plugin version
-        id: version
-        shell: bash
-        run: |
-          VERSION=$(php -r '$s=file_get_contents("horaires-tarifs-parc.php"); preg_match("/Version:\s*([0-9.]+)/",$s,$m); echo $m[1] ?? "";')
-          test -n "$VERSION"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
-      - name: Check PHP syntax
-        shell: bash
-        run: find . -type f -name '*.php' -not -path './.git/*' -print0 | xargs -0 -n1 php -l
-      - name: Check JavaScript syntax
-        shell: bash
-        run: |
-          find assets -type f -name '*.js' -print0 | xargs -0 -n1 node --check
-      - name: Check whether release already exists
-        id: existing
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          if gh release view "${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then echo "exists=true" >> "$GITHUB_OUTPUT"; else echo "exists=false" >> "$GITHUB_OUTPUT"; fi
-      - name: Stage audited release sources
-        if: steps.existing.outputs.exists != 'true'
-        shell: bash
-        run: |
-          rm -rf build horaires-tarifs-parc.zip
-          mkdir -p build/horaires-tarifs-parc
-          cp horaires-tarifs-parc.php uninstall.php readme.txt build/horaires-tarifs-parc/
-          cp -R includes assets build/horaires-tarifs-parc/
-      - name: Build production WordPress ZIP
-        if: steps.existing.outputs.exists != 'true'
-        shell: bash
-        run: |
-          php tools/prepare-production.php build/horaires-tarifs-parc
-          cd build
-          zip -qr ../horaires-tarifs-parc.zip horaires-tarifs-parc
-      - name: Validate WordPress ZIP
-        if: steps.existing.outputs.exists != 'true'
-        shell: bash
-        run: |
-          unzip -t horaires-tarifs-parc.zip
-          test "$(zipinfo -1 horaires-tarifs-parc.zip | cut -d/ -f1 | sort -u)" = "horaires-tarifs-parc"
-          if zipinfo -1 horaires-tarifs-parc.zip | grep -Ei '\.(md|map|ts|tsx|jsx|scss|sass|less)$|/(tests|tools|vendor|\.github|\.git|\.pkg)/|/(composer\.(json|lock)|phpcs\.xml\.dist|package(-lock)?\.json|yarn\.lock|pnpm-lock\.yaml)$'; then
-            echo 'Development, source-map or documentation file found in production ZIP.' >&2
-            exit 1
-          fi
-          unzip -p horaires-tarifs-parc.zip horaires-tarifs-parc/horaires-tarifs-parc.php > /tmp/horaires-tarifs-parc.php
-          PACKAGE_VERSION=$(php -r '$s=file_get_contents("/tmp/horaires-tarifs-parc.php"); preg_match("/Version:\\s*([0-9.]+)/",$s,$m); echo $m[1] ?? "";')
-          test "$PACKAGE_VERSION" = "${{ steps.version.outputs.version }}"
-          grep -q 'Plugin Name: Gestion du parc' /tmp/horaires-tarifs-parc.php
-          find build/horaires-tarifs-parc -type f -name '*.php' -print0 | xargs -0 -n1 php -l
-          find build/horaires-tarifs-parc/assets -type f -name '*.js' -print0 | xargs -0 -n1 node --check
-          if grep -RniE --include='*.php' --include='*.js' --include='*.css' 'ChatGPT|OpenAI|GitHub Copilot|generated[[:space:]-]+by[[:space:]]+(AI|artificial intelligence)|généré[[:space:]]+par[[:space:]]+(une[[:space:]]+)?IA|sourceMappingURL|TODO|FIXME|HACK|console\.log[[:space:]]*\(|debugger[[:space:]]*;' build/horaires-tarifs-parc; then
-            echo 'Development marker found in production sources.' >&2
-            exit 1
-          fi
-          sha256sum horaires-tarifs-parc.zip | tee horaires-tarifs-parc.zip.sha256
-      - name: Create GitHub Release
-        if: steps.existing.outputs.exists != 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          gh release create "${{ steps.version.outputs.tag }}" horaires-tarifs-parc.zip horaires-tarifs-parc.zip.sha256 \
-            --title "Gestion du parc ${{ steps.version.outputs.version }}" \
-            --notes-file <(sed -n '/^## ${{ steps.version.outputs.version }}$/,/^## /p' CHANGELOG.md | sed '$d')
-      - name: Preserve existing release unchanged
-        if: steps.existing.outputs.exists == 'true'
-        shell: bash
-        run: echo "Release ${{ steps.version.outputs.tag }} already exists; keeping its assets immutable."
-)" -eq 1
-          test "$(zipinfo -1 horaires-tarifs-parc.zip | grep -c '^horaires-tarifs-parc/readme.txt
-    needs: [quality, plugin-check]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Read plugin version
-        id: version
-        shell: bash
-        run: |
-          VERSION=$(php -r '$s=file_get_contents("horaires-tarifs-parc.php"); preg_match("/Version:\s*([0-9.]+)/",$s,$m); echo $m[1] ?? "";')
-          test -n "$VERSION"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
-      - name: Check PHP syntax
-        shell: bash
-        run: find . -type f -name '*.php' -not -path './.git/*' -print0 | xargs -0 -n1 php -l
-      - name: Check JavaScript syntax
-        shell: bash
-        run: |
-          find assets -type f -name '*.js' -print0 | xargs -0 -n1 node --check
-      - name: Check whether release already exists
-        id: existing
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          if gh release view "${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then echo "exists=true" >> "$GITHUB_OUTPUT"; else echo "exists=false" >> "$GITHUB_OUTPUT"; fi
-      - name: Stage audited release sources
-        if: steps.existing.outputs.exists != 'true'
-        shell: bash
-        run: |
-          rm -rf build horaires-tarifs-parc.zip
-          mkdir -p build/horaires-tarifs-parc
-          cp horaires-tarifs-parc.php uninstall.php build/horaires-tarifs-parc/
-          cp -R includes assets build/horaires-tarifs-parc/
-      - name: Build production WordPress ZIP
-        if: steps.existing.outputs.exists != 'true'
-        shell: bash
-        run: |
-          php tools/prepare-production.php build/horaires-tarifs-parc
-          cd build
-          zip -qr ../horaires-tarifs-parc.zip horaires-tarifs-parc
-      - name: Validate WordPress ZIP
-        if: steps.existing.outputs.exists != 'true'
-        shell: bash
-        run: |
-          unzip -t horaires-tarifs-parc.zip
-          test "$(zipinfo -1 horaires-tarifs-parc.zip | cut -d/ -f1 | sort -u)" = "horaires-tarifs-parc"
-          if zipinfo -1 horaires-tarifs-parc.zip | grep -Ei '\.(md|map|ts|tsx|jsx|scss|sass|less)$|/(tests|tools|vendor|\.github|\.git|\.pkg)/|/(composer\.(json|lock)|phpcs\.xml\.dist|package(-lock)?\.json|yarn\.lock|pnpm-lock\.yaml)$'; then
-            echo 'Development, source-map or documentation file found in production ZIP.' >&2
-            exit 1
-          fi
-          unzip -p horaires-tarifs-parc.zip horaires-tarifs-parc/horaires-tarifs-parc.php > /tmp/horaires-tarifs-parc.php
-          PACKAGE_VERSION=$(php -r '$s=file_get_contents("/tmp/horaires-tarifs-parc.php"); preg_match("/Version:\\s*([0-9.]+)/",$s,$m); echo $m[1] ?? "";')
-          test "$PACKAGE_VERSION" = "${{ steps.version.outputs.version }}"
-          grep -q 'Plugin Name: Gestion du parc' /tmp/horaires-tarifs-parc.php
-          find build/horaires-tarifs-parc -type f -name '*.php' -print0 | xargs -0 -n1 php -l
-          find build/horaires-tarifs-parc/assets -type f -name '*.js' -print0 | xargs -0 -n1 node --check
-          if grep -RniE --include='*.php' --include='*.js' --include='*.css' 'ChatGPT|OpenAI|GitHub Copilot|generated[[:space:]-]+by[[:space:]]+(AI|artificial intelligence)|généré[[:space:]]+par[[:space:]]+(une[[:space:]]+)?IA|sourceMappingURL|TODO|FIXME|HACK|console\.log[[:space:]]*\(|debugger[[:space:]]*;' build/horaires-tarifs-parc; then
-            echo 'Development marker found in production sources.' >&2
-            exit 1
-          fi
-          sha256sum horaires-tarifs-parc.zip | tee horaires-tarifs-parc.zip.sha256
-      - name: Create GitHub Release
-        if: steps.existing.outputs.exists != 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          gh release create "${{ steps.version.outputs.tag }}" horaires-tarifs-parc.zip horaires-tarifs-parc.zip.sha256 \
-            --title "Gestion du parc ${{ steps.version.outputs.version }}" \
-            --notes-file <(sed -n '/^## ${{ steps.version.outputs.version }}$/,/^## /p' CHANGELOG.md | sed '$d')
-      - name: Preserve existing release unchanged
-        if: steps.existing.outputs.exists == 'true'
-        shell: bash
-        run: echo "Release ${{ steps.version.outputs.tag }} already exists; keeping its assets immutable."
-)" -eq 1
+          zipinfo -1 horaires-tarifs-parc.zip | grep -qx 'horaires-tarifs-parc/horaires-tarifs-parc.php'
+          zipinfo -1 horaires-tarifs-parc.zip | grep -qx 'horaires-tarifs-parc/readme.txt'
           unzip -p horaires-tarifs-parc.zip horaires-tarifs-parc/horaires-tarifs-parc.php > /tmp/htp-install-header.php
           grep -q 'Plugin Name: Gestion du parc' /tmp/htp-install-header.php
           grep -qE 'Version: 1[.]20[.]8([[:space:]]|$)' /tmp/htp-install-header.php
           grep -q "define('PARCS_HT_VERSION', '1.20.8')" /tmp/htp-install-header.php
-          if zipinfo -1 horaires-tarifs-parc.zip | grep -Ei '\.(md|map|ts|tsx|jsx|scss|sass|less)$|/(tests|tools|vendor|\.github|\.git)/|/(composer\.(json|lock)|phpcs\.xml\.dist|package(-lock)?\.json|yarn\.lock|pnpm-lock\.yaml)
-    needs: [quality, plugin-check]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Read plugin version
-        id: version
-        shell: bash
-        run: |
-          VERSION=$(php -r '$s=file_get_contents("horaires-tarifs-parc.php"); preg_match("/Version:\s*([0-9.]+)/",$s,$m); echo $m[1] ?? "";')
-          test -n "$VERSION"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
-      - name: Check PHP syntax
-        shell: bash
-        run: find . -type f -name '*.php' -not -path './.git/*' -print0 | xargs -0 -n1 php -l
-      - name: Check JavaScript syntax
-        shell: bash
-        run: |
-          find assets -type f -name '*.js' -print0 | xargs -0 -n1 node --check
-      - name: Check whether release already exists
-        id: existing
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          if gh release view "${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then echo "exists=true" >> "$GITHUB_OUTPUT"; else echo "exists=false" >> "$GITHUB_OUTPUT"; fi
-      - name: Stage audited release sources
-        if: steps.existing.outputs.exists != 'true'
-        shell: bash
-        run: |
-          rm -rf build horaires-tarifs-parc.zip
-          mkdir -p build/horaires-tarifs-parc
-          cp horaires-tarifs-parc.php uninstall.php build/horaires-tarifs-parc/
-          cp -R includes assets build/horaires-tarifs-parc/
-      - name: Build production WordPress ZIP
-        if: steps.existing.outputs.exists != 'true'
-        shell: bash
-        run: |
-          php tools/prepare-production.php build/horaires-tarifs-parc
-          cd build
-          zip -qr ../horaires-tarifs-parc.zip horaires-tarifs-parc
-      - name: Validate WordPress ZIP
-        if: steps.existing.outputs.exists != 'true'
-        shell: bash
-        run: |
-          unzip -t horaires-tarifs-parc.zip
-          test "$(zipinfo -1 horaires-tarifs-parc.zip | cut -d/ -f1 | sort -u)" = "horaires-tarifs-parc"
-          if zipinfo -1 horaires-tarifs-parc.zip | grep -Ei '\.(md|map|ts|tsx|jsx|scss|sass|less)$|/(tests|tools|vendor|\.github|\.git|\.pkg)/|/(composer\.(json|lock)|phpcs\.xml\.dist|package(-lock)?\.json|yarn\.lock|pnpm-lock\.yaml)$'; then
-            echo 'Development, source-map or documentation file found in production ZIP.' >&2
-            exit 1
-          fi
-          unzip -p horaires-tarifs-parc.zip horaires-tarifs-parc/horaires-tarifs-parc.php > /tmp/horaires-tarifs-parc.php
-          PACKAGE_VERSION=$(php -r '$s=file_get_contents("/tmp/horaires-tarifs-parc.php"); preg_match("/Version:\\s*([0-9.]+)/",$s,$m); echo $m[1] ?? "";')
-          test "$PACKAGE_VERSION" = "${{ steps.version.outputs.version }}"
-          grep -q 'Plugin Name: Gestion du parc' /tmp/horaires-tarifs-parc.php
-          find build/horaires-tarifs-parc -type f -name '*.php' -print0 | xargs -0 -n1 php -l
-          find build/horaires-tarifs-parc/assets -type f -name '*.js' -print0 | xargs -0 -n1 node --check
-          if grep -RniE --include='*.php' --include='*.js' --include='*.css' 'ChatGPT|OpenAI|GitHub Copilot|generated[[:space:]-]+by[[:space:]]+(AI|artificial intelligence)|généré[[:space:]]+par[[:space:]]+(une[[:space:]]+)?IA|sourceMappingURL|TODO|FIXME|HACK|console\.log[[:space:]]*\(|debugger[[:space:]]*;' build/horaires-tarifs-parc; then
-            echo 'Development marker found in production sources.' >&2
-            exit 1
-          fi
-          sha256sum horaires-tarifs-parc.zip | tee horaires-tarifs-parc.zip.sha256
-      - name: Create GitHub Release
-        if: steps.existing.outputs.exists != 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          gh release create "${{ steps.version.outputs.tag }}" horaires-tarifs-parc.zip horaires-tarifs-parc.zip.sha256 \
-            --title "Gestion du parc ${{ steps.version.outputs.version }}" \
-            --notes-file <(sed -n '/^## ${{ steps.version.outputs.version }}$/,/^## /p' CHANGELOG.md | sed '$d')
-      - name: Preserve existing release unchanged
-        if: steps.existing.outputs.exists == 'true'
-        shell: bash
-        run: echo "Release ${{ steps.version.outputs.tag }} already exists; keeping its assets immutable."
-; then
+          if zipinfo -1 horaires-tarifs-parc.zip | grep -Ei '\.(md|map|ts|tsx|jsx|scss|sass|less)$|/(tests|tools|vendor|\.github|\.git)/|/(composer\.(json|lock)|phpcs\.xml\.dist|package(-lock)?\.json|yarn\.lock|pnpm-lock\.yaml)$'; then
             echo 'Source de développement détectée dans le ZIP WordPress.' >&2
             exit 1
           fi
@@ -456,7 +217,6 @@ jobs:
             horaires-tarifs-parc.zip.sha256
           if-no-files-found: error
           retention-days: 30
-
   release:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [quality, plugin-check]
@@ -494,7 +254,7 @@ jobs:
         run: |
           rm -rf build horaires-tarifs-parc.zip
           mkdir -p build/horaires-tarifs-parc
-          cp horaires-tarifs-parc.php uninstall.php build/horaires-tarifs-parc/
+          cp horaires-tarifs-parc.php uninstall.php readme.txt build/horaires-tarifs-parc/
           cp -R includes assets build/horaires-tarifs-parc/
       - name: Build production WordPress ZIP
         if: steps.existing.outputs.exists != 'true'
