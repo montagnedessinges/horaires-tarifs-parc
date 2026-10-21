@@ -64,6 +64,7 @@ jobs:
           php tests/group-tariff-display-settings-runtime.php
           php tests/schedule-engine.php
           php tests/schedule-csv-contract.php
+          php tests/backup-import-1208-contract.php
           php tests/popup-language-contract.php
           php tests/popup-1200-contract.php
           php tests/wordpress-events-runtime.php
@@ -121,6 +122,7 @@ jobs:
           PLUGIN_ROOT=/tmp/htp-production-test php tests/public-data-regressions.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/updater-metadata-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/schedule-csv-contract.php
+          PLUGIN_ROOT=/tmp/htp-production-test php tests/backup-import-1208-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/popup-1200-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/wordpress-events-runtime.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/tariff-identities-contract.php
