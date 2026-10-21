@@ -28,7 +28,14 @@ final class Parcs_HT_Backup_Import {
             'parcs_ht_wordpress_events',
             'parcs_ht_guide_appearance',
             'parcs_ht_public_content',
-            'parcs_ht_popups_1200'
+            'parcs_ht_popups_1200',
+            'parcs_ht_advent_appearance',
+            'parcs_ht_advent_ux',
+            'parcs_ht_faq_contact',
+            'parcs_ht_quote_gate',
+            'parcs_ht_ai_google',
+            'parcs_ht_group_quotes',
+            'parcs_ht_group_quote_years_v2'
         );
     }
 
@@ -116,13 +123,25 @@ final class Parcs_HT_Backup_Import {
             $columns = isset($tariffs['columns']['groups']) ? $tariffs['columns']['groups'] : array();
             $groups = isset($tariffs['groups']) ? $tariffs['groups'] : array();
             $display = isset($display_store['seasons'][$year]) && is_array($display_store['seasons'][$year]) ? $display_store['seasons'][$year] : array();
-            return array('tariffs'=>array('groups'=>$groups,'columns'=>array('groups'=>$columns)),'group_display'=>$display);
+            $quote = self::quote_store();
+            $binding = isset($quote['tariff_bindings'][$year]) && is_array($quote['tariff_bindings'][$year]) ? $quote['tariff_bindings'][$year] : array();
+            $legacy = isset($quote['seasons'][$year]) && is_array($quote['seasons'][$year]) ? $quote['seasons'][$year] : array();
+            return array(
+                'tariffs'=>array('groups'=>$groups,'columns'=>array('groups'=>$columns)),
+                'group_display'=>$display,
+                'quote_binding'=>array('binding'=>$binding,'legacy'=>$legacy)
+            );
         }
         self::fail('Rubrique inconnue.');
     }
 
     private static function display_store() {
         $store = self::stored_option('parcs_ht_group_tariff_settings');
+        return is_array($store) ? $store : array();
+    }
+
+    private static function quote_store() {
+        $store = self::stored_option('parcs_ht_group_quotes');
         return is_array($store) ? $store : array();
     }
 
@@ -299,8 +318,9 @@ final class Parcs_HT_Backup_Import {
                 if (isset($data['group_display'],$data['tariffs']['groups'],$data['tariffs']['columns']['groups'])) self::fail('CSV visiteurs contient des données groupes.');
                 if (count($data) !== 1) self::fail('Section inattendue.');
             } elseif ($scope === 'groups') {
-                if (!isset($data['group_display'],$data['tariffs']['groups'],$data['tariffs']['columns']['groups']) || !is_array($data['group_display'])) self::fail('Tarifs groupes incomplets.');
-                if (count($data) !== 2 || count($data['tariffs']) !== 2 || count($data['tariffs']['columns']) !== 1) self::fail('Sections groupes inattendues.');
+                if (!isset($data['group_display'],$data['tariffs']['groups'],$data['tariffs']['columns']['groups'],$data['quote_binding']['binding'],$data['quote_binding']['legacy']) || !is_array($data['group_display'])) self::fail('Tarifs groupes incomplets.');
+                if (!is_array($data['quote_binding']['binding']) || !is_array($data['quote_binding']['legacy'])) self::fail('Correspondances des devis invalides.');
+                if (count($data) !== 3 || count($data['tariffs']) !== 2 || count($data['tariffs']['columns']) !== 1 || count($data['quote_binding']) !== 2) self::fail('Sections groupes inattendues.');
             }
         }
         return array('scope'=>$scope,'year'=>$wanted_year,'data'=>$data);
@@ -350,7 +370,7 @@ final class Parcs_HT_Backup_Import {
     }
 
     /** Ne modifie que l'année et le groupe de réglages explicitement choisis. */
-    public static function merge_section($candidate, $all, $display_store) {
+    public static function merge_section($candidate, $all, $display_store, $quote_store = array()) {
         $section = $candidate['scope'];
         $year = $candidate['year'];
         $data = $candidate['data'];
@@ -373,10 +393,16 @@ final class Parcs_HT_Backup_Import {
                 $target['columns']['groups'] = $data['tariffs']['columns']['groups'];
                 if (!isset($display_store['seasons']) || !is_array($display_store['seasons'])) $display_store['seasons'] = array();
                 $display_store['seasons'][$year] = $data['group_display'];
+                if (isset($data['quote_binding']) && is_array($data['quote_binding'])) {
+                    if (!isset($quote_store['tariff_bindings']) || !is_array($quote_store['tariff_bindings'])) $quote_store['tariff_bindings'] = array();
+                    if (!isset($quote_store['seasons']) || !is_array($quote_store['seasons'])) $quote_store['seasons'] = array();
+                    $quote_store['tariff_bindings'][$year] = $data['quote_binding']['binding'];
+                    $quote_store['seasons'][$year] = $data['quote_binding']['legacy'];
+                }
             } else return false;
             unset($target);
         }
-        return array('settings'=>$all,'display'=>$display_store);
+        return array('settings'=>$all,'display'=>$display_store,'quotes'=>$quote_store);
     }
 
     private static function affected_state($candidate, $all, $display) {
@@ -416,7 +442,7 @@ final class Parcs_HT_Backup_Import {
         $candidate = self::read_candidate($year, self::park($all));
         if ($candidate['scope'] !== 'global') {
             if ($candidate['year'] !== $year) self::fail('Année incompatible.');
-            $merged = self::merge_section($candidate, $all, self::display_store());
+            $merged = self::merge_section($candidate, $all, self::display_store(), self::quote_store());
             if ($merged === false) self::fail('Import incompatible.');
         }
         $before = self::affected_state($candidate, $all, self::display_store());
@@ -472,10 +498,13 @@ final class Parcs_HT_Backup_Import {
                 if (self::stored_option($key) != $value) self::fail('Échec d’écriture de ' . $key . ' (vérifiez la sauvegarde).');
             }
         } else {
-            $merged = self::merge_section($candidate, $all, $display);
+            $merged = self::merge_section($candidate, $all, $display, self::quote_store());
             if ($merged === false) self::fail('Impossible de fusionner l’import.');
             update_option(Parcs_HT_Defaults::OPTION, $merged['settings'], false);
-            if ($candidate['scope'] === 'groups') update_option('parcs_ht_group_tariff_settings', $merged['display'], false);
+            if ($candidate['scope'] === 'groups') {
+                update_option('parcs_ht_group_tariff_settings', $merged['display'], false);
+                update_option('parcs_ht_group_quotes', $merged['quotes'], false);
+            }
             // Vérification du bloc réellement ciblé, indépendamment du reste de l'année.
             $after = self::section_data($candidate['scope'], $candidate['year'], self::raw_settings(), self::display_store());
             if (self::state_hash($after) !== $candidate['after_hash']) self::fail('Les données enregistrées diffèrent du CSV (voir la révision).');
