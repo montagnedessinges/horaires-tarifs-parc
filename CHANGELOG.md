@@ -1,3 +1,8 @@
+## 1.20.9 — Correctif de vérification des mises à jour
+
+- Répare le bouton « Vérifier maintenant » de la Vue d’ensemble : l’action WordPress appelée par le lien est désormais enregistrée, avec vérification du nonce et des droits administrateur.
+- Après la vérification, retour à la Vue d’ensemble et message de confirmation, sans page inaccessible ni changement dans les réglages des saisons, horaires ou tarifs.
+
 ## 1.20.8 — Sauvegardes et import/export par saison
 
 - Ajout du panneau « Import / export et sauvegarde » sur la vue d’ensemble.
