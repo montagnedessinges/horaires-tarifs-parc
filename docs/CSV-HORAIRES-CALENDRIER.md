@@ -73,3 +73,13 @@ La version 1.15.14 ajoute aussi un filtre instantané dans :
 - Accès temporairement limité.
 
 Ce filtre agit uniquement sur l’affichage des lignes déjà présentes dans le formulaire. Il ne supprime, ne réordonne et ne modifie aucune donnée enregistrée. L’ajout d’une nouvelle ligne réinitialise le filtre actif pour garantir que la nouvelle ligne reste visible et éditable.
+
+## Comportement depuis 1.20.8 : jours, dernières entrées et aperçu
+
+- Pour une période `regular`, la cellule `weekdays` contient les numéros de jours (1 = lundi, 7 = dimanche). Les valeurs sont visibles dans le CSV exporté.
+- Une cellule vide représente **les sept jours** et est explicitement enregistrée comme `1,2,3,4,5,6,7` ; les sept cases sont cochées à la réouverture du formulaire WordPress.
+- Si des jours sont indiqués (ex. `1,2,3,4,5`), seuls ceux-ci sont appliqués. Les tokens invalides, comme `1,abc`, sont refusés.
+- Deux colonnes facultatives sont ajoutées **à la fin** du modèle CSV : `last_entry_minutes_slot1` et `last_entry_minutes_slot2`. Elles permettent de régler indépendamment les minutes avant la fermeture de chaque créneau.
+- Un champ de délai vide utilise le délai général du parc ; `0` signifie exactement zéro minute avant fermeture. Les anciens CSV qui n’ont que `last_entry_minutes` restent valides, avec application de cette valeur aux deux créneaux.
+- Avant import, un aperçu indique pour chaque période habituelle la plage de dates, les jours effectivement cochés, les deux horaires et les deux délais. Il faut confirmer pour modifier les données ; une sauvegarde de sécurité est réalisée avant application.
+- Pour les règles d’accès limité, une cellule `weekdays` vide conserve le comportement historique (du lundi au vendredi) ; pour afficher tous les jours, écrire explicitement `1,2,3,4,5,6,7`.
