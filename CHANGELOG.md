@@ -1,3 +1,11 @@
+## 1.20.8 — Sauvegardes et import/export par saison
+
+- Ajout du panneau « Import / export et sauvegarde » sur la vue d’ensemble.
+- Export ZIP global (JSON fidèle des options de configuration autorisées et CSV lisibles pour chaque année), limité au même site à la restauration.
+- Export/import CSV de données structurées pour horaires, tarifs visiteurs et tarifs groupes avec préservation des identifiants, colonnes et traductions.
+- Aperçu avant import, contrôle du parc et de l'année, révision de sécurité et prévention d’écrasement si les données ont changé pendant l’aperçu.
+- Aucune modification automatique des autres saisons lors d'un import CSV ; les données individuelles de devis, statistiques, journaux et secrets ne sont pas exportées.
+
 ## 1.20.7
 
 - Simplifie la rubrique Bons découverte : seuls les textes français sont modifiables et affichés. Retire les sections de langue de l’administration du module.
