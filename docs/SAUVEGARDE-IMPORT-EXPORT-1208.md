@@ -24,7 +24,14 @@ Options WordPress couvertes (lorsqu’elles existent) :
 - parcs_ht_wordpress_events (paramètres d’événements) ;
 - parcs_ht_guide_appearance ;
 - parcs_ht_public_content ;
-- parcs_ht_popups_1200.
+- parcs_ht_popups_1200 ;
+- parcs_ht_advent_appearance ;
+- parcs_ht_advent_ux ;
+- parcs_ht_faq_contact ;
+- parcs_ht_quote_gate ;
+- parcs_ht_ai_google ;
+- parcs_ht_group_quotes (correspondances des grilles et des formulaires, sans demandes reçues) ;
+- parcs_ht_group_quote_years_v2 (états annuels des devis).
 
 **Non inclus** : demandes de devis et contacts, données personnelles, fichiers médias, configuration du thème, formulaires CF7, base WordPress hors options ci-dessus, statistiques, connexions externes, jetons et journaux d’erreur. **Le ZIP n’est pas une sauvegarde complète du site WordPress.** Conservez une sauvegarde WordPress de la base et des fichiers avant une restauration majeure.
 
@@ -32,7 +39,7 @@ Options WordPress couvertes (lorsqu’elles existent) :
 Trois rubriques :
 1. **Horaires et calendrier** — règles régulières, exceptions, vacances, jours fériés, événements/périodes et accès limité ;
 2. **Tarifs visiteurs** — lignes individuelles/réduites, prix, colonnes, textes FR/EN/DE et moyens de paiement ;
-3. **Tarifs groupes** — lignes/colonnes tarifaires groupes **et** réglages d’affichage groupes de la saison.
+3. **Tarifs groupes** — lignes/colonnes tarifaires groupes, réglages d’affichage et correspondances annuelles des calculs de devis.
 
 Les CSV sont enregistrés en UTF-8 avec séparateur point-virgule.
 
