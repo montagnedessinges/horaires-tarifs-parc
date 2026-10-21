@@ -10,6 +10,30 @@ final class Parcs_HT_Admin_Overview {
         add_action('admin_menu', array(__CLASS__, 'menu'), 36);
         add_action('admin_init', array(__CLASS__, 'redirect_default_entry'), 20);
         add_action('admin_notices', array(__CLASS__, 'canonical_back_link'));
+        // 1.20.9 : cet endpoint manquait alors que le bouton du tableau de bord y pointait.
+        add_action('admin_post_parcs_ht_check_updates_1172', array(__CLASS__, 'check_updates_now'));
+    }
+
+    /** Bouton « Vérifier maintenant » de la vue d'ensemble. */
+    public static function check_updates_now() {
+        if (!current_user_can('manage_options') || !current_user_can('update_plugins')) {
+            wp_die('Accès refusé.');
+        }
+        check_admin_referer('parcs_ht_check_updates_1172');
+
+        if (class_exists('Parcs_HT_Updater')) {
+            Parcs_HT_Updater::clear_cache();
+        }
+        if (!function_exists('wp_update_plugins')) {
+            require_once ABSPATH . 'wp-admin/includes/update.php';
+        }
+        wp_update_plugins();
+
+        wp_safe_redirect(add_query_arg(array(
+            'page' => self::PAGE,
+            'checked' => '1',
+        ), admin_url('admin.php')));
+        exit;
     }
 
     public static function menu() {
