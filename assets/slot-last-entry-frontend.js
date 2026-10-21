@@ -13,7 +13,7 @@
   function text(tpl,values){var out=tpl||'';Object.keys(values||{}).forEach(function(k){out=out.replace(new RegExp('\\{'+k+'\\}','g'),values[k]);});return out;}
   function slots(status){return status&&status.slots&&status.slots.length?status.slots:(status&&status.openTime&&status.closeTime?[{open:status.openTime,close:status.closeTime}]:[]);}
   function source(status){return status&&(status.exception||status.period)?(status.exception||status.period):{};}
-  function slotOffset(status,index){var row=source(status),key='last_entry_minutes_slot'+String(index+1),value=Object.prototype.hasOwnProperty.call(row,key)?String(row[key]==null?'':row[key]):'';if(value==='')value=String(row.last_entry_minutes==null?'':row.last_entry_minutes);if(value==='')value=String((settings.general||{}).last_entry_minutes||0);return Number(value||0);}
+  function slotOffset(status,index){var row=source(status),key='last_entry_minutes_slot'+String(index+1),hasOwn=Object.prototype.hasOwnProperty.call(row,key),value=hasOwn?String(row[key]==null?'':row[key]):String(row.last_entry_minutes==null?'':row.last_entry_minutes);if(value==='')value=String((settings.general||{}).last_entry_minutes||0);return Number(value||0);}
   function slotLast(status,index){var list=slots(status),slot=list[index];return slot&&slot.close?fromMins(mins(slot.close)-slotOffset(status,index)):'';}
   function slotRange(slot,lang){return headerTime(slot.open,lang)+(lang==='fr'?'–':' – ')+headerTime(slot.close,lang);}
   function ranges(list,lang){return(list||[]).map(function(s){return slotRange(s,lang);}).join(' / ');}
