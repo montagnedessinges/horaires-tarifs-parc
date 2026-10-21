@@ -30,6 +30,9 @@ final class Parcs_HT_Updater {
 
     public static function init() {
         add_filter('update_plugins_github.com', array(__CLASS__, 'filter_update'), 10, 4);
+        // Publication directe des versions GitHub dans le cache standard WordPress.
+        // Utilise le même paquet et les mêmes contrôles que le bouton interne.
+        add_filter('pre_set_site_transient_update_plugins', array(__CLASS__, 'sync_native_updates'), 20, 1);
         add_filter('plugins_api', array(__CLASS__, 'plugin_information'), 20, 3);
         add_filter('upgrader_pre_download', array(__CLASS__, 'pre_download'), 10, 4);
         add_filter('auto_update_plugin', array(__CLASS__, 'filter_auto_update'), 20, 2);
@@ -55,6 +58,57 @@ final class Parcs_HT_Updater {
             'tested' => '',
             'requires_php' => '7.4',
         );
+    }
+
+    /**
+     * Synchronise la release GitHub avec le tableau natif des mises à jour WP.
+     *
+     * Ce filtre agit seulement lorsque WordPress enregistre le résultat d'une
+     * vérification réelle (wp_update_plugins). Il n'appelle pas wp_update_plugins,
+     * et il ne force jamais de mise à jour si l'API GitHub est inaccessible.
+     */
+    public static function sync_native_updates($transient) {
+        if (!is_object($transient) || empty($transient->checked) || !is_array($transient->checked)) return $transient;
+
+        $plugin_file = plugin_basename(PARCS_HT_FILE);
+        if (!isset($transient->checked[$plugin_file])) return $transient;
+
+        // La mise à jour de WordPress est déjà prioritaire si elle est présente.
+        if (isset($transient->response[$plugin_file])) return $transient;
+
+        $installed = (string)$transient->checked[$plugin_file];
+        if ($installed === '') return $transient;
+
+        $release = self::latest_release();
+        if (is_wp_error($release) || !is_array($release)) return $transient;
+
+        $available = self::release_version($release);
+        if ($available === '' || version_compare($available, $installed, '<=')) return $transient;
+
+        $asset = self::release_asset($release);
+        $checksum = self::checksum_asset($release);
+        if (!$asset || !$checksum) return $transient;
+
+        $package = self::asset_download_url($asset);
+        if ($package === '') return $transient;
+
+        if (!isset($transient->response) || !is_array($transient->response)) $transient->response = array();
+        if (!isset($transient->no_update) || !is_array($transient->no_update)) $transient->no_update = array();
+
+        $transient->response[$plugin_file] = (object)array(
+            'id' => self::UPDATE_URI,
+            'slug' => self::SLUG,
+            'plugin' => $plugin_file,
+            'version' => $available,
+            'new_version' => $available,
+            'url' => isset($release['html_url']) ? esc_url_raw($release['html_url']) : self::UPDATE_URI,
+            'package' => esc_url_raw($package),
+            'tested' => '',
+            'requires_php' => '7.4',
+        );
+        unset($transient->no_update[$plugin_file]);
+
+        return $transient;
     }
 
     public static function filter_auto_update($update, $item) {
