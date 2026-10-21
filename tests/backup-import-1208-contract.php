@@ -68,10 +68,13 @@ check_1208($update['settings']['seasons']['2026'] === $settings['seasons']['2026
 check_1208($update['display'] === $disp, 'group appearance preserved');
 $group=Parcs_HT_Backup_Import::merge_section(array('scope'=>'groups','year'=>'2027','data'=>array(
     'tariffs'=>array('groups'=>array(array('id'=>'group-new')),'columns'=>array('groups'=>array(array('id'=>'group-price')))),
-    'group_display'=>array('published'=>'0','intro'=>array('fr'=>'Nouveau'))
-)), $settings, $disp);
+    'group_display'=>array('published'=>'0','intro'=>array('fr'=>'Nouveau')),
+    'quote_binding'=>array('binding'=>array('child_row_id'=>'child2027'), 'legacy'=>array())
+)), $settings, $disp, array('tariff_bindings'=>array('2026'=>array('adult_row_id'=>'adult2026'))));
 check_1208($group['settings']['seasons']['2027']['tariffs']['groups'][0]['id'] === 'group-new', 'group rows replaced');
 check_1208($group['settings']['seasons']['2027']['tariffs']['individual'][0]['id'] === 'visitor', 'visitor rows preserved');
 check_1208($group['display']['seasons']['2026']['published'] === '1', 'other year group publication unchanged');
 check_1208($group['display']['seasons']['2027']['published'] === '0', 'group publication status imported');
+check_1208($group['quotes']['tariff_bindings']['2027']['child_row_id'] === 'child2027', '2027 quote binding replaced');
+check_1208($group['quotes']['tariff_bindings']['2026']['adult_row_id'] === 'adult2026', '2026 quote binding preserved');
 echo "Backup/import-export 1.20.8 contract: OK\n";
