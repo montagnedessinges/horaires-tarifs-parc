@@ -127,7 +127,7 @@ final class Parcs_HT_Backup_Import {
 
     /** JSON pointer (RFC 6901) ; seules des feuilles ou des listes vides sont émises. */
     public static function flatten($value, $path = '') {
-        if (!is_array($value) || !$value) return array(array($path, wp_json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)));
+        if (!is_array($value) || !$value) return array(array($path, wp_json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION)));
         $out = array();
         foreach ($value as $key => $child) {
             $part = str_replace(array('~','/'), array('~0','~1'), (string)$key);
@@ -176,8 +176,8 @@ final class Parcs_HT_Backup_Import {
 
     private static function csv_string($scope, $year, $all, $display) {
         $stream = fopen('php://temp', 'w+');
-        fputcsv($stream, self::CSV_COLUMNS, ';');
-        foreach (self::rows_for($scope, $year, $all, $display) as $row) fputcsv($stream, $row, ';');
+        fputcsv($stream, self::CSV_COLUMNS, ';', '"', '');
+        foreach (self::rows_for($scope, $year, $all, $display) as $row) fputcsv($stream, $row, ';', '"', '');
         rewind($stream);
         $data = stream_get_contents($stream);
         fclose($stream);
@@ -185,7 +185,7 @@ final class Parcs_HT_Backup_Import {
     }
 
     private static function json_string($value) {
-        $json = wp_json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $json = wp_json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION);
         if (!is_string($json)) self::fail('Impossible de convertir les réglages en JSON.');
         return $json;
     }
@@ -264,7 +264,7 @@ final class Parcs_HT_Backup_Import {
     private static function parse_csv($file, $wanted_year, $park) {
         $stream = fopen($file, 'rb');
         if (!$stream) self::fail('Impossible de lire le CSV.');
-        $head = fgetcsv($stream, 0, ';');
+        $head = fgetcsv($stream, 0, ';', '"', '');
         if (!is_array($head)) self::fail('En-tête CSV manquant.');
         $head[0] = preg_replace('/^\xEF\xBB\xBF/', '', $head[0]);
         if ($head !== self::CSV_COLUMNS) self::fail('En-tête CSV différent du format de sauvegarde de l’extension.');
