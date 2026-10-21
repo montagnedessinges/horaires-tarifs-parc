@@ -50,6 +50,8 @@ final class Parcs_HT_Admin_Schedule {
 
     private static function weekdays($base, $selected) {
         $selected = array_map('strval', is_array($selected) ? $selected : array());
+        // Anciens réglages vides : tous les jours par défaut, jamais « fermé ».
+        if (!$selected) $selected = array('1','2','3','4','5','6','7');
         $labels = array('1'=>'Lun','2'=>'Mar','3'=>'Mer','4'=>'Jeu','5'=>'Ven','6'=>'Sam','7'=>'Dim');
         echo '<fieldset class="htp-1173-weekdays"><legend>Jours concernés</legend>';
         foreach ($labels as $day => $label) echo '<label><input type="checkbox" name="' . esc_attr($base . '[weekdays][]') . '" value="' . esc_attr($day) . '" ' . checked(in_array($day, $selected, true), true, false) . '><span>' . esc_html($label) . '</span></label>';
@@ -59,9 +61,11 @@ final class Parcs_HT_Admin_Schedule {
     private static function period_row($index, $row) {
         $row = wp_parse_args(is_array($row) ? $row : array(), array(
             'enabled'=>'1','label'=>'','start'=>'','end'=>'','weekdays'=>array('1','2','3','4','5','6','7'),
-            'open'=>'','close'=>'','open2'=>'','close2'=>'','last_entry_minutes'=>'','color'=>'#9AAA8B',
+            'open'=>'','close'=>'','open2'=>'','close2'=>'','last_entry_minutes'=>'','last_entry_minutes_slot1'=>null,'last_entry_minutes_slot2'=>null,'color'=>'#9AAA8B',
         ));
         $base = 'regular_periods[' . $index . ']';
+        $slot1 = $row['last_entry_minutes_slot1'] === null ? (string)$row['last_entry_minutes'] : (string)$row['last_entry_minutes_slot1'];
+        $slot2 = $row['last_entry_minutes_slot2'] === null ? (string)$row['last_entry_minutes'] : (string)$row['last_entry_minutes_slot2'];
         ?>
         <article class="htp-1173-period" data-htp-period-row>
             <header>
@@ -81,9 +85,11 @@ final class Parcs_HT_Admin_Schedule {
                 <summary>Options avancées de cette période</summary>
                 <?php self::weekdays($base, $row['weekdays']); ?>
                 <div class="htp-1173-grid htp-1173-grid-2">
-                    <?php self::field($base . '[last_entry_minutes]', $row['last_entry_minutes'], 'Dernière entrée spécifique — minutes avant fermeture', 'number', array('min'=>'0','max'=>'1440')); ?>
+                    <?php self::field($base . '[last_entry_minutes_slot1]', $slot1, 'Créneau 1 — dernière entrée (minutes avant fermeture)', 'number', array('min'=>'0','max'=>'1440')); ?>
+                    <?php self::field($base . '[last_entry_minutes_slot2]', $slot2, 'Créneau 2 — dernière entrée (minutes avant fermeture)', 'number', array('min'=>'0','max'=>'1440')); ?>
                     <?php self::field($base . '[color]', $row['color'], 'Couleur de la période dans le calendrier', 'color'); ?>
                 </div>
+                <p class="description">Les deux délais sont indépendants. Laissez vide pour reprendre le délai général du parc. Aucun jour coché = tous les jours.</p>
                 <p class="description">La couleur de période reste locale au calendrier : elle n’est pas remplacée par l’apparence globale.</p>
             </details>
         </article>
@@ -216,6 +222,13 @@ final class Parcs_HT_Admin_Schedule {
         return $color !== null ? $color : $fallback;
     }
 
+    private static function clean_optional_minutes($value) {
+        $value = trim((string)$value);
+        if ($value === '') return '';
+        if (!preg_match('/^\d{1,4}$/', $value)) return '';
+        return (string)max(0, min(1440, (int)$value));
+    }
+
     private static function clean_periods($raw) {
         $out = array();
         foreach (is_array($raw) ? $raw : array() as $row) {
@@ -225,8 +238,12 @@ final class Parcs_HT_Admin_Schedule {
                 $day = (string)$day;
                 if (in_array($day, array('1','2','3','4','5','6','7'), true) && !in_array($day, $days, true)) $days[] = $day;
             }
-            $last = isset($row['last_entry_minutes']) ? trim((string)$row['last_entry_minutes']) : '';
-            if ($last !== '') $last = (string)max(0, min(1440, (int)$last));
+            if (!$days) $days = array('1','2','3','4','5','6','7');
+            // Anciennes périodes : conserver le délai unique tant que les champs indépendants n'existent pas.
+            $legacy = isset($row['last_entry_minutes']) ? trim((string)$row['last_entry_minutes']) : '';
+            $slot1 = self::clean_optional_minutes($row['last_entry_minutes_slot1'] ?? $legacy);
+            $slot2 = self::clean_optional_minutes($row['last_entry_minutes_slot2'] ?? $legacy);
+            $last = $slot2 !== '' ? $slot2 : ($slot1 !== '' ? $slot1 : $legacy);
             $out[] = array(
                 'enabled'=>(isset($row['enabled']) && (string)$row['enabled'] === '1') ? '1' : '0',
                 'label'=>sanitize_text_field((string)($row['label'] ?? '')),
@@ -238,6 +255,8 @@ final class Parcs_HT_Admin_Schedule {
                 'open2'=>self::clean_time($row['open2'] ?? ''),
                 'close2'=>self::clean_time($row['close2'] ?? ''),
                 'last_entry_minutes'=>$last,
+                'last_entry_minutes_slot1'=>$slot1,
+                'last_entry_minutes_slot2'=>$slot2,
                 'color'=>self::clean_color($row['color'] ?? '', '#9AAA8B'),
             );
         }

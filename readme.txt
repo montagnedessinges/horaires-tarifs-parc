@@ -2,11 +2,14 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.20.7
+Stable tag: 1.20.8
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes, FAQ et outils du parc.
 
 == Description ==
+
+Depuis la version 1.20.8, la vue d’ensemble contient une interface de sauvegarde/import/export : ZIP global de configuration (JSON réimportable + CSV d'audit par saison) et CSV saisonniers réimportables pour horaires, tarifs visiteurs et tarifs groupes. Une prévisualisation et une sauvegarde de sécurité précèdent chaque import. Le contenu personnalisé et les devis reçus ne sont pas inclus dans les fichiers d’export.
+
 
 Cette extension gère plusieurs saisons de parc, les horaires habituels et exceptionnels, le calendrier public, les périodes et événements, les tarifs individuels et groupes, les devis, les guides pédagogiques, la FAQ globale et le Calendrier de l’Avent.
 

@@ -229,6 +229,7 @@ final class Parcs_HT_Admin_Overview {
             <?php endif; ?>
 
             <?php self::update_panel(); ?>
+            <?php if (class_exists('Parcs_HT_Backup_Import')) Parcs_HT_Backup_Import::render_panel($year); ?>
 
             <?php if ($year !== '') : ?>
                 <section class="htp-overview-status">

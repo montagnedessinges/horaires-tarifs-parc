@@ -137,6 +137,8 @@ final class Parcs_HT_Schedule {
         foreach ((array)($season['regular_periods'] ?? array()) as $period) {
             if (!self::row_in_range($period, $date)) continue;
             $days = array_map('strval', is_array($period['weekdays'] ?? null) ? $period['weekdays'] : array());
+            // Compatibilité : une liste vide représente tous les jours, y compris sur les anciennes saisons.
+            if (!$days) $days = array('1','2','3','4','5','6','7');
             if (!in_array($weekday, $days, true)) continue;
             if (empty($period['open']) || empty($period['close'])) return $closed;
             $slots = array(array('open'=>(string)$period['open'], 'close'=>(string)$period['close']));

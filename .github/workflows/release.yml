@@ -64,6 +64,8 @@ jobs:
           php tests/group-tariff-display-settings-runtime.php
           php tests/schedule-engine.php
           php tests/schedule-csv-contract.php
+          php tests/backup-import-1208-contract.php
+          php tests/schedule-weekdays-slot-delays-1208.php
           php tests/popup-language-contract.php
           php tests/popup-1200-contract.php
           php tests/wordpress-events-runtime.php
@@ -121,6 +123,8 @@ jobs:
           PLUGIN_ROOT=/tmp/htp-production-test php tests/public-data-regressions.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/updater-metadata-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/schedule-csv-contract.php
+          PLUGIN_ROOT=/tmp/htp-production-test php tests/backup-import-1208-contract.php
+          PLUGIN_ROOT=/tmp/htp-production-test php tests/schedule-weekdays-slot-delays-1208.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/popup-1200-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/wordpress-events-runtime.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/tariff-identities-contract.php
@@ -167,6 +171,52 @@ jobs:
             accessibility
           ignore-warnings: true
           include-experimental: false
+  installer-preview:
+    if: github.event_name == 'pull_request'
+    needs: [quality, plugin-check]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout tested sources
+        uses: actions/checkout@v4
+      - name: Prepare WordPress plugin directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/horaires-tarifs-parc
+          cp horaires-tarifs-parc.php uninstall.php readme.txt build/horaires-tarifs-parc/
+          cp -R includes assets build/horaires-tarifs-parc/
+          php tools/prepare-production.php build/horaires-tarifs-parc
+          cd build
+          zip -qr ../horaires-tarifs-parc.zip horaires-tarifs-parc
+      - name: Validate installable ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          unzip -tq horaires-tarifs-parc.zip
+          test "$(zipinfo -1 horaires-tarifs-parc.zip | cut -d/ -f1 | sort -u)" = "horaires-tarifs-parc"
+          zipinfo -1 horaires-tarifs-parc.zip | grep -qx 'horaires-tarifs-parc/horaires-tarifs-parc.php'
+          zipinfo -1 horaires-tarifs-parc.zip | grep -qx 'horaires-tarifs-parc/readme.txt'
+          unzip -p horaires-tarifs-parc.zip horaires-tarifs-parc/horaires-tarifs-parc.php > /tmp/htp-install-header.php
+          grep -q 'Plugin Name: Gestion du parc' /tmp/htp-install-header.php
+          grep -qE 'Version: 1[.]20[.]8([[:space:]]|$)' /tmp/htp-install-header.php
+          grep -q "define('PARCS_HT_VERSION', '1.20.8')" /tmp/htp-install-header.php
+          if zipinfo -1 horaires-tarifs-parc.zip | grep -Ei '\.(md|map|ts|tsx|jsx|scss|sass|less)$|/(tests|tools|vendor|\.github|\.git)/|/(composer\.(json|lock)|phpcs\.xml\.dist|package(-lock)?\.json|yarn\.lock|pnpm-lock\.yaml)$'; then
+            echo 'Source de développement détectée dans le ZIP WordPress.' >&2
+            exit 1
+          fi
+          find build/horaires-tarifs-parc -name '*.php' -type f -print0 | xargs -0 -n1 php -l
+          find build/horaires-tarifs-parc/assets -name '*.js' -type f -print0 | xargs -0 -n1 node --check
+          sha256sum horaires-tarifs-parc.zip > horaires-tarifs-parc.zip.sha256
+          cat horaires-tarifs-parc.zip.sha256
+      - name: Provide installable ZIP for manual validation
+        uses: actions/upload-artifact@v4
+        with:
+          name: installation-wordpress-1.20.8
+          path: |
+            horaires-tarifs-parc.zip
+            horaires-tarifs-parc.zip.sha256
+          if-no-files-found: error
+          retention-days: 30
   release:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [quality, plugin-check]
@@ -204,7 +254,7 @@ jobs:
         run: |
           rm -rf build horaires-tarifs-parc.zip
           mkdir -p build/horaires-tarifs-parc
-          cp horaires-tarifs-parc.php uninstall.php build/horaires-tarifs-parc/
+          cp horaires-tarifs-parc.php uninstall.php readme.txt build/horaires-tarifs-parc/
           cp -R includes assets build/horaires-tarifs-parc/
       - name: Build production WordPress ZIP
         if: steps.existing.outputs.exists != 'true'

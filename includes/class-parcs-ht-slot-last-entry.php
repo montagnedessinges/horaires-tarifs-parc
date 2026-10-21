@@ -139,6 +139,11 @@ final class Parcs_HT_Slot_Last_Entry {
                     $slot1 = array_key_exists('last_entry_minutes_slot1', $old_row) ? (string) $old_row['last_entry_minutes_slot1'] : $legacy;
                     $slot2 = array_key_exists('last_entry_minutes_slot2', $old_row) ? (string) $old_row['last_entry_minutes_slot2'] : $legacy;
 
+                    // Les nouveaux formulaires horaires et l'import CSV apportent déjà les deux champs.
+                    // Ne jamais les écraser avec les anciens indices, même si les périodes ont été réordonnées.
+                    if (array_key_exists('last_entry_minutes_slot1', $row)) $slot1 = self::clean_optional_minutes($row['last_entry_minutes_slot1']);
+                    if (array_key_exists('last_entry_minutes_slot2', $row)) $slot2 = self::clean_optional_minutes($row['last_entry_minutes_slot2']);
+
                     if (isset($posted_rows[$index]) && is_array($posted_rows[$index])) {
                         if (array_key_exists('last_entry_minutes_slot1', $posted_rows[$index])) {
                             $slot1 = self::clean_optional_minutes($posted_rows[$index]['last_entry_minutes_slot1']);
