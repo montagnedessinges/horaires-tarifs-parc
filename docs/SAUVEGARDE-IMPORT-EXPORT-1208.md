@@ -31,7 +31,8 @@ Options WordPress couvertes (lorsqu’elles existent) :
 - parcs_ht_quote_gate ;
 - parcs_ht_ai_google ;
 - parcs_ht_group_quotes (correspondances des grilles et des formulaires, sans demandes reçues) ;
-- parcs_ht_group_quote_years_v2 (états annuels des devis).
+- parcs_ht_group_quote_years_v2 (états annuels des devis) ;
+- parcs_ht_tariff_id_registry (registre permanent des identifiants tarifaires).
 
 **Non inclus** : demandes de devis et contacts, données personnelles, fichiers médias, configuration du thème, formulaires CF7, base WordPress hors options ci-dessus, statistiques, connexions externes, jetons et journaux d’erreur. **Le ZIP n’est pas une sauvegarde complète du site WordPress.** Conservez une sauvegarde WordPress de la base et des fichiers avant une restauration majeure.
 
