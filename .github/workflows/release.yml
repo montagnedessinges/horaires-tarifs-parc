@@ -52,6 +52,7 @@ jobs:
           php tests/public-content-1170-contract.php
           php tests/admin-overview-1170-contract.php
           php tests/overview-check-updates-1209-contract.php
+          php tests/wp-native-updates-1209-runtime.php
           php tests/admin-schedule-1173-contract.php
           php tests/admin-periods-1174-contract.php
           php tests/admin-tariffs-1175-contract.php
@@ -116,6 +117,7 @@ jobs:
           PLUGIN_ROOT=/tmp/htp-production-test php tests/public-content-1170-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/admin-overview-1170-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/overview-check-updates-1209-contract.php
+          PLUGIN_ROOT=/tmp/htp-production-test php tests/wp-native-updates-1209-runtime.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/admin-schedule-1173-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/admin-periods-1174-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/admin-tariffs-1175-contract.php
