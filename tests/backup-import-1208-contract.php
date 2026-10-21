@@ -22,7 +22,8 @@ check_1208(strpos($src, "is_uploaded_file(\$tmp)") !== false, 'verified uploads'
 check_1208(strpos($src, "const MAX_UPLOAD_BYTES") !== false, 'file size cap');
 check_1208(strpos($src, "Le CSV provient d’un autre parc.") !== false, 'other park rejected');
 check_1208(strpos($src, "le CSV correspond à une autre année.") !== false || strpos($src,"Le CSV correspond à une autre année.")!==false, 'other year rejected');
-check_1208(strpos($src, "'parcs_ht_group_quotes'") === false, 'personal quotes excluded');
+check_1208(strpos($src, "'parcs_ht_group_quotes'") !== false, 'quote configuration exported');
+check_1208(strpos($src, "'parcs_ht_group_quote_submissions'") === false, 'personal quote submissions excluded');
 check_1208(strpos($src, "'parcs_ht_runtime_errors'") === false, 'runtime logs excluded');
 check_1208(strpos($src, "Parcs_HT_Backup_Import") !== false, 'class present');
 check_1208(strpos($src, "ZipArchive") !== false, 'ZIP global support');
