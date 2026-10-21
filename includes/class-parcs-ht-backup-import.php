@@ -83,6 +83,7 @@ final class Parcs_HT_Backup_Import {
     }
 
     private static function input($key) {
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Appels réservés aux actions require_admin() avec nonce validé.
         return isset($_POST[$key]) && is_scalar($_POST[$key]) ? sanitize_text_field(wp_unslash($_POST[$key])) : '';
     }
 
@@ -334,8 +335,10 @@ final class Parcs_HT_Backup_Import {
     }
 
     private static function read_candidate($year, $park) {
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Appelé uniquement après require_admin() dans preview().
         if (!isset($_FILES['backup_file']) || !is_array($_FILES['backup_file'])) self::fail('Fichier manquant.');
-        $file = $_FILES['backup_file']; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Upload contrôlé, nonce déjà validé.
+        $file = $_FILES['backup_file'];
         if ((int)($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) self::fail('Erreur de téléversement.');
         if ((int)($file['size'] ?? 0) < 1 || (int)$file['size'] > self::MAX_UPLOAD_BYTES) self::fail('Fichier vide ou trop volumineux.');
         $tmp = isset($file['tmp_name']) ? (string)$file['tmp_name'] : '';
@@ -492,7 +495,8 @@ final class Parcs_HT_Backup_Import {
         <section class="htp-overview-section" id="htp-backup-import" style="border:1px solid #dcdcde;border-radius:10px;padding:18px 20px;margin:18px 0;background:#fff">
             <h2>Import / export et sauvegarde</h2>
             <p>Exportez une archive complète de la configuration de ce site ou un CSV pour une rubrique de <?php echo esc_html($year); ?>. L'import n'agit qu'après un aperçu et une confirmation explicite.</p>
-            <?php if (isset($_GET['backup_imported'])) : ?><div class="notice notice-success inline"><p>Import terminé. Vérifiez maintenant le calendrier et les tarifs publics.</p></div><?php endif; ?>
+            <?php // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- indicateur de succès purement visuel.
+            if (isset($_GET['backup_imported'])) : ?><div class="notice notice-success inline"><p>Import terminé. Vérifiez maintenant le calendrier et les tarifs publics.</p></div><?php endif; ?>
             <div style="display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start">
                 <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="flex:1;min-width:275px">
                     <input type="hidden" name="action" value="parcs_ht_backup_export">
@@ -515,7 +519,8 @@ final class Parcs_HT_Backup_Import {
                     <button type="submit" class="button button-secondary">Analyser avant import</button>
                 </form>
             </div>
-            <?php if (isset($_GET['backup_preview']) && is_array($preview)) : ?>
+            <?php // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- affichage de l'aperçu stocké côté serveur uniquement.
+            if (isset($_GET['backup_preview']) && is_array($preview)) : ?>
                 <div style="border-top:1px solid #ddd;margin-top:20px;padding-top:16px">
                     <h3>Aperçu de l'import</h3>
                     <p><strong>Portée :</strong> <?php echo esc_html($preview['scope'] === 'global' ? 'Configuration globale de toutes les années' : self::sections()[$preview['scope']] . ' — ' . $preview['year']); ?></p>
