@@ -24,6 +24,8 @@ function add_filter($name,$callable,$priority=10,$args=1) {
 }
 function plugin_basename($path){return 'horaires-tarifs-parc/horaires-tarifs-parc.php';}
 function get_site_transient($key){return $key==='parcs_ht_github_latest_release' ? $GLOBALS['native_release_cache'] : false;}
+function get_option($key, $default=''){return $default;}
+function apply_filters($key, $value){return $value;}
 function is_wp_error($x){return false;}
 function esc_url_raw($url){return $url;}
 function fail_native($message){fwrite(STDERR,"[FAIL] ".$message.PHP_EOL);exit(1);}
