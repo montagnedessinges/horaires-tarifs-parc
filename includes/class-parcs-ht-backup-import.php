@@ -51,8 +51,16 @@ final class Parcs_HT_Backup_Import {
         check_admin_referer($nonce);
     }
 
+    /** Lecture fidèle : évite les filtres WordPress d'affichage des tarifs qui altèrent get_option(). */
+    private static function stored_option($name) {
+        global $wpdb;
+        if (!in_array($name, self::option_names(), true)) return null;
+        $value = $wpdb->get_var($wpdb->prepare("SELECT option_value FROM {$wpdb->options} WHERE option_name = %s LIMIT 1", $name));
+        return $value === null ? null : maybe_unserialize($value);
+    }
+
     private static function raw_settings() {
-        $all = get_option(Parcs_HT_Defaults::OPTION, array());
+        $all = self::stored_option(Parcs_HT_Defaults::OPTION);
         return is_array($all) ? $all : array();
     }
 
@@ -113,7 +121,7 @@ final class Parcs_HT_Backup_Import {
     }
 
     private static function display_store() {
-        $store = get_option('parcs_ht_group_tariff_settings', array());
+        $store = self::stored_option('parcs_ht_group_tariff_settings');
         return is_array($store) ? $store : array();
     }
 
@@ -185,7 +193,7 @@ final class Parcs_HT_Backup_Import {
     private static function archive($all) {
         $options = array();
         foreach (self::option_names() as $key) {
-            $value = get_option($key, null);
+            $value = self::stored_option($key);
             if ($value !== null && is_array($value)) $options[$key] = $value;
         }
         if (!isset($options[Parcs_HT_Defaults::OPTION])) self::fail('Configuration principale absente.');
@@ -372,7 +380,7 @@ final class Parcs_HT_Backup_Import {
         if ($candidate['scope'] === 'global') {
             $state = array();
             foreach (self::option_names() as $name) {
-                $value = get_option($name, null);
+                $value = self::stored_option($name);
                 if (isset($candidate['data'][$name])) $state[$name] = $value;
             }
             return $state;
@@ -382,6 +390,19 @@ final class Parcs_HT_Backup_Import {
 
     private static function state_hash($state) {
         return hash('sha256', self::json_string($state));
+    }
+
+    private static function diff_paths($before, $after) {
+        $one = array();
+        $two = array();
+        foreach (self::flatten($before) as $pair) $one[$pair[0]] = $pair[1];
+        foreach (self::flatten($after) as $pair) $two[$pair[0]] = $pair[1];
+        $all = array_unique(array_merge(array_keys($one), array_keys($two)));
+        $out = array();
+        foreach ($all as $path) {
+            if (!array_key_exists($path, $one) || !array_key_exists($path, $two) || $one[$path] !== $two[$path]) $out[] = $path;
+        }
+        return array('count'=>count($out), 'sample'=>array_slice($out, 0, 20));
     }
 
     public static function preview() {
@@ -406,6 +427,7 @@ final class Parcs_HT_Backup_Import {
         $candidate['after_hash'] = self::state_hash($after);
         $candidate['overview'] = $names;
         $candidate['changed'] = $candidate['before_hash'] !== $candidate['after_hash'];
+        $candidate['diff_paths'] = self::diff_paths($before, $after);
         $candidate['park'] = self::park($all);
         $candidate['host'] = self::host();
         $candidate['created'] = time();
@@ -444,7 +466,7 @@ final class Parcs_HT_Backup_Import {
         if ($candidate['scope'] === 'global') {
             foreach ($candidate['data'] as $key=>$value) {
                 update_option($key, $value, false);
-                if (get_option($key) != $value) self::fail('Échec d’écriture de ' . $key . ' (vérifiez la sauvegarde).');
+                if (self::stored_option($key) != $value) self::fail('Échec d’écriture de ' . $key . ' (vérifiez la sauvegarde).');
             }
         } else {
             $merged = self::merge_section($candidate, $all, $display);
@@ -498,6 +520,12 @@ final class Parcs_HT_Backup_Import {
                     <h3>Aperçu de l'import</h3>
                     <p><strong>Portée :</strong> <?php echo esc_html($preview['scope'] === 'global' ? 'Configuration globale de toutes les années' : self::sections()[$preview['scope']] . ' — ' . $preview['year']); ?></p>
                     <p><strong>Sections concernées :</strong> <?php echo esc_html(implode(', ', (array)$preview['overview'])); ?></p>
+                    <p><strong>Valeurs ajoutées, supprimées ou différentes :</strong> <?php echo esc_html((string)($preview['diff_paths']['count'] ?? 0)); ?></p>
+                    <?php if ($preview['scope'] !== 'global' && !empty($preview['diff_paths']['sample'])) : ?>
+                        <details><summary>Voir les chemins concernés (20 maximum)</summary><ul>
+                            <?php foreach ($preview['diff_paths']['sample'] as $path) : ?><li><code><?php echo esc_html($path); ?></code></li><?php endforeach; ?>
+                        </ul></details>
+                    <?php endif; ?>
                     <?php if (empty($preview['changed'])) : ?>
                         <p>Aucune modification détectée. Aucun import nécessaire.</p>
                     <?php else : ?>
