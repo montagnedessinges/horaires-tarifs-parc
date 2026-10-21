@@ -5,6 +5,11 @@ if (!defined('ABSPATH')) { exit; }
 /** Import/export CSV des données horaires et calendrier d'une saison. */
 final class Parcs_HT_Schedule_CSV {
     const MAX_BYTES = 2097152;
+    const PREVIEW_TTL = 900;
+
+    private static function preview_key() {
+        return 'parcs_ht_schedule_csv_preview_' . get_current_user_id();
+    }
 
     public static function init() {
         add_action('admin_post_parcs_ht_schedule_csv_template', array(__CLASS__, 'download_template'));
@@ -26,13 +31,42 @@ final class Parcs_HT_Schedule_CSV {
             'parcs_ht_schedule_csv_export_' . $year
         );
         $tool_url = add_query_arg(array('page'=>Parcs_HT_Admin::PAGE,'season'=>$year,'tab'=>'htp-regular'), admin_url('admin.php')) . '#htp-schedule-csv-controls';
+        $preview = get_transient(self::preview_key());
+        if (!is_array($preview) || ($preview['year'] ?? '') !== $year) $preview = null;
         ?>
-        <div class="htp-subsection htp-schedule-csv" data-htp-csv-tool>
+        <div class="htp-subsection htp-schedule-csv" id="htp-schedule-csv-controls" data-htp-csv-tool>
             <h3>CSV — horaires & calendrier</h3>
             <p class="description">Importez ou exportez les horaires, exceptions, jours fériés, périodes repères et règles d’accès temporairement limité de la saison <?php echo esc_html($year); ?>. L’import valide tout le fichier avant écriture et ne remplace que les catégories réellement présentes dans le CSV.</p>
             <p class="htp-csv-actions"><a class="button" href="<?php echo esc_url($template_url); ?>">Télécharger le modèle CSV</a> <a class="button" href="<?php echo esc_url($export_url); ?>">Exporter les données <?php echo esc_html($year); ?></a></p>
             <label class="htp-field"><span>Fichier CSV</span><input type="file" name="schedule_csv" accept=".csv,text/csv,text/plain" required form="htp-schedule-csv-form"></label>
-            <p><button class="button button-primary" type="submit" form="htp-schedule-csv-form">Importer dans <?php echo esc_html($year); ?></button></p>
+            <p><button class="button button-primary" type="submit" form="htp-schedule-csv-form">Analyser le CSV <?php echo esc_html($year); ?></button></p>
+            <p class="description">Le fichier est d’abord vérifié ; ses périodes et leurs jours sont affichés ci-dessous. L’import n’est effectué qu’après votre confirmation. Si la colonne <code>weekdays</code> est vide, les sept jours sont cochés automatiquement.</p>
+            <?php if (isset($_GET['csv_preview']) && $preview) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- indicateur de lecture seule, aperçu stocké côté serveur. ?>
+                <div class="notice notice-info inline" style="padding:12px;margin:14px 0">
+                    <h4>Aperçu avant import : <?php echo esc_html($year); ?></h4>
+                    <p>Rubriques modifiées : <?php echo esc_html(implode(', ', array_keys($preview['seen']))); ?>. Vérifiez les jours et les horaires avant de confirmer.</p>
+                    <?php if (!empty($preview['regular'])) : ?>
+                    <div style="overflow-x:auto"><table class="widefat striped"><thead><tr><th>Période</th><th>Dates</th><th>Jours cochés</th><th>Horaires</th><th>Dernière entrée, créneaux 1 / 2</th></tr></thead><tbody>
+                        <?php $day_names = array('1'=>'Lu','2'=>'Ma','3'=>'Me','4'=>'Je','5'=>'Ve','6'=>'Sa','7'=>'Di'); ?>
+                        <?php foreach ((array)$preview['regular'] as $p) : ?>
+                            <tr>
+                                <td><?php echo esc_html($p['label']); ?></td>
+                                <td><?php echo esc_html($p['start'] . ' → ' . $p['end']); ?></td>
+                                <td><?php
+                                    $marked = array();
+                                    foreach ($day_names as $num => $text) $marked[] = in_array((string)$num, (array)$p['weekdays'], true) ? '✓ ' . $text : '– ' . $text;
+                                    echo esc_html(implode(' · ', $marked));
+                                ?></td>
+                                <td><?php echo esc_html($p['open'] . '–' . $p['close'] . ($p['open2'] !== '' ? ' / ' . $p['open2'] . '–' . $p['close2'] : '')); ?></td>
+                                <td><?php echo esc_html(($p['last_entry_minutes_slot1'] === '' ? 'Général' : $p['last_entry_minutes_slot1'] . ' min') . ' / ' . ($p['last_entry_minutes_slot2'] === '' ? 'Général' : $p['last_entry_minutes_slot2'] . ' min')); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody></table></div>
+                    <?php endif; ?>
+                    <p><label><input type="checkbox" name="csv_confirm" value="1" required form="htp-schedule-csv-apply-form"> Je confirme le remplacement des rubriques indiquées pour <?php echo esc_html($year); ?>.</label></p>
+                    <button type="submit" class="button button-primary" form="htp-schedule-csv-apply-form">Confirmer l'import CSV</button>
+                </div>
+            <?php endif; ?>
             <p class="description">Types disponibles : <code>regular</code>, <code>exception_hours</code>, <code>exception_closed</code>, <code>holiday</code>, <code>period</code>, <code>school_holiday</code>, <code>limited_access</code>.</p>
         </div>
         <style>
@@ -134,6 +168,11 @@ final class Parcs_HT_Schedule_CSV {
             <input type="hidden" name="action" value="parcs_ht_schedule_csv_import">
             <input type="hidden" name="season_year" value="<?php echo esc_attr($year); ?>">
             <?php wp_nonce_field('parcs_ht_schedule_csv_import_' . $year); ?>
+        </form>
+        <form id="htp-schedule-csv-apply-form" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+            <input type="hidden" name="action" value="parcs_ht_schedule_csv_apply">
+            <input type="hidden" name="season_year" value="<?php echo esc_attr($year); ?>">
+            <?php wp_nonce_field('parcs_ht_schedule_csv_apply_' . $year); ?>
         </form>
         <?php
     }
@@ -390,9 +429,34 @@ final class Parcs_HT_Schedule_CSV {
         }
         fclose($handle);
         if ($errors) wp_die(esc_html(implode("\n", array_slice($errors,0,20))));
+        if (!$seen) wp_die('Aucune rubrique reconnue dans le CSV.');
 
         $all = Parcs_HT_Defaults::all_settings();
         if (!isset($all['seasons'][$year]) || !is_array($all['seasons'][$year])) wp_die('Saison introuvable.');
+        set_transient(self::preview_key(), array(
+            'year'=>$year,
+            'created'=>time(),
+            'before_hash'=>hash('sha256', wp_json_encode($all['seasons'][$year])),
+            'seen'=>$seen, 'regular'=>$regular, 'exceptions'=>$exceptions, 'holidays'=>$holidays, 'special'=>$special, 'domain'=>$domain
+        ), self::PREVIEW_TTL);
+        wp_safe_redirect(add_query_arg(array('page'=>Parcs_HT_Admin_Schedule::PAGE,'season'=>$year,'csv_preview'=>'1'), admin_url('admin.php')) . '#htp-schedule-csv-controls');
+        exit;
+    }
+
+    public static function apply_csv() {
+        if (!current_user_can('manage_options')) wp_die('Accès refusé.');
+        $year = isset($_POST['season_year']) ? sanitize_text_field(wp_unslash($_POST['season_year'])) : '';
+        if (!preg_match('/^20\d{2}$/', $year)) wp_die('Année invalide.');
+        check_admin_referer('parcs_ht_schedule_csv_apply_' . $year);
+        if (!isset($_POST['csv_confirm']) || (string)$_POST['csv_confirm'] !== '1') wp_die('Confirmation de l’import requise.');
+        $preview = get_transient(self::preview_key());
+        if (!is_array($preview) || ($preview['year'] ?? '') !== $year || time() - (int)($preview['created'] ?? 0) > self::PREVIEW_TTL) wp_die('Aperçu expiré, veuillez refaire l’analyse du CSV.');
+        $all = Parcs_HT_Defaults::all_settings();
+        if (!isset($all['seasons'][$year]) || !is_array($all['seasons'][$year])) wp_die('Saison introuvable.');
+        if (hash('sha256', wp_json_encode($all['seasons'][$year])) !== ($preview['before_hash'] ?? '')) wp_die('Les réglages ont changé depuis l’aperçu. Analysez de nouveau le CSV.');
+        $seen = $preview['seen'];
+        $regular = $preview['regular']; $exceptions = $preview['exceptions']; $holidays = $preview['holidays'];
+        $special = $preview['special']; $domain = $preview['domain'];
         if (class_exists('Parcs_HT_Health')) Parcs_HT_Health::store_revision($all, $year, 'Avant import CSV horaires/calendrier');
         $season =& $all['seasons'][$year];
         if (isset($seen['regular'])) $season['regular_periods'] = $regular;
@@ -406,7 +470,9 @@ final class Parcs_HT_Schedule_CSV {
         }
         if (isset($seen['limited_access'])) $season['domain_rules'] = $domain;
         update_option(Parcs_HT_Defaults::OPTION, $all, false);
-        wp_safe_redirect(add_query_arg(array('page'=>Parcs_HT_Admin::PAGE,'season'=>$year,'tab'=>'htp-regular','csv_imported'=>1), admin_url('admin.php')));
+        delete_transient(self::preview_key());
+        do_action('litespeed_purge_all');
+        wp_safe_redirect(add_query_arg(array('page'=>Parcs_HT_Admin_Schedule::PAGE,'season'=>$year,'csv_imported'=>1), admin_url('admin.php')) . '#htp-schedule-csv-controls');
         exit;
     }
 }
