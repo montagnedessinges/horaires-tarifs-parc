@@ -35,7 +35,8 @@ final class Parcs_HT_Backup_Import {
             'parcs_ht_quote_gate',
             'parcs_ht_ai_google',
             'parcs_ht_group_quotes',
-            'parcs_ht_group_quote_years_v2'
+            'parcs_ht_group_quote_years_v2',
+            'parcs_ht_tariff_id_registry'
         );
     }
 
