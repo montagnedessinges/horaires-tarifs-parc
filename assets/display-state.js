@@ -47,6 +47,21 @@
     else{closedState(out,date,lang,l);}
     if(p.type==='before'||p.type==='gap'){var upcomingEntry=lastEntry(status,p.index);out.lastEntryText=upcomingEntry?l.entry+timeLabel(upcomingEntry,lang):'';}
     if(p.type!=='after')out.exceptionText=exceptionText(status,lang);
+    // A closure is not an ordinary end-of-day state: keep its current-day status primary.
+    if(status.exceptional&&!status.open&&status.type==='closed'){
+      var next=nextOpening(date),opening=next?timeLabel(((next.status||{}).openTime)||((slots(next.status)[0]||{}).open),lang):'';
+      var tomorrow=next&&next.date===addDays(date,1);
+      var closureLabel=lang==='en'?'Exceptional closure':lang==='de'?'Außerordentliche Schließung':'Fermeture exceptionnelle';
+      var todayLabel=lang==='en'?'Park closed today':lang==='de'?'Park heute geschlossen':'Parc fermé aujourd’hui';
+      var nextLabel=lang==='en'?'Next scheduled opening':lang==='de'?'Nächste geplante Öffnung':'Prochaine ouverture prévue';
+      var when=next?(tomorrow?(lang==='en'?'tomorrow':lang==='de'?'morgen':'demain'):dateLabel(next.date,lang)):'';
+      out.isExceptionalClosure=true;
+      out.statusText=closureLabel;
+      out.hoursText=todayLabel;
+      out.nextOpeningText=next?nextLabel+' '+when+(opening?(lang==='en'?' at ':lang==='de'?' um ':' à ')+opening:''):'';
+      out.exceptionText=exceptionText(status,lang);
+      out.lastEntryText='';
+    }
     if(status.exceptional)out.ruleText=status.type==='closed'?'Fermeture exceptionnelle prioritaire':'Horaire exceptionnel prioritaire';else if(status.open)out.ruleText='Horaire classique';else out.ruleText='Aucun horaire applicable';
     return out;
   }

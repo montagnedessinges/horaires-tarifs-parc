@@ -57,9 +57,15 @@
         if(statusTarget){statusTarget.textContent=state.statusText;applyStateClasses(statusTarget,state);}
         if(detail){
           var parts=[];
-          if(state.hoursText)parts.push(state.hoursText);
-          if(state.lastEntryText)parts.push(state.lastEntryText);
-          if(state.exceptionText)parts.push(state.exceptionText);
+          if(state.isExceptionalClosure){
+            if(state.hoursText)parts.push(state.hoursText);
+            if(state.exceptionText){var context=state.exceptionText.split(' · ').slice(1).join(' · ');if(context)parts.push(context);}
+            if(state.nextOpeningText)parts.push(state.nextOpeningText);
+          }else{
+            if(state.hoursText)parts.push(state.hoursText);
+            if(state.lastEntryText)parts.push(state.lastEntryText);
+            if(state.exceptionText)parts.push(state.exceptionText);
+          }
           detail.textContent=parts.join(' · ');
         }
         applyStateClasses(root,state);

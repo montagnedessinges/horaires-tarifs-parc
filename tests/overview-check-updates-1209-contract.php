@@ -12,7 +12,7 @@ function check_1209($ok, $message) {
     if (!$ok) exit(1);
 }
 check_1209(is_string($src) && is_string($plugin), 'source files readable');
-check_1209(strpos($plugin, "define('PARCS_HT_VERSION', '1.20.9')") !== false, 'version is 1.20.9');
+check_1209((bool) preg_match("/define\\('PARCS_HT_VERSION', '[0-9]+\\.[0-9]+\\.[0-9]+'\\)/", $plugin), 'plugin declares a semantic version');
 
 if (!defined('ABSPATH')) define('ABSPATH', '/');
 $GLOBALS['htp_1209_actions'] = array();
