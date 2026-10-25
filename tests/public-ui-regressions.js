@@ -119,6 +119,8 @@ async function exceptionErased() {
   assert.ok(!w.document.querySelector('[data-htp-today-detail]').textContent.includes('Forte chaleur'));
   status.exception.show_public_marker = '1';
   status.open = false;
+  status.type = 'closed';
+  status.slots = [];
   w.ParcsHTPStatusSync.refresh();
   assert.equal(w.document.querySelector('[data-htp-today-status]').textContent, 'Fermeture exceptionnelle');
   assert.ok(w.document.querySelector('[data-htp-today-detail]').textContent.includes('Forte chaleur'));
