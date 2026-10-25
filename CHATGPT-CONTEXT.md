@@ -401,3 +401,11 @@ Voir `AUDIT-2026-10-12-THEME-EVENEMENTS.md` et `UPDATE-1.20.4.md`.
 - L'offre Bons découverte est réservée à la communication française. Aucune interface de traduction ni message public indiquant que d'autres langues ne sont pas disponibles.
 - Seul le jeu de champs éditoriaux FR est présenté à l'administrateur et lu au rendu. Les anciens réglages EN/DE ne sont pas supprimés de la base, pour compatibilité, mais ignorés par ce module.
 - Le shortcode à publier est `[parc_bon_decouverte]`. Les aliases existants FR/EN/DE restent enregistrés comme précaution technique mais rendent désormais tous le bloc français. Le registre n'annonce que le shortcode standard pour ce module.
+
+## Décision — Affichage des fermetures exceptionnelles (octobre 2026)
+
+- La fermeture exceptionnelle active doit être clairement signalée dans les textes du shortcode d'accueil `[parc_horaire_accueil]` et du bloc `Aujourd'hui` au-dessus du calendrier.
+- Ne pas modifier le calendrier, ses détails par jour, le HTML des shortcodes, les pictogrammes ou le thème.
+- Le shortcode d'accueil produit trois champs textuels ; l'horloge et l'encadré graphique ne figurent pas dans son HTML et leur origine exacte dans le thème n'est pas confirmée.
+- Les horaires exceptionnels ouverts sont affichés comme des horaires normaux ; seule la fermeture exceptionnelle déclenche le traitement particulier.
+- Préserver tous les autres cas, les deux parcs et FR/EN/DE. Tester sur mobile et vérifier le thème avant publication.
