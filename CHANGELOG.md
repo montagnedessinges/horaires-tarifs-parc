@@ -1,3 +1,10 @@
+## 1.20.10 — Fermetures exceptionnelles dans les statuts publics
+
+- Affiche clairement la fermeture exceptionnelle du jour sur l'accueil et au-dessus du calendrier, sans modifier les shortcodes HTML ni le calendrier lui-même.
+- Distingue la prochaine ouverture prévue du statut actuel ; le contexte public éventuel reste visible sur la page Horaires & Tarifs.
+- Les horaires exceptionnels ouverts sont présentés comme des horaires ordinaires dans le bloc Aujourd'hui ; aucun changement des calculs de planning, du thème ou des données WordPress.
+- Traductions FR/EN/DE.
+
 ## 1.20.9 — Correctif de vérification des mises à jour
 
 - Répare le bouton « Vérifier maintenant » de la Vue d’ensemble : l’action WordPress appelée par le lien est désormais enregistrée, avec vérification du nonce et des droits administrateur.
