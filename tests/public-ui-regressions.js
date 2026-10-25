@@ -120,7 +120,9 @@ async function exceptionErased() {
   status.exception.show_public_marker = '1';
   status.open = false;
   w.ParcsHTPStatusSync.refresh();
-  assert.match(w.document.querySelector('[data-htp-today-detail]').textContent, /Fermeture exceptionnelle.*Forte chaleur/);
+  assert.equal(w.document.querySelector('[data-htp-today-status]').textContent, 'Fermeture exceptionnelle');
+  assert.ok(w.document.querySelector('[data-htp-today-detail]').textContent.includes('Forte chaleur'));
+  assert.ok(!w.document.querySelector('[data-htp-today-detail]').textContent.includes('Horaires exceptionnels'));
   console.log(JSON.stringify({ test: 'exception-context-erased', detail, result: 'PASS' }));
   w.close();
 }
