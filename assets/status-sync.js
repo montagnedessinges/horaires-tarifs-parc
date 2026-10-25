@@ -64,12 +64,7 @@
           }else{
             if(state.hoursText)parts.push(state.hoursText);
             if(state.lastEntryText)parts.push(state.lastEntryText);
-            if(state.exceptionText){
-              if(state.status&&state.status.exceptional&&state.status.open){
-                var openingContext=state.exceptionText.split(' · ').slice(1).join(' · ');
-                if(openingContext)parts.push(openingContext);
-              }else parts.push(state.exceptionText);
-            }
+            if(state.exceptionText)parts.push(state.exceptionText);
           }
           detail.textContent=parts.join(' · ');
         }
