@@ -499,7 +499,7 @@ final class Parcs_HT_Admin {
             </div>
             <div class="htp-check-list">
                 <?php self::checkbox($base . '[apply_domain_rules]', $row['apply_domain_rules'], 'Prendre en compte « Accès temporairement limité »'); ?>
-                <?php self::checkbox($base . '[show_public_marker]', $row['show_public_marker'], 'Afficher le pictogramme / la mention « Horaire exceptionnel » au public'); ?>
+                <?php self::checkbox($base . '[show_public_marker]', $row['show_public_marker'], 'Afficher le repère sur le calendrier'); ?>
             </div>
             <div class="htp-grid htp-grid-2"><?php self::translated_input($base . '[context]', $row['context'], 'Contexte / motif facultatif'); self::translated_input($base . '[title]', $row['title'], 'Titre public facultatif'); self::translated_textarea($base . '[message]', $row['message'], 'Message public facultatif'); ?></div>
 
