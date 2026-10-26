@@ -1,3 +1,10 @@
+## Décision 26/10/2026 — deux formes de fermeture
+- Dans « Périodes → Exceptions », trois choix publics : Horaires exceptionnels, Fermeture exceptionnelle, Fermé. « Fermé » ferme réellement le jour, comme une fermeture exceptionnelle, conserve la croix, mais affiche simplement « Fermé » et non « Fermeture exceptionnelle ».
+- Le moteur métier reste `type=closed` pour les deux fermetures ; seul le champ d'affichage `closure_display=plain` les distingue. Anciennes exceptions sans ce champ = fermeture exceptionnelle. En administration, « Fermé » est une option de sélection alias `closed_plain`, transformée en `type=closed` + `closure_display=plain` à l'enregistrement. Ne jamais confondre l'alias UI et le type stocké.
+- Une date fermée sélectionnée dans le calendrier affiche la prochaine ouverture trouvée dans les saisons **publiées**, avec jour de semaine, date, année et heure. Si aucune prochaine ouverture n'est connue, ne pas en inventer. Le calcul intersaisons existant doit être réutilisé.
+- Enregistrer et présenter de la même manière sur les deux sites, sans remplacer ni effacer les anciennes exceptions, saisons, tarifs ou configurations.
+- Le chantier distinct des autorisations de devis groupes aux dates fermées est détaillé dans ROADMAP.md ; il n'est pas livré par 1.20.11.
+
 # Contexte ChatGPT — Horaires & Tarifs Parc
 
 Ce fichier sert de point d’entrée pour toute nouvelle conversation ChatGPT qui doit travailler sur cette extension WordPress.
