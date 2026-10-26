@@ -1016,7 +1016,7 @@ final class Parcs_HT_Defaults {
 
     private static function closure($label, $start, $end) {
         return array(
-            'enabled' => '1', 'type' => 'closed', 'label' => $label, 'start' => $start, 'end' => $end,
+            'enabled' => '1', 'type' => 'closed', 'closure_display' => 'exceptional', 'label' => $label, 'start' => $start, 'end' => $end,
             'open' => '', 'close' => '', 'last_entry_minutes' => '', 'priority' => '100',
             'title' => array('fr' => '', 'en' => '', 'de' => ''),
             'message' => array('fr' => '', 'en' => '', 'de' => ''),

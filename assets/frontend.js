@@ -217,7 +217,7 @@
     var alert=(settings.alerts||[]).find(function (row) { return enabled(row)&&row.start&&now>=row.start&&(!row.end||now<=row.end); });
     if(alert)return alert;
     var closure=(settings.exceptions||[]).filter(function(row){return enabled(row)&&row.type==='closed'&&inRange(current.date,row.start,row.end);}).sort(function(a,b){return Number(b.priority||0)-Number(a.priority||0);})[0];
-    return closure?{title:closure.title,message:closure.message,button_label:{fr:'',en:'',de:''},button_url:''}:null;
+    return closure?{title:closure.title,message:closure.message,closure_display:closure.closure_display,button_label:{fr:'',en:'',de:''},button_url:''}:null;
   }
   function monthKeys() {
     if(!activeSeasonYear)return [];
@@ -240,7 +240,7 @@
     root.querySelector('[data-htp-today-kicker]').textContent=d.today;
     var heading=root.querySelector('[data-htp-today-status]'),detail=root.querySelector('[data-htp-today-detail]');heading.classList.remove('is-open','is-closed');
     if(!activeSeasonYear){heading.textContent=d.notAvailable||'';detail.textContent='';return;}
-    if(!status.open){heading.classList.add('is-closed');heading.textContent=d.closedToday;var next=nextOpeningAcrossSeasons(now.date),closedBits=[];if(status.exceptional&&status.exception&&String(status.exception.show_public_marker)!=='0'){closedBits.push(d.exceptionalClosure);var closedContext=translated(status.exception.context,language);if(closedContext)closedBits.push(closedContext);}if(next)closedBits.push(text(d.nextOpening,{date:dateLabel(next.date,language,{weekday:'long',day:'numeric',month:'long',timeZone:siteTimezone}),time:timeLabel(next.status.openTime,language)}));detail.textContent=closedBits.join(' · ');return;}
+    if(!status.open){heading.classList.add('is-closed');heading.textContent=d.closedToday;var next=nextOpeningAcrossSeasons(now.date),closedBits=[];if(status.exceptional&&status.exception&&String(status.exception.show_public_marker)!=='0'){closedBits.push(closureLabel(status,d));var closedContext=translated(status.exception.context,language);if(closedContext)closedBits.push(closedContext);}if(next)closedBits.push(text(d.nextOpening,{date:dateLabel(next.date,language,{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:siteTimezone}),time:timeLabel(next.status.openTime,language)}));detail.textContent=closedBits.join(' · ');return;}
     var open=minutes(status.openTime),message,currentSlot=activeSlot(status,now.minutes),upcomingSlot=nextSlot(status,now.minutes);
     if(currentSlot){message=d.openNow;heading.classList.add('is-open');}
     else if(upcomingSlot){
@@ -262,10 +262,16 @@
     if(!seen.length)return dictionary(language).closed;
     return text(dictionary(language).monthHours,{hours:seen.join(' · ')});
   }
+  function plainClosure(status) {
+    return !!(status && status.type === 'closed' && status.exception && String(status.exception.closure_display || 'exceptional') === 'plain');
+  }
+  function closureLabel(status, dict) {
+    return plainClosure(status) ? dict.closed : dict.exceptionalClosure;
+  }
   function dayAria(date,status,language) {
     var d=dictionary(language),label=dateLabel(date,language);
     var events=specialPeriodRows(date).filter(function(row){return !row.source_post_id || translatedExact(row.title,language);}),suffix=(events.length?', '+(translated((settings.general||{}).event_legend_label,language)||d.event):'');
-    if(!status.open)return label+', '+(status.exceptional && (!status.exception || String(status.exception.show_public_marker)!=='0')?d.exceptionalClosure:d.closed)+suffix;
+    if(!status.open)return label+', '+(status.exceptional && (!status.exception || String(status.exception.show_public_marker)!=='0')?closureLabel(status,d):d.closed)+suffix;
     return label+', '+dayRanges(status,language)+(status.exceptional && (!status.exception || String(status.exception.show_public_marker)!=='0')?', '+d.exceptionalHours:'')+suffix;
   }
 
@@ -345,10 +351,22 @@
     box.innerHTML='';
     var heading=document.createElement('h3');heading.textContent=dateLabel(date,language);box.appendChild(heading);
     var hours=document.createElement('p');hours.className='parcs-ht-day-hours';
-    if(status.open)hours.textContent=dayRanges(status,language);else hours.textContent=(status.exceptional&&(!status.exception||String(status.exception.show_public_marker)!=='0'))?d.exceptionalClosure:d.closed;
+    if(status.open)hours.textContent=dayRanges(status,language);else hours.textContent=(status.exceptional&&(!status.exception||String(status.exception.show_public_marker)!=='0'))?closureLabel(status,d):d.closed;
     var parkHoursTitle=translated((settings.general||{}).calendar_hours_title,language)||(language==='en'?'Park opening hours':language==='de'?'Öffnungszeiten des Parks':'Horaires du parc');
     var parkTitle=document.createElement('p');parkTitle.className='parcs-ht-park-hours-title';parkTitle.textContent=parkHoursTitle;box.appendChild(parkTitle);
     box.appendChild(hours);
+    if(!status.open){
+      var nextDay = nextOpeningAcrossSeasons(date);
+      if(nextDay){
+        var nextLabel = document.createElement('p');
+        nextLabel.className = 'parcs-ht-next-opening';
+        nextLabel.textContent = text(d.nextOpening, {
+          date: dateLabel(nextDay.date, language, {weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:siteTimezone}),
+          time: timeLabel(nextDay.status.openTime, language)
+        });
+        box.appendChild(nextLabel);
+      }
+    }
     if(status.open){var last=document.createElement('p');last.className='parcs-ht-day-last';last.textContent=text(d.lastEntry,{time:timeLabel(lastEntryTime(status),language)});box.appendChild(last);}
     if(status.exceptional && (!status.exception || String(status.exception.show_public_marker)!=='0')){var context=translated(status.exception.context,language),title=translated(status.exception.title,language),message=translated(status.exception.message,language),note=document.createElement('div');note.className='parcs-ht-exception-note';var parts=[];if(context)parts.push(context);if(title)parts.push(title);if(message)parts.push(message);note.textContent=parts.join(' — ');if(note.textContent)box.appendChild(note);}
     var holiday=((settings.general||{}).show_public_holidays==='1')?publicHolidayRow(date):null;if(holiday){var holidayText=translated((settings.general||{}).holiday_message,language)||d.publicHoliday;var holidayNote=document.createElement('p');holidayNote.className='parcs-ht-holiday-note';holidayNote.textContent=holidayText;box.appendChild(holidayNote);}
@@ -460,7 +478,7 @@
       var keys=monthKeys(),current=initialMonth();
       root.querySelector('[data-htp-calendar-kicker]').textContent=d.calendar;
       root.querySelector('[data-htp-calendar-title]').textContent=activeSeasonYear||'';
-      root.querySelector('[data-htp-legend-hours]').textContent=d.exceptionalHours;root.querySelector('[data-htp-legend-closed]').textContent=d.exceptionalClosure;var eventLegend=root.querySelector('[data-htp-legend-event]');if(eventLegend)eventLegend.textContent=translated((settings.general||{}).event_legend_label,language)||d.event||'Événement';
+      root.querySelector('[data-htp-legend-hours]').textContent=d.exceptionalHours;root.querySelector('[data-htp-legend-closed]').textContent=d.closed;var eventLegend=root.querySelector('[data-htp-legend-event]');if(eventLegend)eventLegend.textContent=translated((settings.general||{}).event_legend_label,language)||d.event||'Événement';
       var list=root.querySelector('[data-htp-month-list]');list.innerHTML='';
       keys.forEach(function(key){var button=document.createElement('button');button.type='button';button.setAttribute('data-htp-month',key);button.setAttribute('role','tab');button.setAttribute('aria-selected',key===current?'true':'false');button.textContent=dateLabel(key+'-01',language,{month:'long',timeZone:siteTimezone});list.appendChild(button);});
       function selectMonth(key){
@@ -629,11 +647,11 @@
     var alert=activeAlert();if(!alert)return;
     var language=root.getAttribute('data-htp-lang')||'fr',d=dictionary(language),title=translated(alert.title,language),message=translated(alert.message,language),buttonLabel=translated(alert.button_label,language),buttonUrl=translatedExact(alert.button_url,language),display=root.getAttribute('data-htp-display');
     if(!title&&!message)return;
-    var content=document.createElement('section');content.className='parcs-ht-alert';var heading=document.createElement('h2');heading.textContent=title||d.exceptionalClosure;content.appendChild(heading);if(message){var paragraph=document.createElement('p');paragraph.textContent=message;content.appendChild(paragraph);}if(String(alert.show_button||'0')==='1'&&buttonLabel&&buttonUrl){var link=document.createElement('a');link.className='parcs-ht-button';link.href=buttonUrl;link.textContent=buttonLabel;content.appendChild(link);}
+    var content=document.createElement('section');content.className='parcs-ht-alert';var heading=document.createElement('h2');heading.textContent=title||(String(alert.closure_display)==='plain'?d.closed:d.exceptionalClosure);content.appendChild(heading);if(message){var paragraph=document.createElement('p');paragraph.textContent=message;content.appendChild(paragraph);}if(String(alert.show_button||'0')==='1'&&buttonLabel&&buttonUrl){var link=document.createElement('a');link.className='parcs-ht-button';link.href=buttonUrl;link.textContent=buttonLabel;content.appendChild(link);}
     root.hidden=false;
     if(display!=='popup'){root.appendChild(content);return;}
     var previousFocus=document.activeElement;
-    var modal=document.createElement('div');modal.className='parcs-ht-modal';modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');modal.setAttribute('aria-label',title||d.exceptionalClosure);
+    var modal=document.createElement('div');modal.className='parcs-ht-modal';modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');modal.setAttribute('aria-label',title||(String(alert.closure_display)==='plain'?d.closed:d.exceptionalClosure));
     var dialog=document.createElement('div');dialog.className='parcs-ht-modal-dialog';var close=document.createElement('button');close.type='button';close.className='parcs-ht-modal-close';close.setAttribute('aria-label',d.closePopup);close.textContent='×';dialog.appendChild(close);dialog.appendChild(content);modal.appendChild(dialog);root.appendChild(modal);document.body.classList.add('parcs-ht-modal-open');
     function onKeydown(event){
       if(event.key==='Escape'){dismiss();return;}

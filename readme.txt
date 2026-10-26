@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.20.10
+Stable tag: 1.20.11
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes, FAQ et outils du parc.
 
@@ -22,6 +22,12 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.20.11 =
+* Nouveau choix « Fermé » dans les exceptions, avec croix sur le calendrier mais sans mention de fermeture exceptionnelle.
+* Prochaine ouverture avec jour, date, année et heure dans le détail des journées fermées, y compris à la saison suivante.
+* Les anciennes fermetures exceptionnelles sont préservées.
+
 
 = 1.20.7 =
 * Simplifie les bons découverte : un seul jeu de textes en français, sans onglets de langues ni variantes affichées dans la liste des shortcodes.

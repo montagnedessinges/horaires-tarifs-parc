@@ -152,7 +152,7 @@ final class Parcs_HT_Admin_Periods {
 
     private static function exception_row($index, $row) {
         $row = wp_parse_args(is_array($row) ? $row : array(), array(
-            'enabled'=>'1','type'=>'hours','label'=>'','start'=>'','end'=>'','open'=>'','close'=>'','open2'=>'','close2'=>'','last_entry_minutes'=>'','priority'=>'100','apply_domain_rules'=>'1','show_public_marker'=>'1',
+            'enabled'=>'1','type'=>'hours','label'=>'','start'=>'','end'=>'','open'=>'','close'=>'','open2'=>'','close2'=>'','last_entry_minutes'=>'','priority'=>'100','apply_domain_rules'=>'1','show_public_marker'=>'1','closure_display'=>'exceptional',
             'context'=>array('fr'=>'','en'=>'','de'=>''),'title'=>array('fr'=>'','en'=>'','de'=>''),'message'=>array('fr'=>'','en'=>'','de'=>''),'show_popup'=>'0','popup_show_dates'=>'1','popup_show_hours'=>'1','popup_mode'=>'auto',
             'popup_title'=>array('fr'=>'','en'=>'','de'=>''),'popup_message'=>array('fr'=>'','en'=>'','de'=>''),'popup_button_label'=>array('fr'=>'','en'=>'','de'=>''),'popup_button_url'=>array('fr'=>'','en'=>'','de'=>''),'popup_show_button'=>'0',
             'popup_lead_mode'=>'days_before','popup_days_before'=>'1','popup_start'=>'','popup_end'=>''
@@ -162,7 +162,8 @@ final class Parcs_HT_Admin_Periods {
         <div class="htp-repeat-row htp-1174-row htp-1174-exception">
             <div class="htp-row-head"><strong>Exception</strong><?php self::enabled($base . '[enabled]', $row['enabled']); ?><button type="button" class="button-link-delete htp-remove-row">Supprimer</button></div>
             <div class="htp-grid htp-grid-4">
-                <?php self::select($base . '[type]', $row['type'], 'Type', array('hours'=>'Horaires exceptionnels','closed'=>'Fermeture exceptionnelle')); ?>
+                <?php $public_type = (string)$row['type'] === 'closed' && (string)($row['closure_display'] ?? 'exceptional') === 'plain' ? 'closed_plain' : $row['type']; ?>
+                <?php self::select($base . '[type]', $public_type, 'Type', array('hours'=>'Horaires exceptionnels','closed'=>'Fermeture exceptionnelle','closed_plain'=>'Fermé')); ?>
                 <?php self::input($base . '[label]', $row['label'], 'Nom interne'); ?>
                 <?php self::input($base . '[start]', $row['start'], 'Du', 'date'); ?>
                 <?php self::input($base . '[end]', $row['end'], 'Au', 'date'); ?>
@@ -179,7 +180,7 @@ final class Parcs_HT_Admin_Periods {
             <details class="htp-advanced"><summary>Options avancées de l’exception</summary><div class="htp-grid htp-grid-3 htp-details-content">
                 <?php self::input($base . '[last_entry_minutes]', $row['last_entry_minutes'], 'Dernière entrée spécifique (minutes)', 'number', 'min="0" max="1440"'); ?>
                 <?php self::input($base . '[priority]', $row['priority'], 'Priorité', 'number', 'min="0" max="9999"'); ?>
-                <div class="htp-check-list"><?php self::checkbox($base . '[apply_domain_rules]', $row['apply_domain_rules'], 'Appliquer les règles d’accès limité'); ?><?php self::checkbox($base . '[show_public_marker]', $row['show_public_marker'], 'Afficher la mention « Horaire exceptionnel »'); ?></div>
+                <div class="htp-check-list"><?php self::checkbox($base . '[apply_domain_rules]', $row['apply_domain_rules'], 'Appliquer les règles d’accès limité'); ?><?php self::checkbox($base . '[show_public_marker]', $row['show_public_marker'], 'Afficher le repère sur le calendrier'); ?></div>
             </div></details>
 
         </div>
