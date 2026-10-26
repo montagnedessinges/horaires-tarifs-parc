@@ -1,3 +1,13 @@
+## 1.20.11 — Fermeture ordinaire et prochaine ouverture dans le calendrier
+
+- Ajoute le troisième choix « Fermé » à l’administration des exceptions, à côté d’« Horaires exceptionnels » et « Fermeture exceptionnelle », sans introduire de nouveau type métier : les dates restent entièrement fermées et la croix du calendrier est conservée.
+- Enregistre le sous-type d’affichage `closure_display=plain` pour les nouvelles fermetures ordinaires ; les exceptions existantes restent des fermetures exceptionnelles et les données des deux parcs sont conservées.
+- Affiche « Fermé » dans le statut public, le détail du calendrier et les textes accessibles, sans utiliser le libellé « Fermeture exceptionnelle » pour ce nouveau choix. La légende des croix et la rubrique sémantique prennent un intitulé neutre.
+- Affiche la **prochaine ouverture effective**, avec jour de semaine, date, année et horaire, lorsqu’un visiteur sélectionne une journée fermée du calendrier, y compris quand elle appartient à l’année suivante (si la saison suivante est publiée).
+- Complète l’affichage du prochain jour d’ouverture avec l’année dans le moteur des statuts (FR/EN/DE) et préserve les anciennes fermetures.
+- Ajoute des tests de régression JS pour les deux types de fermeture, la croix, le calendrier et le passage de 2026 à 2027. Aucun tarif ni réglage spécifique aux parcs n’est modifié.
+- Ne traite **pas** le chantier distinct du contrôle des dates autorisées dans les devis groupes : il reste planifié.
+
 ## 1.20.10 — Fermetures exceptionnelles dans les statuts publics
 
 - Affiche clairement la fermeture exceptionnelle du jour sur l'accueil et au-dessus du calendrier, sans modifier les shortcodes HTML ni le calendrier lui-même.
