@@ -180,7 +180,7 @@ final class Parcs_HT_Admin_Periods {
             <details class="htp-advanced"><summary>Options avancées de l’exception</summary><div class="htp-grid htp-grid-3 htp-details-content">
                 <?php self::input($base . '[last_entry_minutes]', $row['last_entry_minutes'], 'Dernière entrée spécifique (minutes)', 'number', 'min="0" max="1440"'); ?>
                 <?php self::input($base . '[priority]', $row['priority'], 'Priorité', 'number', 'min="0" max="9999"'); ?>
-                <div class="htp-check-list"><?php self::checkbox($base . '[apply_domain_rules]', $row['apply_domain_rules'], 'Appliquer les règles d’accès limité'); ?><?php self::checkbox($base . '[show_public_marker]', $row['show_public_marker'], 'Afficher la mention « Horaire exceptionnel »'); ?></div>
+                <div class="htp-check-list"><?php self::checkbox($base . '[apply_domain_rules]', $row['apply_domain_rules'], 'Appliquer les règles d’accès limité'); ?><?php self::checkbox($base . '[show_public_marker]', $row['show_public_marker'], 'Afficher le repère sur le calendrier'); ?></div>
             </div></details>
 
         </div>
