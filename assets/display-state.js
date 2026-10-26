@@ -6,12 +6,12 @@
   function fromMins(v){v=Math.max(0,Number(v)||0);return pad(Math.floor(v/60))+':'+pad(v%60);}
   function slots(status){return status&&status.slots&&status.slots.length?status.slots:(status&&status.openTime&&status.closeTime?[{open:status.openTime,close:status.closeTime}]:[]);}
   function timeLabel(v,lang){if(!v)return'';var p=String(v).split(':').map(Number),h=p[0],m=p[1];if(lang==='fr')return h+'h'+(m?pad(m):'');if(lang==='de')return h+(m?':'+pad(m):'')+' Uhr';var s=h>=12?'PM':'AM';return(h%12||12)+(m?':'+pad(m):'')+' '+s;}
-  function dateLabel(v,lang){
+  function dateLabel(v,lang,withYear){
     if(!v)return'';
     var p=String(v).split('-').map(Number),d=new Date(Date.UTC(p[0],p[1]-1,p[2],12));
     if(Number.isNaN(d.getTime()))return String(v);
     var locale=lang==='de'?'de-DE':lang==='en'?'en-GB':'fr-FR';
-    return new Intl.DateTimeFormat(locale,{day:'numeric',month:'long',timeZone:'UTC'}).format(d);
+    return new Intl.DateTimeFormat(locale,{day:'numeric',month:'long',year:withYear?'numeric':undefined,timeZone:'UTC'}).format(d);
   }
   function phase(status,current){var list=slots(status),i;if(!status||!status.open||!list.length)return{type:'closed',index:-1};for(i=0;i<list.length;i++){if(current>=mins(list[i].open)&&current<mins(list[i].close))return{type:'open',index:i};if(current<mins(list[i].open))return{type:i===0?'before':'gap',index:i};}return{type:'after',index:-1};}
   function source(status){return status?(status.exception||status.period||status.source||{}):{};}
@@ -35,6 +35,7 @@
   function exceptionText(status,lang){
     var row=status.exception;if(!status.exceptional||!row||String(row.show_public_marker)==='0')return'';
     var dictionaries=payload.dictionary||{},d=dictionaries[lang]||{},closed=!status.open;
+    if(closed&&String(row.closure_display||'exceptional')==='plain')return '';
     var label=closed?(d.exceptionalClosure||(lang==='en'?'Exceptional closure':lang==='de'?'Außerordentliche Schließung':'Fermeture exceptionnelle')):(d.exceptionalHours||(lang==='en'?'Exceptional opening hours':lang==='de'?'Sonderöffnungszeiten':'Horaires exceptionnels'));
     var context=row.context||{},value=context[lang]||context.fr||'';
     return label+(value?' · '+value:'');
@@ -54,11 +55,12 @@
       var closureLabel=lang==='en'?'Exceptional closure':lang==='de'?'Außerordentliche Schließung':'Fermeture exceptionnelle';
       var todayLabel=lang==='en'?'Park closed today':lang==='de'?'Park heute geschlossen':'Parc fermé aujourd’hui';
       var nextLabel=lang==='en'?'Next scheduled opening':lang==='de'?'Nächste geplante Öffnung':'Prochaine ouverture prévue';
-      var when=next?(tomorrow?(lang==='en'?'tomorrow':lang==='de'?'morgen':'demain'):dateLabel(next.date,lang)):'';
+      var when=next?(tomorrow?(lang==='en'?'tomorrow':lang==='de'?'morgen':'demain'):dateLabel(next.date,lang,true)):'';
+      var plain=String((status.exception||{}).closure_display||'exceptional')==='plain';
       out.isExceptionalClosure=true;
-      out.statusText=closureLabel;
-      out.hoursText=todayLabel;
-      out.nextOpeningText=next?nextLabel+' '+when+(opening?(lang==='en'?' at ':lang==='de'?' um ':' à ')+opening:''):'';
+      out.statusText=plain?(lang==='en'?'Closed':lang==='de'?'Geschlossen':'Fermé'):closureLabel;
+      out.hoursText=plain?(next?nextLabel+' '+when+(opening?(lang==='en'?' at ':lang==='de'?' um ':' à ')+opening:''):''):todayLabel;
+      out.nextOpeningText=plain?'':(next?nextLabel+' '+when+(opening?(lang==='en'?' at ':lang==='de'?' um ':' à ')+opening:''):'');
       out.exceptionText=exceptionText(status,lang);
       out.lastEntryText='';
     }
