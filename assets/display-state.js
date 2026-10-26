@@ -11,7 +11,7 @@
     var p=String(v).split('-').map(Number),d=new Date(Date.UTC(p[0],p[1]-1,p[2],12));
     if(Number.isNaN(d.getTime()))return String(v);
     var locale=lang==='de'?'de-DE':lang==='en'?'en-GB':'fr-FR';
-    return new Intl.DateTimeFormat(locale,{day:'numeric',month:'long',year:withYear?'numeric':undefined,timeZone:'UTC'}).format(d);
+    return new Intl.DateTimeFormat(locale,{weekday:withYear?'long':undefined,day:'numeric',month:'long',year:withYear?'numeric':undefined,timeZone:'UTC'}).format(d);
   }
   function phase(status,current){var list=slots(status),i;if(!status||!status.open||!list.length)return{type:'closed',index:-1};for(i=0;i<list.length;i++){if(current>=mins(list[i].open)&&current<mins(list[i].close))return{type:'open',index:i};if(current<mins(list[i].open))return{type:i===0?'before':'gap',index:i};}return{type:'after',index:-1};}
   function source(status){return status?(status.exception||status.period||status.source||{}):{};}
@@ -31,7 +31,7 @@
   function labels(lang){return lang==='en'?{open:'OPEN',before:'Opens at ',gap:'Reopens at ',closed:'Closed for today',tomorrow:'See you tomorrow!',next:'Next opening',entry:'Last admission: '}:lang==='de'?{open:'GEÖFFNET',before:'Öffnung um ',gap:'Wieder geöffnet um ',closed:'Für heute geschlossen',tomorrow:'Bis morgen!',next:'Nächste Öffnung',entry:'Letzter Einlass: '}:{open:'OUVERT',before:'Ouverture à ',gap:'Réouverture à ',closed:'Fermé pour aujourd’hui',tomorrow:'À demain !',next:'Prochaine ouverture',entry:'Dernière entrée : '};}
   function addDays(date,n){var p=String(date).split('-').map(Number),d=new Date(Date.UTC(p[0],p[1]-1,p[2],12));d.setUTCDate(d.getUTCDate()+n);return d.getUTCFullYear()+'-'+pad(d.getUTCMonth()+1)+'-'+pad(d.getUTCDate());}
   function nextOpening(date){return typeof api.nextOpeningAcrossSeasons==='function'?api.nextOpeningAcrossSeasons(date):null;}
-  function closedState(out,date,lang,l){var next=nextOpening(date);if(next){var opening=timeLabel(((next.status||{}).openTime)||((slots(next.status)[0]||{}).open),lang),isTomorrow=next.date===addDays(date,1);out.statusText=isTomorrow?l.tomorrow:l.next;out.hoursText=isTomorrow?l.before+opening:dateLabel(next.date,lang)+(opening?' · '+opening:'');}else out.statusText=l.closed;}
+  function closedState(out,date,lang,l){var next=nextOpening(date);if(next){var opening=timeLabel(((next.status||{}).openTime)||((slots(next.status)[0]||{}).open),lang),isTomorrow=next.date===addDays(date,1);out.statusText=isTomorrow?l.tomorrow:l.next;out.hoursText=isTomorrow?l.before+opening:dateLabel(next.date,lang,true)+(opening?' · '+opening:'');}else out.statusText=l.closed;}
   function exceptionText(status,lang){
     var row=status.exception;if(!status.exceptional||!row||String(row.show_public_marker)==='0')return'';
     var dictionaries=payload.dictionary||{},d=dictionaries[lang]||{},closed=!status.open;
@@ -64,7 +64,7 @@
       out.exceptionText=exceptionText(status,lang);
       out.lastEntryText='';
     }
-    if(status.exceptional)out.ruleText=status.type==='closed'?'Fermeture exceptionnelle prioritaire':'Horaire exceptionnel prioritaire';else if(status.open)out.ruleText='Horaire classique';else out.ruleText='Aucun horaire applicable';
+    if(status.exceptional)out.ruleText=status.type==='closed'?(String((status.exception||{}).closure_display)==='plain'?'Fermeture prioritaire':'Fermeture exceptionnelle prioritaire'):'Horaire exceptionnel prioritaire';else if(status.open)out.ruleText='Horaire classique';else out.ruleText='Aucun horaire applicable';
     return out;
   }
   window.ParcsHTPDisplayState={mins:mins,slots:slots,phase:phase,lastEntry:lastEntry,slotOffset:slotOffset,timeLabel:timeLabel,dateLabel:dateLabel,ranges:ranges,state:state};
