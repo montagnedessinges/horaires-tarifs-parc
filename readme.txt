@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.20.12
+Stable tag: 1.20.13
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes, FAQ et outils du parc.
 
@@ -22,6 +22,12 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.20.13 =
+* Correctif d’urgence : restauration du code stable de la 1.20.11 après une erreur critique lors d’enregistrements signalée en production sur la 1.20.12.
+* Retire temporairement le nouveau contrôle Oui/Non des devis groupes et ses exceptions ; conserve la fermeture « Fermé », le calendrier et les prochaines ouvertures.
+* Conserve les données WordPress et ne supprime aucune option enregistrée ; seule la fonctionnalité de devis groupes introduite par 1.20.12 est suspendue.
+
 
 = 1.20.12 =
 * Devis groupes : bouton Oui/Non pour les journées entièrement fermées et dates ou périodes d’exception qui inversent la règle.

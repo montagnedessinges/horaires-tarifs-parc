@@ -1,3 +1,11 @@
+## 1.20.13 — Correctif urgent : rétablissement des enregistrements
+
+- À la suite d’un signalement d’erreur critique de WordPress lors des enregistrements en version 1.20.12, restaure exactement le code applicatif des composants devis groupes de **1.20.11** (administration PHP, formulaire, sélecteur public et styles).
+- Suspend l’option Oui/Non sur jours fermés, les exceptions de devis et leurs scripts tant que leur compatibilité avec l’enregistrement en production n’est pas vérifiée.
+- Conserve les fonctions « Fermé » et prochaine ouverture du calendrier introduites en 1.20.11.
+- Les réglages des parcs et les devis enregistrés restent en base ; aucune migration ni purge des données n’est effectuée.
+- Aucun diagnostic certain de la cause de l’erreur critique ne peut être posé sans journal d’erreur PHP/WordPress du site. Il faudra reproduire le scénario d’enregistrement en environnement WordPress avant de republier cette fonctionnalité.
+
 ## 1.20.12 — Devis groupes autorisés ou interdits pendant les jours fermés
 
 - Nouveau réglage **Gestion du parc → Devis groupes → Accès au devis** : « Autoriser la création de devis groupes pour les journées entièrement fermées au public ? » Oui/Non.
