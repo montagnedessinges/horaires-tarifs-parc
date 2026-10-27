@@ -185,7 +185,7 @@ final class Parcs_HT_Quote_Gate {
     }
 
     private static function valid_date($date) {
-        $date = trim((string)$date);
+        $date = is_scalar($date) ? trim((string)$date) : '';
         if (!preg_match('/^(20\d{2})-(\d{2})-(\d{2})$/', $date)) return false;
         $year = (int)substr($date, 0, 4);
         $month = (int)substr($date, 5, 2);
@@ -198,7 +198,7 @@ final class Parcs_HT_Quote_Gate {
      * Règle de sécurité : si aucune saison exploitable n'est trouvée, la date est fermée.
      */
     public static function status_for_date($date) {
-        $date = trim((string)$date);
+        $date = is_scalar($date) ? trim((string)$date) : '';
         if (!self::valid_date($date)) {
             return array('valid'=>false, 'tariffs'=>false, 'closed'=>true, 'year'=>'');
         }
