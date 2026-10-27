@@ -158,6 +158,7 @@ final class Parcs_HT_Quote_Gate {
             'enabled' => isset($_POST['enabled']) ? '1' : '0',
             'closed_enabled' => isset($_POST['closed_enabled']) ? '1' : '0',
             'allow_closed_group_quotes' => isset($_POST['allow_closed_group_quotes']) && sanitize_text_field(wp_unslash($_POST['allow_closed_group_quotes'])) === '0' ? '0' : '1',
+            // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Dates strictement contrôlées dans sanitize_closed_date_exceptions (format, checkdate et bornes).
             'closed_date_exceptions' => self::sanitize_closed_date_exceptions(isset($_POST['closed_date_exceptions']) ? wp_unslash($_POST['closed_date_exceptions']) : array()),
             'closed_contact' => isset($_POST['closed_contact']) ? sanitize_text_field(wp_unslash($_POST['closed_contact'])) : '',
             'unavailable_enabled' => isset($_POST['unavailable_enabled']) ? '1' : '0',
