@@ -1,3 +1,10 @@
+## Décision livrée en 1.20.12 — Devis groupes pendant les fermetures
+- Gestion du parc → Devis groupes → Accès au devis : règle globale par parc « Autoriser la création de devis groupes pour les journées entièrement fermées au public ? » Oui ou Non, avec une liste de journées/périodes inversant la règle par défaut sur **les seuls jours totalement fermés**.
+- Une journée partiellement ouverte (après-midi seulement) reste toujours autorisée, y compris si le groupe souhaite venir le matin. Les règles ne doivent pas être confondues avec les horaires d'ouverture au public ni avec la disponibilité des grilles tarifaires par année.
+- Le formulaire CF7 doit être masqué pour les dates interdites, avec message distinct FR/EN/DE. Le hook de validation `wpcf7_validate` interdit l'envoi même en cas de contournement JS. L'activation ou non du sélecteur de date ne doit pas désactiver la protection serveur.
+- Option `parcs_ht_quote_gate` : `allow_closed_group_quotes` (défaut 1 pour compatibilité), `closed_date_exceptions` (tableau de plages `start/end` inclusives), et messages `blocked_message_fr/en/de`. L'option est locale à chaque installation WordPress, indépendante de la saison affichée en administration.
+- Les sauvegardes restent scopées au module ; n'altèrent pas les tarifs, les saisons ou les paramètres de l'autre parc.
+
 ## Décision 26/10/2026 — deux formes de fermeture
 - Dans « Périodes → Exceptions », trois choix publics : Horaires exceptionnels, Fermeture exceptionnelle, Fermé. « Fermé » ferme réellement le jour, comme une fermeture exceptionnelle, conserve la croix, mais affiche simplement « Fermé » et non « Fermeture exceptionnelle ».
 - Le moteur métier reste `type=closed` pour les deux fermetures ; seul le champ d'affichage `closure_display=plain` les distingue. Anciennes exceptions sans ce champ = fermeture exceptionnelle. En administration, « Fermé » est une option de sélection alias `closed_plain`, transformée en `type=closed` + `closure_display=plain` à l'enregistrement. Ne jamais confondre l'alias UI et le type stocké.

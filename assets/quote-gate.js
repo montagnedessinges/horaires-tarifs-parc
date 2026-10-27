@@ -64,6 +64,11 @@
                 .done(function (response) {
                     if (currentRequest !== requestId) return;
                     var data = response && response.success ? response.data : null;
+                    if (data && data.allowed === false) {
+                        closeForm();
+                        message(config.blockedMessage || 'Le parc est fermé et nous n’accueillons pas de groupes à cette date. Merci de choisir une autre date.', '', 'blocked');
+                        return;
+                    }
                     if (!data || !data.tariffs) {
                         closeForm();
                         message(config.unavailableEnabled ? config.unavailableMessage : '', config.unavailableContact, 'unavailable');

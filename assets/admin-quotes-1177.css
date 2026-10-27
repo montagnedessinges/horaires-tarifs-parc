@@ -20,3 +20,13 @@
 .htp-1177-details>p{margin:0}
 @media(max-width:900px){.htp-1177-status-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){.htp-1177-card{padding:15px}.htp-1177-card-head{display:block}.htp-1177-card-head .button{margin-top:10px}.htp-1177-status-grid,.htp-1177-grid{grid-template-columns:1fr}}
+
+.htp-1177-closed-policy{border:1px solid #dcdcde;border-radius:8px;padding:14px;margin:14px 0}
+.htp-1177-closed-policy h3{margin:0 0 8px}
+.htp-1177-closed-policy h4{margin:18px 0 6px}
+.htp-1177-policy-radio{display:flex;gap:20px;align-items:center;margin:10px 0}
+.htp-1177-policy-radio label{display:inline-flex;align-items:center;gap:6px}
+.htp-1177-closed-range{display:grid;grid-template-columns:1fr 1fr auto;align-items:end;gap:12px;margin:12px 0}
+.htp-1177-closed-range label{display:flex;flex-direction:column;gap:5px;font-weight:600}
+.htp-1177-closed-range input[type=date]{width:100%}
+@media(max-width:620px){.htp-1177-closed-range{grid-template-columns:1fr}}
