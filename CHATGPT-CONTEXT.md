@@ -1,3 +1,8 @@
+## Incident de production 27/10/2026 — priorité aux enregistrements
+- Suite à installation de la version 1.20.12, l’utilisateur a signalé une erreur critique WordPress lors d’un clic sur « Enregistrer » ; origine exacte non établie faute de journal PHP.
+- La version **1.20.13 est un retour conservateur à la logique 1.20.11**, en conservant les nouveautés du calendrier, mais en retirant le nouveau code d’autorisation des devis groupes livré en 1.20.12. Ne pas affirmer que cette fonctionnalité est disponible en 1.20.13.
+- Avant de réintroduire les règles d’accueil de groupes sur jours fermés : tests d’enregistrement WordPress réel, sauvegardes et rollback testé. Ne jamais toucher aux données des saisons, devis ou tarifs.
+
 ## Décision livrée en 1.20.12 — Devis groupes pendant les fermetures
 - Gestion du parc → Devis groupes → Accès au devis : règle globale par parc « Autoriser la création de devis groupes pour les journées entièrement fermées au public ? » Oui ou Non, avec une liste de journées/périodes inversant la règle par défaut sur **les seuls jours totalement fermés**.
 - Une journée partiellement ouverte (après-midi seulement) reste toujours autorisée, y compris si le groupe souhaite venir le matin. Les règles ne doivent pas être confondues avec les horaires d'ouverture au public ni avec la disponibilité des grilles tarifaires par année.

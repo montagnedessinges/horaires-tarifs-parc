@@ -82,7 +82,6 @@ jobs:
           php tests/admin-shortcode-preview-script-regression.php
           php tests/admin-season-status-contract.php
           php tests/quote-gate-language-contract.php
-          php tests/quote-closed-dates-runtime.php
           php tests/quote-language-save-contract.php
           php tests/groups-no-embedded-guide-previews.php
           php tests/public-data-regressions.php
@@ -126,7 +125,6 @@ jobs:
           PLUGIN_ROOT=/tmp/htp-production-test php tests/tariff-info-callouts-1196-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/admin-quotes-1177-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/public-data-regressions.php
-          PLUGIN_ROOT=/tmp/htp-production-test php tests/quote-closed-dates-runtime.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/updater-metadata-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/schedule-csv-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/backup-import-1208-contract.php

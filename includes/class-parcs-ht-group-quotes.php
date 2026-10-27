@@ -402,21 +402,6 @@ final class Parcs_HT_Group_Quotes {
         $visit_field = (string)$settings['visit_field'];
         $group_field = (string)$settings['group_field'];
         if (!array_key_exists($visit_field, $data) || !array_key_exists($group_field, $data)) return $result;
-        // CF7 must enforce the same closure policy as the date selector (including direct POST).
-        // Validate only this quote form, identified by its configured visit and group fields.
-        if (class_exists('Parcs_HT_Quote_Gate')) {
-            $visit_date = is_scalar($data[$visit_field]) ? (string)$data[$visit_field] : '';
-            $date_status = Parcs_HT_Quote_Gate::status_for_date($visit_date);
-            if (!empty($date_status['valid']) && array_key_exists('allowed', $date_status) && !$date_status['allowed']) {
-                foreach ((array)$tags as $tag) {
-                    if (is_object($tag) && isset($tag->name) && (string)$tag->name === $visit_field) {
-                        $result->invalidate($tag, Parcs_HT_Quote_Gate::blocked_message_for_request());
-                        break;
-                    }
-                }
-                return $result;
-            }
-        }
         $year = self::year_from_date($data[$visit_field]);
         if ($year !== '' && self::resolved_season($year, $settings)) return $result;
         foreach ((array)$tags as $tag) {

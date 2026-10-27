@@ -72,7 +72,6 @@ final class Parcs_HT_Admin_Group_Quotes_1177 {
     public static function assets($hook) {
         if ($hook !== 'admin_page_' . self::PAGE) return;
         wp_enqueue_style('parcs-ht-admin-quotes-1177', PARCS_HT_URL . 'assets/admin-quotes-1177.css', array(), PARCS_HT_VERSION);
-        wp_enqueue_script('parcs-ht-admin-quote-closures', PARCS_HT_URL . 'assets/admin-quote-closures.js', array(), PARCS_HT_VERSION, true);
     }
 
     private static function canonical_tariffs($year) {
@@ -251,46 +250,12 @@ final class Parcs_HT_Admin_Group_Quotes_1177 {
         ?>
         <section class="htp-1177-card">
             <h2>Accès au devis</h2>
-            <p class="description">La date de visite détermine l’accès au formulaire. Les règles d’accueil des groupes sont globales à ce parc, indépendamment de l’année sélectionnée pour les tarifs.</p>
+            <p class="description">Le message d’indisponibilité concerne le devis automatique. Il ne doit jamais déclarer que les tarifs groupes sont absents si la grille de l’année est publiée.</p>
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                 <input type="hidden" name="action" value="parcs_ht_save_quote_gate_1177"><input type="hidden" name="year" value="<?php echo esc_attr($year); ?>">
                 <?php wp_nonce_field('parcs_ht_save_quote_gate_1177'); ?>
                 <p><label><input type="checkbox" name="enabled" value="1" <?php checked((string)($gate['enabled'] ?? '1'), '1'); ?>> Choisir la date avant d’afficher le formulaire complet</label></p>
-                <div class="htp-1177-closed-policy" data-htp-closed-quote-policy>
-                    <h3>Accueil des groupes lorsque le parc est fermé</h3>
-                    <p><strong>Autoriser la création de devis groupes pour les journées entièrement fermées au public ?</strong></p>
-                    <fieldset class="htp-1177-policy-radio">
-                        <legend class="screen-reader-text">Autoriser les devis groupes quand le parc est fermé</legend>
-                        <label><input type="radio" name="allow_closed_group_quotes" value="1" <?php checked((string)($gate['allow_closed_group_quotes'] ?? '1'), '1'); ?>> Oui</label>
-                        <label><input type="radio" name="allow_closed_group_quotes" value="0" <?php checked((string)($gate['allow_closed_group_quotes'] ?? '1'), '0'); ?>> Non</label>
-                    </fieldset>
-                    <p class="description">Une journée ouverte, même uniquement l’après-midi, reste toujours autorisée pour les devis groupes. Seules les journées complètement fermées sont concernées.</p>
-                    <h4 data-htp-closed-exception-title>Exceptions : périodes sans devis</h4>
-                    <p class="description" data-htp-closed-exception-info>Les dates ajoutées inversent la règle ci-dessus. Une date unique est possible en laissant « Au » vide.</p>
-                    <div data-htp-closed-quote-rows>
-                        <?php foreach ((array)($gate['closed_date_exceptions'] ?? array()) as $index=>$range) : ?>
-                            <div class="htp-1177-closed-range" data-htp-closed-range-row>
-                                <label>Du <input type="date" name="closed_date_exceptions[<?php echo esc_attr($index); ?>][start]" value="<?php echo esc_attr((string)$range['start']); ?>" required></label>
-                                <label>Au (facultatif) <input type="date" name="closed_date_exceptions[<?php echo esc_attr($index); ?>][end]" value="<?php echo esc_attr((string)$range['end']); ?>"></label>
-                                <button type="button" class="button" data-htp-remove-closed-range>Supprimer</button>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                    <button type="button" class="button" data-htp-add-closed-range>+ Ajouter une date ou une période</button>
-                    <template data-htp-closed-quote-template>
-                        <div class="htp-1177-closed-range" data-htp-closed-range-row>
-                            <label>Du <input type="date" name="closed_date_exceptions[__INDEX__][start]" required></label>
-                            <label>Au (facultatif) <input type="date" name="closed_date_exceptions[__INDEX__][end]"></label>
-                            <button type="button" class="button" data-htp-remove-closed-range>Supprimer</button>
-                        </div>
-                    </template>
-                </div>
-                <details><summary>Message affiché lorsqu’un devis est interdit</summary><div class="htp-1177-details">
-                    <?php foreach (array('fr'=>'FR','en'=>'EN','de'=>'DE') as $lang) : ?>
-                        <label><span><?php echo esc_html($lang); ?></span><textarea rows="3" name="blocked_message_<?php echo esc_attr($lang); ?>"><?php echo esc_textarea((string)($gate['blocked_message_' . $lang] ?? '')); ?></textarea></label>
-                    <?php endforeach; ?>
-                </div></details>
-                <details><summary>Avertissement si le devis reste autorisé malgré la fermeture</summary><div class="htp-1177-details"><p><label><input type="checkbox" name="closed_enabled" value="1" <?php checked((string)($gate['closed_enabled'] ?? '1'), '1'); ?>> Afficher un avertissement informatif pour les jours fermés autorisés</label></p><?php foreach (array('fr','en','de') as $lang) : ?><label><span><?php echo esc_html(strtoupper($lang)); ?></span><textarea rows="3" name="closed_message_<?php echo esc_attr($lang); ?>"><?php echo esc_textarea((string)($gate['closed_message_' . $lang] ?? '')); ?></textarea></label><?php endforeach; ?><label><span>Contact</span><input type="text" name="closed_contact" value="<?php echo esc_attr((string)($gate['closed_contact'] ?? '')); ?>"></label></div></details>
+                <details><summary>Date où le parc est fermé</summary><div class="htp-1177-details"><p><label><input type="checkbox" name="closed_enabled" value="1" <?php checked((string)($gate['closed_enabled'] ?? '1'), '1'); ?>> Afficher un avertissement sans bloquer le devis</label></p><?php foreach (array('fr','en','de') as $lang) : ?><label><span><?php echo esc_html(strtoupper($lang)); ?></span><textarea rows="3" name="closed_message_<?php echo esc_attr($lang); ?>"><?php echo esc_textarea((string)($gate['closed_message_' . $lang] ?? '')); ?></textarea></label><?php endforeach; ?><label><span>Contact</span><input type="text" name="closed_contact" value="<?php echo esc_attr((string)($gate['closed_contact'] ?? '')); ?>"></label></div></details>
                 <details><summary>Devis automatique indisponible</summary><div class="htp-1177-details"><p><label><input type="checkbox" name="unavailable_enabled" value="1" <?php checked((string)($gate['unavailable_enabled'] ?? '1'), '1'); ?>> Afficher un message lorsque le devis ne peut réellement pas être calculé</label></p><?php foreach (array('fr','en','de') as $lang) : ?><label><span><?php echo esc_html(strtoupper($lang)); ?></span><textarea rows="3" name="unavailable_message_<?php echo esc_attr($lang); ?>"><?php echo esc_textarea((string)($gate['unavailable_message_' . $lang] ?? '')); ?></textarea></label><?php endforeach; ?><label><span>Contact</span><input type="text" name="unavailable_contact" value="<?php echo esc_attr((string)($gate['unavailable_contact'] ?? '')); ?>"></label></div></details>
                 <?php submit_button('Enregistrer l’accès au devis', 'secondary', 'submit', false); ?>
             </form>
@@ -385,16 +350,11 @@ final class Parcs_HT_Admin_Group_Quotes_1177 {
         $out = array(
             'enabled'=>isset($_POST['enabled']) ? '1' : '0',
             'closed_enabled'=>isset($_POST['closed_enabled']) ? '1' : '0',
-            'allow_closed_group_quotes'=>isset($_POST['allow_closed_group_quotes']) && sanitize_text_field(wp_unslash($_POST['allow_closed_group_quotes'])) === '0' ? '0' : '1',
-            // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Dates strictement contrôlées dans sanitize_closed_date_exceptions (format, checkdate et bornes).
-            'closed_date_exceptions'=>Parcs_HT_Quote_Gate::sanitize_closed_date_exceptions(isset($_POST['closed_date_exceptions']) ? wp_unslash($_POST['closed_date_exceptions']) : array()),
             'closed_contact'=>isset($_POST['closed_contact']) ? sanitize_text_field(wp_unslash($_POST['closed_contact'])) : '',
             'unavailable_enabled'=>isset($_POST['unavailable_enabled']) ? '1' : '0',
             'unavailable_contact'=>isset($_POST['unavailable_contact']) ? sanitize_text_field(wp_unslash($_POST['unavailable_contact'])) : '',
         );
         foreach (array('fr','en','de') as $lang) {
-            $blocked = 'blocked_message_' . $lang;
-            $out[$blocked] = isset($_POST[$blocked]) ? sanitize_textarea_field(wp_unslash($_POST[$blocked])) : '';
             $closed = 'closed_message_' . $lang;
             $unavailable = 'unavailable_message_' . $lang;
             $out[$closed] = isset($_POST[$closed]) ? sanitize_textarea_field(wp_unslash($_POST[$closed])) : '';
