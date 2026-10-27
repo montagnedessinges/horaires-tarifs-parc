@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.20.11
+Stable tag: 1.20.12
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes, FAQ et outils du parc.
 
@@ -22,6 +22,12 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.20.12 =
+* Devis groupes : bouton Oui/Non pour les journées entièrement fermées et dates ou périodes d’exception qui inversent la règle.
+* Date interdite : devis masqué, message personnalisable et validation de sécurité côté serveur.
+* Une journée ouverte seulement l’après-midi reste autorisée ; réglages indépendants sur les deux parcs.
+
 
 = 1.20.11 =
 * Nouveau choix « Fermé » dans les exceptions, avec croix sur le calendrier mais sans mention de fermeture exceptionnelle.
