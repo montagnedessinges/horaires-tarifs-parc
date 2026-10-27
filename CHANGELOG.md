@@ -1,3 +1,14 @@
+## 1.20.12 — Devis groupes autorisés ou interdits pendant les jours fermés
+
+- Nouveau réglage **Gestion du parc → Devis groupes → Accès au devis** : « Autoriser la création de devis groupes pour les journées entièrement fermées au public ? » Oui/Non.
+- Les **exceptions** (journée ou plage inclusive) inversent uniquement cette règle sur les journées complètement fermées : Oui → refus sur l’exception ; Non → autorisation sur l’exception.
+- Les journées ouvertes au public, y compris seulement l’après-midi, permettent toujours la préparation d’un devis groupe pour un éventuel accueil le matin.
+- Le visiteur choisit sa date ; une date non autorisée masque intégralement le formulaire et affiche un message modifiable en FR/EN/DE. Aucun PDF/devis ne peut être généré : vérification redondante dans Contact Form 7 côté serveur.
+- Conservation de l’activation annuelle des devis et du contrôle des grilles tarifaires par année : une exception n’autorise jamais un devis si les tarifs de l’année ne sont pas disponibles.
+- Les réglages sont **globaux par installation WordPress** mais indépendants entre La Montagne des Singes et La Forêt des Singes. Ils n’introduisent aucun calendrier parallèle et ne modifient pas les fermetures ou les tarifs existants.
+- Compatibilité : la règle par défaut est « Oui » pour conserver le comportement des sites déjà installés. Les exceptions existantes, historiques de devis et autres saisons ne sont pas modifiés.
+- Tests automatisés PHP et JavaScript pour les modes Oui et Non, les extrémités de période, les dates invalides, une ouverture l’après-midi, la suppression des exceptions et le blocage serveur.
+
 ## 1.20.11 — Fermeture ordinaire et prochaine ouverture dans le calendrier
 
 - Ajoute le troisième choix « Fermé » à l’administration des exceptions, à côté d’« Horaires exceptionnels » et « Fermeture exceptionnelle », sans introduire de nouveau type métier : les dates restent entièrement fermées et la croix du calendrier est conservée.
