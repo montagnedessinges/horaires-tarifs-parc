@@ -9,6 +9,7 @@ define('PARCS_HT_VERSION', 'test');
 $GLOBALS['cse_test_options'] = array();
 $GLOBALS['cse_shortcodes'] = array();
 $GLOBALS['cse_public_years'] = array('2026');
+$GLOBALS['cse_public_window'] = true;
 $GLOBALS['cse_test_language'] = 'fr';
 
 function add_shortcode($tag, $callback) { $GLOBALS['cse_shortcodes'][$tag] = $callback; }
@@ -34,7 +35,7 @@ final class Parcs_HT_Defaults {
 }
 final class Parcs_HT_Public_Visibility {
     public static function retail_years() { return $GLOBALS['cse_public_years']; }
-    public static function in_window($year) { return true; }
+    public static function in_window($year) { return $GLOBALS['cse_public_window']; }
 }
 
 function check_cse($pass, $message) {
@@ -115,6 +116,9 @@ check_cse($GLOBALS['cse_shortcodes']['parc_tarifs_cse_de']() === '', 'alias CSE 
 check_cse($GLOBALS['cse_shortcodes']['parc_lien_cse_de']() === '', 'renvoi CSE masqué sur une page allemande');
 $GLOBALS['cse_test_language'] = 'fr';
 check_cse(strpos($GLOBALS['cse_shortcodes']['parc_tarifs_cse_de'](), 'Adulte') !== false, 'alias historique _de affiche le français sur une page française');
+$GLOBALS['cse_public_window'] = false;
+check_cse(strpos(Parcs_HT_CSE::shortcode(), 'Adulte') !== false, 'publication CSE indépendante de la fenêtre annuelle générale');
+$GLOBALS['cse_public_window'] = true;
 $GLOBALS['cse_public_years'] = array();
 $hidden_public = Parcs_HT_CSE::render('fr');
 check_cse(strpos($hidden_public, '<del>12 €</del>') === false, 'tarifs publics non publiés jamais exposés');
