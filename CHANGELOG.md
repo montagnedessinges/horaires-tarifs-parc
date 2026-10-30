@@ -1,3 +1,11 @@
+## 1.20.20 — Tarifs CSE manuels, sans comparaison visiteurs
+
+- L'écran de configuration CSE permet de saisir librement le nom du billet et son prix CSE, sans rattachement à une ligne tarifaire visiteurs.
+- Retire la sélection du tarif public, le réglage d'affichage comparatif et la troisième colonne du tableau CSE.
+- Conserve les données CSE existantes (libellés, tarifs, liens d'adhésion et commande, années, options des deux parcs), les données historiques de comparaison sont simplement ignorées par le rendu et supprimées à la prochaine sauvegarde des lignes concernées.
+- Aucun changement des tarifs visiteurs/groupes, du parcours de demande d'adhésion, ni du correctif mémoire 1.20.19.
+- Contrôles de régression CSE et test d'enregistrement WordPress complétés.
+
 ## 1.20.19 — sauvegardes ciblées, charge PHP réduite
 
 - Les formulaires dédiés Périodes, Tarifs visiteurs et Tarifs groupes n'écrivent que les sous-rubriques concernées ; les autres saisons, les devis et le module CSE restent inchangés.

@@ -49,7 +49,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for phase in seed save-periods assert-periods save-retail assert-retail save-groups assert-groups; do
+          for phase in seed save-periods assert-periods save-retail assert-retail save-groups assert-groups save-cse assert-cse; do
             echo "Phase: $phase"
             HTP_CASE="$phase" php -d memory_limit=256M wp-cli.phar eval-file tests/scoped-save-wp.php --path=/tmp/htp-wp --context=admin
           done
