@@ -1,3 +1,14 @@
+## 1.20.15 — Retour contrôlé du blocage des devis sur jours fermés (sur base CSE 1.20.14)
+
+- Réintègre le réglage global Oui/Non pour les devis groupes sur **journées totalement fermées**, avec exceptions de dates et périodes inversant la règle.
+- Une journée ouverte seulement l'après-midi continue d'accepter des demandes de devis ; une année sans grille tarifaire reste non chiffrable.
+- Affiche un message configurable FR/EN/DE, masque le formulaire sur date interdite et valide à nouveau la date côté serveur dans Contact Form 7.
+- Renforce les sauvegardes avec contrôle de type du champ radio ; les plages invalides sont ignorées.
+- Corrige les collisions d'index de périodes après suppression/réajout et ajoute tests DOM dédiés.
+- Ajoute des tests PHP des **deux chemins d'enregistrement admin-post** (en complément des tests métier et CF7 déjà créés en 1.20.12). Les tests PHP isolés ne remplacent pas le contrôle d'enregistrement en environnement WordPress réel.
+- Aucune suppression d'options, aucun changement des tarifs ni des fonctions CSE 1.20.14. Les règles restent propres à chaque installation WordPress.
+- Point de vigilance : l'erreur critique de la 1.20.12 n'a pas de trace PHP fournie ; **sa cause précise n'est pas confirmée**. Validation en préproduction nécessaire avant installation sur les parcs.
+
 ## 1.20.14 — Module de billetterie et tarifs CSE
 
 - Nouvel écran **Gestion du parc → Tarifs CSE**, accessible également depuis la rubrique Groupes, avec réglages annuels propres à chaque installation WordPress.
