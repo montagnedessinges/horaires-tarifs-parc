@@ -36,6 +36,8 @@ final class Parcs_HT_Shortcode_Registry {
     public static function shortcode($base, $language = '') {
         $base = sanitize_key($base);
         $language = sanitize_key($language);
+        $definition = self::definitions()[$base] ?? array();
+        if (in_array($definition['kind'] ?? '', array('cse','cse_link'), true)) $language = '';
         return '[' . $base . ($language !== '' ? '_' . $language : '') . ']';
     }
 
@@ -92,8 +94,10 @@ final class Parcs_HT_Shortcode_Registry {
                 'shortcodes'=>array('auto'=>self::shortcode($base)),
             );
             foreach (self::languages() as $language) {
-                // La ligne du bon découverte reste sans déclinaisons linguistiques.
-                $row['shortcodes'][$language] = !empty($definition['single_language']) ? '' : self::shortcode($base, $language);
+                // CSE : uniquement le shortcode canonique. Les alias _fr/_en/_de restent
+                // enregistrés à l'exécution pour préserver les pages historiques.
+                $single_language = !empty($definition['single_language']) || in_array($definition['kind'] ?? '', array('cse','cse_link'), true);
+                $row['shortcodes'][$language] = $single_language ? '' : self::shortcode($base, $language);
             }
             $out[] = $row;
         }
