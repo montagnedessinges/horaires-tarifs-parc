@@ -276,7 +276,7 @@ final class Parcs_HT_Admin_Retail_Tariffs {
         $content_url = class_exists('Parcs_HT_Public_Content') ? add_query_arg(array('page'=>Parcs_HT_Public_Content::PAGE), admin_url('admin.php')) : '';
         ?>
         <div class="wrap htp-admin htp-1175-tariffs" id="htp-tariffs">
-            <div class="htp-1175-title"><div><h1>Tarifs visiteurs</h1><p class="description">Individuels et Tarifs réduits sont administrés ici. Les tarifs Groupes restent dans leur espace dédié et ne sont jamais enregistrés par cette page.</p></div><span>Interface 1.17.5</span></div>
+            <div class="htp-1175-title"><div><h1>Tarifs visiteurs</h1><p class="description">Individuels et Tarifs réduits sont administrés ici. Les tarifs Groupes restent dans leur espace dédié et ne sont jamais enregistrés par cette page.</p><a class="button" href="<?php echo esc_url(add_query_arg(array("page"=>Parcs_HT_Admin_Navigation::TARIFFS_PAGE,"season"=>$year), admin_url("admin.php"))); ?>">← Retour à Tarifs</a></div><span>Interface 1.17.5</span></div>
             <?php if (class_exists('Parcs_HT_Admin_Navigation') && method_exists('Parcs_HT_Admin_Navigation', 'render_year_context')) Parcs_HT_Admin_Navigation::render_year_context(self::PAGE, $year); ?>
             <?php if (isset($_GET['updated'])) : /* phpcs:ignore WordPress.Security.NonceVerification.Recommended -- message visuel uniquement. */ ?><div class="notice notice-success is-dismissible"><p>Les tarifs visiteurs <?php echo esc_html($year); ?> ont été enregistrés.</p></div><?php endif; ?>
             <div class="htp-1175-rule"><strong>Règles protégées :</strong> moyens de paiement visiteurs séparés Sur place / En ligne, achat en ligne limité à Individuels, et aucune donnée Groupes modifiée.</div>
