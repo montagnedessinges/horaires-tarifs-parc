@@ -200,11 +200,6 @@ final class Parcs_HT_Admin_Navigation {
         foreach ($submenu[$parent] as $item) {
             if (!isset($item[2]) || $item[2] === $parent) continue;
             $slug = (string)$item[2];
-            $hidden_pages = array(
-                class_exists('Parcs_HT_Admin_Retail_Tariffs') ? Parcs_HT_Admin_Retail_Tariffs::PAGE : 'parcs-ht-tariffs',
-                class_exists('Parcs_HT_CSE') ? Parcs_HT_CSE::PAGE : 'parcs-ht-cse',
-            );
-            if (in_array($slug, $hidden_pages, true)) continue;
             if (isset($seen_slugs[$slug])) continue;
             $seen_slugs[$slug] = true;
             $items[] = $item;
@@ -338,7 +333,15 @@ final class Parcs_HT_Admin_Navigation {
 
     public static function admin_head() {
         $page = isset($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- sélection d’écran en lecture seule.
-        $allowed = array(self::GROUPS_PAGE, self::COMMUNICATION_PAGE, self::PERIODS_PAGE, self::UPDATES_PAGE);
+        // Keep the legacy target pages registered in the submenu so WordPress permits direct access,
+        // then hide only their menu rows while routing users through the Tarifs landing page.
+        ?>
+        <style>
+        #adminmenu .wp-submenu li:has(> a[href*="page=parcs-ht-tariffs"]),
+        #adminmenu .wp-submenu li:has(> a[href*="page=parcs-ht-cse"]) { display:none !important; }
+        </style>
+        <?php
+        $allowed = array(self::GROUPS_PAGE, self::COMMUNICATION_PAGE, self::PERIODS_PAGE, self::UPDATES_PAGE, self::TARIFFS_PAGE);
         if (class_exists('Parcs_HT_Admin_General')) $allowed[] = Parcs_HT_Admin_General::PAGE;
         if (!in_array($page, $allowed, true)) return;
         ?>
