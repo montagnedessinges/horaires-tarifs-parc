@@ -103,7 +103,7 @@ check_cse(strpos(Parcs_HT_CSE::render_link('fr', array('annee'=>'2026')), 'https
 
 $english = Parcs_HT_CSE::render('en');
 check_cse(strpos($english, 'https://example.test/login/') !== false, 'rendu CSE toujours français si demandé en anglais');
-check_cse(strpos($english, 'Adult') === false && strpos($english, 'Adulte') !== false, 'aucun libellé anglais dans le rendu CSE');
+check_cse(strpos($english, '>Adult</th>') === false && strpos($english, '>Adulte</th>') !== false, 'aucun libellé anglais dans le rendu CSE');
 $rows = Parcs_HT_Shortcode_Registry::public_rows();
 $cse_rows = array_values(array_filter($rows, static function ($row) { return in_array($row['base'], array('parc_tarifs_cse','parc_lien_cse'), true); }));
 check_cse(count($cse_rows) === 2, 'entrées CSE présentes au registre');
