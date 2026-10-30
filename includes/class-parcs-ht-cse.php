@@ -251,7 +251,7 @@ final class Parcs_HT_CSE {
         if (!current_user_can('manage_options')) return;
         $year = self::chosen_year();
         $settings = $year !== '' ? self::year_settings($year) : array();
-        echo '<div class="wrap htp-cse-admin"><h1>Tarifs CSE</h1><p>Offre française de billetterie professionnelle, avec des réglages propres à chaque année et à chaque parc.</p><p><a class="button" href="' . esc_url(add_query_arg(array('page'=>class_exists('Parcs_HT_Admin_Navigation') ? Parcs_HT_Admin_Navigation::TARIFFS_PAGE : 'parcs-ht-tariffs-home', 'season'=>$year), admin_url('admin.php'))) . '">← Retour à Tarifs</a></p>';
+        echo '<div class="wrap htp-cse-admin"><h1>Tarifs CSE</h1><p>Offre française de billetterie professionnelle. Son interrupteur annuel pilote sa publication indépendamment du calendrier général, avec des réglages propres à chaque année et à chaque parc.</p><p><a class="button" href="' . esc_url(add_query_arg(array('page'=>class_exists('Parcs_HT_Admin_Navigation') ? Parcs_HT_Admin_Navigation::TARIFFS_PAGE : 'parcs-ht-tariffs-home', 'season'=>$year), admin_url('admin.php'))) . '">← Retour à Tarifs</a></p>';
         if ($year === '') {
             echo '<p>Créez d’abord une année dans Administration générale → Saisons.</p></div>';
             return;
