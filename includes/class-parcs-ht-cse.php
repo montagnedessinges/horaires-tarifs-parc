@@ -340,8 +340,9 @@ final class Parcs_HT_CSE {
         $all = self::all();
         $out = array();
         foreach (self::years() as $year) {
-            if ((string)($all[$year]['enabled'] ?? '0') === '1' &&
-                (!class_exists('Parcs_HT_Public_Visibility') || Parcs_HT_Public_Visibility::in_window($year))) $out[] = $year;
+            // Le CSE possède son propre interrupteur annuel : il ne dépend pas
+            // de la fenêtre générale appliquée aux cinq autres modules.
+            if ((string)($all[$year]['enabled'] ?? '0') === '1') $out[] = $year;
         }
         return $out;
     }
