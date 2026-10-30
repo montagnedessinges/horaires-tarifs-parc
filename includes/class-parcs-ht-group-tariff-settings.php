@@ -457,6 +457,7 @@ final class Parcs_HT_Group_Tariff_Settings {
     }
 
     public static function public_years($today = '') {
+        if (class_exists('Parcs_HT_Public_Visibility')) return Parcs_HT_Public_Visibility::group_tariff_years($today);
         $today = self::today($today);
         $years = array();
         foreach (self::published_years() as $year) {
@@ -493,17 +494,20 @@ final class Parcs_HT_Group_Tariff_Settings {
 
     public static function public_year($today = '') {
         $today = self::today($today);
+        $years = self::public_years($today);
+        if (!$years) return '';
         if (class_exists('Parcs_HT_Display_Policy')) {
             $forced = Parcs_HT_Display_Policy::selected_group_year();
-            if ($forced !== '' && in_array($forced, self::public_years($today), true)) return $forced;
+            if ($forced !== '' && in_array($forced, $years, true)) return $forced;
         }
+        // Retain the existing convention: choose the eligible season with the latest
+        // commercial start date, while central visibility decides which years qualify.
         $eligible = array();
-        foreach (self::published_years() as $year) {
+        foreach ($years as $year) {
             $effective = self::effective_display_date($year);
-            if ($effective === '' || $effective > $today) continue;
+            if ($effective === '') $effective = $year . '-01-01';
             $eligible[] = array('year'=>$year,'date'=>$effective);
         }
-        if (!$eligible) return '';
         usort($eligible, static function ($a, $b) {
             if ($a['date'] === $b['date']) return (int)$a['year'] <=> (int)$b['year'];
             return strcmp($a['date'], $b['date']);
