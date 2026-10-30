@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.20.18
+Stable tag: 1.20.19
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes, FAQ et outils du parc.
 
@@ -22,6 +22,10 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.20.19 =
+* Corrige le sélecteur CSS du menu pour conserver le raccourci « Tarifs » au survol tout en masquant uniquement les anciennes grilles visiteurs et CSE.
+
 
 = 1.20.18 =
 * Corrige l’accès aux grilles Tarifs visiteurs et CSE depuis le hub, et charge ses styles de cartes.
