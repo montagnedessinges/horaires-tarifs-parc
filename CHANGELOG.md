@@ -1,3 +1,13 @@
+## 1.20.14 — Module de billetterie et tarifs CSE
+
+- Nouvel écran **Gestion du parc → Tarifs CSE**, accessible également depuis la rubrique Groupes, avec réglages annuels propres à chaque installation WordPress.
+- Tableau public : **Billet → Tarif CSE → Tarif public** (ce dernier barré uniquement lorsque la comparaison montre réellement un avantage). Les prix publics sont récupérés par identité stable depuis les tarifs individuels de la même année, sur le canal « sur place » ; aucune valeur future n’est inventée.
+- Shortcodes `[parc_tarifs_cse]` (alias `[parcs_tarifs_cse]`) et `[parc_lien_cse]`, y compris versions `_fr`, `_en` et `_de`.
+- Parcours de connexion/création de compte, e-mail d’activation CSE, boutons distincts pour la billetterie et le bon de commande PDF, message modifiable de transition vers la dématérialisation (billets PDF ou codes pour billets personnalisés).
+- Activation de la publication année par année, masquage du tableau, de la colonne publique, des boutons, du message et du renvoi CSE dans l’onglet Groupes de la page Horaires et Tarifs.
+- Module isolé des grilles visiteurs et groupes ; ajout des réglages CSE aux exports/imports d’archive globale. Aucun tarif CSE ni URL de commande propre à un parc n’est prérempli automatiquement.
+- Tests CSE de non-régression intégrés au workflow PHP 7.4/8.1/8.2/8.3.
+
 ## 1.20.13 — Correctif urgent : rétablissement des enregistrements
 
 - À la suite d’un signalement d’erreur critique de WordPress lors des enregistrements en version 1.20.12, restaure exactement le code applicatif des composants devis groupes de **1.20.11** (administration PHP, formulaire, sélecteur public et styles).
