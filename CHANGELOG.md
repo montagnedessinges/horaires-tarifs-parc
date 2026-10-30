@@ -2,7 +2,7 @@
 
 - Regroupe les accès aux tarifs visiteurs et CSE sous « Tarifs » sans mélanger leurs réglages ; conserve les anciennes routes et actions.
 - Réserve l’administration et le rendu CSE aux pages françaises. Les alias `_fr`, `_en` et `_de` restent enregistrés pour compatibilité, mais n’apparaissent plus dans le catalogue des shortcodes.
-- Simplifie l’écran CSE en français uniquement et préserve les champs EN/DE historiques à chaque sauvegarde.
+- Simplifie l’écran CSE en français uniquement, préserve les champs EN/DE historiques et rend son interrupteur annuel indépendant du calendrier général.
 - Retire le raccourci CSE de « Groupes », ajoute les retours vers « Tarifs » et conserve l’année sélectionnée.
 - Ajoute des contrats de non-régression sur la navigation, les alias historiques et la conservation des traductions.
 
