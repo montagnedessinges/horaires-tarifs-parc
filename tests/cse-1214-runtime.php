@@ -19,6 +19,7 @@ function esc_attr($value) { return htmlspecialchars((string)$value, ENT_QUOTES, 
 function esc_url($value) { return (string)$value; }
 function sanitize_key($value) { return preg_replace('/[^a-z0-9_\-]/', '', strtolower((string)$value)); }
 function sanitize_text_field($value) { return trim((string)$value); }
+function sanitize_email($value) { return filter_var((string)$value, FILTER_SANITIZE_EMAIL); }
 function remove_accents($value) { return str_replace(array('é','è','ê','à'), array('e','e','e','a'), (string)$value); }
 function wp_enqueue_style($handle, $src = '', $deps = array(), $ver = false) {}
 function wp_enqueue_script($handle, $src = '', $deps = array(), $ver = false, $footer = false) {}
