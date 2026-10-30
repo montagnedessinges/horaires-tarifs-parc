@@ -71,6 +71,7 @@ $season2027 = array(
  'tariffs'=>array('groups'=>array(array('enabled'=>'1','price'=>'9,50 €'))),
 );
 $GLOBALS['options']['main'] = array('timezone'=>'Europe/Paris','seasons'=>array('2026'=>$season2026,'2027'=>$season2027));
+Parcs_HT_Display_Policy::filter_main_option($GLOBALS['options']['main']);
 $GLOBALS['options'][Parcs_HT_Group_Tariff_Settings::OPTION] = array('version'=>4,'seasons'=>array(
  '2026'=>array('published'=>'1','display_from'=>'2026-01-01'),
  '2027'=>array('published'=>'1','display_from'=>'2026-10-30'),
