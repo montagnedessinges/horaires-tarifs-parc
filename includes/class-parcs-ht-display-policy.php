@@ -167,6 +167,7 @@ final class Parcs_HT_Display_Policy {
     }
 
     public static function retail_years() {
+        if (class_exists('Parcs_HT_Public_Visibility')) return Parcs_HT_Public_Visibility::retail_years();
         $all = self::raw_main();
         $today = self::today($all);
         $years = array();
@@ -187,6 +188,7 @@ final class Parcs_HT_Display_Policy {
     }
 
     public static function group_schedule_years() {
+        if (class_exists('Parcs_HT_Public_Visibility')) return Parcs_HT_Public_Visibility::group_schedule_years();
         $years = array();
         $all = self::raw_main();
         foreach ((array)($all['seasons'] ?? array()) as $year => $season) {
@@ -222,7 +224,7 @@ final class Parcs_HT_Display_Policy {
         $base = preg_replace('/_(fr|en|de)$/', '', (string)$tag);
         if ($base !== 'parc_tarifs_groupes') return false;
         $year = self::requested_group_year();
-        $published = class_exists('Parcs_HT_Group_Tariff_Settings') ? Parcs_HT_Group_Tariff_Settings::published_years() : array();
+        $published = class_exists('Parcs_HT_Group_Tariff_Settings') ? Parcs_HT_Group_Tariff_Settings::public_years() : array();
         if ($year !== '' && in_array($year, $published, true)) self::begin_group_tariff_year($year);
         return false;
     }
