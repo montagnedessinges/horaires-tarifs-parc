@@ -1,0 +1,55 @@
+name: Integration WordPress — sauvegardes ciblées
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  admin-saves:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: wordpress
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent -h 127.0.0.1 -proot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mysqli, pdo_mysql
+          tools: none
+      - name: Install WordPress and plugin
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSLo wp-cli.phar https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+          mkdir -p /tmp/htp-wp
+          php wp-cli.phar core download --path=/tmp/htp-wp --quiet
+          php wp-cli.phar config create --path=/tmp/htp-wp --dbname=wordpress --dbuser=root --dbpass=root --dbhost=127.0.0.1 --skip-check --quiet
+          php wp-cli.phar core install --path=/tmp/htp-wp --url=http://localhost --title="Save tests" --admin_user=admin --admin_password=only-for-ci --admin_email=admin@example.test --skip-email --quiet
+          mkdir -p /tmp/htp-wp/wp-content/plugins/horaires-tarifs-parc
+          cp horaires-tarifs-parc.php uninstall.php readme.txt /tmp/htp-wp/wp-content/plugins/horaires-tarifs-parc/
+          cp -R includes assets /tmp/htp-wp/wp-content/plugins/horaires-tarifs-parc/
+          php wp-cli.phar plugin activate horaires-tarifs-parc --path=/tmp/htp-wp
+      - name: Execute real admin save handlers and check isolation
+        shell: bash
+        run: |
+          set -euo pipefail
+          for phase in seed save-periods assert-periods save-retail assert-retail save-groups assert-groups; do
+            echo "Phase: $phase"
+            HTP_CASE="$phase" php -d memory_limit=256M wp-cli.phar eval-file tests/scoped-save-wp.php --path=/tmp/htp-wp
+          done
