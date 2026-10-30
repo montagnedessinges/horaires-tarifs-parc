@@ -1,0 +1,24 @@
+.parcs-ht-cse{color:inherit;max-width:100%;line-height:1.55}
+.parcs-ht-cse__year{background:transparent;color:inherit;padding:12px 0 24px}
+.parcs-ht-cse__year h2{font-size:1.4rem;margin:0 0 12px;color:inherit}
+.parcs-ht-cse__year h3{font-size:1.08rem;margin:0 0 8px;color:inherit}
+.parcs-ht-cse__table-wrap{width:100%;overflow-x:auto;margin:18px 0 24px}
+.parcs-ht-cse__table{width:100%;border-collapse:collapse;table-layout:auto;color:inherit;background:transparent}
+.parcs-ht-cse__table th,.parcs-ht-cse__table td{padding:12px 14px;text-align:left;border-bottom:1px solid rgba(127,127,127,.35);vertical-align:middle}
+.parcs-ht-cse__table thead th{font-weight:700;background:rgba(127,127,127,.08)}
+.parcs-ht-cse__table td strong{font-size:1.1em}
+.parcs-ht-cse__table td del{opacity:.65}
+.parcs-ht-cse__paths{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:20px 0}
+.parcs-ht-cse__path{padding:18px;border:1px solid rgba(127,127,127,.35);border-radius:12px;background:transparent}
+.parcs-ht-cse__path p{margin:.4em 0 1em}
+.parcs-ht-cse__contact{overflow-wrap:anywhere}
+.parcs-ht-cse__actions{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}
+.parcs-ht-cse__button{display:inline-block;text-align:center;text-decoration:none;padding:11px 17px;border:1px solid var(--htp-primary,#006757);border-radius:8px;background:var(--htp-primary,#006757);color:#fff!important;font-weight:600;line-height:1.35}
+.parcs-ht-cse__button:hover,.parcs-ht-cse__button:focus{filter:brightness(.9)}
+.parcs-ht-cse__button.is-secondary{background:transparent;color:inherit!important}
+.parcs-ht-cse__notice{padding:16px 18px;border-left:3px solid var(--htp-primary,#006757);background:rgba(127,127,127,.08);border-radius:6px;margin:18px 0}
+.parcs-ht-cse__notice p{margin:6px 0 0}
+.parcs-ht-cse-referral{margin:18px 0;padding:16px;border:1px solid rgba(127,127,127,.3);border-radius:9px;color:inherit;background:transparent}
+.parcs-ht-cse-referral p{margin:6px 0}
+.parcs-ht-cse-referral a{font-weight:600}
+@media(max-width:680px){.parcs-ht-cse__paths{grid-template-columns:1fr}.parcs-ht-cse__table th,.parcs-ht-cse__table td{padding:9px 7px}.parcs-ht-cse__actions{flex-direction:column}.parcs-ht-cse__button{width:100%;box-sizing:border-box}}
