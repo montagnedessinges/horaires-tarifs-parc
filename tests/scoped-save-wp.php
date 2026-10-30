@@ -28,7 +28,12 @@ function htp_save($workspace, $settings) {
 switch ($case) {
 case 'seed':
     $all = htp_option();
-    htp_expect(is_array($all) && isset($all['seasons']['2026']), 'Initial season missing');
+    if (!is_array($all)) $all = array();
+    if (!isset($all['seasons']) || !is_array($all['seasons'])) $all['seasons'] = array();
+    // A blank WordPress installation does not necessarily create 2026 by default.
+    if (!isset($all['seasons']['2026'])) $all['seasons']['2026'] = Parcs_HT_Defaults::empty_season('2026');
+    if (!isset($all['quote_page']) || !is_array($all['quote_page'])) $all['quote_page'] = array();
+    if (!isset($all['general']) || !is_array($all['general'])) $all['general'] = array();
     $all['seasons']['2027'] = Parcs_HT_Defaults::empty_season('2027');
     $all['seasons']['2027']['season_start'] = '2027-04-12';
     $all['seasons']['2027']['season_end'] = '2027-10-31';
