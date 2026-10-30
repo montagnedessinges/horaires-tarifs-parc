@@ -1,3 +1,9 @@
+## 1.20.18
+
+- Corrige l’accès aux réglages Tarifs visiteurs et CSE en conservant leurs routes enregistrées dans WordPress tout en masquant leurs raccourcis du menu.
+- Charge les styles des cartes sur le nouvel écran « Tarifs ».
+- Ajoute un test de non-régression sur les accès et l’affichage du hub.
+
 ## 1.20.17
 
 - Regroupe les accès aux tarifs visiteurs et CSE sous « Tarifs » sans mélanger leurs réglages ; conserve les anciennes routes et actions.
