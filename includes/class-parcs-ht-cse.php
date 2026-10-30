@@ -15,10 +15,11 @@ final class Parcs_HT_CSE {
         foreach (array('parc_tarifs_cse', 'parcs_tarifs_cse', 'parc_lien_cse') as $base) {
             add_shortcode($base, array(__CLASS__, $base === 'parc_lien_cse' ? 'shortcode_link' : 'shortcode'));
             foreach (array('fr','en','de') as $lang) {
-                add_shortcode($base . '_' . $lang, static function ($atts = array()) use ($base, $lang) {
+                // Alias conservés pour les pages déjà publiées : ils renvoient au rendu français.
+                add_shortcode($base . '_' . $lang, static function ($atts = array()) use ($base) {
                     return $base === 'parc_lien_cse'
-                        ? Parcs_HT_CSE::render_link($lang)
-                        : Parcs_HT_CSE::render($lang, is_array($atts) ? $atts : array());
+                        ? Parcs_HT_CSE::shortcode_link(is_array($atts) ? $atts : array())
+                        : Parcs_HT_CSE::shortcode(is_array($atts) ? $atts : array());
                 });
             }
         }
@@ -247,7 +248,7 @@ final class Parcs_HT_CSE {
         if (!current_user_can('manage_options')) return;
         $year = self::chosen_year();
         $settings = $year !== '' ? self::year_settings($year) : array();
-        echo '<div class="wrap htp-cse-admin"><h1>Tarifs et billetterie CSE</h1><p>Offre indépendante des tarifs visiteurs et groupes. Chaque année et chaque parc possèdent leurs propres réglages.</p>';
+        echo '<div class="wrap htp-cse-admin"><h1>Tarifs CSE</h1><p>Offre française de billetterie professionnelle, avec des réglages propres à chaque année et à chaque parc.</p><p><a class="button" href="' . esc_url(add_query_arg(array('page'=>class_exists('Parcs_HT_Admin_Navigation') ? Parcs_HT_Admin_Navigation::TARIFFS_PAGE : 'parcs-ht-tariffs-home', 'season'=>$year), admin_url('admin.php'))) . '">← Retour à Tarifs</a></p>';
         if ($year === '') {
             echo '<p>Créez d’abord une année dans Administration générale → Saisons.</p></div>';
             return;
@@ -258,7 +259,7 @@ final class Parcs_HT_CSE {
             echo '<div class="notice ' . ($saved_flag === '1' ? 'notice-success' : 'notice-error') . '"><p>' . ($saved_flag === '1' ? 'Réglages CSE enregistrés.' : 'La sauvegarde n’a pas pu être confirmée.') . '</p></div>';
         }
         echo '<style>.htp-cse-admin{max-width:1200px}.htp-cse-admin .htp-cse-section{background:#fff;border:1px solid #dcdcde;border-radius:10px;padding:20px;margin:18px 0}.htp-cse-admin .htp-cse-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}.htp-cse-admin .htp-cse-field{margin:12px 0;border:1px solid #ddd;padding:10px}.htp-cse-admin .htp-cse-field label{display:block;margin:7px 0}.htp-cse-admin input[type=url],.htp-cse-admin textarea{width:100%;max-width:600px}.htp-cse-admin .htp-cse-table input[type=text]{width:100%;min-width:105px}.htp-cse-admin .htp-cse-table select{max-width:260px}.htp-cse-admin .htp-cse-table th{white-space:nowrap}.htp-cse-admin .htp-cse-flags label{display:block;margin:8px 0}@media(max-width:780px){.htp-cse-admin .htp-cse-table{display:block;overflow:auto}}</style>';
-        echo '<p><code>[parc_tarifs_cse]</code> (alias : <code>[parcs_tarifs_cse]</code>) — versions FR/EN/DE disponibles. <code>[parc_lien_cse]</code> affiche seulement le renvoi vers la page CSE.</p>';
+        echo '<p><code>[parc_tarifs_cse]</code> (alias : <code>[parcs_tarifs_cse]</code>) affiche l’offre CSE en français. <code>[parc_lien_cse]</code> affiche le renvoi uniquement sur une page française. Les anciens suffixes de langue restent compatibles et affichent la version française.</p>';
         echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '"><input type="hidden" name="action" value="parcs_ht_save_cse"><input type="hidden" name="season" value="' . esc_attr($year) . '">';
         wp_nonce_field('parcs_ht_save_cse_' . $year);
         echo '<section class="htp-cse-section"><h2>Visibilité — ' . esc_html($year) . '</h2><div class="htp-cse-grid htp-cse-flags">';
@@ -271,30 +272,28 @@ final class Parcs_HT_CSE {
             'show_online'=>'Afficher le bouton billetterie en ligne',
             'show_pdf'=>'Afficher le téléchargement du bon de commande PDF',
             'show_transition'=>'Afficher le message de transition numérique',
-            'show_link'=>'Afficher un renvoi CSE sous les tarifs Groupes de la page Horaires et Tarifs',
+            'show_link'=>'Afficher un renvoi vers l’offre CSE sous les tarifs visiteurs français',
         );
         foreach ($flags as $flag=>$label) {
             echo '<label><input type="checkbox" name="cse[' . esc_attr($flag) . ']" value="1" ' . checked((string)($settings[$flag] ?? '0'), '1', false) . '> ' . esc_html($label) . '</label>';
         }
         echo '</div></section>';
         echo '<section class="htp-cse-section"><h2>Tarifs CSE</h2><p>Le tarif public est issu de la ligne correspondante des tarifs individuels de ' . esc_html($year) . '. Seuls les prix réellement disponibles sont affichés. Pour ajouter une ligne, remplissez une ligne vide ; pour la supprimer, cochez Supprimer.</p>';
-        echo '<input type="hidden" name="cse_rows_present" value="1"><table class="widefat striped htp-cse-table"><thead><tr><th>Afficher</th><th>Billet FR</th><th>EN</th><th>DE</th><th>Tarif CSE</th><th>Tarif public (source)</th><th>Supprimer</th></tr></thead><tbody>';
+        echo '<input type="hidden" name="cse_rows_present" value="1"><table class="widefat striped htp-cse-table"><thead><tr><th>Afficher</th><th>Billet</th><th>Tarif CSE</th><th>Tarif public (source)</th><th>Supprimer</th></tr></thead><tbody>';
         $rows = array_values((array)($settings['rows'] ?? array()));
         for ($j=0;$j<3;$j++) $rows[] = array('label'=>array('fr'=>'','en'=>'','de'=>''),'cse_price'=>'','public_row_id'=>'','enabled'=>'1');
         $sources = self::source_options($year);
         foreach ($rows as $index=>$row) {
             $labels = (array)($row['label'] ?? array());
             echo '<tr><td><input type="checkbox" name="cse[rows][' . (int)$index . '][enabled]" value="1" ' . checked((string)($row['enabled'] ?? '1'), '1', false) . '></td>';
-            foreach (array('fr','en','de') as $lang) {
-                echo '<td><input type="text" name="cse[rows][' . (int)$index . '][label][' . esc_attr($lang) . ']" value="' . esc_attr($labels[$lang] ?? '') . '"></td>';
-            }
+            echo '<td><input type="text" name="cse[rows][' . (int)$index . '][label]" value="' . esc_attr(self::tr($labels, 'fr')) . '"></td>';
             echo '<td><input type="text" name="cse[rows][' . (int)$index . '][cse_price]" value="' . esc_attr($row['cse_price'] ?? '') . '" placeholder="10,50 €"></td>';
             echo '<td><select name="cse[rows][' . (int)$index . '][public_row_id]"><option value="">— Ne pas comparer —</option>';
             foreach ($sources as $id=>$label) echo '<option value="' . esc_attr($id) . '"' . selected((string)($row['public_row_id'] ?? ''), $id, false) . '>' . esc_html($label) . '</option>';
             echo '</select></td><td><input type="checkbox" name="cse[rows][' . (int)$index . '][delete]" value="1" aria-label="Supprimer cette ligne"></td></tr>';
         }
         echo '</tbody></table></section>';
-        echo '<section class="htp-cse-section"><h2>Parcours de commande et boutons</h2><p>Si le lien d’une langue est vide, le lien français est utilisé. Aucun lien n’est inventé. Séparez bien connexion, inscription, billetterie et bon de commande.</p>';
+        echo '<section class="htp-cse-section"><h2>Parcours de commande et boutons</h2><p>Renseignez les liens et libellés français. Séparez bien connexion, inscription, billetterie et bon de commande.</p>';
         self::field('page_url', 'Adresse de la page CSE (pour le renvoi public)', $settings['page_url']);
         self::field('login_url', 'Connexion au compte CSE', $settings['login_url']);
         self::field('signup_url', 'Création de compte', $settings['signup_url']);
