@@ -19,12 +19,18 @@ final class Parcs_HT_Tariff_Seasons {
         if (!is_array($new_value) || !is_admin()) return $new_value;
         if (!current_user_can('manage_options') || !isset($_POST['_wpnonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'])), 'parcs_ht_save')) return $new_value;
         if (!isset($_POST['action']) || sanitize_key(wp_unslash($_POST['action'])) !== 'parcs_ht_save') return $new_value;
+        // L'enregistrement d'une autre rubrique ne doit jamais recalculer les grilles.
+        $tariff_marker = isset($_POST['settings']['_complete']['tariffs']) && is_scalar($_POST['settings']['_complete']['tariffs'])
+            ? sanitize_text_field(wp_unslash($_POST['settings']['_complete']['tariffs'])) : '';
+        if ($tariff_marker !== '1') return $new_value;
         $year = isset($_POST['season_year']) ? sanitize_text_field(wp_unslash($_POST['season_year'])) : '';
         if (!preg_match('/^20\d{2}$/', $year) || !isset($new_value['seasons'][$year])) return $new_value;
 
         $tariffs = isset($new_value['tariffs']) && is_array($new_value['tariffs']) ? $new_value['tariffs'] : array();
         $raw = isset($_POST['settings']['tariffs']) && is_array($_POST['settings']['tariffs']) ? map_deep(wp_unslash($_POST['settings']['tariffs']), 'sanitize_textarea_field') : array();
         foreach (array('individual','reduced','groups') as $group) {
+            // Sur un écran Visiteurs, aucune entrée Groupes ne doit être écrasée.
+            if (!array_key_exists($group, $raw) && !isset($raw['columns'][$group])) continue;
             if (isset($tariffs['columns'][$group]) && is_array($tariffs['columns'][$group])) {
                 foreach ($tariffs['columns'][$group] as $i => &$column) {
                     $posted = isset($raw['columns'][$group][$i]) && is_array($raw['columns'][$group][$i]) ? $raw['columns'][$group][$i] : array();
