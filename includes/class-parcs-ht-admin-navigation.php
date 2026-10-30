@@ -337,8 +337,10 @@ final class Parcs_HT_Admin_Navigation {
         // then hide only their menu rows while routing users through the Tarifs landing page.
         ?>
         <style>
-        #adminmenu .wp-submenu li:has(> a[href*="page=parcs-ht-tariffs"]),
-        #adminmenu .wp-submenu li:has(> a[href*="page=parcs-ht-cse"]) { display:none !important; }
+        #adminmenu .wp-submenu li:has(> a[href$="page=parcs-ht-tariffs"]),
+        #adminmenu .wp-submenu li:has(> a[href*="page=parcs-ht-tariffs&"]),
+        #adminmenu .wp-submenu li:has(> a[href$="page=parcs-ht-cse"]),
+        #adminmenu .wp-submenu li:has(> a[href*="page=parcs-ht-cse&"]) { display:none !important; }
         </style>
         <?php
         $allowed = array(self::GROUPS_PAGE, self::COMMUNICATION_PAGE, self::PERIODS_PAGE, self::UPDATES_PAGE, self::TARIFFS_PAGE);
