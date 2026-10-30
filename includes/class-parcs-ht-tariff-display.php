@@ -262,7 +262,10 @@ final class Parcs_HT_Tariff_Display {
             if (in_array($key, array('individual','reduced'), true)) {
                 $html .= self::info_callouts($tariffs['info_blocks'][$key] ?? array(), $language, '#006757');
             }
-            if ($key === 'groups') $html .= self::public_group_extras($general, $language, $d);
+            if ($key === 'groups') {
+                $html .= self::public_group_extras($general, $language, $d);
+                if (class_exists('Parcs_HT_CSE')) $html .= Parcs_HT_CSE::render_link($language, array('annee'=>$year));
+            }
             $html .= '</div>';
             $first = false;
         }

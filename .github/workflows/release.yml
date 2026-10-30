@@ -76,6 +76,7 @@ jobs:
           php tests/group-gratuity-contract.php
           php tests/group-tariff-publication-contract.php
           php tests/group-tariff-shortcode-runtime.php
+          php tests/cse-1214-runtime.php
           php tests/shortcode-registry-contract.php
           php tests/discovery-voucher-contract.php
           php tests/admin-shortcode-previews-contract.php

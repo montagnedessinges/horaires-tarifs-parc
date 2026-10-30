@@ -13,6 +13,8 @@ final class Parcs_HT_Shortcode_Registry {
             'parc_reglement_avent' => array('label'=>'Règlement du Calendrier de l’Avent','kind'=>'advent','module'=>'rules','preview'=>true),
             'parc_tableau_tarifs' => array('label'=>'Tableau des tarifs','kind'=>'core','module'=>'tariffs','preview'=>true),
             'parc_tarifs_groupes' => array('label'=>'Tarifs groupes uniquement','kind'=>'groups','module'=>'group_tariffs','preview'=>true),
+            'parc_tarifs_cse' => array('label'=>'Tarifs et billetterie CSE','kind'=>'cse','module'=>'cse','preview'=>true),
+            'parc_lien_cse' => array('label'=>'Renvoi vers la page CSE','kind'=>'cse_link','module'=>'cse_link','preview'=>true),
             'parc_groupes_horaires_tarifs' => array('label'=>'Groupes — horaires et tarifs','kind'=>'group_portal','module'=>'group_portal','preview'=>true),
             'parc_fermeture_exceptionnelle' => array('label'=>'Alerte de fermeture','kind'=>'core','module'=>'alert','preview'=>true),
             'parc_horaire' => array('label'=>'Texte horaire dynamique pour l’en-tête','kind'=>'core','module'=>'header_hour','preview'=>true),
@@ -54,6 +56,8 @@ final class Parcs_HT_Shortcode_Registry {
             require_once PARCS_HT_DIR . 'includes/class-parcs-ht-shortcodes.php';
             return Parcs_HT_Shortcodes::render($definition['module'], $language, array());
         }
+        if ($definition['kind'] === 'cse' && class_exists('Parcs_HT_CSE')) return Parcs_HT_CSE::render($language, array());
+        if ($definition['kind'] === 'cse_link' && class_exists('Parcs_HT_CSE')) return Parcs_HT_CSE::render_link($language);
         if ($definition['kind'] === 'groups') {
             if (class_exists('Parcs_HT_Tariff_Display')) return Parcs_HT_Tariff_Display::render_group($language, array());
             if (class_exists('Parcs_HT_Group_Tariffs')) return Parcs_HT_Group_Tariffs::render($language, array());

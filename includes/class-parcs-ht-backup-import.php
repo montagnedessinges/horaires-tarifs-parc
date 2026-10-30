@@ -22,6 +22,7 @@ final class Parcs_HT_Backup_Import {
         return array(
             'parcs_ht_settings',
             'parcs_ht_group_tariff_settings',
+            'parcs_ht_cse_settings',
             'parcs_ht_advent',
             'parcs_ht_pedagogical_guides',
             'parcs_ht_faq',

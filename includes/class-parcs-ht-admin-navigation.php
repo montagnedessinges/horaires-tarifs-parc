@@ -194,6 +194,7 @@ final class Parcs_HT_Admin_Navigation {
             self::PERIODS_PAGE,
             'parcs-ht-tariffs',
             self::GROUPS_PAGE,
+            class_exists('Parcs_HT_CSE') ? Parcs_HT_CSE::PAGE : 'parcs-ht-cse',
             self::COMMUNICATION_PAGE,
             $content_slug,
             'parcs-ht-preview',
@@ -240,6 +241,7 @@ final class Parcs_HT_Admin_Navigation {
         self::landing_header('Groupes', 'Les tarifs groupes, les devis, les guides pédagogiques et les bons découverte sont regroupés ici, tout en restant des écrans séparés.');
         echo '<div class="htp-1172-grid">';
         self::card('Tarifs groupes', 'Tarifs, moyens de paiement, informations et apparence propres aux groupes.', self::legacy_url('htp-tariffs-groups', $year));
+        if (class_exists('Parcs_HT_CSE')) self::card('Tarifs CSE', 'Tarifs professionnels, comparatif public, accès aux comptes et bon de commande PDF.', add_query_arg(array('page'=>Parcs_HT_CSE::PAGE, 'season'=>$year), admin_url('admin.php')));
         self::card('Devis groupes', 'Disponibilité, formulaire et règles de devis.', self::legacy_url('htp-quote', $year));
         self::card('Guides pédagogiques', 'Documents scolaires, langues, cycles et statistiques.', self::legacy_url('htp-guides', $year));
         self::card('Bons découverte', 'Offres scolaires, départements autorisés, formulaire CF7 et textes modifiables.', admin_url('admin.php?page=' . Parcs_HT_Discovery_Voucher::PAGE));
