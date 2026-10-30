@@ -239,9 +239,13 @@ final class Parcs_HT_Tariff_Identities {
         unset($old_value, $option);
         if (self::$normalizing || !is_array($new_value)) return $new_value;
         // Les mises à jour d'horaires, périodes ou pop-up n'ont aucune grille à renuméroter.
-        if (is_admin() && isset($_POST['action']) && is_scalar($_POST['action'])
-            && sanitize_key(wp_unslash($_POST['action'])) === 'parcs_ht_save'
-            && (string)($_POST['settings']['_complete']['tariffs'] ?? '') !== '1') return $new_value;
+        // phpcs:disable WordPress.Security.NonceVerification.Missing -- Lecture du contexte de requête seulement ; aucune écriture de tarif ici.
+        $action = isset($_POST['action']) && is_scalar($_POST['action'])
+            ? sanitize_key(wp_unslash($_POST['action'])) : '';
+        $tariff_marker = isset($_POST['settings']['_complete']['tariffs']) && is_scalar($_POST['settings']['_complete']['tariffs'])
+            ? sanitize_text_field(wp_unslash($_POST['settings']['_complete']['tariffs'])) : '';
+        // phpcs:enable WordPress.Security.NonceVerification.Missing
+        if (is_admin() && $action === 'parcs_ht_save' && $tariff_marker !== '1') return $new_value;
         self::$normalizing = true;
         $year = '';
         if (isset($_POST['season_year'])) { // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Utilisé uniquement pour rattacher les IDs au brouillon en cours de sauvegarde.

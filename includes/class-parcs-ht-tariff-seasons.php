@@ -20,7 +20,9 @@ final class Parcs_HT_Tariff_Seasons {
         if (!current_user_can('manage_options') || !isset($_POST['_wpnonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'])), 'parcs_ht_save')) return $new_value;
         if (!isset($_POST['action']) || sanitize_key(wp_unslash($_POST['action'])) !== 'parcs_ht_save') return $new_value;
         // L'enregistrement d'une autre rubrique ne doit jamais recalculer les grilles.
-        if ((string)($_POST['settings']['_complete']['tariffs'] ?? '') !== '1') return $new_value;
+        $tariff_marker = isset($_POST['settings']['_complete']['tariffs']) && is_scalar($_POST['settings']['_complete']['tariffs'])
+            ? sanitize_text_field(wp_unslash($_POST['settings']['_complete']['tariffs'])) : '';
+        if ($tariff_marker !== '1') return $new_value;
         $year = isset($_POST['season_year']) ? sanitize_text_field(wp_unslash($_POST['season_year'])) : '';
         if (!preg_match('/^20\d{2}$/', $year) || !isset($new_value['seasons'][$year])) return $new_value;
 
