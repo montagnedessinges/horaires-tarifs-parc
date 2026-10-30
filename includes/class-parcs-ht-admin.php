@@ -1155,8 +1155,22 @@ final class Parcs_HT_Admin {
             }
         }
 
-        // Le sanitizer canonique reste commun, mais l'écriture finale ne conserve
-        // que les valeurs appartenant à l'écran, sans effacer ni reconstituer les autres.
+        // Ne pas revalider des dizaines de listes hors de l'écran actif.
+        // On conserve les seules données utiles au sanitizer canonique, par
+        // copie superficielle (copy-on-write) sans recopier toute la configuration.
+        if ($is_scoped) {
+            $read_sections = array(
+                'periods'=>array('general','school_holidays','special_periods','public_holidays','domain_rules','exceptions'),
+                'retail'=>array('general','tariffs'),
+                'groups'=>array('tariffs'),
+                'popup'=>array('general','alerts'),
+            );
+            $keys = array_fill_keys($read_sections[$workspace], true);
+            $current = array_intersect_key($current, $keys);
+            $raw = array_intersect_key($raw, $keys + array('_complete'=>true));
+        }
+        // Le sanitizer reste centralisé, mais il reçoit uniquement les données
+        // de l'écran ; l'écriture ci-dessous ne touche pas les autres modules.
         $clean = self::sanitize($raw, $current);
         $all = Parcs_HT_Defaults::all_settings();
         if (!isset($all['seasons'][$year])) $all['seasons'][$year] = Parcs_HT_Defaults::empty_season($year);
