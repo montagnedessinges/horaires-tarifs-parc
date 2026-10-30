@@ -1,4 +1,4 @@
-## 1.20.16 — Visibilité annuelle unifiée des tarifs
+## 1.20.16
 
 - Corrige une divergence entre le calendrier et les tarifs visiteurs/groupes : les sélecteurs historiques délèguent à la politique centrale `Parcs_HT_Public_Visibility`.
 - Les tarifs groupes, les horaires groupes et leurs onglets publics respectent les dates de bascule d’apparition et de retrait, même lorsque les interrupteurs manuels sont renseignés.
