@@ -205,7 +205,7 @@ final class Parcs_HT_Public_Visibility {
         return self::order_years($years);
     }
 
-    public static function retail_years() {
+    public static function retail_years($today = '') {
         $years = array();
         $current = self::current_year();
         foreach (self::all_years() as $year) {
@@ -213,17 +213,17 @@ final class Parcs_HT_Public_Visibility {
             $fallback = array_key_exists('retail_tariffs_visible', $season)
                 ? (string)$season['retail_tariffs_visible'] === '1'
                 : ((string)($season['published'] ?? '0') === '1' && $year === $current);
-            if (self::module_visible($year, 'retail_tariffs_visible', $fallback)) $years[] = $year;
+            if (self::module_visible($year, 'retail_tariffs_visible', $fallback, $today)) $years[] = $year;
         }
         return self::order_years($years);
     }
 
-    public static function group_schedule_years() {
+    public static function group_schedule_years($today = '') {
         $years = array();
         foreach (self::all_years() as $year) {
             $season = self::raw_season($year);
             $fallback = (string)($season['groups_schedule_visible'] ?? '0') === '1';
-            if (self::module_visible($year, 'groups_schedule_visible', $fallback)) $years[] = $year;
+            if (self::module_visible($year, 'groups_schedule_visible', $fallback, $today)) $years[] = $year;
         }
         return self::order_years($years);
     }
@@ -246,7 +246,7 @@ final class Parcs_HT_Public_Visibility {
         return false;
     }
 
-    public static function group_tariff_years() {
+    public static function group_tariff_years($today = '') {
         $years = array();
         foreach (self::all_years() as $year) {
             if (!self::group_tariff_grid_ready($year)) continue;
@@ -254,7 +254,7 @@ final class Parcs_HT_Public_Visibility {
             $fallback = array_key_exists('group_tariffs_visible', $season)
                 ? (string)$season['group_tariffs_visible'] === '1'
                 : (class_exists('Parcs_HT_Group_Tariff_Settings') && (string)(Parcs_HT_Group_Tariff_Settings::settings($year)['published'] ?? '0') === '1');
-            if (self::module_visible($year, 'group_tariffs_visible', $fallback)) $years[] = $year;
+            if (self::module_visible($year, 'group_tariffs_visible', $fallback, $today)) $years[] = $year;
         }
         return self::order_years($years);
     }

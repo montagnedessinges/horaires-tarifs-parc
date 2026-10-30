@@ -12,7 +12,7 @@ function wp_verify_nonce($value, $action) { return $value === 'valid'; }
 function wp_unslash($value) { return $value; }
 function sanitize_text_field($value) { return trim((string)$value); }
 function sanitize_key($value) { return preg_replace('/[^a-z0-9_-]/', '', strtolower($value)); }
-function wp_date($format, $stamp = null, $zone = null) { return $format === 'Y' ? '2026' : '2026-09-15'; }
+function wp_date($format, $stamp = null, $zone = null) { $date = $GLOBALS['test_today'] ?? '2026-09-15'; return $format === 'Y' ? substr($date, 0, 4) : $date; }
 function remove_accents($value) { return strtr((string)$value, array('é'=>'e','è'=>'e','ê'=>'e','à'=>'a','ù'=>'u','ô'=>'o','î'=>'i')); }
 function esc_url_raw($value) { return $value; }
 function esc_attr($value) { return htmlspecialchars((string)$value, ENT_QUOTES); }
@@ -21,6 +21,7 @@ final class Parcs_HT_Defaults { const OPTION = 'main'; public static function al
 $root = getenv('PLUGIN_ROOT') ?: dirname(__DIR__);
 require_once $root . '/includes/class-parcs-ht-display-policy.php';
 require_once $root . '/includes/class-parcs-ht-group-tariff-settings.php';
+require_once $root . '/includes/class-parcs-ht-public-visibility.php';
 require_once $root . '/includes/class-parcs-ht-group-quotes.php';
 require_once $root . '/includes/class-parcs-ht-tariff-identities.php';
 function check11512($ok, $message) { if (!$ok) { fwrite(STDERR, "FAIL: $message\n"); exit(1); } echo "OK: $message\n"; }
@@ -58,6 +59,32 @@ foreach (range(0,15) as $mask) {
  check11512(((string)($quote['seasons']['2027']['published']??'0')==='1') === (bool)($mask&4), "real quote engine permission mask $mask");
  if($mask&4) check11512((string)$quote['seasons']['2027']['adult']==='9', 'quote reads 2027 canonical adult price');
 }
+// Régression #95 : les sélecteurs historiques doivent respecter la même fenêtre de visibilité.
+$season2026 = array(
+ 'published'=>'1','calendar_visible'=>'0','retail_tariffs_visible'=>'0','groups_schedule_visible'=>'0','group_tariffs_visible'=>'0',
+ 'public_display_from'=>'2026-01-01','public_display_until'=>'2026-10-30',
+ 'tariffs'=>array('groups'=>array(array('enabled'=>'1','price'=>'9 €'))),
+);
+$season2027 = array(
+ 'published'=>'0','calendar_visible'=>'0','retail_tariffs_visible'=>'0','groups_schedule_visible'=>'0','group_tariffs_visible'=>'0',
+ 'public_display_from'=>'2026-10-30','public_display_until'=>'',
+ 'tariffs'=>array('groups'=>array(array('enabled'=>'1','price'=>'9,50 €'))),
+);
+$GLOBALS['options']['main'] = array('timezone'=>'Europe/Paris','seasons'=>array('2026'=>$season2026,'2027'=>$season2027));
+Parcs_HT_Display_Policy::filter_main_option($GLOBALS['options']['main']);
+$GLOBALS['options'][Parcs_HT_Group_Tariff_Settings::OPTION] = array('version'=>4,'seasons'=>array(
+ '2026'=>array('published'=>'1','display_from'=>'2026-01-01'),
+ '2027'=>array('published'=>'1','display_from'=>'2026-10-30'),
+));
+foreach (array('2026-10-29'=>array('2026'),'2026-10-30'=>array('2027'),'2026-10-31'=>array('2027')) as $date=>$expected) {
+ $GLOBALS['test_today']=$date;
+ check11512(Parcs_HT_Display_Policy::retail_years()===$expected, "retail tariffs follow central visibility on $date");
+ check11512(Parcs_HT_Group_Tariff_Settings::public_years()===$expected, "group tariffs follow central visibility on $date");
+ check11512(Parcs_HT_Group_Tariff_Settings::public_year()===$expected[0], "group tariff shortcode selects the centrally visible season on $date");
+ check11512(Parcs_HT_Display_Policy::group_schedule_years()===$expected, "group schedules follow central visibility on $date");
+}
+unset($GLOBALS['test_today']);
+
 $GLOBALS['admin']=true;
 $old=array('seasons'=>array('2026'=>array('published'=>'1','retail_tariffs_visible'=>'1'),'2027'=>$v));
 $_POST=array('action'=>'parcs_ht_save','_wpnonce'=>'valid','season_year'=>'2027','settings'=>array('general'=>array('group_quotes_enabled'=>'0')));
