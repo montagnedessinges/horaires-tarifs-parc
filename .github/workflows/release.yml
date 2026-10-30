@@ -304,7 +304,7 @@ jobs:
         run: |
           gh release create "${{ steps.version.outputs.tag }}" horaires-tarifs-parc.zip horaires-tarifs-parc.zip.sha256 \
             --title "Gestion du parc ${{ steps.version.outputs.version }}" \
-            --notes-file <(sed -n '/^## ${{ steps.version.outputs.version }}$/,/^## /p' CHANGELOG.md | sed '$d')
+            --notes-file <(sed -n '/^## ${{ steps.version.outputs.version }}/,/^## /p' CHANGELOG.md | sed '$d')
       - name: Preserve existing release unchanged
         if: steps.existing.outputs.exists == 'true'
         shell: bash
