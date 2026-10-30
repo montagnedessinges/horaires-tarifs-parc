@@ -38,7 +38,10 @@ final class Parcs_HT_CSE {
 
     private static function tr($values, $lang, $fallback = '') {
         $values = is_array($values) ? $values : array();
-        return trim((string)($values[$lang] ?? $values['fr'] ?? $fallback)) ?: $fallback;
+        $localized = trim((string)($values[$lang] ?? ''));
+        if ($localized !== '') return $localized;
+        $french = trim((string)($values['fr'] ?? ''));
+        return $french !== '' ? $french : $fallback;
     }
 
     private static function initial($year) {
@@ -116,15 +119,38 @@ final class Parcs_HT_CSE {
     private static function source_price($year, $row_id) {
         if (!preg_match('/^tariff_row_[0-9]{6,}$/', (string)$row_id)) return '';
         if (class_exists('Parcs_HT_Public_Visibility') && !in_array((string)$year, Parcs_HT_Public_Visibility::retail_years(), true)) return '';
+        $all = Parcs_HT_Defaults::all_settings();
+        $tariffs = (array)($all['seasons'][$year]['tariffs'] ?? array());
+        $columns = (array)($tariffs['columns']['individual'] ?? array());
+        $onsite = array();
+        $available = array();
+        foreach ($columns as $column) {
+            if (!is_array($column) || (string)($column['visible'] ?? '1') === '0') continue;
+            $id = sanitize_key((string)($column['id'] ?? ''));
+            if ($id === '') continue;
+            $available[] = $id;
+            $label = strtolower(remove_accents(self::tr($column['label'] ?? array(), 'fr', '')));
+            if (strpos($label, 'sur place') !== false || strpos($label, 'onsite') !== false || strpos($label, 'guichet') !== false) $onsite[] = $id;
+        }
+        // Une colonne unique constitue le tarif public de référence. Pour plusieurs
+        // canaux, seule une colonne explicitement « sur place » est sûre.
+        $ids = $onsite ? $onsite : (count($available) === 1 ? $available : array());
         foreach (self::public_rows($year) as $row) {
             if (!is_array($row) || (string)($row['id'] ?? '') !== $row_id || (string)($row['enabled'] ?? '0') !== '1') continue;
             $cells = (array)($row['cells'] ?? array());
-            foreach (array('onsite','price') as $channel) {
-                if (isset($cells[$channel]['value']) && trim((string)$cells[$channel]['value']) !== '') return trim((string)$cells[$channel]['value']);
+            foreach (array_merge($ids, array('onsite','price')) as $id) {
+                if (isset($cells[$id]['value']) && trim((string)$cells[$id]['value']) !== '') return trim((string)$cells[$id]['value']);
             }
-            return trim((string)($row['price'] ?? ''));
+            // « price » est le stockage historique des anciennes saisons mono-colonne.
+            if (!$cells || count($available) <= 1) return trim((string)($row['price'] ?? ''));
+            return '';
         }
         return '';
+    }
+
+    private static function numeric_price($text) {
+        if (!preg_match('/\d+(?:[.,]\d{1,2})?/', (string)$text, $match)) return null;
+        return (float)str_replace(',', '.', $match[0]);
     }
 
     private static function localized_urls($raw) {
@@ -334,7 +360,16 @@ final class Parcs_HT_CSE {
                 $html .= '<tr><th scope="row">' . esc_html($name) . '</th><td><strong>' . esc_html((string)$row['cse_price']) . '</strong></td>';
                 if ($s['show_public'] === '1') {
                     $public = self::source_price($year, (string)($row['public_row_id'] ?? ''));
-                    $html .= '<td>' . ($public !== '' ? '<del>' . esc_html($public) . '</del>' : '<span aria-label="' . esc_attr(self::t($lang, 'Non renseigné', 'Not available', 'Nicht verfügbar')) . '">—</span>') . '</td>';
+                    $comparison = '—';
+                    if ($public !== '') {
+                        $public_amount = self::numeric_price($public);
+                        $cse_amount = self::numeric_price($row['cse_price']);
+                        // Ne pas barrer un tarif public inférieur ou égal au tarif CSE.
+                        $comparison = $public_amount !== null && $cse_amount !== null && $public_amount > $cse_amount
+                            ? '<del>' . esc_html($public) . '</del>'
+                            : esc_html($public);
+                    }
+                    $html .= '<td>' . $comparison . '</td>';
                 }
                 $html .= '</tr>';
             }
