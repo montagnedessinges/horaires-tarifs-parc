@@ -15,7 +15,7 @@ htp_12018_assert(
     'page hub Tarifs absente du menu'
 );
 htp_12018_assert(
-    strpos($navigation, "if (in_array($slug, $hidden_pages, true)) continue;") === false,
+    strpos($navigation, 'if (in_array($slug, $hidden_pages, true)) continue;') === false,
     'les pages visiteurs/CSE sont retirées du registre de sous-menus WordPress'
 );
 htp_12018_assert(
