@@ -6,3 +6,5 @@
 .parcs-ht-quote-access-date{width:min(100%,320px);min-height:44px;padding:8px 10px;font:inherit}
 .parcs-ht-gate-active .parcs-ht-quote-form{display:none!important}
 .parcs-ht-gate-active.parcs-ht-gate-open .parcs-ht-quote-form{display:block!important}
+
+.parcs-ht-quote-gate-message[data-kind="blocked"]{font-weight:600}

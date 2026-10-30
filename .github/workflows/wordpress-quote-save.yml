@@ -1,0 +1,58 @@
+name: Test quote saves in real WordPress
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  wordpress-quote-save:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: wordpress
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent -h 127.0.0.1 -proot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up PHP + WordPress dependencies
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mysqli, pdo_mysql
+          tools: none
+      - name: Install WordPress core and activate actual plugin
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSLo wp-cli.phar https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+          php wp-cli.phar --info
+          mkdir -p /tmp/htp-wordpress
+          php wp-cli.phar core download --path=/tmp/htp-wordpress --quiet
+          php wp-cli.phar config create --path=/tmp/htp-wordpress --dbname=wordpress --dbuser=root --dbpass=root --dbhost=127.0.0.1 --skip-check --quiet
+          php wp-cli.phar core install --path=/tmp/htp-wordpress --url=http://localhost --title="Quote integration test" --admin_user=admin --admin_password=only-for-ci-test --admin_email=admin@example.test --skip-email --quiet
+          mkdir -p /tmp/htp-wordpress/wp-content/plugins/horaires-tarifs-parc
+          cp -R includes assets /tmp/htp-wordpress/wp-content/plugins/horaires-tarifs-parc/
+          cp horaires-tarifs-parc.php readme.txt uninstall.php /tmp/htp-wordpress/wp-content/plugins/horaires-tarifs-parc/
+          php wp-cli.phar plugin activate horaires-tarifs-parc --path=/tmp/htp-wordpress
+      - name: Submit actual WordPress admin-post quote saves
+        shell: bash
+        run: |
+          set -euo pipefail
+          WP="php wp-cli.phar --path=/tmp/htp-wordpress"
+          $WP eval 'wp_set_current_user(1); $_POST=array("year"=>"2026","enabled"=>"1","allow_closed_group_quotes"=>"0","closed_date_exceptions"=>array(array("start"=>"2026-12-11","end"=>"")),"blocked_message_fr"=>"Indisponible"); $_REQUEST=array("_wpnonce"=>wp_create_nonce("parcs_ht_save_quote_gate_1177")); Parcs_HT_Admin_Group_Quotes_1177::save_gate();'
+          $WP eval '$o=get_option("parcs_ht_quote_gate"); if (!is_array($o) || $o["allow_closed_group_quotes"]!=="0" || count($o["closed_date_exceptions"])!==1 || $o["closed_date_exceptions"][0]["end"]!=="2026-12-11") throw new RuntimeException("Modern admin-post did not persist the expected policy"); echo "Modern admin-post saved in real WordPress\n";'
+          $WP eval 'wp_set_current_user(1); $_POST=array("enabled"=>"1","allow_closed_group_quotes"=>"1","closed_date_exceptions"=>array(array("start"=>"2026-12-24","end"=>"2026-12-31")),"blocked_message_fr"=>"Indisponible"); $_REQUEST=array("_wpnonce"=>wp_create_nonce("parcs_ht_save_quote_gate")); Parcs_HT_Quote_Gate::save();'
+          $WP eval '$o=get_option("parcs_ht_quote_gate"); if (!is_array($o) || $o["allow_closed_group_quotes"]!=="1" || count($o["closed_date_exceptions"])!==1 || $o["closed_date_exceptions"][0]["end"]!=="2026-12-31") throw new RuntimeException("Legacy admin-post failed"); if (!class_exists("Parcs_HT_CSE")) throw new RuntimeException("CSE module missing"); echo "Legacy admin-post saved and CSE preserved\n";'
