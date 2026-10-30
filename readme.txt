@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.20.18
+Stable tag: 1.20.19
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes, FAQ et outils du parc.
 
@@ -22,6 +22,12 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.20.19 =
+* Enregistre uniquement la rubrique active dans les écrans dédiés des périodes et des tarifs visiteurs/groupes, sans modifier les données des autres écrans ni des autres saisons.
+* Réduit les copies complètes inutiles des options WordPress et les recalculs des tarifs lors des sauvegardes ciblées.
+* Préserve les sauvegardes, les devis, les préférences de mise à jour et le module CSE. Tests réels WordPress et PHP renforcés.
+
 
 = 1.20.18 =
 * Corrige l’accès aux grilles Tarifs visiteurs et CSE depuis le hub, et charge ses styles de cartes.

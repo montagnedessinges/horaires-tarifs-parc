@@ -1,4 +1,4 @@
-## Correctif en préparation — sauvegarde ciblée, charge PHP réduite
+## 1.20.19 — sauvegardes ciblées, charge PHP réduite
 
 - Les formulaires dédiés Périodes, Tarifs visiteurs et Tarifs groupes n'écrivent que les sous-rubriques concernées ; les autres saisons, les devis et le module CSE restent inchangés.
 - Les filtres des tarifs ne recalculent plus les grilles lors des sauvegardes d'horaires/périodes.
