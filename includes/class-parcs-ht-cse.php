@@ -176,7 +176,7 @@ final class Parcs_HT_CSE {
         $year = isset($_POST['season']) ? sanitize_text_field(wp_unslash($_POST['season'])) : '';
         if (!preg_match('/^20\d{2}$/', $year) || !in_array($year, self::years(), true)) wp_die('Année inconnue.', '', array('response'=>400));
         check_admin_referer('parcs_ht_save_cse_' . $year);
-        $raw = isset($_POST['cse']) && is_array($_POST['cse']) ? wp_unslash($_POST['cse']) : array();
+        $raw = isset($_POST['cse']) && is_array($_POST['cse']) ? wp_unslash($_POST['cse']) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Formulaire protégé par nonce et capacité, chaque champ est ensuite validé et assaini selon son type.
         $old = self::year_settings($year);
         $next = $old;
         foreach (array('enabled','show_table','show_public','show_login','show_signup','show_online','show_pdf','show_transition','show_link') as $flag) {
@@ -246,7 +246,7 @@ final class Parcs_HT_CSE {
             return;
         }
         if (class_exists('Parcs_HT_Admin_Navigation')) Parcs_HT_Admin_Navigation::render_year_context(self::PAGE, $year);
-        if (isset($_GET['cse_saved'])) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- indicateur d'état de sauvegarde
+        if (isset($_GET['cse_saved'])) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- indicateur d'état de sauvegarde en lecture seule
             echo '<div class="notice ' . (sanitize_text_field(wp_unslash($_GET['cse_saved'])) === '1' ? 'notice-success' : 'notice-error') . '"><p>' . (sanitize_text_field(wp_unslash($_GET['cse_saved'])) === '1' ? 'Réglages CSE enregistrés.' : 'La sauvegarde n’a pas pu être confirmée.') . '</p></div>';
         }
         echo '<style>.htp-cse-admin{max-width:1200px}.htp-cse-admin .htp-cse-section{background:#fff;border:1px solid #dcdcde;border-radius:10px;padding:20px;margin:18px 0}.htp-cse-admin .htp-cse-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}.htp-cse-admin .htp-cse-field{margin:12px 0;border:1px solid #ddd;padding:10px}.htp-cse-admin .htp-cse-field label{display:block;margin:7px 0}.htp-cse-admin input[type=url],.htp-cse-admin textarea{width:100%;max-width:600px}.htp-cse-admin .htp-cse-table input[type=text]{width:100%;min-width:105px}.htp-cse-admin .htp-cse-table select{max-width:260px}.htp-cse-admin .htp-cse-table th{white-space:nowrap}.htp-cse-admin .htp-cse-flags label{display:block;margin:8px 0}@media(max-width:780px){.htp-cse-admin .htp-cse-table{display:block;overflow:auto}}</style>';
