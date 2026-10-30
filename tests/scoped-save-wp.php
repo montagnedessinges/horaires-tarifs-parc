@@ -2,7 +2,7 @@
 /** WordPress integration test: run via wp eval-file with HTP_CASE env variable. */
 if (!defined('ABSPATH')) exit(1);
 $case = getenv('HTP_CASE') ?: '';
-define('WP_ADMIN', true);
+if (!defined('WP_ADMIN')) define('WP_ADMIN', true);
 wp_set_current_user(1);
 function htp_expect($ok, $message) {
     if (!$ok) throw new RuntimeException($message);

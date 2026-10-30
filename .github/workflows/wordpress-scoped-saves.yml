@@ -51,5 +51,5 @@ jobs:
           set -euo pipefail
           for phase in seed save-periods assert-periods save-retail assert-retail save-groups assert-groups; do
             echo "Phase: $phase"
-            HTP_CASE="$phase" php -d memory_limit=256M wp-cli.phar eval-file tests/scoped-save-wp.php --path=/tmp/htp-wp
+            HTP_CASE="$phase" php -d memory_limit=256M wp-cli.phar eval-file tests/scoped-save-wp.php --path=/tmp/htp-wp --context=admin
           done
