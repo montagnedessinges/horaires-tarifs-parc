@@ -107,7 +107,7 @@ final class Parcs_HT_Admin_Overview {
                 array('title'=>'Administration générale', 'text'=>'Parc, saisons, liens, publication annuelle et apparence globale.', 'url'=>self::admin_url_for('parcs-ht-general', $year)),
                 array('title'=>'Horaires & calendrier', 'text'=>'Horaires habituels et calendrier de l’année sélectionnée.', 'url'=>self::admin_url_for('parcs-ht-schedule', $year)),
                 array('title'=>'Périodes & événements', 'text'=>'Périodes repères, événements, exceptions et accès limité.', 'url'=>self::admin_url_for('parcs-ht-periods', $year)),
-                array('title'=>'Tarifs visiteurs', 'text'=>'Individuels, tarifs réduits, moyens de paiement et offres.', 'url'=>self::admin_url_for('parcs-ht-tariffs', $year)),
+                array('title'=>'Tarifs', 'text'=>'Accéder aux tarifs visiteurs ou à l’offre CSE.', 'url'=>self::admin_url_for(Parcs_HT_Admin_Navigation::TARIFFS_PAGE, $year)),
             ),
             'Groupes' => array(
                 array('title'=>'Espace Groupes', 'text'=>'Tarifs groupes, devis groupes et guides pédagogiques réunis dans une même rubrique.', 'url'=>self::admin_url_for('parcs-ht-groups', $year)),

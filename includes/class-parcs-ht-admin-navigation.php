@@ -14,6 +14,7 @@ final class Parcs_HT_Admin_Navigation {
     const COMMUNICATION_PAGE = 'parcs-ht-communication';
     const PERIODS_PAGE = 'parcs-ht-periods';
     const UPDATES_PAGE = 'parcs-ht-updates';
+    const TARIFFS_PAGE = 'parcs-ht-tariffs-home';
 
     private static $bridges = array(
         'parcs-ht-tariffs' => 'htp-tariffs',
@@ -161,12 +162,30 @@ final class Parcs_HT_Admin_Navigation {
 
         add_submenu_page($parent, 'Horaires & calendrier', 'Horaires & calendrier', 'manage_options', 'parcs-ht-schedule', class_exists('Parcs_HT_Admin_Schedule') ? array('Parcs_HT_Admin_Schedule', 'page') : array(__CLASS__, 'bridge_fallback'));
         add_submenu_page($parent, 'Périodes, événements et exceptions', 'Périodes & événements', 'manage_options', self::PERIODS_PAGE, array(__CLASS__, 'periods_page'));
+        add_submenu_page($parent, 'Tarifs', 'Tarifs', 'manage_options', self::TARIFFS_PAGE, array(__CLASS__, 'tariffs_page'));
         add_submenu_page($parent, 'Tarifs visiteurs', 'Tarifs visiteurs', 'manage_options', 'parcs-ht-tariffs', array(__CLASS__, 'bridge_fallback'));
         add_submenu_page($parent, 'Groupes', 'Groupes', 'manage_options', self::GROUPS_PAGE, array(__CLASS__, 'groups_page'));
         add_submenu_page($parent, 'Communication', 'Communication', 'manage_options', self::COMMUNICATION_PAGE, array(__CLASS__, 'communication_page'));
         add_submenu_page($parent, 'Aperçu', 'Aperçu', 'manage_options', 'parcs-ht-preview', array('Parcs_HT_Admin', 'preview_page'));
         add_submenu_page($parent, 'Mises à jour', 'Mises à jour', 'update_plugins', self::UPDATES_PAGE, array(__CLASS__, 'updates_page'));
         add_submenu_page($parent, 'Shortcodes', 'Shortcodes', 'manage_options', 'parcs-ht-shortcodes', array('Parcs_HT_Admin', 'shortcodes_page'));
+    }
+
+    /** Page d'entrée commune aux tarifs visiteurs et CSE, sans fusionner leurs réglages. */
+    public static function tariffs_page() {
+        if (!current_user_can('manage_options')) return;
+        $year = self::requested_year();
+        $visitor_args = array('page'=>class_exists('Parcs_HT_Admin_Retail_Tariffs') ? Parcs_HT_Admin_Retail_Tariffs::PAGE : 'parcs-ht-tariffs');
+        $cse_args = array('page'=>class_exists('Parcs_HT_CSE') ? Parcs_HT_CSE::PAGE : 'parcs-ht-cse');
+        if ($year !== '') {
+            $visitor_args['season'] = $year;
+            $cse_args['season'] = $year;
+        }
+        self::landing_header('Tarifs', 'Choisissez la grille à gérer. Les tarifs visiteurs et l’offre CSE restent séparés, avec leurs propres réglages par année.');
+        echo '<div class="htp-1172-grid">';
+        self::card('Tarifs visiteurs', 'Tarifs individuels et réduits, moyens de paiement, impression et présentation publique.', add_query_arg($visitor_args, admin_url('admin.php')));
+        self::card('Tarifs CSE', 'Offre professionnelle française, tarifs CSE et parcours de billetterie.', add_query_arg($cse_args, admin_url('admin.php')));
+        echo '</div></div>';
     }
 
     /** Range le sous-menu dans l'ordre fonctionnel retenu. */
@@ -181,6 +200,11 @@ final class Parcs_HT_Admin_Navigation {
         foreach ($submenu[$parent] as $item) {
             if (!isset($item[2]) || $item[2] === $parent) continue;
             $slug = (string)$item[2];
+            $hidden_pages = array(
+                class_exists('Parcs_HT_Admin_Retail_Tariffs') ? Parcs_HT_Admin_Retail_Tariffs::PAGE : 'parcs-ht-tariffs',
+                class_exists('Parcs_HT_CSE') ? Parcs_HT_CSE::PAGE : 'parcs-ht-cse',
+            );
+            if (in_array($slug, $hidden_pages, true)) continue;
             if (isset($seen_slugs[$slug])) continue;
             $seen_slugs[$slug] = true;
             $items[] = $item;
@@ -192,9 +216,8 @@ final class Parcs_HT_Admin_Navigation {
             class_exists('Parcs_HT_Admin_General') ? Parcs_HT_Admin_General::PAGE : 'parcs-ht-general',
             'parcs-ht-schedule',
             self::PERIODS_PAGE,
-            'parcs-ht-tariffs',
+            self::TARIFFS_PAGE,
             self::GROUPS_PAGE,
-            class_exists('Parcs_HT_CSE') ? Parcs_HT_CSE::PAGE : 'parcs-ht-cse',
             self::COMMUNICATION_PAGE,
             $content_slug,
             'parcs-ht-preview',
@@ -241,7 +264,6 @@ final class Parcs_HT_Admin_Navigation {
         self::landing_header('Groupes', 'Les tarifs groupes, les devis, les guides pédagogiques et les bons découverte sont regroupés ici, tout en restant des écrans séparés.');
         echo '<div class="htp-1172-grid">';
         self::card('Tarifs groupes', 'Tarifs, moyens de paiement, informations et apparence propres aux groupes.', self::legacy_url('htp-tariffs-groups', $year));
-        if (class_exists('Parcs_HT_CSE')) self::card('Tarifs CSE', 'Tarifs professionnels, comparatif public, accès aux comptes et bon de commande PDF.', add_query_arg(array('page'=>Parcs_HT_CSE::PAGE, 'season'=>$year), admin_url('admin.php')));
         self::card('Devis groupes', 'Disponibilité, formulaire et règles de devis.', self::legacy_url('htp-quote', $year));
         self::card('Guides pédagogiques', 'Documents scolaires, langues, cycles et statistiques.', self::legacy_url('htp-guides', $year));
         self::card('Bons découverte', 'Offres scolaires, départements autorisés, formulaire CF7 et textes modifiables.', admin_url('admin.php?page=' . Parcs_HT_Discovery_Voucher::PAGE));

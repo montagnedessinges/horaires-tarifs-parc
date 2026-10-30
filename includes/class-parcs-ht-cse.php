@@ -15,10 +15,11 @@ final class Parcs_HT_CSE {
         foreach (array('parc_tarifs_cse', 'parcs_tarifs_cse', 'parc_lien_cse') as $base) {
             add_shortcode($base, array(__CLASS__, $base === 'parc_lien_cse' ? 'shortcode_link' : 'shortcode'));
             foreach (array('fr','en','de') as $lang) {
-                add_shortcode($base . '_' . $lang, static function ($atts = array()) use ($base, $lang) {
+                // Alias conservés pour les pages déjà publiées : ils renvoient au rendu français.
+                add_shortcode($base . '_' . $lang, static function ($atts = array()) use ($base) {
                     return $base === 'parc_lien_cse'
-                        ? Parcs_HT_CSE::render_link($lang)
-                        : Parcs_HT_CSE::render($lang, is_array($atts) ? $atts : array());
+                        ? Parcs_HT_CSE::shortcode_link(is_array($atts) ? $atts : array())
+                        : Parcs_HT_CSE::shortcode(is_array($atts) ? $atts : array());
                 });
             }
         }
@@ -29,17 +30,18 @@ final class Parcs_HT_CSE {
     }
 
     private static function t($lang, $fr, $en, $de) {
-        return $lang === 'en' ? $en : ($lang === 'de' ? $de : $fr);
+        unset($lang, $en, $de);
+        return $fr;
     }
 
     private static function language($lang) {
-        return in_array($lang, array('fr','en','de'), true) ? $lang : 'fr';
+        unset($lang);
+        return 'fr';
     }
 
     private static function tr($values, $lang, $fallback = '') {
+        unset($lang);
         $values = is_array($values) ? $values : array();
-        $localized = trim((string)($values[$lang] ?? ''));
-        if ($localized !== '') return $localized;
         $french = trim((string)($values['fr'] ?? ''));
         return $french !== '' ? $french : $fallback;
     }
@@ -157,21 +159,25 @@ final class Parcs_HT_CSE {
         return (float)str_replace(',', '.', $match[0]);
     }
 
-    private static function localized_urls($raw) {
-        $out = array();
-        foreach (array('fr','en','de') as $lang) {
-            $out[$lang] = esc_url_raw(is_array($raw) && is_scalar($raw[$lang] ?? null) ? (string)$raw[$lang] : '');
-        }
-        return $out;
+    private static function localized_urls($raw, $existing = array()) {
+        $existing = is_array($existing) ? $existing : array();
+        $french = is_array($raw) ? ($raw['fr'] ?? '') : $raw;
+        return array(
+            'fr'=>esc_url_raw(is_scalar($french) ? (string)$french : ''),
+            'en'=>(string)($existing['en'] ?? ''),
+            'de'=>(string)($existing['de'] ?? ''),
+        );
     }
 
-    private static function translations($raw, $multiline = false) {
-        $out = array();
-        foreach (array('fr','en','de') as $lang) {
-            $value = is_array($raw) && is_scalar($raw[$lang] ?? null) ? (string)$raw[$lang] : '';
-            $out[$lang] = $multiline ? sanitize_textarea_field($value) : sanitize_text_field($value);
-        }
-        return $out;
+    private static function translations($raw, $multiline = false, $existing = array()) {
+        $existing = is_array($existing) ? $existing : array();
+        $french = is_array($raw) ? ($raw['fr'] ?? '') : $raw;
+        $french = is_scalar($french) ? (string)$french : '';
+        return array(
+            'fr'=>$multiline ? sanitize_textarea_field($french) : sanitize_text_field($french),
+            'en'=>(string)($existing['en'] ?? ''),
+            'de'=>(string)($existing['de'] ?? ''),
+        );
     }
 
     /** Sauvegarde exclusive de l'année CSE ciblée ; les autres années restent intactes. */
@@ -187,25 +193,27 @@ final class Parcs_HT_CSE {
             $next[$flag] = isset($raw[$flag]) && (string)$raw[$flag] === '1' ? '1' : '0';
         }
         foreach (array('page_url','login_url','signup_url','online_url','pdf_url') as $key) {
-            $next[$key] = self::localized_urls($raw[$key] ?? array());
+            $next[$key] = self::localized_urls($raw[$key] ?? '', $old[$key] ?? array());
         }
         foreach (array('login_label','signup_label','online_label','pdf_label') as $label_key) {
-            $next[$label_key] = self::translations($raw[$label_key] ?? array());
+            $next[$label_key] = self::translations($raw[$label_key] ?? '', false, $old[$label_key] ?? array());
         }
         $next['contact_email'] = sanitize_email(is_scalar($raw['contact_email'] ?? null) ? (string)$raw['contact_email'] : '');
-        $next['intro'] = self::translations($raw['intro'] ?? array(), true);
-        $next['transition'] = self::translations($raw['transition'] ?? array(), true);
+        $next['intro'] = self::translations($raw['intro'] ?? '', true, $old['intro'] ?? array());
+        $next['transition'] = self::translations($raw['transition'] ?? '', true, $old['transition'] ?? array());
 
         $allowed_sources = self::source_options($year);
         if (isset($_POST['cse_rows_present'])) {
             $next['rows'] = array();
-            foreach (array_slice((array)($raw['rows'] ?? array()), 0, 30) as $item) {
+            $old_rows = array_values((array)($old['rows'] ?? array()));
+            foreach (array_slice((array)($raw['rows'] ?? array()), 0, 30) as $index=>$item) {
                 if (!is_array($item) || !empty($item['delete'])) continue;
-                $label = self::translations($item['label'] ?? array());
+                $existing_row = isset($old_rows[$index]) && is_array($old_rows[$index]) ? $old_rows[$index] : array();
+                $label = self::translations($item['label'] ?? '', false, $existing_row['label'] ?? array());
                 $price = sanitize_text_field(is_scalar($item['cse_price'] ?? null) ? (string)$item['cse_price'] : '');
                 $source = sanitize_key(is_scalar($item['public_row_id'] ?? null) ? (string)$item['public_row_id'] : '');
                 if (!isset($allowed_sources[$source])) $source = '';
-                if ($label['fr'] === '' && $label['en'] === '' && $label['de'] === '' && $price === '') continue;
+                if ($label['fr'] === '' && $price === '') continue;
                 $next['rows'][] = array(
                     'enabled'=>isset($item['enabled']) && (string)$item['enabled'] === '1' ? '1' : '0',
                     'label'=>$label, 'cse_price'=>$price, 'public_row_id'=>$source,
@@ -229,25 +237,21 @@ final class Parcs_HT_CSE {
     }
 
     private static function field($key, $label, $values, $type = 'url') {
-        echo '<fieldset class="htp-cse-field"><legend><strong>' . esc_html($label) . '</strong></legend>';
-        foreach (array('fr'=>'FR','en'=>'EN','de'=>'DE') as $lang=>$name) {
-            $value = (string)($values[$lang] ?? '');
-            echo '<label>' . esc_html($name) . ' ';
-            if ($type === 'textarea') {
-                echo '<textarea rows="3" name="cse[' . esc_attr($key) . '][' . esc_attr($lang) . ']">' . esc_textarea($value) . '</textarea>';
-            } else {
-                echo '<input type="' . ($type === 'text' ? 'text' : 'url') . '" name="cse[' . esc_attr($key) . '][' . esc_attr($lang) . ']" value="' . esc_attr($value) . '"' . ($type === 'url' ? ' placeholder="https://"' : '') . '>';
-            }
-            echo '</label>';
+        $value = self::tr($values, 'fr');
+        echo '<fieldset class="htp-cse-field"><legend><strong>' . esc_html($label) . '</strong></legend><label>';
+        if ($type === 'textarea') {
+            echo '<textarea rows="3" name="cse[' . esc_attr($key) . ']">' . esc_textarea($value) . '</textarea>';
+        } else {
+            echo '<input type="' . ($type === 'text' ? 'text' : 'url') . '" name="cse[' . esc_attr($key) . ']" value="' . esc_attr($value) . '"' . ($type === 'url' ? ' placeholder="https://"' : '') . '>';
         }
-        echo '</fieldset>';
+        echo '</label></fieldset>';
     }
 
     public static function admin_page() {
         if (!current_user_can('manage_options')) return;
         $year = self::chosen_year();
         $settings = $year !== '' ? self::year_settings($year) : array();
-        echo '<div class="wrap htp-cse-admin"><h1>Tarifs et billetterie CSE</h1><p>Offre indépendante des tarifs visiteurs et groupes. Chaque année et chaque parc possèdent leurs propres réglages.</p>';
+        echo '<div class="wrap htp-cse-admin"><h1>Tarifs CSE</h1><p>Offre française de billetterie professionnelle. Son interrupteur annuel pilote sa publication indépendamment du calendrier général, avec des réglages propres à chaque année et à chaque parc.</p><p><a class="button" href="' . esc_url(add_query_arg(array('page'=>class_exists('Parcs_HT_Admin_Navigation') ? Parcs_HT_Admin_Navigation::TARIFFS_PAGE : 'parcs-ht-tariffs-home', 'season'=>$year), admin_url('admin.php'))) . '">← Retour à Tarifs</a></p>';
         if ($year === '') {
             echo '<p>Créez d’abord une année dans Administration générale → Saisons.</p></div>';
             return;
@@ -258,7 +262,7 @@ final class Parcs_HT_CSE {
             echo '<div class="notice ' . ($saved_flag === '1' ? 'notice-success' : 'notice-error') . '"><p>' . ($saved_flag === '1' ? 'Réglages CSE enregistrés.' : 'La sauvegarde n’a pas pu être confirmée.') . '</p></div>';
         }
         echo '<style>.htp-cse-admin{max-width:1200px}.htp-cse-admin .htp-cse-section{background:#fff;border:1px solid #dcdcde;border-radius:10px;padding:20px;margin:18px 0}.htp-cse-admin .htp-cse-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}.htp-cse-admin .htp-cse-field{margin:12px 0;border:1px solid #ddd;padding:10px}.htp-cse-admin .htp-cse-field label{display:block;margin:7px 0}.htp-cse-admin input[type=url],.htp-cse-admin textarea{width:100%;max-width:600px}.htp-cse-admin .htp-cse-table input[type=text]{width:100%;min-width:105px}.htp-cse-admin .htp-cse-table select{max-width:260px}.htp-cse-admin .htp-cse-table th{white-space:nowrap}.htp-cse-admin .htp-cse-flags label{display:block;margin:8px 0}@media(max-width:780px){.htp-cse-admin .htp-cse-table{display:block;overflow:auto}}</style>';
-        echo '<p><code>[parc_tarifs_cse]</code> (alias : <code>[parcs_tarifs_cse]</code>) — versions FR/EN/DE disponibles. <code>[parc_lien_cse]</code> affiche seulement le renvoi vers la page CSE.</p>';
+        echo '<p><code>[parc_tarifs_cse]</code> (alias : <code>[parcs_tarifs_cse]</code>) affiche l’offre CSE en français. <code>[parc_lien_cse]</code> affiche le renvoi uniquement sur une page française. Les anciens suffixes de langue restent compatibles et affichent la version française.</p>';
         echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '"><input type="hidden" name="action" value="parcs_ht_save_cse"><input type="hidden" name="season" value="' . esc_attr($year) . '">';
         wp_nonce_field('parcs_ht_save_cse_' . $year);
         echo '<section class="htp-cse-section"><h2>Visibilité — ' . esc_html($year) . '</h2><div class="htp-cse-grid htp-cse-flags">';
@@ -271,30 +275,28 @@ final class Parcs_HT_CSE {
             'show_online'=>'Afficher le bouton billetterie en ligne',
             'show_pdf'=>'Afficher le téléchargement du bon de commande PDF',
             'show_transition'=>'Afficher le message de transition numérique',
-            'show_link'=>'Afficher un renvoi CSE sous les tarifs Groupes de la page Horaires et Tarifs',
+            'show_link'=>'Afficher un renvoi vers l’offre CSE sous les tarifs visiteurs français',
         );
         foreach ($flags as $flag=>$label) {
             echo '<label><input type="checkbox" name="cse[' . esc_attr($flag) . ']" value="1" ' . checked((string)($settings[$flag] ?? '0'), '1', false) . '> ' . esc_html($label) . '</label>';
         }
         echo '</div></section>';
         echo '<section class="htp-cse-section"><h2>Tarifs CSE</h2><p>Le tarif public est issu de la ligne correspondante des tarifs individuels de ' . esc_html($year) . '. Seuls les prix réellement disponibles sont affichés. Pour ajouter une ligne, remplissez une ligne vide ; pour la supprimer, cochez Supprimer.</p>';
-        echo '<input type="hidden" name="cse_rows_present" value="1"><table class="widefat striped htp-cse-table"><thead><tr><th>Afficher</th><th>Billet FR</th><th>EN</th><th>DE</th><th>Tarif CSE</th><th>Tarif public (source)</th><th>Supprimer</th></tr></thead><tbody>';
+        echo '<input type="hidden" name="cse_rows_present" value="1"><table class="widefat striped htp-cse-table"><thead><tr><th>Afficher</th><th>Billet</th><th>Tarif CSE</th><th>Tarif public (source)</th><th>Supprimer</th></tr></thead><tbody>';
         $rows = array_values((array)($settings['rows'] ?? array()));
         for ($j=0;$j<3;$j++) $rows[] = array('label'=>array('fr'=>'','en'=>'','de'=>''),'cse_price'=>'','public_row_id'=>'','enabled'=>'1');
         $sources = self::source_options($year);
         foreach ($rows as $index=>$row) {
             $labels = (array)($row['label'] ?? array());
             echo '<tr><td><input type="checkbox" name="cse[rows][' . (int)$index . '][enabled]" value="1" ' . checked((string)($row['enabled'] ?? '1'), '1', false) . '></td>';
-            foreach (array('fr','en','de') as $lang) {
-                echo '<td><input type="text" name="cse[rows][' . (int)$index . '][label][' . esc_attr($lang) . ']" value="' . esc_attr($labels[$lang] ?? '') . '"></td>';
-            }
+            echo '<td><input type="text" name="cse[rows][' . (int)$index . '][label]" value="' . esc_attr(self::tr($labels, 'fr')) . '"></td>';
             echo '<td><input type="text" name="cse[rows][' . (int)$index . '][cse_price]" value="' . esc_attr($row['cse_price'] ?? '') . '" placeholder="10,50 €"></td>';
             echo '<td><select name="cse[rows][' . (int)$index . '][public_row_id]"><option value="">— Ne pas comparer —</option>';
             foreach ($sources as $id=>$label) echo '<option value="' . esc_attr($id) . '"' . selected((string)($row['public_row_id'] ?? ''), $id, false) . '>' . esc_html($label) . '</option>';
             echo '</select></td><td><input type="checkbox" name="cse[rows][' . (int)$index . '][delete]" value="1" aria-label="Supprimer cette ligne"></td></tr>';
         }
         echo '</tbody></table></section>';
-        echo '<section class="htp-cse-section"><h2>Parcours de commande et boutons</h2><p>Si le lien d’une langue est vide, le lien français est utilisé. Aucun lien n’est inventé. Séparez bien connexion, inscription, billetterie et bon de commande.</p>';
+        echo '<section class="htp-cse-section"><h2>Parcours de commande et boutons</h2><p>Renseignez les liens et libellés français. Séparez bien connexion, inscription, billetterie et bon de commande.</p>';
         self::field('page_url', 'Adresse de la page CSE (pour le renvoi public)', $settings['page_url']);
         self::field('login_url', 'Connexion au compte CSE', $settings['login_url']);
         self::field('signup_url', 'Création de compte', $settings['signup_url']);
@@ -338,18 +340,25 @@ final class Parcs_HT_CSE {
         $all = self::all();
         $out = array();
         foreach (self::years() as $year) {
-            if ((string)($all[$year]['enabled'] ?? '0') === '1' &&
-                (!class_exists('Parcs_HT_Public_Visibility') || Parcs_HT_Public_Visibility::in_window($year))) $out[] = $year;
+            // Le CSE possède son propre interrupteur annuel : il ne dépend pas
+            // de la fenêtre générale appliquée aux cinq autres modules.
+            if ((string)($all[$year]['enabled'] ?? '0') === '1') $out[] = $year;
         }
         return $out;
     }
 
+    private static function is_french_surface() {
+        return !class_exists('Parcs_HT_Schedule') || Parcs_HT_Schedule::language() === 'fr';
+    }
+
     public static function shortcode($atts = array()) {
-        return self::render(Parcs_HT_Schedule::language(), is_array($atts) ? $atts : array());
+        if (!self::is_french_surface()) return '';
+        return self::render('fr', is_array($atts) ? $atts : array());
     }
 
     public static function shortcode_link($atts = array()) {
-        return self::render_link(Parcs_HT_Schedule::language(), is_array($atts) ? $atts : array());
+        if (!self::is_french_surface()) return '';
+        return self::render_link('fr', is_array($atts) ? $atts : array());
     }
 
     private static function render_year($lang, $year) {
