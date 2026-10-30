@@ -1133,32 +1133,89 @@ final class Parcs_HT_Admin {
         $current = Parcs_HT_Defaults::settings($year);
         $scoped_save = isset($_POST['htp_save_active']);
         $incomplete = self::incomplete_sections($raw);
+        $workspace = isset($_POST['parcs_ht_11711_workspace']) && is_scalar($_POST['parcs_ht_11711_workspace'])
+            ? sanitize_key(wp_unslash($_POST['parcs_ht_11711_workspace'])) : '';
+        // Les écrans métier ont leur propre formulaire et ne doivent modifier QUE leur rubrique.
+        $scope_sections = array(
+            'periods'=>array('holidays','exceptions','domain_rules'),
+            'retail'=>array('tariffs'),
+            'groups'=>array('tariffs'),
+            'popup'=>array('alerts'),
+        );
+        $is_scoped = isset($scope_sections[$workspace]);
+        if ($is_scoped) {
+            $complete = isset($raw['_complete']) && is_array($raw['_complete']) ? $raw['_complete'] : array();
+            foreach ($scope_sections[$workspace] as $section) {
+                if ((string)($complete[$section] ?? '') !== '1') {
+                    wp_die('La rubrique à enregistrer est incomplète. Aucun réglage n’a été modifié.');
+                }
+            }
+        }
+
+        // Le sanitizer canonique reste commun, mais l'écriture finale ne conserve
+        // que les valeurs appartenant à l'écran, sans effacer ni reconstituer les autres.
         $clean = self::sanitize($raw, $current);
         $all = Parcs_HT_Defaults::all_settings();
-        if (class_exists('Parcs_HT_Health')) Parcs_HT_Health::store_revision($all, $year);
         if (!isset($all['seasons'][$year])) $all['seasons'][$year] = Parcs_HT_Defaults::empty_season($year);
-        $all['general'] = $clean['general'];
-        $all['timezone'] = $clean['timezone'];
-        unset($all['general']['year'], $all['general']['season_start'], $all['general']['season_end'], $all['general']['published']);
-        $all['alerts'] = $clean['alerts'];
-        $all['tariffs'] = $clean['tariffs'];
-        $all['quote_page'] = $clean['quote_page'];
-        $all['seasons'][$year] = array_merge($all['seasons'][$year], array(
-            'year' => $year,
-            'published' => isset($clean['season_published']) ? $clean['season_published'] : '0',
-            'season_start' => isset($clean['season_start']) ? $clean['season_start'] : '',
-            'season_end' => isset($clean['season_end']) ? $clean['season_end'] : '',
-            'regular_periods' => $clean['regular_periods'],
-            'school_holidays' => $clean['school_holidays'],
-            'special_periods' => $clean['special_periods'],
-            'public_holidays' => $clean['public_holidays'],
-            'domain_rules' => $clean['domain_rules'],
-            'exceptions' => $clean['exceptions'],
-        ));
+        if (!$is_scoped && class_exists('Parcs_HT_Health')) Parcs_HT_Health::store_revision($all, $year);
+
+        if ($is_scoped) {
+            if ($workspace === 'periods') {
+                foreach (array('school_holidays','special_periods','public_holidays','domain_rules','exceptions') as $key) {
+                    $all['seasons'][$year][$key] = $clean[$key];
+                }
+                self::apply_scoped_general($all, $clean, $raw);
+            } elseif ($workspace === 'popup') {
+                $all['alerts'] = $clean['alerts'];
+                self::apply_scoped_general($all, $clean, $raw);
+            } elseif ($workspace === 'retail' || $workspace === 'groups') {
+                $old_tariffs = isset($all['seasons'][$year]['tariffs']) && is_array($all['seasons'][$year]['tariffs'])
+                    ? $all['seasons'][$year]['tariffs'] : ($all['tariffs'] ?? array());
+                $merged = is_array($old_tariffs) ? $old_tariffs : array();
+                if ($workspace === 'groups') {
+                    $merged['groups'] = $clean['tariffs']['groups'];
+                    if (!isset($merged['columns']) || !is_array($merged['columns'])) $merged['columns'] = array();
+                    $merged['columns']['groups'] = $clean['tariffs']['columns']['groups'];
+                    if (isset($clean['tariffs']['group_order'])) $merged['group_order'] = $clean['tariffs']['group_order'];
+                } else {
+                    foreach (array('individual','reduced','notes','payment_methods','payment_items','payment_icons','payment_styles','print','info_blocks') as $key) {
+                        if (array_key_exists($key, $clean['tariffs'])) $merged[$key] = $clean['tariffs'][$key];
+                    }
+                    if (!isset($merged['columns']) || !is_array($merged['columns'])) $merged['columns'] = array();
+                    foreach (array('individual','reduced') as $key) $merged['columns'][$key] = $clean['tariffs']['columns'][$key];
+                    self::apply_scoped_general($all, $clean, $raw);
+                }
+                // Le filtre annuel existant synchronise les tarifs et les identifiants.
+                $all['tariffs'] = $merged;
+            }
+        } else {
+            $all['general'] = $clean['general'];
+            $all['timezone'] = $clean['timezone'];
+            unset($all['general']['year'], $all['general']['season_start'], $all['general']['season_end'], $all['general']['published']);
+            $all['alerts'] = $clean['alerts'];
+            $all['tariffs'] = $clean['tariffs'];
+            $all['quote_page'] = $clean['quote_page'];
+            $all['seasons'][$year] = array_merge($all['seasons'][$year], array(
+                'year' => $year,
+                'published' => isset($clean['season_published']) ? $clean['season_published'] : '0',
+                'season_start' => isset($clean['season_start']) ? $clean['season_start'] : '',
+                'season_end' => isset($clean['season_end']) ? $clean['season_end'] : '',
+                'regular_periods' => $clean['regular_periods'],
+                'school_holidays' => $clean['school_holidays'],
+                'special_periods' => $clean['special_periods'],
+                'public_holidays' => $clean['public_holidays'],
+                'domain_rules' => $clean['domain_rules'],
+                'exceptions' => $clean['exceptions'],
+            ));
+        }
         $all['schema_version'] = Parcs_HT_Defaults::SCHEMA_VERSION;
         update_option(Parcs_HT_Defaults::OPTION, $all, false);
         $clean['active_season_year'] = $year;
-        if (class_exists('Parcs_HT_Health')) Parcs_HT_Health::notify_audit($clean, 'enregistrement de la saison '.$year);
+        // Le contrôle approfondi reste accessible dans Santé/Aperçu, sans
+        // reconstruire une deuxième fois toutes les saisons pendant une sauvegarde ciblée.
+        if (!$is_scoped && class_exists('Parcs_HT_Health')) {
+            Parcs_HT_Health::notify_audit($clean, 'enregistrement de la saison '.$year);
+        }
         do_action('litespeed_purge_all');
         $redirect = array('page' => self::PAGE, 'season' => $year, 'updated' => '1');
         $allowed_tabs = array('htp-general','htp-regular','htp-holidays','htp-domain','htp-exceptions','htp-alerts','htp-tariffs','htp-quote','htp-preview','htp-updates','htp-shortcodes');
@@ -1167,6 +1224,16 @@ final class Parcs_HT_Admin {
         if (!empty($incomplete) && !$scoped_save) $redirect['preserved'] = '1';
         wp_safe_redirect(add_query_arg($redirect, admin_url('admin.php')));
         exit;
+    }
+
+    private static function apply_scoped_general(&$all, $clean, $raw) {
+        $posted = isset($raw['general']) && is_array($raw['general']) ? $raw['general'] : array();
+        if (!$posted) return;
+        if (!isset($all['general']) || !is_array($all['general'])) $all['general'] = array();
+        // Jamais de sauvegarde des champs généraux absents de ce formulaire.
+        foreach (array_keys($posted) as $key) {
+            if (array_key_exists($key, $clean['general'])) $all['general'][$key] = $clean['general'][$key];
+        }
     }
 
     public static function check_updates() {

@@ -1,3 +1,12 @@
+## Correctif en préparation — sauvegarde ciblée, charge PHP réduite
+
+- Les formulaires dédiés Périodes, Tarifs visiteurs et Tarifs groupes n'écrivent que les sous-rubriques concernées ; les autres saisons, les devis et le module CSE restent inchangés.
+- Les filtres des tarifs ne recalculent plus les grilles lors des sauvegardes d'horaires/périodes.
+- Les historiques complets ne dupliquent plus dix fois la configuration dans une même journée, et les tests de vérification lourds sont évités pour les sauvegardes ciblées.
+- Les sauvegardes globales/import/export et le système de restauration existants restent disponibles.
+- Les options WordPress historiques restent en place : une répartition physique en plusieurs options pourra nécessiter une migration distincte si les mesures PHP montrent un besoin supplémentaire.
+- La cause exacte des dépassements mémoire sur le site Forêt des Singes reste à confirmer avec les journaux PHP et le pic mesuré en préproduction.
+
 ## 1.20.18
 
 - Corrige l’accès aux réglages Tarifs visiteurs et CSE en conservant leurs routes enregistrées dans WordPress tout en masquant leurs raccourcis du menu.

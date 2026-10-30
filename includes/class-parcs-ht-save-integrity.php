@@ -275,12 +275,18 @@ final class Parcs_HT_Save_Integrity {
     public static function normalize_existing_revisions() {
         $current = get_option(self::REVISIONS_OPTION, array());
         $normalized = self::normalize_revisions($current);
-        if (!self::same_value($current, $normalized)) update_option(self::REVISIONS_OPTION, $normalized, false);
+        if ($current !== $normalized) update_option(self::REVISIONS_OPTION, $normalized, false);
     }
 
     public static function store_daily_snapshot($year = '', $reason = 'Enregistrement') {
         $revisions = get_option(self::REVISIONS_OPTION, array());
         if (!is_array($revisions)) $revisions = array();
+        // Ne pas allouer un snapshot intégral pour chaque clic « Enregistrer ».
+        // Une sauvegarde quotidienne existe déjà : conserver la première du jour.
+        $today = wp_date('Y-m-d');
+        foreach ($revisions as $revision) {
+            if (is_array($revision) && self::revision_day($revision) === $today) return;
+        }
         array_unshift($revisions, self::capture_snapshot($year, $reason));
         update_option(self::REVISIONS_OPTION, self::normalize_revisions($revisions), false);
     }

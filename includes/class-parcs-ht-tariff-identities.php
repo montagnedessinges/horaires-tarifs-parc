@@ -238,6 +238,10 @@ final class Parcs_HT_Tariff_Identities {
     public static function preserve_ids_on_update($new_value, $old_value, $option) {
         unset($old_value, $option);
         if (self::$normalizing || !is_array($new_value)) return $new_value;
+        // Les mises à jour d'horaires, périodes ou pop-up n'ont aucune grille à renuméroter.
+        if (is_admin() && isset($_POST['action']) && is_scalar($_POST['action'])
+            && sanitize_key(wp_unslash($_POST['action'])) === 'parcs_ht_save'
+            && (string)($_POST['settings']['_complete']['tariffs'] ?? '') !== '1') return $new_value;
         self::$normalizing = true;
         $year = '';
         if (isset($_POST['season_year'])) { // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Utilisé uniquement pour rattacher les IDs au brouillon en cours de sauvegarde.
