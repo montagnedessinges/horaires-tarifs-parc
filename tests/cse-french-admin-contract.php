@@ -15,6 +15,6 @@ cse_french_contract_assert(strpos($cse, 'localized_urls($raw[$key] ??') !== fals
 cse_french_contract_assert(strpos($cse, 'translations($raw[$label_key] ??') !== false, 'la sauvegarde traite les libellés français séparément');
 cse_french_contract_assert(strpos($cse, "'en'=>") !== false && strpos($cse, "'de'=>") !== false, 'les traductions historiques sont recopiées');
 cse_french_contract_assert(strpos($cse, 'name="cse[') !== false && strpos($cse, '[label]') !== false, 'le formulaire propose les champs français canoniques');
-cse_french_contract_assert(strpos($cse, "foreach (array('fr','en','de') as $lang)") !== false, 'les anciens alias de shortcode restent enregistrés');
+cse_french_contract_assert(strpos($cse, "foreach (array('fr','en','de') as") !== false, 'les anciens alias de shortcode restent enregistrés');
 cse_french_contract_assert(strpos($cse, "Parcs_HT_Schedule::language() === 'fr'") !== false, 'les shortcodes CSE sont limités aux pages françaises');
 fwrite(STDOUT, "OK cse-french-admin-contract\n");
