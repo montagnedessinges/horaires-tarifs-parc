@@ -77,6 +77,7 @@ jobs:
           php tests/group-tariff-publication-contract.php
           php tests/group-tariff-shortcode-runtime.php
           php tests/cse-1214-runtime.php
+          php tests/cse-french-admin-contract.php
           php tests/shortcode-registry-contract.php
           php tests/discovery-voucher-contract.php
           php tests/admin-shortcode-previews-contract.php
@@ -141,6 +142,7 @@ jobs:
           PLUGIN_ROOT=/tmp/htp-production-test php tests/group-tariff-publication-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/group-tariff-shortcode-runtime.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/shortcode-registry-contract.php
+          PLUGIN_ROOT=/tmp/htp-production-test php tests/cse-french-admin-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/admin-shortcode-previews-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/admin-shortcode-preview-script-regression.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/pedagogical-guides-contract.php
