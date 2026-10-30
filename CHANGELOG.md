@@ -1,3 +1,10 @@
+## 1.20.16 — Visibilité annuelle unifiée des tarifs
+
+- Corrige une divergence entre le calendrier et les tarifs visiteurs/groupes : les sélecteurs historiques délèguent à la politique centrale `Parcs_HT_Public_Visibility`.
+- Les tarifs groupes, les horaires groupes et leurs onglets publics respectent les dates de bascule d’apparition et de retrait, même lorsque les interrupteurs manuels sont renseignés.
+- Conserve le choix explicite d’année dans les onglets et sélectionne la saison commercialement la plus récente parmi les années effectivement visibles.
+- Ajoute une non-régression aux dates veille / jour de bascule / lendemain pour les tarifs visiteurs, tarifs groupes, horaires groupes et sélection du shortcode.
+
 ## 1.20.15 — Retour contrôlé du blocage des devis sur jours fermés (sur base CSE 1.20.14)
 
 - Réintègre le réglage global Oui/Non pour les devis groupes sur **journées totalement fermées**, avec exceptions de dates et périodes inversant la règle.
