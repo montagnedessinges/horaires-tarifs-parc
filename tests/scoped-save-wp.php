@@ -51,6 +51,7 @@ case 'seed':
     $all['tariffs'] = $all['seasons']['2026']['tariffs'];
     update_option(Parcs_HT_Defaults::OPTION, $all, false);
     update_option('parcs_ht_cse_settings', array('2026'=>array('contact_email'=>'test@example.org')), false);
+    update_option('parcs_ht_github_auto_update', '1', false);
     echo "Fixture installed\n";
     break;
 case 'save-periods':
@@ -73,6 +74,7 @@ case 'assert-periods':
     htp_expect(($o['general']['park_name']['fr']??'')==='Parc test inchangé','Period save changed park name');
     htp_expect(($o['general']['holiday_border_width']??'')==='5','Period settings were not saved');
     htp_expect((get_option('parcs_ht_cse_settings')['2026']['contact_email']??'')==='test@example.org','CSE was changed');
+    htp_expect(get_option('parcs_ht_github_auto_update')==='1','Saving periods disabled the GitHub updater');
     echo "Periods save isolated OK\n";
     break;
 case 'save-retail':
@@ -105,6 +107,7 @@ case 'assert-groups':
     htp_expect(($t['individual'][0]['label']['fr']??'')==='Visiteur tarif nouveau','Groups save changed visitor tariffs');
     htp_expect(($o['general']['park_name']['fr']??'')==='Parc test inchangé','Groups save changed park name');
     htp_expect(($o['quote_page']['intro']['fr']??'')==='DEvis inchangé','Groups save changed quote');
+    htp_expect(get_option('parcs_ht_github_auto_update')==='1','Saving groups disabled the GitHub updater');
     $daily=get_option(Parcs_HT_Save_Integrity::REVISIONS_OPTION,array());
     htp_expect(count((array)$daily)<=1,'Multiple complete snapshots taken on same day');
     $legacy=get_option(Parcs_HT_Health::REVISIONS_OPTION,array());
