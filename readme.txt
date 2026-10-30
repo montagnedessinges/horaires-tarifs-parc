@@ -25,7 +25,7 @@ Une sauvegarde du site et de la base de données reste recommandée avant toute 
 
 = 1.20.17 =
 * Regroupe les accès aux tarifs visiteurs et CSE sous « Tarifs » sans mélanger leurs réglages ; conserve les anciennes routes.
-* Réserve l’administration et les shortcodes CSE aux pages françaises, masque les variantes EN/DE de l’interface et préserve leurs données historiques.
+* Réserve l’administration et les shortcodes CSE aux pages françaises, masque les variantes EN/DE de l’interface, préserve leurs données historiques et rend l’interrupteur CSE indépendant du calendrier général.
 * Retire le raccourci CSE de « Groupes » et conserve le contexte d’année entre les écrans.
 
 
