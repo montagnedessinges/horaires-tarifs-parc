@@ -27,7 +27,7 @@ foreach (array(
     'Administration générale',
     'Horaires & calendrier',
     'Périodes & événements',
-    'Tarifs visiteurs',
+    'Tarifs',
     'Groupes',
     'Contenus & traductions',
     'Communication',
@@ -53,9 +53,16 @@ if (version_compare($version, '1.17.2', '>=')) {
     htp_admin_1170_assert(is_string($navigation) && $navigation !== '', 'navigation 1.17.2 absente');
     htp_admin_1170_assert(strpos($main, 'class-parcs-ht-admin-navigation.php') !== false, 'navigation 1.17.2 non chargée');
     htp_admin_1170_assert(strpos($main, 'Parcs_HT_Admin_Navigation::init();') !== false, 'navigation 1.17.2 non initialisée');
-    foreach (array('parcs-ht-groups','parcs-ht-communication','parcs-ht-updates','parcs-ht-schedule','parcs-ht-tariffs') as $slug) {
+    foreach (array('parcs-ht-groups','parcs-ht-communication','parcs-ht-updates','parcs-ht-schedule','parcs-ht-tariffs','parcs-ht-tariffs-home') as $slug) {
         htp_admin_1170_assert(strpos($navigation, $slug) !== false, 'sous-menu 1.17.2 manquant : ' . $slug);
     }
+    htp_admin_1170_assert(strpos($navigation, "self::card('Tarifs CSE'") !== false, 'rubrique Tarifs sans accès CSE');
+    htp_admin_1170_assert(strpos($navigation, "self::card('Tarifs visiteurs'") !== false, 'rubrique Tarifs sans accès visiteurs');
+    $groups_start = strpos($navigation, 'public static function groups_page()');
+    $groups_end = strpos($navigation, 'public static function ', $groups_start + 1);
+    $groups_page = $groups_start !== false ? substr($navigation, $groups_start, $groups_end - $groups_start) : '';
+    htp_admin_1170_assert(strpos($groups_page, 'Tarifs CSE') === false, 'raccourci CSE encore présent dans Groupes');
+    htp_admin_1170_assert(strpos($navigation, "'parcs-ht-tariffs' => 'htp-tariffs'") !== false, 'route historique visiteurs absente');
     foreach (array('Tarifs groupes','Devis groupes','Guides pédagogiques') as $label) {
         htp_admin_1170_assert(strpos($navigation, $label) !== false, 'rubrique Groupes incomplète : ' . $label);
     }
