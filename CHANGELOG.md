@@ -1,3 +1,8 @@
+## 1.20.19
+
+- Corrige le sélecteur CSS du menu : le raccourci « Tarifs » reste visible au survol de « Gestion du parc », tandis que les anciennes entrées visiteurs et CSE restent masquées.
+- Ajoute une régression vérifiant que le slug `parcs-ht-tariffs-home` n’est pas capturé par le masquage des routes `parcs-ht-tariffs`.
+
 ## 1.20.18
 
 - Corrige l’accès aux réglages Tarifs visiteurs et CSE en conservant leurs routes enregistrées dans WordPress tout en masquant leurs raccourcis du menu.
