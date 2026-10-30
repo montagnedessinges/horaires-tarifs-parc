@@ -1110,7 +1110,12 @@ final class Parcs_HT_Admin {
         $year = isset($_POST['season_year']) ? sanitize_text_field(wp_unslash($_POST['season_year'])) : '';
         if (!preg_match('/^20\d{2}$/', $year)) wp_die('Année de saison invalide.');
 
-        if (class_exists('Parcs_HT_Updater') && !in_array(Parcs_HT_Updater::token_source(), array('constant','environment'), true)) {
+        $workspace = isset($_POST['parcs_ht_11711_workspace']) && is_scalar($_POST['parcs_ht_11711_workspace'])
+            ? sanitize_key(wp_unslash($_POST['parcs_ht_11711_workspace'])) : '';
+        $is_scoped_request = in_array($workspace, array('periods','retail','groups','popup'), true);
+
+        // Une sauvegarde de tarifs ou de périodes ne change pas les mises à jour GitHub.
+        if (!$is_scoped_request && class_exists('Parcs_HT_Updater') && !in_array(Parcs_HT_Updater::token_source(), array('constant','environment'), true)) {
             $remove_token = isset($_POST['github_token_remove']) && sanitize_text_field(wp_unslash($_POST['github_token_remove'])) === '1';
             $new_token = isset($_POST['github_token_new']) ? trim(sanitize_text_field(wp_unslash($_POST['github_token_new']))) : '';
             if ($remove_token) {
@@ -1125,7 +1130,7 @@ final class Parcs_HT_Admin {
             }
         }
 
-        if (class_exists('Parcs_HT_Updater')) {
+        if (!$is_scoped_request && class_exists('Parcs_HT_Updater')) {
             $auto_update = isset($_POST['github_auto_update']) && sanitize_text_field(wp_unslash($_POST['github_auto_update'])) === '1';
             Parcs_HT_Updater::set_auto_update($auto_update);
         }
@@ -1133,8 +1138,6 @@ final class Parcs_HT_Admin {
         $current = Parcs_HT_Defaults::settings($year);
         $scoped_save = isset($_POST['htp_save_active']);
         $incomplete = self::incomplete_sections($raw);
-        $workspace = isset($_POST['parcs_ht_11711_workspace']) && is_scalar($_POST['parcs_ht_11711_workspace'])
-            ? sanitize_key(wp_unslash($_POST['parcs_ht_11711_workspace'])) : '';
         // Les écrans métier ont leur propre formulaire et ne doivent modifier QUE leur rubrique.
         $scope_sections = array(
             'periods'=>array('holidays','exceptions','domain_rules'),
