@@ -54,6 +54,10 @@ final class Parcs_HT_CSE {
             'signup_url'=>array('fr'=>'','en'=>'','de'=>''),
             'online_url'=>array('fr'=>'','en'=>'','de'=>''),
             'pdf_url'=>array('fr'=>'','en'=>'','de'=>''),
+            'login_label'=>array('fr'=>'','en'=>'','de'=>''),
+            'signup_label'=>array('fr'=>'','en'=>'','de'=>''),
+            'online_label'=>array('fr'=>'','en'=>'','de'=>''),
+            'pdf_label'=>array('fr'=>'','en'=>'','de'=>''),
             'contact_email'=>'',
             'intro'=>array('fr'=>'','en'=>'','de'=>''),
             'transition'=>array(
@@ -185,6 +189,9 @@ final class Parcs_HT_CSE {
         foreach (array('page_url','login_url','signup_url','online_url','pdf_url') as $key) {
             $next[$key] = self::localized_urls($raw[$key] ?? array());
         }
+        foreach (array('login_label','signup_label','online_label','pdf_label') as $label_key) {
+            $next[$label_key] = self::translations($raw[$label_key] ?? array());
+        }
         $next['contact_email'] = sanitize_email(is_scalar($raw['contact_email'] ?? null) ? (string)$raw['contact_email'] : '');
         $next['intro'] = self::translations($raw['intro'] ?? array(), true);
         $next['transition'] = self::translations($raw['transition'] ?? array(), true);
@@ -229,7 +236,7 @@ final class Parcs_HT_CSE {
             if ($type === 'textarea') {
                 echo '<textarea rows="3" name="cse[' . esc_attr($key) . '][' . esc_attr($lang) . ']">' . esc_textarea($value) . '</textarea>';
             } else {
-                echo '<input type="url" name="cse[' . esc_attr($key) . '][' . esc_attr($lang) . ']" value="' . esc_attr($value) . '" placeholder="https://">';
+                echo '<input type="' . ($type === 'text' ? 'text' : 'url') . '" name="cse[' . esc_attr($key) . '][' . esc_attr($lang) . ']" value="' . esc_attr($value) . '"' . ($type === 'url' ? ' placeholder="https://"' : '') . '>';
             }
             echo '</label>';
         }
@@ -293,6 +300,9 @@ final class Parcs_HT_CSE {
         self::field('signup_url', 'Création de compte', $settings['signup_url']);
         self::field('online_url', 'Billetterie dématérialisée', $settings['online_url']);
         self::field('pdf_url', 'Bon de commande PDF (temporaire)', $settings['pdf_url']);
+        foreach (array('login_label'=>'Libellé du bouton connexion','signup_label'=>'Libellé du bouton création de compte','online_label'=>'Libellé du bouton billetterie','pdf_label'=>'Libellé du bouton PDF') as $key=>$label) {
+            self::field($key, $label . ' (facultatif)', $settings[$key], 'text');
+        }
         echo '<label><strong>Adresse e-mail pour l’activation des comptes CSE</strong> <input type="email" name="cse[contact_email]" value="' . esc_attr($settings['contact_email']) . '" class="regular-text"></label>';
         echo '</section><section class="htp-cse-section"><h2>Textes de la page CSE</h2>';
         self::field('intro', 'Introduction facultative', $settings['intro'], 'textarea');
@@ -377,17 +387,17 @@ final class Parcs_HT_CSE {
             $html .= '</tbody></table></div>';
         }
         $html .= '<div class="parcs-ht-cse__paths"><div class="parcs-ht-cse__path"><h3>' . esc_html(self::t($lang, 'Vous avez déjà un compte CSE ?', 'Already have a CSE account?', 'Sie haben bereits ein CSE-Konto?')) . '</h3>';
-        $html .= '<p>' . esc_html(self::t($lang, 'Connectez-vous avec vos identifiants habituels. Si votre statut CSE est activé, vos tarifs professionnels sont accessibles.', 'Sign in using your usual credentials. If your CSE status is active, you can access your professional rates.', 'Melden Sie sich mit Ihren Zugangsdaten an. Nach Freischaltung des CSE-Status sehen Sie Ihre CSE-Tarife.')) . '</p>';
-        if ($s['show_login'] === '1') $html .= self::action_button(self::url($s['login_url'], $lang), self::t($lang, 'Me connecter', 'Sign in', 'Anmelden'));
+        $html .= '<p>' . esc_html(self::t($lang, 'Connectez-vous avec vos identifiants habituels. Si votre statut CSE est activé, vos tarifs professionnels sont accessibles. Sinon, contactez-nous pour vérifier l’activation de votre compte, sans en créer un deuxième.', 'Sign in using your usual credentials. If your CSE status is active, you can access your professional rates. Otherwise, contact us to check activation without creating another account.', 'Melden Sie sich mit Ihren Zugangsdaten an. Nach Freischaltung des CSE-Status sehen Sie Ihre CSE-Tarife. Andernfalls kontaktieren Sie uns, statt ein zweites Konto anzulegen.')) . '</p>';
+        if ($s['show_login'] === '1') $html .= self::action_button(self::url($s['login_url'], $lang), self::tr($s['login_label'], $lang, self::t($lang, 'Me connecter', 'Sign in', 'Anmelden')));
         $html .= '</div><div class="parcs-ht-cse__path"><h3>' . esc_html(self::t($lang, 'Vous n’avez pas encore de compte ?', 'New to CSE ticketing?', 'Noch kein CSE-Konto?')) . '</h3>';
         $html .= '<p>' . esc_html(self::t($lang, 'Créez votre compte sur la billetterie, puis demandez par e-mail l’activation de votre statut CSE. Une fois celui-ci activé, reconnectez-vous pour commander.', 'Create an account on the ticketing website, then email us to request CSE activation. Once activated, sign back in to order.', 'Erstellen Sie ein Konto im Ticketshop und beantragen Sie per E-Mail die CSE-Freischaltung. Melden Sie sich danach an, um zu bestellen.')) . '</p>';
-        if ($s['show_signup'] === '1') $html .= self::action_button(self::url($s['signup_url'], $lang), self::t($lang, 'Créer mon compte', 'Create an account', 'Konto erstellen'));
+        if ($s['show_signup'] === '1') $html .= self::action_button(self::url($s['signup_url'], $lang), self::tr($s['signup_label'], $lang, self::t($lang, 'Créer mon compte', 'Create an account', 'Konto erstellen')));
         $email = sanitize_email((string)$s['contact_email']);
         if ($email !== '') $html .= '<p class="parcs-ht-cse__contact">' . esc_html(self::t($lang, 'Activation CSE : ', 'CSE activation: ', 'CSE-Freischaltung: ')) . '<a href="mailto:' . esc_attr($email) . '">' . esc_html($email) . '</a></p>';
         $html .= '</div></div>';
         $html .= '<div class="parcs-ht-cse__actions">';
-        if ($s['show_online'] === '1') $html .= self::action_button(self::url($s['online_url'], $lang), self::t($lang, 'Accéder à la billetterie CSE', 'Open CSE ticketing', 'Zum CSE-Ticketshop'));
-        if ($s['show_pdf'] === '1') $html .= self::action_button(self::url($s['pdf_url'], $lang), self::t($lang, 'Télécharger le bon de commande PDF', 'Download PDF order form', 'PDF-Bestellformular herunterladen'), true);
+        if ($s['show_online'] === '1') $html .= self::action_button(self::url($s['online_url'], $lang), self::tr($s['online_label'], $lang, self::t($lang, 'Accéder à la billetterie CSE', 'Open CSE ticketing', 'Zum CSE-Ticketshop')));
+        if ($s['show_pdf'] === '1') $html .= self::action_button(self::url($s['pdf_url'], $lang), self::tr($s['pdf_label'], $lang, self::t($lang, 'Télécharger le bon de commande PDF', 'Download PDF order form', 'PDF-Bestellformular herunterladen')), true);
         $html .= '</div>';
         if ($s['show_transition'] === '1') {
             $message = self::tr($s['transition'], $lang);
