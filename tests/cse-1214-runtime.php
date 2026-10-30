@@ -26,6 +26,13 @@ function remove_accents($value) { return str_replace(array('é','è','ê','à'),
 function wp_enqueue_style($handle, $src = '', $deps = array(), $ver = false) {}
 function wp_enqueue_script($handle, $src = '', $deps = array(), $ver = false, $footer = false) {}
 function did_action($action) { return 0; }
+function current_user_can($capability) { return $capability === 'manage_options'; }
+function admin_url($path = '') { return 'https://example.test/wp-admin/' . $path; }
+function add_query_arg($args, $url = '') { return $url . '?' . http_build_query($args); }
+function checked($value, $target = true, $echo = true) { $result = (string)$value === (string)$target ? ' checked="checked"' : ''; if ($echo) echo $result; return $result; }
+function wp_nonce_field($action) { echo '<input type="hidden" name="_wpnonce" value="test">'; }
+function submit_button($label) { echo '<button type="submit">' . esc_html($label) . '</button>'; }
+function esc_textarea($value) { return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8'); }
 
 final class Parcs_HT_Schedule {
     public static function language() { return $GLOBALS['cse_test_language']; }
@@ -91,10 +98,17 @@ Parcs_HT_CSE::init();
 foreach (array('parc_tarifs_cse','parc_tarifs_cse_fr','parc_tarifs_cse_en','parc_tarifs_cse_de','parcs_tarifs_cse','parc_lien_cse') as $tag) {
     check_cse(isset($GLOBALS['cse_shortcodes'][$tag]), 'shortcode ' . $tag);
 }
+ob_start();
+Parcs_HT_CSE::admin_page();
+$admin_html = ob_get_clean();
+check_cse(strpos($admin_html, 'name="cse[rows][0][cse_price]"') !== false, 'champ de saisie manuelle en administration');
+check_cse(strpos($admin_html, 'name="cse[rows][0][public_row_id]"') === false && strpos($admin_html, 'Tarif public (source)') === false, 'aucune sélection de tarif visiteur dans l’administration');
+check_cse(strpos($admin_html, 'name="cse[show_public]"') === false, 'ancien interrupteur de comparaison retiré');
 $html = Parcs_HT_CSE::render('fr');
-check_cse(strpos($html, '<th scope="col">Tarif CSE</th>') < strpos($html, '<th scope="col">Tarif public</th>'), 'ordre CSE puis public');
-check_cse(strpos($html, '<strong>10,50 €</strong>') !== false && strpos($html, '<del>12 €</del>') !== false, 'prix adulte comparé au tarif sur place');
-check_cse(strpos($html, '<del>8 €</del>') !== false && strpos($html, '<del>11 €</del>') === false, 'prix enfant correct sans confusion avec canal en ligne');
+check_cse(strpos($html, '<th scope="col">Billet</th>') !== false && strpos($html, '<th scope="col">Tarif CSE</th>') !== false, 'seules les colonnes billet et tarif CSE sont affichées');
+check_cse(substr_count($html, '<th scope="col">') === 2, 'aucune troisième colonne de comparaison');
+check_cse(strpos($html, '<strong>10,50 €</strong>') !== false && strpos($html, '<strong>7 €</strong>') !== false, 'prix saisis manuellement affichés');
+check_cse(strpos($html, 'Tarif public') === false && strpos($html, '<del>') === false, 'les anciens tarifs publics ne sont jamais affichés');
 check_cse(strpos($html, '2027') === false, 'année non publiée exclue');
 check_cse(strpos($html, 'Masqué') === false, 'ligne désactivée absente');
 check_cse(strpos($html, 'https://example.test/login/') !== false && strpos($html, 'https://example.test/signup/') !== false, 'connexion et inscription distinctes');
@@ -121,11 +135,11 @@ check_cse(strpos(Parcs_HT_CSE::shortcode(), 'Adulte') !== false, 'publication CS
 $GLOBALS['cse_public_window'] = true;
 $GLOBALS['cse_public_years'] = array();
 $hidden_public = Parcs_HT_CSE::render('fr');
-check_cse(strpos($hidden_public, '<del>12 €</del>') === false, 'tarifs publics non publiés jamais exposés');
+check_cse(strpos($hidden_public, '<strong>10,50 €</strong>') !== false, 'tarifs CSE indépendants de la publication des tarifs visiteurs');
 $GLOBALS['cse_public_years'] = array('2026');
 $GLOBALS['cse_test_options']['parcs_ht_cse_settings']['2026']['show_public'] = '0';
 $no_public = Parcs_HT_CSE::render('fr');
-check_cse(strpos($no_public, 'Tarif public') === false, 'colonne public masquable');
+check_cse(strpos($no_public, 'Tarif public') === false && substr_count($no_public, '<th scope="col">') === 2, 'ancien réglage comparatif ignoré sans effet sur les prix CSE');
 $GLOBALS['cse_test_options']['parcs_ht_cse_settings']['2026']['show_public'] = '1';
 $GLOBALS['cse_test_options']['parcs_ht_cse_settings']['2026']['show_link'] = '0';
 check_cse(Parcs_HT_CSE::render_link('fr') === '', 'renvoi public désactivable');
