@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.20.13
+Stable tag: 1.20.14
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes, FAQ et outils du parc.
 
@@ -22,6 +22,12 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.20.14 =
+* Nouveau module Tarifs CSE indépendant par année, désactivé par défaut, sans modifier les tarifs visiteurs ni groupes.
+* Tableau avec Tarif CSE puis Tarif public barré, issu de la ligne de tarif individuel de la même année.
+* Shortcodes FR/EN/DE, parcours connexion ou création de compte, commandes en ligne ou formulaire PDF et message de transition numérique.
+* Renvoi optionnel depuis le panneau Groupes de la page Horaires et Tarifs ; configuration indépendante pour chaque parc.
 
 = 1.20.13 =
 * Correctif d’urgence : restauration du code stable de la 1.20.11 après une erreur critique lors d’enregistrements signalée en production sur la 1.20.12.
