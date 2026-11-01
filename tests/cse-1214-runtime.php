@@ -95,6 +95,14 @@ $GLOBALS['cse_test_options']['parcs_ht_cse_settings'] = array(
 
 require_once dirname(__DIR__) . '/includes/class-parcs-ht-shortcode-registry.php';
 require_once dirname(__DIR__) . '/includes/class-parcs-ht-cse.php';
+$old_transition = 'Notre billetterie CSE dématérialisée est déjà disponible. Après commande, vos billets peuvent être téléchargés en PDF prêts à l’emploi ou sous forme de codes à intégrer à vos propres supports de billetterie. Pour vous laisser le temps de vous adapter, nous maintenons temporairement le bon de commande PDF. À terme, les commandes seront exclusivement en ligne.';
+$GLOBALS['cse_test_options']['parcs_ht_cse_settings']['2026']['transition'] = array('fr'=>$old_transition,'en'=>'','de'=>'');
+$migrated = Parcs_HT_CSE::year_settings('2026');
+check_cse(strpos($migrated['transition']['fr'], 'La billetterie en ligne est la même pour tous') === 0, 'ancien message modèle remplacé dans le rendu sans toucher aux options persistées');
+check_cse($GLOBALS['cse_test_options']['parcs_ht_cse_settings']['2026']['transition']['fr'] === $old_transition, 'migration lecture seule, sans réécriture de la base');
+$GLOBALS['cse_test_options']['parcs_ht_cse_settings']['2026']['transition']['fr'] = 'Message personnalisé conservé';
+check_cse(Parcs_HT_CSE::year_settings('2026')['transition']['fr'] === 'Message personnalisé conservé', 'texte personnalisé préservé');
+unset($GLOBALS['cse_test_options']['parcs_ht_cse_settings']['2026']['transition']);
 Parcs_HT_CSE::init();
 foreach (array('parc_tarifs_cse','parc_tarifs_cse_fr','parc_tarifs_cse_en','parc_tarifs_cse_de','parcs_tarifs_cse','parc_lien_cse') as $tag) {
     check_cse(isset($GLOBALS['cse_shortcodes'][$tag]), 'shortcode ' . $tag);

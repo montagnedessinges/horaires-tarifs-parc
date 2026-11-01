@@ -85,7 +85,15 @@ final class Parcs_HT_CSE {
     public static function year_settings($year) {
         $raw = self::all();
         $saved = isset($raw[$year]) && is_array($raw[$year]) ? $raw[$year] : array();
-        return array_replace(self::initial($year), $saved);
+        $settings = array_replace(self::initial($year), $saved);
+        // Une seule migration d'affichage : remplacer l'ancien message modèle
+        // trompeur. Les messages réellement personnalisés restent intacts.
+        $old_transition = 'Notre billetterie CSE dématérialisée est déjà disponible. Après commande, vos billets peuvent être téléchargés en PDF prêts à l’emploi ou sous forme de codes à intégrer à vos propres supports de billetterie. Pour vous laisser le temps de vous adapter, nous maintenons temporairement le bon de commande PDF. À terme, les commandes seront exclusivement en ligne.';
+        if (is_array($settings['transition'] ?? null)
+            && (string)($settings['transition']['fr'] ?? '') === $old_transition) {
+            $settings['transition']['fr'] = self::initial($year)['transition']['fr'];
+        }
+        return $settings;
     }
 
     private static function years() {
