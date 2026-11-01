@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.20.27
+Stable tag: 1.20.28
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes, FAQ et outils du parc.
 
@@ -22,6 +22,11 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.20.28 =
+* Places the CSE information block inside the public visitor tariff section, directly below its Tarifs heading.
+* Keeps the notice independent from the year tabs and separate from the CSE tariff table.
+
 
 = 1.20.23 =
 * Clarifie le parcours CSE sur les pages Horaires & Tarifs et CSE : espace réservé aux responsables CSE / amicales ; les particuliers passent par leur CSE pour les billets préférentiels.
