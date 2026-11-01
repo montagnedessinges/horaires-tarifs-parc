@@ -1,3 +1,10 @@
+## 1.20.26 — Retour à la grille classique, renvoi CSE séparé
+
+- Rétablit les trois onglets classiques Individuels, Tarifs réduits et Groupes ; le module CSE n’ajoute plus d’onglet ni de contenu dans cette grille.
+- Affiche le renvoi vers la page CSE dans un bloc autonome avant les tarifs visiteurs, à partir du lien activé et configuré dans une année.
+- Le bloc reste disponible même si l’offre tarifaire CSE de l’année est désactivée ; les tarifs et leur publication restent gérés sur la page CSE.
+- La logique d’enregistrement et le schéma des réglages ne sont pas modifiés.
+
 ## 1.20.25 — Onglet CSE indépendant de la publication annuelle
 
 - Rend le lien CSE commun aux années de tarifs visiteurs : l’onglet peut s’afficher même si l’offre CSE annuelle n’est pas publiée.

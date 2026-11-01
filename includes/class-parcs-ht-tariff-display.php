@@ -103,11 +103,14 @@ final class Parcs_HT_Tariff_Display {
         unset($atts);
         $language = self::language($language);
         $late_style = self::ensure_assets();
+        $cse_link = ($language === 'fr' && class_exists('Parcs_HT_CSE'))
+            ? Parcs_HT_CSE::render_link($language)
+            : '';
         $settings = Parcs_HT_Defaults::settings();
 
         if (class_exists('Parcs_HT_Public_Visibility')) {
             $years = Parcs_HT_Public_Visibility::tariff_years();
-            if (!$years) return '';
+            if (!$years) return $cse_link;
             $requested = class_exists('Parcs_HT_Public_Seasons') ? Parcs_HT_Public_Seasons::requested_year() : '';
             $selected = Parcs_HT_Public_Visibility::default_year($years, $requested);
 
@@ -120,12 +123,12 @@ final class Parcs_HT_Tariff_Display {
                 $html .= self::render_public_year($language, $settings, $year);
                 $html .= '</div>';
             }
-            return $html . '</div>';
+            return $cse_link . $html . '</div>';
         }
 
         if (class_exists('Parcs_HT_Tariff_Seasons')) $settings = Parcs_HT_Tariff_Seasons::select_season_tariffs($settings, true);
         $settings['tariffs'] = self::normalize_for_display($settings['tariffs'] ?? array());
-        return $late_style . self::render_public_settings($language, $settings);
+        return $cse_link . $late_style . self::render_public_settings($language, $settings);
     }
 
     private static function year_tabs($id, $years, $selected, $language) {
@@ -237,17 +240,11 @@ final class Parcs_HT_Tariff_Display {
         $groups = array();
         foreach ($order as $key) if (isset($labels[$key]) && !isset($groups[$key]) && self::visible_rows($tariffs[$key] ?? array())) $groups[$key] = $labels[$key];
         foreach ($labels as $key=>$label) if (!isset($groups[$key]) && self::visible_rows($tariffs[$key] ?? array())) $groups[$key] = $label;
-
-        $year = trim((string)($general['year'] ?? ''));
-        $cse_link = '';
-        if ($language === 'fr' && class_exists('Parcs_HT_CSE')) {
-            $cse_link = Parcs_HT_CSE::render_link($language, array('annee'=>$year));
-            if ($cse_link !== '') $groups['cse'] = 'CSE';
-        }
         if (!$groups) return '';
 
         self::$instance++;
         $id = 'parcs-ht-tariff-table-ui-' . self::$instance;
+        $year = trim((string)($general['year'] ?? ''));
         $tickets_url = self::translated_url($general['tickets_url'] ?? array(), $language);
         $style = self::style_variables($general);
 
@@ -264,16 +261,12 @@ final class Parcs_HT_Tariff_Display {
                 $note = self::tr($tariffs['notes'] ?? array(), $language, '');
                 if ($note !== '') $html .= '<p class="parcs-ht-tariff-ui__note is-before-table">' . esc_html($note) . '</p>';
             }
-            if ($key === 'cse') {
-                $html .= $cse_link;
-            } else {
-                $html .= self::price_table($tariffs, $key, $language, array('tickets_url'=>$tickets_url));
-                if (in_array($key, array('individual','reduced'), true)) {
-                    $html .= self::info_callouts($tariffs['info_blocks'][$key] ?? array(), $language, '#006757');
-                }
-                if ($key === 'groups') {
-                    $html .= self::public_group_extras($general, $language, $d);
-                }
+            $html .= self::price_table($tariffs, $key, $language, array('tickets_url'=>$tickets_url));
+            if (in_array($key, array('individual','reduced'), true)) {
+                $html .= self::info_callouts($tariffs['info_blocks'][$key] ?? array(), $language, '#006757');
+            }
+            if ($key === 'groups') {
+                $html .= self::public_group_extras($general, $language, $d);
             }
             $html .= '</div>';
             $first = false;
