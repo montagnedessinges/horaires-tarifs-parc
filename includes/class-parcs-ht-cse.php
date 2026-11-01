@@ -68,8 +68,8 @@ final class Parcs_HT_CSE {
                 'de'=>'Unser digitales CSE-Ticketsystem ist bereits verfügbar. Tickets können als fertige PDFs oder als Codes für Ihre eigenen Tickets heruntergeladen werden. Das PDF-Bestellformular bleibt für eine Übergangszeit verfügbar. Später erfolgen Bestellungen ausschließlich online.',
             ),
             'rows'=>array(
-                array('enabled'=>'1','label'=>array('fr'=>'Adulte','en'=>'Adult','de'=>'Erwachsene'),'cse_price'=>''),
-                array('enabled'=>'1','label'=>array('fr'=>'Enfant','en'=>'Child','de'=>'Kind'),'cse_price'=>'','public_row_id'=>''),
+                array('enabled'=>'1','label'=>array('fr'=>'Adulte','en'=>'Adult','de'=>'Erwachsene'),'cse_price'=>'','public_price'=>''),
+                array('enabled'=>'1','label'=>array('fr'=>'Enfant','en'=>'Child','de'=>'Kind'),'cse_price'=>'','public_price'=>''),
             ),
         );
     }
@@ -102,6 +102,16 @@ final class Parcs_HT_CSE {
         $current = wp_date('Y');
         if (in_array($current, $years, true)) return $current;
         return $years ? (string)end($years) : '';
+    }
+
+
+    /** Interprète uniquement les deux montants saisis à la main pour savoir si le tarif public peut être barré. */
+    private static function numeric_price($text) {
+        $text = trim((string)$text);
+        // Espaces habituelles, insécables et fines utilisées comme séparateurs de milliers.
+        $text = str_replace(array(' ', "\xc2\xa0", "\xe2\x80\xaf"), '', $text);
+        if (!preg_match('/[0-9]+(?:[.,][0-9]{1,2})?/', $text, $matches)) return null;
+        return (float)str_replace(',', '.', $matches[0]);
     }
 
     private static function localized_urls($raw, $existing = array()) {
@@ -155,10 +165,13 @@ final class Parcs_HT_CSE {
                 $existing_row = isset($old_rows[$index]) && is_array($old_rows[$index]) ? $old_rows[$index] : array();
                 $label = self::translations($item['label'] ?? '', false, $existing_row['label'] ?? array());
                 $price = sanitize_text_field(is_scalar($item['cse_price'] ?? null) ? (string)$item['cse_price'] : '');
-                if ($label['fr'] === '' && $price === '') continue;
+                // Prix public indépendant : ne rechercher aucun tarif visiteur.
+                // Un champ vide explicite permet également de supprimer un ancien prix.
+                $public_price = sanitize_text_field(is_scalar($item['public_price'] ?? null) ? (string)$item['public_price'] : '');
+                if ($label['fr'] === '' && $price === '' && $public_price === '') continue;
                 $next['rows'][] = array(
                     'enabled'=>isset($item['enabled']) && (string)$item['enabled'] === '1' ? '1' : '0',
-                    'label'=>$label, 'cse_price'=>$price,
+                    'label'=>$label, 'cse_price'=>$price, 'public_price'=>$public_price,
                 );
             }
         }
@@ -222,15 +235,16 @@ final class Parcs_HT_CSE {
             echo '<label><input type="checkbox" name="cse[' . esc_attr($flag) . ']" value="1" ' . checked((string)($settings[$flag] ?? '0'), '1', false) . '> ' . esc_html($label) . '</label>';
         }
         echo '</div></section>';
-        echo '<section class="htp-cse-section"><h2>Tarifs CSE</h2><p>Saisissez librement le nom du billet et son tarif CSE. Aucun rattachement aux tarifs visiteurs n’est nécessaire. Pour ajouter une ligne, remplissez une ligne vide ; pour la supprimer, cochez Supprimer.</p>';
-        echo '<input type="hidden" name="cse_rows_present" value="1"><table class="widefat striped htp-cse-table"><thead><tr><th>Afficher</th><th>Billet</th><th>Tarif CSE</th> <th>Supprimer</th></tr></thead><tbody>';
+        echo '<section class="htp-cse-section"><h2>Tarifs CSE</h2><p>Renseignez manuellement le nom du billet, le tarif CSE et le tarif public de comparaison. Ces trois champs sont indépendants des tarifs visiteurs. Pour ajouter une ligne, remplissez une ligne vide ; pour la supprimer, cochez Supprimer.</p>';
+        echo '<input type="hidden" name="cse_rows_present" value="1"><table class="widefat striped htp-cse-table"><thead><tr><th>Afficher</th><th>Billet</th><th>Tarif CSE</th><th>Tarif public</th><th>Supprimer</th></tr></thead><tbody>';
         $rows = array_values((array)($settings['rows'] ?? array()));
-        for ($j=0;$j<3;$j++) $rows[] = array('label'=>array('fr'=>'','en'=>'','de'=>''),'cse_price'=>'','enabled'=>'1');
+        for ($j=0;$j<3;$j++) $rows[] = array('label'=>array('fr'=>'','en'=>'','de'=>''),'cse_price'=>'','public_price'=>'','enabled'=>'1');
         foreach ($rows as $index=>$row) {
             $labels = (array)($row['label'] ?? array());
             echo '<tr><td><input type="checkbox" name="cse[rows][' . (int)$index . '][enabled]" value="1" ' . checked((string)($row['enabled'] ?? '1'), '1', false) . '></td>';
             echo '<td><input type="text" name="cse[rows][' . (int)$index . '][label]" value="' . esc_attr(self::tr($labels, 'fr')) . '"></td>';
             echo '<td><input type="text" name="cse[rows][' . (int)$index . '][cse_price]" value="' . esc_attr($row['cse_price'] ?? '') . '" placeholder="10,50 €"></td>';
+            echo '<td><input type="text" name="cse[rows][' . (int)$index . '][public_price]" value="' . esc_attr($row['public_price'] ?? '') . '" placeholder="12 €"></td>';
             echo '<td><input type="checkbox" name="cse[rows][' . (int)$index . '][delete]" value="1" aria-label="Supprimer cette ligne"></td></tr>';
         }
         echo '</tbody></table></section>';
@@ -311,11 +325,23 @@ final class Parcs_HT_CSE {
         }
         if ($s['show_table'] === '1' && $rows) {
             $html .= '<div class="parcs-ht-cse__table-wrap"><table class="parcs-ht-cse__table"><thead><tr><th scope="col">' . esc_html(self::t($lang, 'Billet', 'Ticket', 'Ticket')) . '</th><th scope="col">' . esc_html(self::t($lang, 'Tarif CSE', 'CSE rate', 'CSE-Preis')) . '</th>';
-            $html .= '</tr></thead><tbody>';
+            $html .= '<th scope="col">Tarif public</th></tr></thead><tbody>';
             foreach ($rows as $row) {
                 $name = self::tr($row['label'] ?? array(), $lang, self::t($lang, 'Billet', 'Ticket', 'Ticket'));
                 $html .= '<tr><th scope="row">' . esc_html($name) . '</th><td><strong>' . esc_html((string)$row['cse_price']) . '</strong></td>';
-                $html .= '</tr>';
+                $public_price = trim((string)($row['public_price'] ?? ''));
+                $public_amount = self::numeric_price($public_price);
+                $cse_amount = self::numeric_price($row['cse_price']);
+                // Le tarif public est toujours celui saisi dans le module CSE,
+                // jamais un tarif visiteurs récupéré automatiquement.
+                if ($public_price === '') {
+                    $display_public = '—';
+                } elseif ($public_amount !== null && $cse_amount !== null && $public_amount > $cse_amount) {
+                    $display_public = '<del>' . esc_html($public_price) . '</del>';
+                } else {
+                    $display_public = esc_html($public_price);
+                }
+                $html .= '<td>' . $display_public . '</td></tr>';
             }
             $html .= '</tbody></table></div>';
         }

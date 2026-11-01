@@ -84,9 +84,9 @@ $GLOBALS['cse_test_options']['parcs_ht_cse_settings'] = array(
         'pdf_url'=>array('fr'=>'https://example.test/bon-de-commande.pdf'),
         'contact_email'=>'cse@example.test',
         'rows'=>array(
-            array('enabled'=>'1','label'=>array('fr'=>'Adulte','en'=>'Adult','de'=>'Erwachsene'),'cse_price'=>'10,50 €','public_row_id'=>'tariff_row_000001'),
-            array('enabled'=>'1','label'=>array('fr'=>'Enfant','en'=>'Child','de'=>'Kind'),'cse_price'=>'7 €','public_row_id'=>'tariff_row_000002'),
-            array('enabled'=>'0','label'=>array('fr'=>'Masqué'),'cse_price'=>'1 €','public_row_id'=>''),
+            array('enabled'=>'1','label'=>array('fr'=>'Adulte','en'=>'Adult','de'=>'Erwachsene'),'cse_price'=>'10,50 €','public_price'=>'12 €','public_row_id'=>'tariff_row_000001'),
+            array('enabled'=>'1','label'=>array('fr'=>'Enfant','en'=>'Child','de'=>'Kind'),'cse_price'=>'7 €','public_price'=>'8 €','public_row_id'=>'tariff_row_000002'),
+            array('enabled'=>'0','label'=>array('fr'=>'Masqué'),'cse_price'=>'1 €','public_price'=>'2 €','public_row_id'=>''),
         ),
     ),
     '2027'=>array('enabled'=>'0'),
@@ -101,14 +101,17 @@ foreach (array('parc_tarifs_cse','parc_tarifs_cse_fr','parc_tarifs_cse_en','parc
 ob_start();
 Parcs_HT_CSE::admin_page();
 $admin_html = ob_get_clean();
-check_cse(strpos($admin_html, 'name="cse[rows][0][cse_price]"') !== false, 'champ de saisie manuelle en administration');
+check_cse(strpos($admin_html, 'name="cse[rows][0][cse_price]"') !== false, 'champ tarif CSE manuel en administration');
+check_cse(strpos($admin_html, 'name="cse[rows][0][public_price]"') !== false, 'champ tarif public manuel en administration');
+check_cse(strpos($admin_html, 'value="12 €"') !== false, 'ancien prix public manuel affiché à la réouverture');
 check_cse(strpos($admin_html, 'name="cse[rows][0][public_row_id]"') === false && strpos($admin_html, 'Tarif public (source)') === false, 'aucune sélection de tarif visiteur dans l’administration');
 check_cse(strpos($admin_html, 'name="cse[show_public]"') === false, 'ancien interrupteur de comparaison retiré');
 $html = Parcs_HT_CSE::render('fr');
-check_cse(strpos($html, '<th scope="col">Billet</th>') !== false && strpos($html, '<th scope="col">Tarif CSE</th>') !== false, 'seules les colonnes billet et tarif CSE sont affichées');
-check_cse(substr_count($html, '<th scope="col">') === 2, 'aucune troisième colonne de comparaison');
-check_cse(strpos($html, '<strong>10,50 €</strong>') !== false && strpos($html, '<strong>7 €</strong>') !== false, 'prix saisis manuellement affichés');
-check_cse(strpos($html, 'Tarif public') === false && strpos($html, '<del>') === false, 'les anciens tarifs publics ne sont jamais affichés');
+check_cse(strpos($html, '<th scope="col">Billet</th>') !== false && strpos($html, '<th scope="col">Tarif CSE</th>') !== false && strpos($html, '<th scope="col">Tarif public</th>') !== false, 'colonnes billet / CSE / public présentes');
+check_cse(substr_count($html, '<th scope="col">') === 3, 'trois colonnes affichées');
+check_cse(strpos($html, '<strong>10,50 €</strong>') !== false && strpos($html, '<strong>7 €</strong>') !== false, 'prix CSE saisis manuellement affichés');
+check_cse(strpos($html, '<del>12 €</del>') !== false && strpos($html, '<del>8 €</del>') !== false, 'prix publics manuels barrés lorsqu’ils sont supérieurs');
+check_cse(strpos($html, '<del>11 €</del>') === false, 'aucun prix public tiré des tarifs visiteurs');
 check_cse(strpos($html, '2027') === false, 'année non publiée exclue');
 check_cse(strpos($html, 'Masqué') === false, 'ligne désactivée absente');
 check_cse(strpos($html, 'https://example.test/login/') !== false && strpos($html, 'https://example.test/signup/') !== false, 'connexion et inscription distinctes');
@@ -135,12 +138,20 @@ check_cse(strpos(Parcs_HT_CSE::shortcode(), 'Adulte') !== false, 'publication CS
 $GLOBALS['cse_public_window'] = true;
 $GLOBALS['cse_public_years'] = array();
 $hidden_public = Parcs_HT_CSE::render('fr');
-check_cse(strpos($hidden_public, '<strong>10,50 €</strong>') !== false, 'tarifs CSE indépendants de la publication des tarifs visiteurs');
+check_cse(strpos($hidden_public, '<strong>10,50 €</strong>') !== false && strpos($hidden_public, '<del>12 €</del>') !== false, 'tarifs CSE et publics manuels indépendants de la publication des tarifs visiteurs');
 $GLOBALS['cse_public_years'] = array('2026');
 $GLOBALS['cse_test_options']['parcs_ht_cse_settings']['2026']['show_public'] = '0';
 $no_public = Parcs_HT_CSE::render('fr');
-check_cse(strpos($no_public, 'Tarif public') === false && substr_count($no_public, '<th scope="col">') === 2, 'ancien réglage comparatif ignoré sans effet sur les prix CSE');
+check_cse(strpos($no_public, 'Tarif public') !== false && strpos($no_public, '<del>12 €</del>') !== false, 'ancien réglage show_public ignoré, colonne manuelle toujours affichée');
 $GLOBALS['cse_test_options']['parcs_ht_cse_settings']['2026']['show_public'] = '1';
+// Les prix publics vides ou inférieurs ne doivent ni disparaître ni être barrés artificiellement.
+$GLOBALS['cse_test_options']['parcs_ht_cse_settings']['2026']['rows'][0]['public_price'] = '';
+$GLOBALS['cse_test_options']['parcs_ht_cse_settings']['2026']['rows'][1]['public_price'] = '6 €';
+$partial = Parcs_HT_CSE::render('fr');
+check_cse(strpos($partial, '<td>—</td>') !== false, 'tarif public non renseigné présenté par un tiret');
+check_cse(strpos($partial, '<td>6 €</td>') !== false && strpos($partial, '<del>6 €</del>') === false, 'prix public inférieur au CSE non barré');
+$GLOBALS['cse_test_options']['parcs_ht_cse_settings']['2026']['rows'][0]['public_price'] = '12 €';
+$GLOBALS['cse_test_options']['parcs_ht_cse_settings']['2026']['rows'][1]['public_price'] = '8 €';
 $GLOBALS['cse_test_options']['parcs_ht_cse_settings']['2026']['show_link'] = '0';
 check_cse(Parcs_HT_CSE::render_link('fr') === '', 'renvoi public désactivable');
 $GLOBALS['cse_test_options']['parcs_ht_cse_settings']['2026']['enabled'] = '0';

@@ -1,3 +1,12 @@
+## 1.20.21 — CSE : billet, tarif CSE et tarif public saisis manuellement
+
+- Corrige la suppression excessive de la comparaison dans la version 1.20.20.
+- L'administration CSE comporte trois champs indépendants par ligne : nom du billet, tarif CSE et tarif public, tous saisis manuellement.
+- Le tableau public montre les trois colonnes. Un tarif public saisi apparaît barré uniquement s'il est supérieur au tarif CSE ; un tarif public absent affiche « — ».
+- Aucun sélecteur de billet visiteurs ni liaison automatique aux grilles visiteurs. Les champs historiques `public_row_id` restent ignorés.
+- La sauvegarde CSE conserve son option séparée, ses années, l'adhésion, les boutons et toutes les améliorations mémoire de 1.20.19.
+- Tests réels WordPress/MySQL et contrats CSE ajoutés pour empêcher toute nouvelle suppression accidentelle de la colonne.
+
 ## 1.20.20 — Tarifs CSE manuels, sans comparaison visiteurs
 
 - L'écran de configuration CSE permet de saisir librement le nom du billet et son prix CSE, sans rattachement à une ligne tarifaire visiteurs.
