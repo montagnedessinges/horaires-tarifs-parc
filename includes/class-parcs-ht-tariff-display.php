@@ -237,11 +237,17 @@ final class Parcs_HT_Tariff_Display {
         $groups = array();
         foreach ($order as $key) if (isset($labels[$key]) && !isset($groups[$key]) && self::visible_rows($tariffs[$key] ?? array())) $groups[$key] = $labels[$key];
         foreach ($labels as $key=>$label) if (!isset($groups[$key]) && self::visible_rows($tariffs[$key] ?? array())) $groups[$key] = $label;
+
+        $year = trim((string)($general['year'] ?? ''));
+        $cse_link = '';
+        if ($language === 'fr' && class_exists('Parcs_HT_CSE')) {
+            $cse_link = Parcs_HT_CSE::render_link($language, array('annee'=>$year));
+            if ($cse_link !== '') $groups['cse'] = 'CSE';
+        }
         if (!$groups) return '';
 
         self::$instance++;
         $id = 'parcs-ht-tariff-table-ui-' . self::$instance;
-        $year = trim((string)($general['year'] ?? ''));
         $tickets_url = self::translated_url($general['tickets_url'] ?? array(), $language);
         $style = self::style_variables($general);
 
@@ -258,13 +264,16 @@ final class Parcs_HT_Tariff_Display {
                 $note = self::tr($tariffs['notes'] ?? array(), $language, '');
                 if ($note !== '') $html .= '<p class="parcs-ht-tariff-ui__note is-before-table">' . esc_html($note) . '</p>';
             }
-            $html .= self::price_table($tariffs, $key, $language, array('tickets_url'=>$tickets_url));
-            if (in_array($key, array('individual','reduced'), true)) {
-                $html .= self::info_callouts($tariffs['info_blocks'][$key] ?? array(), $language, '#006757');
-            }
-            if ($key === 'groups') {
-                $html .= self::public_group_extras($general, $language, $d);
-                if (class_exists('Parcs_HT_CSE')) $html .= Parcs_HT_CSE::render_link($language, array('annee'=>$year));
+            if ($key === 'cse') {
+                $html .= $cse_link;
+            } else {
+                $html .= self::price_table($tariffs, $key, $language, array('tickets_url'=>$tickets_url));
+                if (in_array($key, array('individual','reduced'), true)) {
+                    $html .= self::info_callouts($tariffs['info_blocks'][$key] ?? array(), $language, '#006757');
+                }
+                if ($key === 'groups') {
+                    $html .= self::public_group_extras($general, $language, $d);
+                }
             }
             $html .= '</div>';
             $first = false;

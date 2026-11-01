@@ -242,7 +242,7 @@ final class Parcs_HT_CSE {
             'show_online'=>'Afficher le bouton billetterie en ligne',
             'show_pdf'=>'Afficher le téléchargement du bon de commande PDF',
             'show_transition'=>'Afficher le message de transition numérique',
-            'show_link'=>'Afficher un renvoi vers l’espace CSE sous les tarifs visiteurs français',
+            'show_link'=>'Afficher l’onglet CSE dans le tableau des tarifs visiteurs français',
             'show_kit'=>'Afficher la demande de kit de communication (uniquement par e-mail)',
         );
         foreach ($flags as $flag=>$label) {
@@ -430,10 +430,13 @@ final class Parcs_HT_CSE {
         $url = self::url($s['page_url'], $lang);
         if ($url === '') return '';
         $html = self::assets();
-        return $html . '<div class="parcs-ht-cse-referral"><strong>' .
-            esc_html(self::t($lang, 'Vous représentez un CSE ou une amicale du personnel ?', 'Do you represent a works council or staff association?', 'Vertreten Sie einen Betriebsrat oder eine Personalvereinigung?')) .
-            '</strong><p>' .
-            esc_html(self::t($lang, 'Accès réservé aux responsables CSE et amicales du personnel. Vous êtes un particulier ? Pour obtenir des billets au tarif CSE, adressez-vous au CSE de votre employeur.', 'Professional access only. Individuals should contact their employer’s CSE.', 'Nur für berufliche Vertreter. Einzelpersonen wenden sich an den Betriebsrat ihres Arbeitgebers.')) .
-            '</p><a href="' . esc_url($url) . '">' . esc_html(self::t($lang, 'Espace CSE — responsables uniquement', 'CSE area for representatives', 'CSE-Bereich für Vertreter')) . '</a></div>';
+        return $html . '<div class="parcs-ht-cse-referral">' .
+            '<p><strong>' . esc_html(self::t($lang, 'Quelle différence entre les tarifs groupe et CSE ?', 'How do group and CSE rates differ?', 'Was ist der Unterschied zwischen Gruppen- und CSE-Tarifen?')) . '</strong> ' .
+            esc_html(self::t($lang, 'Le tarif groupe, plus bas, s’applique lorsque les participants viennent ensemble lors d’une même visite. Le tarif CSE concerne des billets achetés par un CSE ou une amicale puis revendus à leurs bénéficiaires, qui les utilisent séparément ; il est donc différent et plus élevé que le tarif groupe.', 'Group rates are lower and apply when visitors come together for one visit. CSE rates apply to tickets bought by a works council or staff association and resold to beneficiaries for separate visits; they are therefore different and higher than group rates.', 'Gruppentarife sind niedriger und gelten für Besucher, die gemeinsam kommen. CSE-Tickets werden von einem Betriebsrat oder einer Personalvereinigung gekauft und an Begünstigte für getrennte Besuche weiterverkauft; sie sind daher anders und teurer als Gruppentarife.')) .
+            '</p><p><strong>' . esc_html(self::t($lang, 'Vous êtes un particulier ?', 'Are you an individual visitor?', 'Sind Sie Privatbesucher?')) . '</strong> ' .
+            esc_html(self::t($lang, 'Parlez-en à votre CSE et invitez-le à nous contacter pour étudier la mise en place de tarifs préférentiels.', 'Ask your works council to contact us about preferential rates.', 'Bitten Sie Ihren Betriebsrat, uns wegen Vorzugspreisen zu kontaktieren.')) .
+            '</p><p><strong>' . esc_html(self::t($lang, 'Vous représentez un CSE ou une amicale du personnel ?', 'Do you represent a works council or staff association?', 'Vertreten Sie einen Betriebsrat oder eine Personalvereinigung?')) . '</strong> ' .
+            esc_html(self::t($lang, 'Consultez les tarifs et les modalités d’achat.', 'View CSE rates and purchase terms.', 'Informieren Sie sich über CSE-Preise und Kaufbedingungen.')) .
+            '</p><a href="' . esc_url($url) . '">' . esc_html(self::t($lang, 'Voir les tarifs et modalités CSE', 'View CSE rates and terms', 'CSE-Preise und Bedingungen ansehen')) . '</a></div>';
     }
 }

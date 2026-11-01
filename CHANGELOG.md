@@ -1,3 +1,10 @@
+## 1.20.24 — Onglet CSE dans les tarifs visiteurs
+
+- Ajoute un onglet CSE au tableau « Horaires et tarifs » lorsque le renvoi CSE est activé et configuré pour l’année.
+- Explique la différence : le tarif groupe, plus bas, concerne une visite collective au même moment ; le tarif CSE concerne des billets achetés par un CSE ou une amicale et revendus aux bénéficiaires pour des visites séparées.
+- Oriente les particuliers vers leur CSE et les représentants vers les tarifs et modalités d’achat CSE.
+- Le bloc CSE ne s’affiche plus sous l’onglet « Groupes » ; les réglages par année et par parc sont conservés.
+
 ## 1.20.23 — Parcours CSE et kit de communication sur demande
 
 - Sur les pages de tarifs visiteurs, le renvoi CSE distingue clairement les responsables CSE/amicales des particuliers ; les particuliers passent par le CSE de leur employeur pour obtenir les billets préférentiels.
