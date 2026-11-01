@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.20.21
+Stable tag: 1.20.22
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes, FAQ et outils du parc.
 
@@ -22,6 +22,11 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.20.22 =
+* Rétablit le menu « Tarifs » en limitant le masquage CSS aux anciens raccourcis et non au hub « Tarifs ».
+* Conserve le tarif public CSE manuel de 1.20.21 et le correctif mémoire de 1.20.19.
+
 
 = 1.20.21 =
 * Rétablit une troisième colonne « Tarif public » entièrement saisie à la main pour chaque billet CSE, indépendamment des tarifs visiteurs.

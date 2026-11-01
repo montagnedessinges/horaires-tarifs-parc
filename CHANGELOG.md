@@ -1,3 +1,10 @@
+## 1.20.22 — Sous-menu « Tarifs » de nouveau visible
+
+- Corrige le sélecteur CSS d'administration `page=parcs-ht-tariffs` qui masquait aussi `page=parcs-ht-tariffs-home`.
+- Les anciennes routes « Tarifs visiteurs » et « Tarifs CSE » restent enregistrées et accessibles depuis le hub ; seuls leurs raccourcis dans le menu sont masqués.
+- Les trois colonnes CSE manuelles (Billet, Tarif CSE, Tarif public), les autres modules, les données et le correctif mémoire sont inchangés.
+- Ajoute un test exécutant l'enregistrement et le classement des sous-menus et vérifiant le CSS.
+
 ## 1.20.21 — CSE : billet, tarif CSE et tarif public saisis manuellement
 
 - Corrige la suppression excessive de la comparaison dans la version 1.20.20.
