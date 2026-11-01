@@ -82,17 +82,13 @@ final class Parcs_HT_Tariff_Shared_1168 {
     public static function render_public($language, $atts = array()) {
         unset($atts);
         $language = self::language($language);
-        $cse_link = ($language === 'fr' && class_exists('Parcs_HT_CSE'))
-            ? Parcs_HT_CSE::render_link($language)
-            : '';
-
         if (!class_exists('Parcs_HT_Public_Visibility') || !class_exists('Parcs_HT_Tariff_Public_Fixes')) {
-            return $cse_link . Parcs_HT_Tariff_Display::render_public($language, array());
+            return Parcs_HT_Tariff_Display::render_public($language, array());
         }
 
         $late_style = self::display_call('ensure_assets');
         $years = Parcs_HT_Public_Visibility::tariff_years();
-        if (!$years) return $cse_link;
+        if (!$years) return '';
 
         $requested = class_exists('Parcs_HT_Public_Seasons') ? Parcs_HT_Public_Seasons::requested_year() : '';
         $selected = Parcs_HT_Public_Visibility::default_year($years, $requested);
@@ -109,7 +105,7 @@ final class Parcs_HT_Tariff_Shared_1168 {
             $html .= '</div>';
         }
 
-        return $cse_link . $html . '</div>';
+        return $html . '</div>';
     }
 
     private static function render_public_year($language, $year) {
@@ -173,6 +169,9 @@ final class Parcs_HT_Tariff_Shared_1168 {
 
         $html = '<section id="' . esc_attr($id) . '" class="parcs-ht-tariff-ui" data-htp-ui-tariffs style="' . esc_attr($style) . '">';
         $html .= '<div class="parcs-ht-tariff-ui__header"><div class="parcs-ht-tariff-ui__title">' . esc_html($prices_title) . '</div></div>';
+        if ($language === 'fr' && class_exists('Parcs_HT_CSE')) {
+            $html .= Parcs_HT_CSE::render_link($language);
+        }
         $html .= self::display_call('category_tabs', array($id, $groups));
 
         $first = true;
