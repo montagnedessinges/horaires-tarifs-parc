@@ -111,7 +111,7 @@ case 'save-cse':
             'enabled'=>'1','show_table'=>'1','show_login'=>'1','show_signup'=>'1','show_online'=>'1',
             'contact_email'=>'test@example.org',
             'rows'=>array(array(
-                'enabled'=>'1','label'=>'Adulte CSE','cse_price'=>'8,90 €',
+                'enabled'=>'1','label'=>'Adulte CSE','cse_price'=>'8,90 €','public_price'=>'12,50 €',
                 // Un ancien navigateur peut encore soumettre ce champ : il doit être ignoré.
                 'public_row_id'=>'tariff_row_000001',
             )),
@@ -125,13 +125,14 @@ case 'assert-cse':
     $row=$cse['2026']['rows'][0]??array();
     htp_expect(($row['label']['fr']??'')==='Adulte CSE','CSE manual label not saved');
     htp_expect(($row['cse_price']??'')==='8,90 €','CSE manual price not saved');
+    htp_expect(($row['public_price']??'')==='12,50 €','Manual public price not saved');
     htp_expect(!array_key_exists('public_row_id',$row),'CSE retained a visitor tariff reference');
     $o=htp_option();
     htp_expect(($o['seasons']['2026']['tariffs']['individual'][0]['label']['fr']??'')==='Visiteur tarif nouveau','Saving CSE modified visitor prices');
     htp_expect(($o['seasons']['2026']['tariffs']['groups'][0]['label']['fr']??'')==='Groupe nouveau','Saving CSE modified group prices');
     htp_expect(($o['seasons']['2027']['season_start']??'')==='2027-04-12','Saving CSE modified another year');
     htp_expect(get_option('parcs_ht_github_auto_update')==='1','Saving CSE changed updater preferences');
-    echo "CSE manual price saved without visitor link OK\n";
+    echo "CSE and public prices manually saved without visitor link OK\n";
     break;
 case 'assert-groups':
     $o=htp_option();$t=$o['seasons']['2026']['tariffs']??array();

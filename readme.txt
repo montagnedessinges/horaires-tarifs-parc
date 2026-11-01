@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.20.20
+Stable tag: 1.20.21
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes, FAQ et outils du parc.
 
@@ -22,6 +22,12 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.20.21 =
+* Rétablit une troisième colonne « Tarif public » entièrement saisie à la main pour chaque billet CSE, indépendamment des tarifs visiteurs.
+* Le tarif public est affiché sur la page CSE et barré uniquement lorsqu'il est supérieur au tarif CSE ; un prix vide affiche un tiret.
+* Conserve l'adhésion CSE, les données des autres années, les tarifs visiteurs/groupes et le correctif mémoire PHP 1.20.19.
+
 
 = 1.20.20 =
 * Simplifie le module CSE : nom du billet et prix CSE saisis librement, sans sélection ni comparaison avec les tarifs visiteurs.
