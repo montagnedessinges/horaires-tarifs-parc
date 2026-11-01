@@ -437,6 +437,6 @@ final class Parcs_HT_CSE {
             esc_html(self::t($lang, 'Parlez-en à votre CSE et invitez-le à nous contacter pour étudier la mise en place de tarifs préférentiels.', 'Ask your works council to contact us about preferential rates.', 'Bitten Sie Ihren Betriebsrat, uns wegen Vorzugspreisen zu kontaktieren.')) .
             '</p><p><strong>' . esc_html(self::t($lang, 'Vous représentez un CSE ou une amicale du personnel ?', 'Do you represent a works council or staff association?', 'Vertreten Sie einen Betriebsrat oder eine Personalvereinigung?')) . '</strong> ' .
             esc_html(self::t($lang, 'Consultez les tarifs et les modalités d’achat.', 'View CSE rates and purchase terms.', 'Informieren Sie sich über CSE-Preise und Kaufbedingungen.')) .
-            '</p><a href="' . esc_url($url) . '">' . esc_html(self::t($lang, 'Voir les tarifs et modalités CSE', 'View CSE rates and terms', 'CSE-Preise und Bedingungen ansehen')) . '</a></div>';
+            '</p><a href="' . esc_url($url) . '">' . esc_html(self::t($lang, 'Espace CSE — responsables uniquement : tarifs et modalités d’achat', 'CSE representatives only: rates and purchase terms', 'CSE-Bereich nur für Vertreter: Preise und Kaufbedingungen')) . '</a></div>';
     }
 }
