@@ -231,6 +231,7 @@ final class Parcs_HT_CSE {
         }
         echo '<style>.htp-cse-admin{max-width:1200px}.htp-cse-admin .htp-cse-section{background:#fff;border:1px solid #dcdcde;border-radius:10px;padding:20px;margin:18px 0}.htp-cse-admin .htp-cse-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}.htp-cse-admin .htp-cse-field{margin:12px 0;border:1px solid #ddd;padding:10px}.htp-cse-admin .htp-cse-field label{display:block;margin:7px 0}.htp-cse-admin input[type=url],.htp-cse-admin textarea{width:100%;max-width:600px}.htp-cse-admin .htp-cse-table input[type=text]{width:100%;min-width:105px}.htp-cse-admin .htp-cse-table th{white-space:nowrap}.htp-cse-admin .htp-cse-flags label{display:block;margin:8px 0}@media(max-width:780px){.htp-cse-admin .htp-cse-table{display:block;overflow:auto}}</style>';
         echo '<p><code>[parc_tarifs_cse]</code> (alias : <code>[parcs_tarifs_cse]</code>) affiche l’offre CSE en français. <code>[parc_lien_cse]</code> affiche le renvoi uniquement sur une page française. Les anciens suffixes de langue restent compatibles et affichent la version française.</p>';
+        echo '<p>Le lien CSE du tableau des tarifs visiteurs est commun à toutes les années. Il peut rester affiché même si l’offre de l’année n’est pas publiée ; les tarifs présentés sur cette page CSE restent gérés par année.</p>';
         echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '"><input type="hidden" name="action" value="parcs_ht_save_cse"><input type="hidden" name="season" value="' . esc_attr($year) . '">';
         wp_nonce_field('parcs_ht_save_cse_' . $year);
         echo '<section class="htp-cse-section"><h2>Visibilité — ' . esc_html($year) . '</h2><div class="htp-cse-grid htp-cse-flags">';
@@ -242,7 +243,7 @@ final class Parcs_HT_CSE {
             'show_online'=>'Afficher le bouton billetterie en ligne',
             'show_pdf'=>'Afficher le téléchargement du bon de commande PDF',
             'show_transition'=>'Afficher le message de transition numérique',
-            'show_link'=>'Afficher l’onglet CSE dans le tableau des tarifs visiteurs français',
+            'show_link'=>'Afficher l’onglet CSE fixe dans les tarifs visiteurs français (lien commun, indépendant de l’offre annuelle)',
             'show_kit'=>'Afficher la demande de kit de communication (uniquement par e-mail)',
         );
         foreach ($flags as $flag=>$label) {
@@ -419,15 +420,29 @@ final class Parcs_HT_CSE {
 
     public static function render_link($lang, $atts = array()) {
         $lang = self::language($lang);
-        $year = isset($atts['annee']) ? sanitize_text_field((string)$atts['annee']) : '';
-        if ($year === '') {
-            $years = self::enabled_years();
-            $year = in_array(wp_date('Y'), $years, true) ? wp_date('Y') : ($years ? (string)end($years) : '');
+        $requested_year = isset($atts['annee']) ? sanitize_text_field((string)$atts['annee']) : '';
+        $years = self::years();
+        $candidates = array();
+        if ($requested_year !== '' && in_array($requested_year, $years, true)) $candidates[] = $requested_year;
+        if ($requested_year === '') {
+            $current_year = wp_date('Y');
+            if (in_array($current_year, $years, true)) $candidates[] = $current_year;
         }
-        if ($year === '' || !in_array($year, self::enabled_years(), true)) return '';
-        $s = self::year_settings($year);
-        if ($s['show_link'] !== '1') return '';
-        $url = self::url($s['page_url'], $lang);
+        foreach (array_reverse($years) as $candidate) {
+            if (!in_array($candidate, $candidates, true)) $candidates[] = $candidate;
+        }
+
+        // Le renvoi vers la page CSE est fixe : prendre le lien activé d'une année
+        // même si son offre tarifaire annuelle n'est pas publiée.
+        $url = '';
+        foreach ($candidates as $candidate) {
+            $settings = self::year_settings($candidate);
+            if ($settings['show_link'] !== '1') continue;
+            $candidate_url = self::url($settings['page_url'], $lang);
+            if ($candidate_url === '') continue;
+            $url = $candidate_url;
+            break;
+        }
         if ($url === '') return '';
         $html = self::assets();
         return $html . '<div class="parcs-ht-cse-referral">' .

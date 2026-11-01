@@ -1,3 +1,9 @@
+## 1.20.25 — Onglet CSE indépendant de la publication annuelle
+
+- Rend le lien CSE commun aux années de tarifs visiteurs : l’onglet peut s’afficher même si l’offre CSE annuelle n’est pas publiée.
+- Utilise le lien CSE activé et configuré, en privilégiant l’année de la grille visiteurs puis en recherchant une configuration valide dans les autres années.
+- Les tarifs affichés sur la page CSE restent publiés et gérés séparément par année.
+
 ## 1.20.24 — Onglet CSE dans les tarifs visiteurs
 
 - Ajoute un onglet CSE au tableau « Horaires et tarifs » lorsque le renvoi CSE est activé et configuré pour l’année.
