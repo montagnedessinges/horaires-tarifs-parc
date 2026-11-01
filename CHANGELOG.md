@@ -1,3 +1,9 @@
+## 1.20.27 — Lien CSE rendu avec le tableau visiteurs
+
+- Transmet le renvoi CSE au renderer partagé qui affiche les tarifs visiteurs, afin qu’il apparaisse bien avant le tableau.
+- Conserve le rendu classique des trois onglets Individuels, Tarifs réduits et Groupes.
+- Aucun réglage annuel ni tarif CSE n’est modifié.
+
 ## 1.20.26 — Retour à la grille classique, renvoi CSE séparé
 
 - Rétablit les trois onglets classiques Individuels, Tarifs réduits et Groupes ; le module CSE n’ajoute plus d’onglet ni de contenu dans cette grille.
