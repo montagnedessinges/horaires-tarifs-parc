@@ -19,9 +19,12 @@ htp_12018_assert(
     'les pages visiteurs/CSE sont retirées du registre de sous-menus WordPress'
 );
 htp_12018_assert(
-    strpos($navigation, 'li:has(> a[href*="page=parcs-ht-tariffs"])') !== false
-    && strpos($navigation, 'li:has(> a[href*="page=parcs-ht-cse"])') !== false,
-    'masquage visuel des anciennes entrées sans retirer les routes'
+    strpos($navigation, 'a[href$="page=parcs-ht-tariffs"]') !== false
+    && strpos($navigation, 'a[href*="page=parcs-ht-tariffs&"]') !== false
+    && strpos($navigation, 'a[href$="page=parcs-ht-cse"]') !== false
+    && strpos($navigation, 'a[href*="page=parcs-ht-cse&"]') !== false
+    && strpos($navigation, 'a[href*="page=parcs-ht-tariffs"]') === false,
+    'masquage ciblé sans masquer le hub Tarifs'
 );
 htp_12018_assert(
     strpos($navigation, 'self::UPDATES_PAGE, self::TARIFFS_PAGE') !== false,
