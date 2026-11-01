@@ -83,6 +83,7 @@ $GLOBALS['cse_test_options']['parcs_ht_cse_settings'] = array(
         'online_url'=>array('fr'=>'https://example.test/tickets/'),
         'pdf_url'=>array('fr'=>'https://example.test/bon-de-commande.pdf'),
         'contact_email'=>'cse@example.test',
+        'kit_email'=>'kit@example.test', 'show_kit'=>'1',
         'rows'=>array(
             array('enabled'=>'1','label'=>array('fr'=>'Adulte','en'=>'Adult','de'=>'Erwachsene'),'cse_price'=>'10,50 €','public_price'=>'12 €','public_row_id'=>'tariff_row_000001'),
             array('enabled'=>'1','label'=>array('fr'=>'Enfant','en'=>'Child','de'=>'Kind'),'cse_price'=>'7 €','public_price'=>'8 €','public_row_id'=>'tariff_row_000002'),
@@ -106,6 +107,7 @@ check_cse(strpos($admin_html, 'name="cse[rows][0][public_price]"') !== false, 'c
 check_cse(strpos($admin_html, 'value="12 €"') !== false, 'ancien prix public manuel affiché à la réouverture');
 check_cse(strpos($admin_html, 'name="cse[rows][0][public_row_id]"') === false && strpos($admin_html, 'Tarif public (source)') === false, 'aucune sélection de tarif visiteur dans l’administration');
 check_cse(strpos($admin_html, 'name="cse[show_public]"') === false, 'ancien interrupteur de comparaison retiré');
+check_cse(strpos($admin_html, 'name="cse[kit_email]"') !== false && strpos($admin_html, 'name="cse[show_kit]"') !== false, 'paramètres du kit sur demande présents en administration');
 $html = Parcs_HT_CSE::render('fr');
 check_cse(strpos($html, '<th scope="col">Billet</th>') !== false && strpos($html, '<th scope="col">Tarif CSE</th>') !== false && strpos($html, '<th scope="col">Tarif public</th>') !== false, 'colonnes billet / CSE / public présentes');
 check_cse(substr_count($html, '<th scope="col">') === 3, 'trois colonnes affichées');
@@ -116,8 +118,15 @@ check_cse(strpos($html, '2027') === false, 'année non publiée exclue');
 check_cse(strpos($html, 'Masqué') === false, 'ligne désactivée absente');
 check_cse(strpos($html, 'https://example.test/login/') !== false && strpos($html, 'https://example.test/signup/') !== false, 'connexion et inscription distinctes');
 check_cse(strpos($html, 'https://example.test/bon-de-commande.pdf') !== false, 'bon de commande indépendant');
+check_cse(strpos($html, 'Espace réservé aux responsables CSE') !== false && strpos($html, 'Vous êtes un particulier') !== false, 'page CSE précise les deux publics');
+check_cse(strpos($html, 'mêmes billets passent automatiquement aux tarifs CSE') !== false, 'parcours PrestaShop expliqué sans fausse billetterie séparée');
+check_cse(strpos($html, 'mailto:kit@example.test?subject=') !== false, 'kit de communication uniquement sur demande par e-mail');
+check_cse(strpos($html, 'drive.google.com') === false, 'pas de dossier Drive interne exposé au public');
+check_cse(strpos($html, 'kit@example.test') !== false && strpos($html, 'cse@example.test') !== false, 'contacts du kit et de l’activation distincts');
 check_cse(strpos($html, 'PDF') !== false && strpos($html, 'codes') !== false, 'message de dématérialisation');
 check_cse(strpos(Parcs_HT_CSE::render_link('fr', array('annee'=>'2026')), 'https://example.test/cse/') !== false, 'renvoi explicite CSE');
+$referral = Parcs_HT_CSE::render_link('fr', array('annee'=>'2026'));
+check_cse(strpos($referral, 'responsables uniquement') !== false && strpos($referral, 'Vous êtes un particulier') !== false, 'renvoi visiteurs distingue les CSE des particuliers');
 
 $english = Parcs_HT_CSE::render('en');
 check_cse(strpos($english, 'https://example.test/login/') !== false, 'rendu CSE toujours français si demandé en anglais');
@@ -152,6 +161,15 @@ check_cse(strpos($partial, '<td>—</td>') !== false, 'tarif public non renseign
 check_cse(strpos($partial, '<td>6 €</td>') !== false && strpos($partial, '<del>6 €</del>') === false, 'prix public inférieur au CSE non barré');
 $GLOBALS['cse_test_options']['parcs_ht_cse_settings']['2026']['rows'][0]['public_price'] = '12 €';
 $GLOBALS['cse_test_options']['parcs_ht_cse_settings']['2026']['rows'][1]['public_price'] = '8 €';
+$GLOBALS['cse_test_options']['parcs_ht_cse_settings']['2026']['show_kit'] = '0';
+check_cse(strpos(Parcs_HT_CSE::render('fr'), 'mailto:kit@example.test') === false, 'kit masqué si désactivé');
+$GLOBALS['cse_test_options']['parcs_ht_cse_settings']['2026']['show_kit'] = '1';
+$GLOBALS['cse_test_options']['parcs_ht_cse_settings']['2026']['kit_email'] = '';
+check_cse(strpos(Parcs_HT_CSE::render('fr'), 'mailto:cse@example.test?subject=') !== false, 'contact activation utilisé en repli si e-mail kit absent');
+$GLOBALS['cse_test_options']['parcs_ht_cse_settings']['2026']['contact_email'] = '';
+check_cse(strpos(Parcs_HT_CSE::render('fr'), 'parcs-ht-cse__kit') === false, 'pas de bouton kit sans contact e-mail');
+$GLOBALS['cse_test_options']['parcs_ht_cse_settings']['2026']['contact_email'] = 'cse@example.test';
+$GLOBALS['cse_test_options']['parcs_ht_cse_settings']['2026']['kit_email'] = 'kit@example.test';
 $GLOBALS['cse_test_options']['parcs_ht_cse_settings']['2026']['show_link'] = '0';
 check_cse(Parcs_HT_CSE::render_link('fr') === '', 'renvoi public désactivable');
 $GLOBALS['cse_test_options']['parcs_ht_cse_settings']['2026']['enabled'] = '0';

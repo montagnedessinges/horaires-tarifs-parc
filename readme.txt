@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.20.22
+Stable tag: 1.20.23
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes, FAQ et outils du parc.
 
@@ -22,6 +22,13 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.20.23 =
+* Clarifie le parcours CSE sur les pages Horaires & Tarifs et CSE : espace réservé aux responsables CSE / amicales ; les particuliers passent par leur CSE pour les billets préférentiels.
+* Explique que les tarifs CSE s’affichent sur les mêmes billets PrestaShop après activation et connexion du compte professionnel, sans billetterie distincte.
+* Propose un kit de communication (photos, vidéos, logos et textes) uniquement sur demande par e-mail, configuré par parc et par année, sans exposer Google Sheet ou dossiers Drive.
+* Conserve les 3 tarifs manuels du tableau CSE, les liens de commande historiques et les optimisations mémoire.
+
 
 = 1.20.22 =
 * Rétablit le menu « Tarifs » en limitant le masquage CSS aux anciens raccourcis et non au hub « Tarifs ».
