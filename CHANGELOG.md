@@ -1,3 +1,9 @@
+## 1.20.30 — Parcours CSE et groupes clarifié
+
+- Remplace le texte de comparaison ambigu par trois parcours distincts : particuliers, CSE/amicales et sorties de groupe.
+- Ajoute un bouton stylé vers l’espace CSE et un bouton qui sélectionne l’onglet Groupes lorsqu’il est disponible.
+- Rend le libellé de l’onglet, les titres, les textes et les libellés des boutons modifiables dans l’administration ; ces réglages sont globaux et indépendants des années de tarifs.
+
 ## 1.20.27 — Lien CSE rendu avec le tableau visiteurs
 
 - Transmet le renvoi CSE au renderer partagé qui affiche les tarifs visiteurs, afin qu’il apparaisse bien avant le tableau.

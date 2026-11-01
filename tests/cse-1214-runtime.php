@@ -134,7 +134,7 @@ check_cse(strpos($html, 'kit@example.test') !== false && strpos($html, 'cse@exam
 check_cse(strpos($html, 'PDF') !== false && strpos($html, 'codes') !== false, 'message de dématérialisation');
 check_cse(strpos(Parcs_HT_CSE::render_link('fr', array('annee'=>'2026')), 'https://example.test/cse/') !== false, 'renvoi explicite CSE');
 $referral = Parcs_HT_CSE::render_link('fr', array('annee'=>'2026'));
-check_cse(strpos($referral, 'responsables uniquement') !== false && strpos($referral, 'Vous êtes un particulier') !== false, 'renvoi visiteurs distingue les CSE des particuliers');
+check_cse(strpos($referral, 'Accéder à l’espace CSE') !== false && strpos($referral, 'Vous êtes un particulier') !== false, 'renvoi visiteurs propose les parcours CSE et particuliers');
 
 $english = Parcs_HT_CSE::render('en');
 check_cse(strpos($english, 'https://example.test/login/') !== false, 'rendu CSE toujours français si demandé en anglais');

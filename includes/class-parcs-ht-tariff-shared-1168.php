@@ -132,7 +132,7 @@ final class Parcs_HT_Tariff_Shared_1168 {
         }
 
         $cse_panel = ($language === 'fr' && class_exists('Parcs_HT_CSE'))
-            ? trim((string)Parcs_HT_CSE::render_link($language))
+            ? trim((string)Parcs_HT_CSE::render_link($language, array('group_tab_available'=>$group_visible)))
             : '';
 
         $dicts = Parcs_HT_Schedule::dictionaries();
@@ -142,7 +142,7 @@ final class Parcs_HT_Tariff_Shared_1168 {
             'reduced'=>self::content($language, 'common.reduced', $d['reduced'] ?? 'Tarifs réduits', $d['reduced'] ?? 'Reduced rates', $d['reduced'] ?? 'Ermäßigte Tarife'),
             'groups'=>self::content($language, 'common.groups', $d['groups'] ?? 'Groupes', $d['groups'] ?? 'Groups', $d['groups'] ?? 'Gruppen'),
         );
-        if ($cse_panel !== '') $labels['cse'] = 'CSE';
+        if ($cse_panel !== '') $labels['cse'] = class_exists('Parcs_HT_CSE') ? Parcs_HT_CSE::public_tab_label() : 'CSE';
 
         $order = isset($tariffs['group_order']) && is_array($tariffs['group_order']) ? $tariffs['group_order'] : array_keys($labels);
         $groups = array();

@@ -32,6 +32,15 @@
         select(tabs[next],true);
       });
     });
+    var shortcuts=qsa(root,'[data-htp-select-tab]');
+    shortcuts.forEach(function(trigger){
+      trigger.addEventListener('click',function(){
+        var key=String(trigger.getAttribute('data-htp-select-tab')||'');
+        var target=null;
+        tabs.forEach(function(tab){if(String(tab.getAttribute('data-htp-ui-tab')||'')===key)target=tab;});
+        if(target)select(target,true);
+      });
+    });
   }
 
   function initYearRoot(root){

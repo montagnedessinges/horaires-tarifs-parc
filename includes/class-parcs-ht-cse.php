@@ -77,6 +77,44 @@ final class Parcs_HT_CSE {
         );
     }
 
+    private static function public_copy_defaults() {
+        return array(
+            'tab_label'=>'CSE',
+            'individual_title'=>'Vous êtes un particulier ?',
+            'individual_text'=>'Renseignez-vous auprès de votre CSE pour savoir si vous pouvez bénéficier de tarifs préférentiels. S’il n’en propose pas, parlez-en avec lui.',
+            'cse_title'=>'Vous représentez un CSE ou une amicale du personnel ?',
+            'cse_text'=>'Retrouvez les tarifs CSE dans votre espace dédié.',
+            'cse_button'=>'Accéder à l’espace CSE',
+            'groups_title'=>'Vous organisez une sortie où tous les participants viennent ensemble à la même date ?',
+            'groups_text'=>'Consultez nos tarifs de groupe, prévus pour une visite commune.',
+            'groups_button'=>'Voir les tarifs groupes',
+        );
+    }
+
+    /** Textes communs à toutes les années : le panneau public CSE est fixe. */
+    public static function public_copy() {
+        $all = self::all();
+        $saved = isset($all['_public_copy']) && is_array($all['_public_copy']) ? $all['_public_copy'] : array();
+        return array_replace(self::public_copy_defaults(), $saved);
+    }
+
+    public static function public_tab_label() {
+        $copy = self::public_copy();
+        $label = trim((string)($copy['tab_label'] ?? ''));
+        return $label !== '' ? $label : 'CSE';
+    }
+
+    private static function public_copy_field($key, $label, $copy, $multiline = false) {
+        $value = (string)($copy[$key] ?? '');
+        echo '<fieldset class="htp-cse-field"><legend><strong>' . esc_html($label) . '</strong></legend><label>';
+        if ($multiline) {
+            echo '<textarea rows="3" name="cse_public_copy[' . esc_attr($key) . ']">' . esc_textarea($value) . '</textarea>';
+        } else {
+            echo '<input type="text" name="cse_public_copy[' . esc_attr($key) . ']" value="' . esc_attr($value) . '">';
+        }
+        echo '</label></fieldset>';
+    }
+
     public static function all() {
         $raw = get_option(self::OPTION, array());
         return is_array($raw) ? $raw : array();
@@ -189,6 +227,16 @@ final class Parcs_HT_CSE {
             }
         }
         $all = self::all();
+        $raw_copy = isset($_POST['cse_public_copy']) && is_array($_POST['cse_public_copy']) ? wp_unslash($_POST['cse_public_copy']) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- le nonce protège le formulaire ; chaque champ est assaini ci-dessous.
+        $copy = self::public_copy();
+        foreach (self::public_copy_defaults() as $key=>$default) {
+            unset($default);
+            if (!array_key_exists($key, $raw_copy)) continue;
+            $value = is_scalar($raw_copy[$key]) ? (string)$raw_copy[$key] : '';
+            $multiline = in_array($key, array('individual_text','cse_text','groups_text'), true);
+            $copy[$key] = $multiline ? sanitize_textarea_field($value) : sanitize_text_field($value);
+        }
+        $all['_public_copy'] = $copy;
         $all[$year] = $next;
         update_option(self::OPTION, $all, false);
         // Vérification explicite de la persistance avant message de succès.
@@ -219,6 +267,7 @@ final class Parcs_HT_CSE {
         if (!current_user_can('manage_options')) return;
         $year = self::chosen_year();
         $settings = $year !== '' ? self::year_settings($year) : array();
+        $public_copy = self::public_copy();
         echo '<div class="wrap htp-cse-admin"><h1>Tarifs CSE</h1><p>Offre française de billetterie professionnelle. Son interrupteur annuel pilote sa publication indépendamment du calendrier général, avec des réglages propres à chaque année et à chaque parc.</p><p><a class="button" href="' . esc_url(add_query_arg(array('page'=>class_exists('Parcs_HT_Admin_Navigation') ? Parcs_HT_Admin_Navigation::TARIFFS_PAGE : 'parcs-ht-tariffs-home', 'season'=>$year), admin_url('admin.php'))) . '">← Retour à Tarifs</a></p>';
         if ($year === '') {
             echo '<p>Créez d’abord une année dans Administration générale → Saisons.</p></div>';
@@ -234,6 +283,17 @@ final class Parcs_HT_CSE {
         echo '<p>Le lien vers la page CSE est indépendant de la grille des tarifs visiteurs. Les tarifs CSE restent gérés sur leur page dédiée.</p>';
         echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '"><input type="hidden" name="action" value="parcs_ht_save_cse"><input type="hidden" name="season" value="' . esc_attr($year) . '">';
         wp_nonce_field('parcs_ht_save_cse_' . $year);
+        echo '<section class="htp-cse-section"><h2>Onglet CSE des tarifs visiteurs</h2><p>Ces textes sont communs à toutes les années. Ils s’affichent dans l’onglet CSE de la page Horaires et tarifs. Le bouton des tarifs groupes sélectionne l’onglet Groupes.</p>';
+        self::public_copy_field('tab_label', 'Nom de l’onglet', $public_copy);
+        self::public_copy_field('individual_title', 'Titre — particuliers', $public_copy);
+        self::public_copy_field('individual_text', 'Texte — particuliers', $public_copy, true);
+        self::public_copy_field('cse_title', 'Titre — CSE et amicales', $public_copy);
+        self::public_copy_field('cse_text', 'Texte — CSE et amicales', $public_copy, true);
+        self::public_copy_field('cse_button', 'Bouton vers l’espace CSE', $public_copy);
+        self::public_copy_field('groups_title', 'Titre — sortie de groupe', $public_copy);
+        self::public_copy_field('groups_text', 'Texte — sortie de groupe', $public_copy, true);
+        self::public_copy_field('groups_button', 'Bouton vers l’onglet Groupes', $public_copy);
+        echo '</section>';
         echo '<section class="htp-cse-section"><h2>Visibilité — ' . esc_html($year) . '</h2><div class="htp-cse-grid htp-cse-flags">';
         $flags = array(
             'enabled'=>'Publier l’offre CSE pour cette année',
@@ -432,8 +492,7 @@ final class Parcs_HT_CSE {
             if (!in_array($candidate, $candidates, true)) $candidates[] = $candidate;
         }
 
-        // Le renvoi vers la page CSE est fixe : prendre le lien activé d'une année
-        // même si son offre tarifaire annuelle n'est pas publiée.
+        // Le renvoi et ses textes restent fixes, même si l’offre CSE de l’année n’est pas publiée.
         $url = '';
         foreach ($candidates as $candidate) {
             $settings = self::year_settings($candidate);
@@ -444,14 +503,17 @@ final class Parcs_HT_CSE {
             break;
         }
         if ($url === '') return '';
-        $html = self::assets();
-        return $html . '<div class="parcs-ht-cse-referral">' .
-            '<p><strong>' . esc_html(self::t($lang, 'Quelle différence entre les tarifs groupe et CSE ?', 'How do group and CSE rates differ?', 'Was ist der Unterschied zwischen Gruppen- und CSE-Tarifen?')) . '</strong> ' .
-            esc_html(self::t($lang, 'Le tarif groupe, plus bas, s’applique lorsque les participants viennent ensemble lors d’une même visite. Le tarif CSE concerne des billets achetés par un CSE ou une amicale puis revendus à leurs bénéficiaires, qui les utilisent séparément ; il est donc différent et plus élevé que le tarif groupe.', 'Group rates are lower and apply when visitors come together for one visit. CSE rates apply to tickets bought by a works council or staff association and resold to beneficiaries for separate visits; they are therefore different and higher than group rates.', 'Gruppentarife sind niedriger und gelten für Besucher, die gemeinsam kommen. CSE-Tickets werden von einem Betriebsrat oder einer Personalvereinigung gekauft und an Begünstigte für getrennte Besuche weiterverkauft; sie sind daher anders und teurer als Gruppentarife.')) .
-            '</p><p><strong>' . esc_html(self::t($lang, 'Vous êtes un particulier ?', 'Are you an individual visitor?', 'Sind Sie Privatbesucher?')) . '</strong> ' .
-            esc_html(self::t($lang, 'Parlez-en à votre CSE et invitez-le à nous contacter pour étudier la mise en place de tarifs préférentiels.', 'Ask your works council to contact us about preferential rates.', 'Bitten Sie Ihren Betriebsrat, uns wegen Vorzugspreisen zu kontaktieren.')) .
-            '</p><p><strong>' . esc_html(self::t($lang, 'Vous représentez un CSE ou une amicale du personnel ?', 'Do you represent a works council or staff association?', 'Vertreten Sie einen Betriebsrat oder eine Personalvereinigung?')) . '</strong> ' .
-            esc_html(self::t($lang, 'Consultez les tarifs et les modalités d’achat.', 'View CSE rates and purchase terms.', 'Informieren Sie sich über CSE-Preise und Kaufbedingungen.')) .
-            '</p><a href="' . esc_url($url) . '">' . esc_html(self::t($lang, 'Espace CSE — responsables uniquement : tarifs et modalités d’achat', 'CSE representatives only: rates and purchase terms', 'CSE-Bereich nur für Vertreter: Preise und Kaufbedingungen')) . '</a></div>';
+        $copy = self::public_copy();
+        $groups_available = !empty($atts['group_tab_available']);
+        $html = self::assets() . '<div class="parcs-ht-cse-referral">';
+        $html .= '<section class="parcs-ht-cse-referral__card is-individual"><h3>' . esc_html($copy['individual_title']) . '</h3><p>' . nl2br(esc_html($copy['individual_text'])) . '</p></section>';
+        $html .= '<section class="parcs-ht-cse-referral__card is-cse"><h3>' . esc_html($copy['cse_title']) . '</h3><p>' . nl2br(esc_html($copy['cse_text'])) . '</p>';
+        $html .= '<a class="parcs-ht-cse__button" href="' . esc_url($url) . '">' . esc_html($copy['cse_button']) . '</a></section>';
+        $html .= '<section class="parcs-ht-cse-referral__card is-groups"><h3>' . esc_html($copy['groups_title']) . '</h3><p>' . nl2br(esc_html($copy['groups_text'])) . '</p>';
+        if ($groups_available) {
+            $html .= '<button type="button" class="parcs-ht-cse__button" data-htp-select-tab="groups">' . esc_html($copy['groups_button']) . '</button>';
+        }
+        $html .= '</section></div>';
+        return $html;
     }
 }
