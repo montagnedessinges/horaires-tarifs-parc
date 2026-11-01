@@ -109,7 +109,8 @@ case 'save-cse':
         'cse_rows_present'=>'1',
         'cse'=>array(
             'enabled'=>'1','show_table'=>'1','show_login'=>'1','show_signup'=>'1','show_online'=>'1',
-            'contact_email'=>'test@example.org',
+            'contact_email'=>'test@example.org','kit_email'=>'communication@example.org','show_kit'=>'1',
+            'kit_label'=>'Demander le kit','kit_intro'=>'Supports fournis sur demande uniquement.',
             'rows'=>array(array(
                 'enabled'=>'1','label'=>'Adulte CSE','cse_price'=>'8,90 €','public_price'=>'12,50 €',
                 // Un ancien navigateur peut encore soumettre ce champ : il doit être ignoré.
@@ -126,6 +127,10 @@ case 'assert-cse':
     htp_expect(($row['label']['fr']??'')==='Adulte CSE','CSE manual label not saved');
     htp_expect(($row['cse_price']??'')==='8,90 €','CSE manual price not saved');
     htp_expect(($row['public_price']??'')==='12,50 €','Manual public price not saved');
+    htp_expect(($cse['2026']['show_kit']??'')==='1','Kit request flag not saved');
+    htp_expect(($cse['2026']['kit_email']??'')==='communication@example.org','Separate kit contact not saved');
+    htp_expect(($cse['2026']['kit_label']['fr']??'')==='Demander le kit','Kit request button label not saved');
+    htp_expect(($cse['2026']['kit_intro']['fr']??'')==='Supports fournis sur demande uniquement.','Kit descriptive text not saved');
     htp_expect(!array_key_exists('public_row_id',$row),'CSE retained a visitor tariff reference');
     $o=htp_option();
     htp_expect(($o['seasons']['2026']['tariffs']['individual'][0]['label']['fr']??'')==='Visiteur tarif nouveau','Saving CSE modified visitor prices');

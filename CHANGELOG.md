@@ -1,3 +1,12 @@
+## 1.20.23 — Parcours CSE et kit de communication sur demande
+
+- Sur les pages de tarifs visiteurs, le renvoi CSE distingue clairement les responsables CSE/amicales des particuliers ; les particuliers passent par le CSE de leur employeur pour obtenir les billets préférentiels.
+- Sur la page CSE, le parcours explique qu'il n'existe pas de catalogue de billets distinct : après création de compte et activation du statut CSE, les prix changent automatiquement sur les billets habituels de PrestaShop à la connexion.
+- Ajout d'un kit de communication **sur demande**, sans accès public au Google Sheet interne ni aux dossiers Drive. Activation configurable par année, contact e-mail distinct facultatif avec repli vers l'e-mail d'activation, texte et bouton personnalisables ; aucun envoi automatique.
+- Texte par défaut du message complémentaire et libellés d'administration actualisés. Les textes historiques enregistrés dans WordPress ne sont pas écrasés.
+- Préserve les trois colonnes manuelles CSE (nom de billet / prix CSE / prix public), les anciennes options de commande, toutes les années et le correctif mémoire 1.20.19.
+- Tests du rendu CSE, du parcours de renvoi, de la demande par e-mail et de la sauvegarde isolée dans WordPress.
+
 ## 1.20.22 — Sous-menu « Tarifs » de nouveau visible
 
 - Corrige le sélecteur CSS d'administration `page=parcs-ht-tariffs` qui masquait aussi `page=parcs-ht-tariffs-home`.

@@ -22,3 +22,6 @@
 .parcs-ht-cse-referral p{margin:6px 0}
 .parcs-ht-cse-referral a{font-weight:600}
 @media(max-width:680px){.parcs-ht-cse__paths{grid-template-columns:1fr}.parcs-ht-cse__table th,.parcs-ht-cse__table td{padding:9px 7px}.parcs-ht-cse__actions{flex-direction:column}.parcs-ht-cse__button{width:100%;box-sizing:border-box}}
+.parcs-ht-cse__audience{padding:12px 16px;border-left:3px solid var(--htp-primary,#006757);margin:12px 0 18px;background:rgba(127,127,127,.06);border-radius:5px}
+.parcs-ht-cse__kit{padding:18px;border:1px solid rgba(127,127,127,.35);border-radius:12px;margin:18px 0;background:transparent}
+.parcs-ht-cse__kit p{margin:6px 0 14px}
