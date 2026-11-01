@@ -131,6 +131,10 @@ final class Parcs_HT_Tariff_Shared_1168 {
             $tariffs['reduced'] = array();
         }
 
+        $cse_panel = ($language === 'fr' && class_exists('Parcs_HT_CSE'))
+            ? trim((string)Parcs_HT_CSE::render_link($language))
+            : '';
+
         $dicts = Parcs_HT_Schedule::dictionaries();
         $d = isset($dicts[$language]) ? $dicts[$language] : $dicts['fr'];
         $labels = array(
@@ -138,11 +142,16 @@ final class Parcs_HT_Tariff_Shared_1168 {
             'reduced'=>self::content($language, 'common.reduced', $d['reduced'] ?? 'Tarifs réduits', $d['reduced'] ?? 'Reduced rates', $d['reduced'] ?? 'Ermäßigte Tarife'),
             'groups'=>self::content($language, 'common.groups', $d['groups'] ?? 'Groupes', $d['groups'] ?? 'Groups', $d['groups'] ?? 'Gruppen'),
         );
+        if ($cse_panel !== '') $labels['cse'] = 'CSE';
 
         $order = isset($tariffs['group_order']) && is_array($tariffs['group_order']) ? $tariffs['group_order'] : array_keys($labels);
         $groups = array();
         foreach ($order as $key) {
             if (!isset($labels[$key]) || isset($groups[$key])) continue;
+            if ($key === 'cse') {
+                if ($cse_panel !== '') $groups[$key] = $labels[$key];
+                continue;
+            }
             if ($key === 'groups') {
                 if ($group_visible) $groups[$key] = $labels[$key];
                 continue;
@@ -153,6 +162,10 @@ final class Parcs_HT_Tariff_Shared_1168 {
         }
         foreach ($labels as $key=>$label) {
             if (isset($groups[$key])) continue;
+            if ($key === 'cse') {
+                if ($cse_panel !== '') $groups[$key] = $label;
+                continue;
+            }
             if ($key === 'groups') {
                 if ($group_visible) $groups[$key] = $label;
             } elseif ($retail_visible && self::display_call('visible_rows', array($tariffs[$key] ?? array()))) {
@@ -169,16 +182,15 @@ final class Parcs_HT_Tariff_Shared_1168 {
 
         $html = '<section id="' . esc_attr($id) . '" class="parcs-ht-tariff-ui" data-htp-ui-tariffs style="' . esc_attr($style) . '">';
         $html .= '<div class="parcs-ht-tariff-ui__header"><div class="parcs-ht-tariff-ui__title">' . esc_html($prices_title) . '</div></div>';
-        if ($language === 'fr' && class_exists('Parcs_HT_CSE')) {
-            $html .= Parcs_HT_CSE::render_link($language);
-        }
         $html .= self::display_call('category_tabs', array($id, $groups));
 
         $first = true;
         foreach ($groups as $key=>$label) {
             $html .= '<div id="' . esc_attr($id . '-panel-' . $key) . '" class="parcs-ht-tariff-ui__panel" role="tabpanel" aria-labelledby="' . esc_attr($id . '-tab-' . $key) . '" data-htp-ui-panel="' . esc_attr($key) . '"' . (!$first ? ' hidden' : '') . '>';
 
-            if ($key === 'individual') {
+            if ($key === 'cse') {
+                $html .= $cse_panel;
+            } elseif ($key === 'individual') {
                 $html .= self::fixes_call('visitor_payment_strip', array($tariffs, $language, 'individual', $label));
                 $html .= self::display_call('price_table', array($tariffs, 'individual', $language, array('tickets_url'=>$tickets_url)));
                 $html .= self::display_call('info_callouts', array($tariffs['info_blocks']['individual'] ?? array(), $language, '#006757'));
