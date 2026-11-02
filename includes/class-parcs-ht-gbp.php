@@ -3,6 +3,8 @@ if (!defined('ABSPATH')) { exit; }
 
 /**
  * Google Business Profile : une fiche connectée par installation WordPress.
+ * Module additionnel basé sur 1.20.31 : ne change pas les comportements existants.
+ * Toute modification hors Google Maps doit être discutée séparément avant inclusion.
  * Désactivé par défaut, sans modification du calendrier ni envoi sans consentement.
  * L'identifiant OAuth et le secret sont spécifiques au projet Google Cloud du parc.
  */
