@@ -1,5 +1,11 @@
 # 1.21.0 — Synchronisation Google Maps à partir du calendrier existant
 
+## Périmètre obligatoire
+
+Cette évolution part de la version **1.20.31**. Elle ajoute uniquement le module Google Business Profile et ses points de raccordement nécessaires. Le contenu du calendrier, les tarifs, les groupes, les devis, les sauvegardes ciblées et les comportements existants doivent rester identiques à 1.20.31. La branche `main` reste inchangée tant que la PR n'est pas explicitement validée et fusionnée.
+
+Toute modification hors de ce périmètre doit être expliquée et discutée avant d'être ajoutée. Si une adaptation exige de changer un comportement existant, on la garde à part pour en débattre avant de poursuivre.
+
 ## Objectif
 
 Le moteur `Parcs_HT_Schedule::resolve_day()` est l'unique source des horaires de la Montagne des Singes et de la Forêt des Singes. **Aucun nouveau calendrier n'est créé** et aucune donnée d'ouverture n'est écrasée. Chaque installation WordPress associe une fiche Google distincte.
