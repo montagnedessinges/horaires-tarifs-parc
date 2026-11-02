@@ -65,6 +65,7 @@ Ces éléments impliquent un vrai flux OAuth avec choix de la fiche autorisée, 
 ### Exceptions datées
 
 - Convertir les horaires exceptionnels publiés en périodes `specialHours` sur leurs dates exactes pour toute la saison planifiée.
+- Exemple obligatoire : si les lundis réguliers sont ouverts mais qu’un lundi précis du calendrier est fermé, conserver le lundi ouvert dans `regularHours` et ajouter une exception fermée `specialHours` à cette date. Cette exception Google doit remplacer l’horaire régulier uniquement pour le lundi concerné.
 - Convertir une fermeture isolée ou de courte durée (6 jours consécutifs maximum) en exceptions fermées datées.
 - Pour les jours d’ouverture avec deux créneaux, transmettre les deux périodes de la journée ; vérifier qu’elles ne se chevauchent pas.
 - Pour une fermeture saisonnière de 7 jours ou plus, utiliser l’état temporairement fermé, selon les consignes Google. Programmer l’appel de fermeture et l’appel de réouverture aux dates de calendrier retenues. L’API expose le statut courant mais pas une date d’effet future ; le plugin doit donc porter la planification.
@@ -124,7 +125,7 @@ Le statut d’approbation, les deux comptes/fiches, les catégories, les quotas 
 
 ## Plan de vérification avant release
 
-- **Conversion** : plages hebdomadaires, journées avec deux créneaux, exceptions ouvertes, fermetures de 1 à 6 jours, fermeture saisonnière ≥7 jours et réouverture planifiée.
+- **Conversion** : plages hebdomadaires, journées avec deux créneaux, journée datée fermée alors que son jour habituel est ouvert, exceptions ouvertes, fermetures de 1 à 6 jours, fermeture saisonnière ≥7 jours et réouverture planifiée.
 - **Priorité** : vérifier que l’exception gagnante dans `resolve_day()` est celle envoyée à Google ; aucune règle de priorité parallèle.
 - **Données** : confirmer que 2026/2027 et les exceptions propres à chaque parc sont converties indépendamment ; aucune donnée n’est supprimée à l’installation ou à la mise à jour.
 - **API** : scope, fiche sans permission, jeton révoqué/expiré, `validateOnly`, erreurs 400/401/403/429/5xx, répétition d’une synchronisation identique et réponse partielle.
