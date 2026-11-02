@@ -1,3 +1,12 @@
+## 1.21.0 — Synchronisation facultative Google Business Profile (préparation)
+
+- Ajoute un module Google Maps désactivé par défaut dans l’administration du parc.
+- Reprend les données du calendrier déjà existant (périodes, jours fermés, exceptions, saisons) sans les dupliquer.
+- Ajoute l’autorisation OAuth 2.0, la sélection de la fiche du parc, l’envoi des horaires via l’API Business Information et la fermeture saisonnière.
+- Prévoit une synchronisation horaire / lors d’un changement du calendrier, un envoi manuel et des erreurs consultables dans WordPress.
+- N’envoie aucune modification à Google avant connexion, sélection de la fiche et activation explicite.
+- Tests : projection des horaires, ouvertures exceptionnelles et transitions 2026/2027.
+
 ## 1.20.30 — Parcours CSE et groupes clarifié
 
 - Remplace le texte de comparaison ambigu par trois parcours distincts : particuliers, CSE/amicales et sorties de groupe.
