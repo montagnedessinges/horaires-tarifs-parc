@@ -787,7 +787,7 @@ final class Parcs_HT_Defaults {
         $out['quote_page'] = array_replace_recursive($defaults['quote_page'], isset($saved['quote_page']) && is_array($saved['quote_page']) ? $saved['quote_page'] : array());
         foreach (array('important_messages','quick_links','info_blocks','accordions') as $quote_list) { if (isset($saved['quote_page'][$quote_list]) && is_array($saved['quote_page'][$quote_list])) $out['quote_page'][$quote_list] = $saved['quote_page'][$quote_list]; }
         $saved_tariffs = isset($saved['tariffs']) && is_array($saved['tariffs']) ? $saved['tariffs'] : array();
-        if ($is_public && class_exists('Parcs_HT_Display_Policy')) {
+        if ($is_public && isset($saved['tariffs']) && is_array($saved['tariffs']) && class_exists('Parcs_HT_Display_Policy')) {
             $saved_tariffs = Parcs_HT_Display_Policy::normalize_tariffs($saved_tariffs);
         }
         $out['tariffs'] = array_replace($defaults['tariffs'], $saved_tariffs);
