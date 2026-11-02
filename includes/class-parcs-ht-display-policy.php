@@ -130,8 +130,10 @@ final class Parcs_HT_Display_Policy {
         if (is_admin()) return $value;
         if (self::$normalized_main === null) self::$normalized_main = self::normalize_all_tariffs($value);
         $value = self::$normalized_main;
+        // Un chargement PHP correspond à une requête : les réglages et la date
+        // ne changent pas pendant son rendu. Ne refaire le parcours qu'après écriture.
+        if (is_array(self::$filtered_main)) return self::$filtered_main;
         $today = self::today($value);
-        if (is_array(self::$filtered_main) && self::$filtered_date === $today) return self::$filtered_main;
         if (empty($value['seasons']) || !is_array($value['seasons'])) {
             self::$filtered_main = $value;
             self::$filtered_date = $today;
