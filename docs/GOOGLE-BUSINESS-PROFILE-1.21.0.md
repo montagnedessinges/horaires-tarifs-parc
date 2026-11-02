@@ -23,7 +23,7 @@ Cette release est préparée sur une branche de développement. **Aucune connexi
   - écarts sur les 35 prochains jours convertis en horaires exceptionnels (`specialHours`);
   - hors saison ou sans ouverture prévue dans la semaine, statut `CLOSED_TEMPORARILY`;
   - reprise des horaires et du statut `OPEN` à la réouverture, si le calendrier WordPress le prévoit.
-- Synchronisation **quotidienne** WP-Cron + événement différé après modification du calendrier + bouton **Synchroniser maintenant**. Les plans inchangés sont ignorés. Le module n'est chargé que dans l’administration ou lors d’une tâche cron, jamais sur les requêtes publiques ordinaires.
+- Une seule vérification planifiée par jour, vers **1 h du matin** dans le fuseau horaire WordPress ; chaque installation reçoit un décalage déterministe de 0 à 59 minutes. Le calendrier est comparé localement à l’envoi précédent : si le contenu utile n’a pas changé, aucun appel à Google n’est lancé. Une modification du calendrier est prise en compte à la prochaine vérification nocturne. Le bouton **Synchroniser maintenant** permet une intervention exceptionnelle. Le module n'est chargé que dans l’administration ou lors d’une tâche cron, jamais sur les requêtes publiques ordinaires.
 - Contrôle après envoi par relecture de l'API et affichage des erreurs / des modifications Google en attente.
 - Les autres champs Google (nom, adresse, téléphone, catégorie, etc.) ne sont jamais modifiés.
 

@@ -11,7 +11,6 @@ if (!defined('ABSPATH')) { exit; }
 final class Parcs_HT_GBP {
     const OPTION = 'parcs_ht_gbp_connection';
     const CRON = 'parcs_ht_gbp_daily_sync';
-    const QUEUED = 'parcs_ht_gbp_queued_sync';
     const PAGE = 'parcs-ht-google-maps';
     const API = 'https://mybusinessbusinessinformation.googleapis.com/v1/';
 
@@ -23,9 +22,7 @@ final class Parcs_HT_GBP {
         add_action('admin_post_parcs_ht_gbp_disconnect', array(__CLASS__,'disconnect'));
         add_action('admin_post_parcs_ht_gbp_sync', array(__CLASS__,'manual_sync'));
         add_action(self::CRON, array(__CLASS__,'automatic_sync'));
-        add_action(self::QUEUED, array(__CLASS__,'automatic_sync'));
         add_action('init', array(__CLASS__,'ensure_schedule'));
-        add_action('updated_option', array(__CLASS__,'calendar_updated'), 30, 3);
     }
 
     private static function option() {
@@ -52,16 +49,22 @@ final class Parcs_HT_GBP {
         add_submenu_page('parcs-horaires-tarifs','Synchronisation Google Maps','Google Maps','manage_options',self::PAGE,array(__CLASS__,'page'));
     }
 
-    public static function ensure_schedule() {
-        if (!empty(self::option()['enabled']) && !wp_next_scheduled(self::CRON)) {
-            wp_schedule_event(time() + 300, 'daily', self::CRON);
-        }
+    private static function next_sync_timestamp() {
+        $timezone = function_exists('wp_timezone') ? wp_timezone() : new DateTimeZone('UTC');
+        $now = new DateTimeImmutable('now', $timezone);
+        // Décale chaque installation dans une fenêtre d'une heure pour éviter
+        // que plusieurs fiches ne sollicitent Google au même instant.
+        $site = function_exists('home_url') ? home_url('/') : 'wordpress';
+        $offset = hexdec(substr(hash('sha256', (string)$site), 0, 4)) % 60;
+        $next = $now->setTime(1, 0, 0)->modify('+'.$offset.' minutes');
+        if ($next <= $now) $next = $next->modify('+1 day');
+        return $next->getTimestamp();
     }
 
-    public static function calendar_updated($option, $old, $value) {
-        unset($old,$value);
-        if ($option !== Parcs_HT_Defaults::OPTION || empty(self::option()['enabled'])) return;
-        if (!wp_next_scheduled(self::QUEUED)) wp_schedule_single_event(time() + 90, self::QUEUED);
+    public static function ensure_schedule() {
+        if (!empty(self::option()['enabled']) && !wp_next_scheduled(self::CRON)) {
+            wp_schedule_single_event(self::next_sync_timestamp(), self::CRON);
+        }
     }
 
     public static function save() {
@@ -276,7 +279,12 @@ final class Parcs_HT_GBP {
     }
 
     public static function automatic_sync() {
-        self::sync(false);
+        try {
+            self::sync(false);
+        } finally {
+            // Planifier la prochaine vérification même si Google renvoie une erreur.
+            self::ensure_schedule();
+        }
     }
 
     public static function manual_sync() {
@@ -299,6 +307,12 @@ final class Parcs_HT_GBP {
             $plan = Parcs_HT_GBP_Plan::build($all, $date);
             if (is_wp_error($plan)) { self::record_error($plan); return $plan; }
             $hash = hash('sha256', wp_json_encode($plan));
+            $fingerprint = array('mode'=>$plan['mode']);
+            if ($plan['mode'] === 'open') {
+                $fingerprint['regularHours'] = $plan['regularHours'];
+                $fingerprint['specialHours'] = $plan['specialHours'];
+            }
+            $hash = hash('sha256', wp_json_encode($fingerprint));
             if (!$force && hash_equals((string)($data['last_hash'] ?? ''), $hash)) {
                 return array('skipped'=>true,'mode'=>$plan['mode']);
             }
