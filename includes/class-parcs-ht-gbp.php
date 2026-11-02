@@ -105,10 +105,8 @@ final class Parcs_HT_GBP {
         self::write($data);
         if (!$data['enabled']) {
             wp_clear_scheduled_hook(self::CRON);
-            wp_clear_scheduled_hook(self::QUEUED);
         } else {
             self::ensure_schedule();
-            if (!wp_next_scheduled(self::QUEUED)) wp_schedule_single_event(time()+90, self::QUEUED);
         }
         self::redirect('saved');
     }
@@ -179,7 +177,6 @@ final class Parcs_HT_GBP {
         self::write($data);
         delete_transient('parcs_ht_gbp_access');
         wp_clear_scheduled_hook(self::CRON);
-        wp_clear_scheduled_hook(self::QUEUED);
         self::redirect('disconnected');
     }
 
@@ -306,7 +303,6 @@ final class Parcs_HT_GBP {
             $date = wp_date('Y-m-d', null, $tz);
             $plan = Parcs_HT_GBP_Plan::build($all, $date);
             if (is_wp_error($plan)) { self::record_error($plan); return $plan; }
-            $hash = hash('sha256', wp_json_encode($plan));
             $fingerprint = array('mode'=>$plan['mode']);
             if ($plan['mode'] === 'open') {
                 $fingerprint['regularHours'] = $plan['regularHours'];
