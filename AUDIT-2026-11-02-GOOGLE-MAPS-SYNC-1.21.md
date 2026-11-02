@@ -22,6 +22,10 @@ La prochaine version doit comporter deux outils visibles et distincts :
 
 La conversion et l’envoi réel doivent rester deux actions distinctes : **« Convertir / prévisualiser »** ne modifie pas la fiche Google ; **« Synchroniser maintenant »** envoie le résultat après confirmation. Une connexion réussie ne déclenche donc pas d’écriture automatique.
 
+### Emplacement dans l’administration
+
+La synchronisation doit apparaître comme un onglet **« Google Maps »** dans l’écran existant **Gestion du parc → Horaires & calendrier**. Ce placement la rattache au calendrier source et évite de la confondre avec l’écran **IA & Google**, qui gère les données structurées / SEO et ne synchronise pas la fiche Business Profile. Le titre de l’onglet reste court ; son en-tête peut être **« Synchronisation des horaires Google Maps »**.
+
 ## Éléments vérifiés dans le dépôt
 
 - Le dépôt canonique partagé par les deux parcs est `montagnedessinges/horaires-tarifs-parc`, branche `main`.
@@ -67,7 +71,8 @@ Ces éléments impliquent un vrai flux OAuth avec choix de la fiche autorisée, 
 
 ## Parcours d’administration proposé
 
-1. **Prérequis** : afficher l’état d’accès Business Profile, le compte Google connecté et les autorisations disponibles. Expliquer qu’une clé API seule ne suffit pas.
+1. **Emplacement** : ouvrir l’onglet « Google Maps » dans Gestion du parc → Horaires & calendrier, avec l’en-tête « Synchronisation des horaires Google Maps ».
+2. **Prérequis** : afficher l’état d’accès Business Profile, le compte Google connecté et les autorisations disponibles. Expliquer qu’une clé API seule ne suffit pas.
 2. **Connexion** : bouton explicite « Connecter Google » qui lance OAuth avec le scope minimal requis ; stocker les jetons de renouvellement de façon protégée et proposer déconnexion / révocation.
 3. **Sélection de la fiche** : après connexion, l’administrateur choisit la fiche Google associée à ce WordPress. Ne pas l’associer automatiquement uniquement par nom.
 4. **Conversion** : action « Convertir / prévisualiser » qui transforme le calendrier publié en modèle Google, sans écrire sur Google. Le résultat montre la semaine de base, les exceptions datées et le diff.
