@@ -54,7 +54,7 @@ final class Parcs_HT_GBP {
 
     public static function ensure_schedule() {
         if (!empty(self::option()['enabled']) && !wp_next_scheduled(self::CRON)) {
-            wp_schedule_event(time() + 300, 'hourly', self::CRON);
+            wp_schedule_event(time() + 300, 'daily', self::CRON);
         }
     }
 
@@ -299,7 +299,7 @@ final class Parcs_HT_GBP {
             $plan = Parcs_HT_GBP_Plan::build($all, $date);
             if (is_wp_error($plan)) { self::record_error($plan); return $plan; }
             $hash = hash('sha256', wp_json_encode($plan));
-            if (!$force && $hash === ($data['last_hash'] ?? '') && (time()-(int)($data['last_timestamp'] ?? 0)) < 21600) {
+            if (!$force && hash_equals((string)($data['last_hash'] ?? ''), $hash)) {
                 return array('skipped'=>true,'mode'=>$plan['mode']);
             }
             $location = (string)$data['location'];
