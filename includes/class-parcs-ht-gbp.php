@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) { exit; }
  */
 final class Parcs_HT_GBP {
     const OPTION = 'parcs_ht_gbp_connection';
-    const CRON = 'parcs_ht_gbp_hourly_sync';
+    const CRON = 'parcs_ht_gbp_daily_sync';
     const QUEUED = 'parcs_ht_gbp_queued_sync';
     const PAGE = 'parcs-ht-google-maps';
     const API = 'https://mybusinessbusinessinformation.googleapis.com/v1/';
