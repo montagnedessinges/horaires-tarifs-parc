@@ -7,6 +7,8 @@ final class Parcs_HT_Display_Policy {
     private static $raw_main = null;
     private static $raw_group = null;
     private static $normalized_main = null;
+    private static $filtered_main = null;
+    private static $filtered_date = '';
     private static $forced_group_tariff_year = '';
 
     public static function init() {
@@ -118,6 +120,8 @@ final class Parcs_HT_Display_Policy {
         if ($option !== Parcs_HT_Defaults::OPTION) return;
         self::$raw_main = null;
         self::$normalized_main = null;
+        self::$filtered_main = null;
+        self::$filtered_date = '';
     }
 
     public static function filter_main_option($value) {
@@ -126,8 +130,13 @@ final class Parcs_HT_Display_Policy {
         if (is_admin()) return $value;
         if (self::$normalized_main === null) self::$normalized_main = self::normalize_all_tariffs($value);
         $value = self::$normalized_main;
-        if (empty($value['seasons']) || !is_array($value['seasons'])) return $value;
         $today = self::today($value);
+        if (is_array(self::$filtered_main) && self::$filtered_date === $today) return self::$filtered_main;
+        if (empty($value['seasons']) || !is_array($value['seasons'])) {
+            self::$filtered_main = $value;
+            self::$filtered_date = $today;
+            return $value;
+        }
         foreach ($value['seasons'] as &$season) {
             if (!is_array($season)) continue;
             if (array_key_exists('calendar_visible', $season)) {
@@ -144,6 +153,8 @@ final class Parcs_HT_Display_Policy {
             if ($from !== '' && $today < $from) $season['published'] = '0';
         }
         unset($season);
+        self::$filtered_main = $value;
+        self::$filtered_date = $today;
         return $value;
     }
 
