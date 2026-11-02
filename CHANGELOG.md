@@ -3,7 +3,7 @@
 - Ajoute un module Google Maps désactivé par défaut dans l’administration du parc.
 - Reprend les données du calendrier déjà existant (périodes, jours fermés, exceptions, saisons) sans les dupliquer.
 - Ajoute l’autorisation OAuth 2.0, la sélection de la fiche du parc, l’envoi des horaires via l’API Business Information et la fermeture saisonnière.
-- Prévoit une synchronisation horaire / lors d’un changement du calendrier, un envoi manuel et des erreurs consultables dans WordPress.
+- Prévoit une vérification nocturne quotidienne décalée par installation, une synchronisation manuelle et des erreurs consultables dans WordPress.
 - N’envoie aucune modification à Google avant connexion, sélection de la fiche et activation explicite.
 - Tests : projection des horaires, ouvertures exceptionnelles et transitions 2026/2027.
 
