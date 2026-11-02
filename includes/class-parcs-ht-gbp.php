@@ -123,16 +123,20 @@ final class Parcs_HT_GBP {
             'response_type'=>'code', 'scope'=>'https://www.googleapis.com/auth/business.manage',
             'access_type'=>'offline', 'prompt'=>'consent', 'state'=>$state,
         );
+        // phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect -- Redirection OAuth vers un domaine Google fixe, jamais une URL fournie par l'utilisateur.
         wp_redirect('https://accounts.google.com/o/oauth2/v2/auth?'.http_build_query($params, '', '&', PHP_QUERY_RFC3986)); exit;
     }
 
     public static function callback() {
         if (!current_user_can('manage_options')) wp_die('Accès refusé.');
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- OAuth : contrôle par state unique, à usage unique et lié à l'administrateur.
         $state = isset($_GET['state']) ? sanitize_text_field(wp_unslash($_GET['state'])) : '';
         $expected = get_transient('parcs_ht_gbp_oauth_'.get_current_user_id());
         delete_transient('parcs_ht_gbp_oauth_'.get_current_user_id());
         if (!$expected || !is_string($state) || !hash_equals($expected,$state)) self::redirect('invalid');
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- OAuth : state vérifié ci-dessus ; paramètre de lecture seule.
         if (!empty($_GET['error'])) self::redirect('denied');
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- OAuth : state vérifié ci-dessus, code échangé côté serveur.
         $code = isset($_GET['code']) ? sanitize_text_field(wp_unslash($_GET['code'])) : '';
         if ($code === '') self::redirect('denied');
         $data = self::option();
@@ -364,6 +368,7 @@ final class Parcs_HT_GBP {
         $plan = Parcs_HT_GBP_Plan::build($all, $today);
         echo '<div class="wrap"><h1>Synchronisation Google Maps</h1>';
         echo '<p>Le calendrier Horaires &amp; calendrier reste la source unique. Ce module ne modifie jamais vos saisons, tarifs ou événements.</p>';
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Notice admin de lecture seule, aucune mutation.
         if (isset($_GET['gbp_notice'])) {
             $notices = array(
                 'saved'=>'Réglages enregistrés.','connected'=>'Compte connecté. Choisissez maintenant la fiche du parc.',
@@ -372,6 +377,7 @@ final class Parcs_HT_GBP {
                 'denied'=>'Autorisation Google non accordée.','invalid'=>'Sélection ou état de connexion invalide.',
                 'error'=>'Google a refusé une opération. Consultez le détail ci-dessous.'
             );
+            // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Valeur de notice en lecture seule, liste blanche stricte.
             $key = sanitize_key(wp_unslash($_GET['gbp_notice']));
             if (isset($notices[$key])) echo '<div class="notice notice-info"><p>'.esc_html($notices[$key]).'</p></div>';
         }
