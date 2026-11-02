@@ -114,3 +114,10 @@ Elle ne confirme pas à elle seule le dépassement mémoire. Pour comparer les d
 - pic mémoire et fatal PHP correspondant, s’ils sont disponibles.
 
 La comparaison doit guider la correction commune ; aucun réglage spécifique à la Montagne ne doit être copié vers la Forêt.
+
+
+## Hypothèse sur une limite mémoire différente
+
+L’utilisateur suppose que l’hébergement de La Forêt des Singes a une limite mémoire PHP plus basse parce que le site reçoit moins de visites. C’est possible si les deux sites ont des offres ou réglages d’hébergement différents, mais le nombre de visiteurs ne détermine pas à lui seul la limite PHP.
+
+La documentation WordPress précise que `memory_limit` limite la mémoire d’une requête PHP/page, avec des limites WordPress distinctes pour l’affichage public et l’administration. La page **Outils → Santé du site → Infos → Serveur** permet de comparer la limite PHP et la mémoire demandée par WordPress entre les deux sites. La capture de problèmes fournie ne donne pas ces valeurs. Voir https://developer.wordpress.org/advanced-administration/performance/php/ et https://developer.wordpress.org/reference/classes/wp_debug_data/get_wp_server/.
