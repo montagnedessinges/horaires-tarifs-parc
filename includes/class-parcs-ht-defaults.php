@@ -10,6 +10,19 @@ final class Parcs_HT_Defaults {
     const POPUP_FLAG_OPTION = 'parcs_ht_has_popup_source';
     const SCHEMA_VERSION = 27;
 
+    private static $request_all_settings = null;
+    private static $request_settings_cache = array();
+    private static $building_settings = false;
+
+    public static function is_building_settings() {
+        return self::$building_settings;
+    }
+
+    public static function invalidate_request_cache() {
+        self::$request_all_settings = null;
+        self::$request_settings_cache = array();
+    }
+
     public static function svg_allowed_tags() {
         return array(
             'svg' => array('xmlns'=>true,'viewbox'=>true,'viewBox'=>true,'width'=>true,'height'=>true,'fill'=>true,'stroke'=>true,'stroke-width'=>true,'stroke-linecap'=>true,'stroke-linejoin'=>true,'focusable'=>true,'aria-hidden'=>true,'role'=>true,'class'=>true,'preserveaspectratio'=>true,'preserveAspectRatio'=>true),
@@ -744,28 +757,39 @@ final class Parcs_HT_Defaults {
     }
 
     public static function all_settings() {
-        // Les réglages fusionnés sont immuables pendant une requête front normale.
-        // Les mettre en cache ici évite de reconstruire toutes les saisons/tarifs à chaque shortcode ou pop-up.
-        static $request_cache = null;
-        if (is_array($request_cache)) {
-            return $request_cache;
+        if (is_array(self::$request_all_settings)) {
+            return self::$request_all_settings;
         }
 
-        self::maybe_upgrade();
-        $saved = get_option(self::OPTION, array());
+        self::$building_settings = true;
+        try {
+            self::maybe_upgrade();
+            $saved = get_option(self::OPTION, array());
+        } finally {
+            self::$building_settings = false;
+        }
+
         $defaults = self::get();
         if (!is_array($saved) || empty($saved)) {
-            return $defaults;
+            self::$request_all_settings = $defaults;
+            return self::$request_all_settings;
         }
         $out = $defaults;
         foreach (array('schema_version','site_type','timezone','languages') as $key) {
             if (array_key_exists($key, $saved)) $out[$key] = $saved[$key];
         }
+        $is_public = !is_admin();
+        $today = $is_public && class_exists('Parcs_HT_Display_Policy')
+            ? Parcs_HT_Display_Policy::today($out)
+            : '';
         $out['general'] = array_replace_recursive($defaults['general'], isset($saved['general']) && is_array($saved['general']) ? $saved['general'] : array());
         $out['alerts'] = isset($saved['alerts']) && is_array($saved['alerts']) ? $saved['alerts'] : array();
         $out['quote_page'] = array_replace_recursive($defaults['quote_page'], isset($saved['quote_page']) && is_array($saved['quote_page']) ? $saved['quote_page'] : array());
         foreach (array('important_messages','quick_links','info_blocks','accordions') as $quote_list) { if (isset($saved['quote_page'][$quote_list]) && is_array($saved['quote_page'][$quote_list])) $out['quote_page'][$quote_list] = $saved['quote_page'][$quote_list]; }
         $saved_tariffs = isset($saved['tariffs']) && is_array($saved['tariffs']) ? $saved['tariffs'] : array();
+        if ($is_public && class_exists('Parcs_HT_Display_Policy')) {
+            $saved_tariffs = Parcs_HT_Display_Policy::normalize_tariffs($saved_tariffs);
+        }
         $out['tariffs'] = array_replace($defaults['tariffs'], $saved_tariffs);
         foreach (array('notes','payment_methods') as $key) {
             $out['tariffs'][$key] = array_replace($defaults['tariffs'][$key], isset($saved_tariffs[$key]) && is_array($saved_tariffs[$key]) ? $saved_tariffs[$key] : array());
@@ -777,7 +801,13 @@ final class Parcs_HT_Defaults {
         $out['seasons'] = array();
         $seasons = isset($saved['seasons']) && is_array($saved['seasons']) ? $saved['seasons'] : array();
         foreach ($seasons as $year => $season) {
-            if (!preg_match('/^20\\d{2}$/', (string) $year) || !is_array($season)) continue;
+            if (!preg_match('/^20\d{2}$/', (string) $year) || !is_array($season)) continue;
+            if ($is_public && class_exists('Parcs_HT_Display_Policy')) {
+                if (isset($season['tariffs']) && is_array($season['tariffs'])) {
+                    $season['tariffs'] = Parcs_HT_Display_Policy::normalize_tariffs($season['tariffs']);
+                }
+                $season = Parcs_HT_Display_Policy::apply_season_visibility($season, $today);
+            }
             $out['seasons'][(string)$year] = array_replace_recursive(self::empty_season((string)$year), $season);
             foreach (array('regular_periods','school_holidays','special_periods','public_holidays','domain_rules','exceptions') as $list) {
                 $out['seasons'][(string)$year][$list] = isset($season[$list]) && is_array($season[$list]) ? $season[$list] : array();
@@ -786,17 +816,14 @@ final class Parcs_HT_Defaults {
         if (empty($out['seasons']) && !empty($defaults['seasons'])) $out['seasons'] = $defaults['seasons'];
         ksort($out['seasons'], SORT_NUMERIC);
         $out['schema_version'] = self::SCHEMA_VERSION;
-        $request_cache = $out;
-        return $request_cache;
+        self::$request_all_settings = $out;
+        return self::$request_all_settings;
     }
 
     public static function settings($requested_year = '') {
-        // Plusieurs shortcodes peuvent être présents sur une même page. Le résultat
-        // fusionné d'une saison est immuable pendant la requête : on le construit une fois.
-        static $request_cache = array();
         $cache_key = (string) $requested_year;
-        if (isset($request_cache[$cache_key])) {
-            return $request_cache[$cache_key];
+        if (isset(self::$request_settings_cache[$cache_key])) {
+            return self::$request_settings_cache[$cache_key];
         }
 
         $all = self::all_settings();
@@ -813,8 +840,8 @@ final class Parcs_HT_Defaults {
             $settings[$list] = isset($season[$list]) && is_array($season[$list]) ? $season[$list] : array();
         }
         $settings['active_season_year'] = $year;
-        $request_cache[$cache_key] = $settings;
-        return $request_cache[$cache_key];
+        self::$request_settings_cache[$cache_key] = $settings;
+        return self::$request_settings_cache[$cache_key];
     }
 
     public static function select_season_year($settings, $requested_year = '') {
