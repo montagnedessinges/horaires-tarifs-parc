@@ -20,8 +20,6 @@ define('PARCS_HT_DISPLAY_NAME', 'Gestion du parc');
 
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-defaults.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-schedule.php';
-require_once PARCS_HT_DIR . 'includes/class-parcs-ht-gbp-plan.php';
-require_once PARCS_HT_DIR . 'includes/class-parcs-ht-gbp.php';
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-wordpress-events.php';
 Parcs_HT_WordPress_Events::init();
 require_once PARCS_HT_DIR . 'includes/class-parcs-ht-shortcode-registry.php';
@@ -72,7 +70,6 @@ Parcs_HT_Public_Visibility::init();
 Parcs_HT_Public_Content::init();
 Parcs_HT_AI_Google::init();
 Parcs_HT_Calendar_Semantic::init();
-Parcs_HT_GBP::init();
 Parcs_HT_CF7_Form_11712::init();
 Parcs_HT_Popup_1200::init();
 Parcs_HT_Public_Seasons::init();
@@ -137,6 +134,14 @@ add_action('admin_enqueue_scripts', static function ($hook) {
     $settings = Parcs_HT_Defaults::settings($year);
     wp_add_inline_script('parcs-ht-tariff-seasons-admin', 'window.ParcsHTTariffSeasonAdmin=' . wp_json_encode(array('tariffs'=>(array)($settings['tariffs'] ?? array()))) . ';', 'before');
 }, 90);
+
+add_action('plugins_loaded', static function () {
+    $doing_cron = function_exists('wp_doing_cron') && wp_doing_cron();
+    if (!is_admin() && !$doing_cron) return;
+    require_once PARCS_HT_DIR . 'includes/class-parcs-ht-gbp-plan.php';
+    require_once PARCS_HT_DIR . 'includes/class-parcs-ht-gbp.php';
+    Parcs_HT_GBP::init();
+}, 1);
 
 add_action('plugins_loaded', static function () {
     Parcs_HT_Bootstrap::init();
