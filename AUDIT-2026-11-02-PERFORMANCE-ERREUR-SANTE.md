@@ -121,3 +121,19 @@ La comparaison doit guider la correction commune ; aucun réglage spécifique à
 L’utilisateur suppose que l’hébergement de La Forêt des Singes a une limite mémoire PHP plus basse parce que le site reçoit moins de visites. C’est possible si les deux sites ont des offres ou réglages d’hébergement différents, mais le nombre de visiteurs ne détermine pas à lui seul la limite PHP.
 
 La documentation WordPress précise que `memory_limit` limite la mémoire d’une requête PHP/page, avec des limites WordPress distinctes pour l’affichage public et l’administration. La page **Outils → Santé du site → Infos → Serveur** permet de comparer la limite PHP et la mémoire demandée par WordPress entre les deux sites. La capture de problèmes fournie ne donne pas ces valeurs. Voir https://developer.wordpress.org/advanced-administration/performance/php/ et https://developer.wordpress.org/reference/classes/wp_debug_data/get_wp_server/.
+
+
+## Exigence de conception — fonctionner sur un hébergement modeste
+
+Le besoin utilisateur est que l’extension fonctionne sur des sites WordPress variés, y compris avec beaucoup de données de planning et une capacité serveur plus faible. Le contenu est principalement du texte et des horaires ; l’objectif n’est pas d’ajouter des animations ni d’augmenter artificiellement la limite PHP.
+
+Le coût à maîtriser se situe côté serveur : chargement des fichiers du plugin, lecture et fusion des saisons, copies PHP en mémoire et sérialisation à l’enregistrement. Le manuel WordPress décrit la limite PHP comme une limite mémoire appliquée à chaque rendu de page : https://developer.wordpress.org/advanced-administration/performance/php/.
+
+Critères de la mise à jour performance :
+- conserver le rendu existant sans exiger d’augmentation de `memory_limit` ;
+- charger les composants admin uniquement en administration et les composants publics seulement lorsqu’ils sont nécessaires ;
+- lire/calculer une seule représentation utile à la page, sans recalculer toutes les saisons non publiées/non visibles ;
+- invalider le cache lors d’un enregistrement pour afficher les nouvelles données immédiatement ;
+- enregistrer une saison sans resérialiser le contenu des autres saisons, après migration réversible ;
+- éviter tout appel HTTP externe dans le rendu public des horaires ;
+- comparer temps et pic mémoire sous la limite réellement disponible sur l’hébergement le plus contraint des deux sites.
