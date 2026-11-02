@@ -113,7 +113,12 @@ Parcs_HT_Stability_11511::init();
 Parcs_HT_Save_Integrity::init();
 
 register_activation_hook(__FILE__, array('Parcs_HT_Defaults', 'activate'));
-register_deactivation_hook(__FILE__, static function () { require_once PARCS_HT_DIR . 'includes/class-parcs-ht-health.php'; Parcs_HT_Health::deactivate(); });
+register_deactivation_hook(__FILE__, static function () {
+    wp_clear_scheduled_hook(Parcs_HT_GBP::CRON);
+    wp_clear_scheduled_hook(Parcs_HT_GBP::QUEUED);
+    require_once PARCS_HT_DIR . 'includes/class-parcs-ht-health.php';
+    Parcs_HT_Health::deactivate();
+});
 
 add_action('updated_option', static function ($option, $old_value, $value) {
     unset($old_value);
