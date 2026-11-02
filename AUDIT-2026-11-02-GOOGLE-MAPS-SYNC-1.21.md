@@ -37,6 +37,27 @@ La conversion et l’envoi réel doivent rester deux actions distinctes : **« C
 
 La synchronisation doit apparaître comme un onglet **« Google Maps »** dans l’écran existant **Gestion du parc → Horaires & calendrier**. Ce placement la rattache au calendrier source et évite de la confondre avec l’écran **IA & Google**, qui gère les données structurées / SEO et ne synchronise pas la fiche Business Profile. Le titre de l’onglet reste court ; son en-tête peut être **« Synchronisation des horaires Google Maps »**.
 
+## Vérification des calendriers publics (02/11/2026)
+
+### Montagne des Singes
+
+La page publique [Tarifs groupes — calendrier 2027](https://www.montagnedessinges.com/groupes-et-cse/tarifs-groupes/?htp_group_year=2027) affiche :
+
+- Saison du 20/03/2027 au 14/11/2027.
+- Du 20/03 au 31/08 : tous les jours, 09:30–17:30.
+- Du 01/09 au 14/11 : tous les jours, 10:00–17:00.
+- Fermeture exceptionnelle du 08/11 au 10/11/2027 (3 jours consécutifs).
+
+Ce calendrier fournit déjà un cas simple à convertir : deux régimes réguliers à programmer à leurs dates de début, puis une fermeture spéciale de trois jours. La page 2027 consultée ne montre pas de pause méridienne dans ces horaires.
+
+### Forêt des Singes
+
+La page publique [Tarifs groupes](https://www.la-foret-des-singes.com/tarifs-groupes/) accessible dans les résultats consultés affiche le calendrier 2026, pas le calendrier 2027. L’ouverture directe de la même page avec le paramètre d’année 2027 a renvoyé une page WordPress « erreur critique » dans le navigateur de consultation. Je ne peux donc pas confirmer les horaires 2027 de la Forêt depuis sa page publique.
+
+Le calendrier public 2026 montre toutefois pourquoi le convertisseur devra accepter plusieurs régimes hebdomadaires dans une saison : horaires à deux plages, horaires semaine / week-end différents à l’automne et horaires d’après-midi uniquement en semaine sur certaines périodes. Cela donne un exemple de complexité, mais ne constitue pas une preuve des horaires 2027.
+
+**Conséquence pour le développement :** le moteur doit lire les dates et horaires propres à la saison sélectionnée pour chaque parc ; il ne doit pas supposer un nombre fixe de régimes ni réutiliser les périodes 2026 pour 2027.
+
 ## Éléments vérifiés dans le dépôt
 
 - Le dépôt canonique partagé par les deux parcs est `montagnedessinges/horaires-tarifs-parc`, branche `main`.
@@ -144,6 +165,8 @@ Le statut d’approbation, les deux comptes/fiches, les catégories, les quotas 
 ### Dépôt
 
 - [Moteur des horaires](https://github.com/montagnedessinges/horaires-tarifs-parc/blob/main/includes/class-parcs-ht-schedule.php)
+- [Calendrier 2027 public — Montagne des Singes](https://www.montagnedessinges.com/groupes-et-cse/tarifs-groupes/?htp_group_year=2027)
+- [Calendrier public — Forêt des Singes](https://www.la-foret-des-singes.com/tarifs-groupes/)
 - [Socle IA & Google 1.18.0](https://github.com/montagnedessinges/horaires-tarifs-parc/blob/main/AUDIT-2026-09-29-IA-GOOGLE-1.18.0.md)
 - [Classe IA & Google](https://github.com/montagnedessinges/horaires-tarifs-parc/blob/main/includes/class-parcs-ht-ai-google.php)
 - [Instructions du dépôt](https://github.com/montagnedessinges/horaires-tarifs-parc/blob/main/AGENTS.md)
