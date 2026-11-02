@@ -81,3 +81,22 @@ Pour qu’une sauvegarde d’une saison ne sérialise plus toutes les saisons, s
 ## Limite et décision
 
 Aucun changement de code fonctionnel n’est proposé dans cet audit : le journal serveur nécessaire pour attribuer l’erreur fatale n’est pas disponible, et la séparation du stockage exige une migration avec compatibilité historique. La prochaine correction doit être fondée sur ces mesures, puis vérifiée sur un site de préproduction avant installation sur les deux parcs.
+
+
+## Précisions après le retour utilisateur
+
+L’utilisateur indique que le site refonctionne lorsque l’extension est désactivée. Cette reproduction renforce le lien entre l’extension active et le problème observé. Elle ne désigne pas encore le chemin fautif : un conflit peut être déclenché par l’interaction de l’extension avec le thème ou une autre extension, même sans appel direct à `session_start()` dans ce dépôt.
+
+L’option principale n’est pas autoloadée : l’activation utilise `add_option(..., false)` et les sauvegardes utilisent `update_option(..., false)`. Le risque identifié n’est donc pas un chargement automatique de cette grosse option sur toutes les pages WordPress. Il apparaît lorsque le code de l’extension la demande explicitement et fusionne toutes les saisons, ainsi qu’au moment où une sauvegarde transmet de nouveau l’option complète à WordPress.
+
+## Références officielles consultées
+
+- Le Plugin Handbook WordPress recommande de séparer le code d’administration du code public et de charger les fichiers admin avec `is_admin()` : https://developer.wordpress.org/plugins/plugin-basics/best-practices/
+- La documentation Performance WordPress explique que les options autoloadées sont chargées à chaque page et recommande de ne pas autoloader celles qui ne servent que sur quelques URL : https://developer.wordpress.org/advanced-administration/performance/optimization/#autoloaded-options
+- Le test Santé du site WordPress décrit l’alerte de session active et les risques pour REST/loopback : https://developer.wordpress.org/reference/classes/wp_site_health/get_test_php_sessions/
+- WordPress indique qu’un conflit d’extension ou de thème est une cause fréquente de boucle REST en échec et recommande l’isolation par désactivation/réactivation : https://developer.wordpress.org/advanced-administration/wordpress/loopback/
+- Le manuel PHP explique que les sessions fichier sont verrouillées jusqu’à la fermeture ou fin du script et que `session_write_close()` peut réduire les blocages concurrents : https://www.php.net/manual/en/function.session-write-close.php
+
+## Priorité de livraison
+
+La prochaine évolution à traiter est le chantier performance/mémoire de l’extension, avant la synchronisation Google Maps. L’audit de synchronisation Google Maps reste une étape séparée après stabilisation. Aucun déploiement sur les deux sites n’est inclus dans cette décision.
