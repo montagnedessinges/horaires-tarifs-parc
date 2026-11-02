@@ -1135,7 +1135,6 @@ final class Parcs_HT_Admin {
             Parcs_HT_Updater::set_auto_update($auto_update);
         }
 
-        $current = Parcs_HT_Defaults::settings($year);
         $scoped_save = isset($_POST['htp_save_active']);
         $incomplete = self::incomplete_sections($raw);
         // Les écrans métier ont leur propre formulaire et ne doivent modifier QUE leur rubrique.
@@ -1165,14 +1164,16 @@ final class Parcs_HT_Admin {
                 'groups'=>array('tariffs'),
                 'popup'=>array('general','alerts'),
             );
+            $current = Parcs_HT_Defaults::scoped_settings($year, $read_sections[$workspace]);
             $keys = array_fill_keys($read_sections[$workspace], true);
-            $current = array_intersect_key($current, $keys);
             $raw = array_intersect_key($raw, $keys + array('_complete'=>true));
+        } else {
+            $current = Parcs_HT_Defaults::settings($year);
         }
         // Le sanitizer reste centralisé, mais il reçoit uniquement les données
         // de l'écran ; l'écriture ci-dessous ne touche pas les autres modules.
         $clean = self::sanitize($raw, $current);
-        $all = Parcs_HT_Defaults::all_settings();
+        $all = $is_scoped ? Parcs_HT_Defaults::raw_settings() : Parcs_HT_Defaults::all_settings();
         if (!isset($all['seasons'][$year])) $all['seasons'][$year] = Parcs_HT_Defaults::empty_season($year);
         if (!$is_scoped && class_exists('Parcs_HT_Health')) Parcs_HT_Health::store_revision($all, $year);
 
