@@ -30,6 +30,8 @@ La conversion et l’envoi réel doivent rester deux actions distinctes : **« C
 - L’API expose le statut courant `openInfo.status` (ouvert / fermé temporairement), sans champ de date d’effet future. Une seule validation doit envoyer le calendrier et enregistrer les transitions futures pour toutes les périodes planifiées d’au moins 7 jours consécutifs : fermeture temporaire au début de chaque période et réouverture à la prochaine date d’ouverture. L’administrateur n’a pas à revenir cliquer au moment de ces deux transitions. Si l’une des dates est déjà arrivée au moment de la validation, l’action correspondante doit être exécutée immédiatement au lieu d’être planifiée dans le passé. Ce sont des événements ponctuels, pas une vérification quotidienne. Les fermetures d’urgence resteront gérées manuellement dans Google Maps et ne feront pas partie d’une synchronisation automatique.
 - Les horaires peuvent changer plusieurs fois dans l’année : au moins deux régimes sont prévus à la Montagne des Singes et probablement davantage à la Forêt des Singes. Le convertisseur doit gérer un nombre variable de périodes et produire les exceptions datées nécessaires pour représenter tous les horaires planifiés.
 - Le schéma d’API expose une liste de périodes spéciales et ne donne pas, dans la référence consultée, de maximum global pour le nombre d’entrées ; cela ne prouve pas qu’il n’existe aucune limite opérationnelle. Les périodes spéciales doivent rester non chevauchantes et les fermetures de longue durée doivent utiliser le statut temporaire selon les consignes Google.
+- Google permet d’enregistrer une heure spéciale sur une date future précise et indique que ces horaires apparaissent pour les clients aux dates désignées. Cependant, sa consigne reste d’utiliser « temporairement fermé » pour une fermeture de 7 jours ou plus. Une exception d’un jour sur le premier jour de cette longue fermeture pourrait rendre ce jour visible dans l’aperçu des prochains jours avant le basculement du statut, mais ce contournement n’est pas validé comme conforme à la consigne Google. Ne pas le présenter comme une garantie sans essai sur une fiche réelle et vérification du rendu Maps.
+- Limite d’affichage à expliquer : sans exception d’annonce anticipée validée, le statut temporaire ne changera qu’au moment où l’action planifiée s’exécute. Avant ce moment, la fiche peut continuer à montrer les horaires hebdomadaires normaux pour les jours futurs ; l’API documentée n’offre pas de date d’effet future pour `openInfo.status`.
 
 ### Emplacement dans l’administration
 
@@ -96,6 +98,7 @@ Ces éléments impliquent un vrai flux OAuth avec choix de la fiche autorisée, 
 ## Points bloquants à confirmer avant développement
 
 - Le projet Google Cloud de l’entreprise est-il déjà approuvé pour les Business Profile APIs ? Son quota Business Information API est-il supérieur à zéro ?
+- Sur une fiche de test, une exception spéciale fermée sur la date de début d’une fermeture longue est-elle acceptée et visible à l’avance sans remplacer la recommandation Google d’utiliser le statut temporaire ?
 - Les deux fiches Google sont-elles administrées depuis le compte Google qui autorisera l’intégration ?
 - Google accepte-t-il, pour les catégories exactes des deux lieux, les horaires et jours spéciaux générés par le calendrier ?
 
@@ -125,7 +128,7 @@ Le statut d’approbation, les deux comptes/fiches, les catégories, les quotas 
 
 ## Plan de vérification avant release
 
-- **Conversion** : plages hebdomadaires, journées avec deux créneaux, journée datée fermée alors que son jour habituel est ouvert, exceptions ouvertes, fermetures de 1 à 6 jours, fermeture continue ≥7 jours et réouverture planifiée.
+- **Conversion / affichage** : plages hebdomadaires, journées avec deux créneaux, journée datée fermée alors que son jour habituel est ouvert, exceptions ouvertes, fermetures de 1 à 6 jours, fermeture continue ≥7 jours et réouverture planifiée ; vérifier dans Maps l’affichage d’une fermeture longue dans la fenêtre des 7 prochains jours avant et après la transition.
 - **Priorité** : vérifier que l’exception gagnante dans `resolve_day()` est celle envoyée à Google ; aucune règle de priorité parallèle.
 - **Données** : confirmer que 2026/2027 et les exceptions propres à chaque parc sont converties indépendamment ; aucune donnée n’est supprimée à l’installation ou à la mise à jour.
 - **API** : scope, fiche sans permission, jeton révoqué/expiré, `validateOnly`, erreurs 400/401/403/429/5xx, répétition d’une synchronisation identique et réponse partielle.
