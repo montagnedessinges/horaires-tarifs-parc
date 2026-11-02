@@ -28,9 +28,9 @@ La conversion et l’envoi réel doivent rester deux actions distinctes : **« C
 - La fermeture de midi ne devient pas une journée fermée : elle est représentée par deux plages d’ouverture le même jour, avec l’intervalle de fermeture entre les deux.
 - Les exceptions datées de courte durée (jusqu’à 6 jours de fermeture consécutifs) sont envoyées comme horaires spéciaux. Toute période de fermeture continue de 7 jours ou plus — fermeture saisonnière ou autre fermeture planifiée — doit suivre la consigne Google « temporairement fermé » ; elle ne doit pas être encodée comme une suite d’exceptions quotidiennes.
 - L’API expose le statut courant `openInfo.status` (ouvert / fermé temporairement), sans champ de date d’effet future. Une seule validation doit envoyer le calendrier et enregistrer les transitions futures pour toutes les périodes planifiées d’au moins 7 jours consécutifs : fermeture temporaire au début de chaque période et réouverture à la prochaine date d’ouverture. L’administrateur n’a pas à revenir cliquer au moment de ces deux transitions. Si l’une des dates est déjà arrivée au moment de la validation, l’action correspondante doit être exécutée immédiatement au lieu d’être planifiée dans le passé. Ce sont des événements ponctuels, pas une vérification quotidienne. Les fermetures d’urgence resteront gérées manuellement dans Google Maps et ne feront pas partie d’une synchronisation automatique.
-- Les horaires peuvent changer plusieurs fois dans l’année : au moins deux régimes sont prévus à la Montagne des Singes et probablement davantage à la Forêt des Singes. Le convertisseur doit gérer un nombre variable de périodes et produire les exceptions datées nécessaires pour représenter tous les horaires planifiés.
+- Les horaires peuvent changer plusieurs fois dans l’année : au moins deux régimes sont prévus à la Montagne des Singes et probablement davantage à la Forêt des Singes. Pour chaque régime hebdomadaire, l’extension doit programmer une mise à jour de `regularHours` à la date de début ; réserver `specialHours` aux exceptions par date. La synchronisation annuelle validée doit programmer ces transitions sans vérification quotidienne.
 - Le schéma d’API expose une liste de périodes spéciales et ne donne pas, dans la référence consultée, de maximum global pour le nombre d’entrées ; cela ne prouve pas qu’il n’existe aucune limite opérationnelle. Les périodes spéciales doivent rester non chevauchantes et les fermetures de longue durée doivent utiliser le statut temporaire selon les consignes Google.
-- Google permet de programmer des horaires spéciaux sur des dates futures et indique qu’ils apparaissent aux clients aux dates désignées. Proposition à tester pour l’aperçu : pour une fermeture longue qui commence un mardi, préprogrammer les six premiers jours (mardi à dimanche) comme fermés afin qu’ils apparaissent dans la fenêtre des prochains jours ; programmer aussi le passage à « temporairement fermé » au début de cette fermeture pour la suite. La règle Google reste d’utiliser le statut temporaire pour une fermeture de 7 jours ou plus : cette combinaison doit être validée sur une fiche réelle avant d’être retenue.
+- Google permet de programmer des horaires spéciaux sur des dates futures et indique qu’ils apparaissent aux clients aux dates désignées. Une piste serait de préprogrammer les six premiers jours d’une fermeture longue pour les rendre visibles dans l’aperçu des prochains jours, puis de faire passer la fiche en « temporairement fermé ». Cependant, l’utilisateur constate que l’interface Google désactive les horaires spéciaux quand la fiche est temporairement fermée ; Google indique aussi que les horaires spéciaux nécessitent des horaires principaux ouverts. Cette combinaison n’est donc pas considérée comme acquise : il faut la tester sur une fiche réelle avant de l’intégrer.
 - Limite d’affichage à expliquer : sans exception d’annonce anticipée validée, le statut temporaire ne changera qu’au moment où l’action planifiée s’exécute. Avant ce moment, la fiche peut continuer à montrer les horaires hebdomadaires normaux pour les jours futurs ; l’API documentée n’offre pas de date d’effet future pour `openInfo.status`.
 
 ### Emplacement dans l’administration
@@ -61,8 +61,8 @@ Ces éléments impliquent un vrai flux OAuth avec choix de la fiche autorisée, 
 ### Horaires réguliers
 
 - Convertir les jours et plages de la semaine de base en `regularHours`.
-- Pour les parcs dont les horaires varient selon les saisons, ne pas supposer qu’une semaine-type unique représente toute l’année.
-- La prévisualisation doit nommer clairement la saison / semaine de référence retenue, et montrer les différences de saison que Google recevra comme exceptions datées.
+- Pour les parcs dont les horaires varient selon les saisons, programmer une mise à jour du motif hebdomadaire `regularHours` à chaque changement de régime au calendrier. Ne pas simuler des mois de nouvel horaire hebdomadaire en ajoutant une exception spéciale par date.
+- La prévisualisation doit afficher chaque régime hebdomadaire, ses dates de début / fin et les appels futurs programmés pour l’appliquer.
 
 ### Exceptions datées
 
@@ -98,7 +98,8 @@ Ces éléments impliquent un vrai flux OAuth avec choix de la fiche autorisée, 
 ## Points bloquants à confirmer avant développement
 
 - Le projet Google Cloud de l’entreprise est-il déjà approuvé pour les Business Profile APIs ? Son quota Business Information API est-il supérieur à zéro ?
-- Sur une fiche de test, l’aperçu anticipé de six jours fermés suivi du statut « temporairement fermé » au début d’une fermeture de plus de 6 jours est-il accepté et s’affiche-t-il correctement ?
+- Après une fermeture temporaire, l’API permet-elle de remettre le prochain régime `regularHours`, de rouvrir la fiche et de conserver / réactiver les exceptions datées ?
+- Une fermeture longue planifiée apparaît-elle comme fermée dans la fenêtre Maps des 7 jours avant son premier jour, sans désactiver ou invalider les horaires spéciaux ?
 - Les deux fiches Google sont-elles administrées depuis le compte Google qui autorisera l’intégration ?
 - Google accepte-t-il, pour les catégories exactes des deux lieux, les horaires et jours spéciaux générés par le calendrier ?
 
@@ -128,7 +129,8 @@ Le statut d’approbation, les deux comptes/fiches, les catégories, les quotas 
 
 ## Plan de vérification avant release
 
-- **Conversion / affichage** : plages hebdomadaires, journées avec deux créneaux, journée datée fermée alors que son jour habituel est ouvert, exceptions ouvertes, fermetures de 1 à 6 jours, fermeture continue ≥7 jours et réouverture planifiée ; tester l’affichage anticipé des six premiers jours fermés et le basculement du statut temporaire au démarrage.
+- **Conversion / affichage** : plages hebdomadaires, changements planifiés de `regularHours` entre régimes, journées avec deux créneaux, journée datée fermée alors que son jour habituel est ouvert, exceptions ouvertes, fermetures de 1 à 6 jours, fermeture continue ≥7 jours et réouverture planifiée ; tester si la fermeture longue apparaît dans l’aperçu Maps une semaine à l’avance.
+- **Réouverture** : après une période « temporairement fermé », réappliquer le prochain régime de `regularHours`, rétablir l’état ouvert, vérifier que les horaires sont visibles et vérifier quand les horaires spéciaux sont de nouveau modifiables.
 - **Priorité** : vérifier que l’exception gagnante dans `resolve_day()` est celle envoyée à Google ; aucune règle de priorité parallèle.
 - **Données** : confirmer que 2026/2027 et les exceptions propres à chaque parc sont converties indépendamment ; aucune donnée n’est supprimée à l’installation ou à la mise à jour.
 - **API** : scope, fiche sans permission, jeton révoqué/expiré, `validateOnly`, erreurs 400/401/403/429/5xx, répétition d’une synchronisation identique et réponse partielle.
