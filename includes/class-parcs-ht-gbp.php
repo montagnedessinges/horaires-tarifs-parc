@@ -314,11 +314,8 @@ final class Parcs_HT_GBP {
                     if (is_wp_error($write)) { self::record_error($write); return $write; }
                 }
             } else {
-                if ($current === 'CLOSED_TEMPORARILY') {
-                    $reopen = self::api('PATCH',$location,array('openInfo'=>array('status'=>'OPEN')),array('updateMask'=>'openInfo.status'));
-                    if (is_wp_error($reopen)) { self::record_error($reopen); return $reopen; }
-                }
-                // Envoi limité strictement aux horaires, jamais aux autres champs de la fiche.
+                // Valider puis enregistrer les horaires avant de rouvrir la fiche.
+                // En cas de refus de Google, elle reste fermée au lieu d'afficher d'anciens horaires.
                 $body = array(
                     'regularHours'=>$plan['regularHours'],
                     'specialHours'=>array('specialHourPeriods'=>self::preserve_future_specials($remote,$plan)),
@@ -328,6 +325,10 @@ final class Parcs_HT_GBP {
                 if (is_wp_error($validation)) { self::record_error($validation); return $validation; }
                 $write = self::api('PATCH', $location, $body, $mask);
                 if (is_wp_error($write)) { self::record_error($write); return $write; }
+                if ($current === 'CLOSED_TEMPORARILY') {
+                    $reopen = self::api('PATCH',$location,array('openInfo'=>array('status'=>'OPEN')),array('updateMask'=>'openInfo.status'));
+                    if (is_wp_error($reopen)) { self::record_error($reopen); return $reopen; }
+                }
             }
             $verify = self::api('GET',$location,null,array('readMask'=>'name,openInfo,regularHours,specialHours,metadata'));
             if (is_wp_error($verify)) { self::record_error($verify); return $verify; }
