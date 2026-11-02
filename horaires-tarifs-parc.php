@@ -77,7 +77,7 @@ Parcs_HT_Stability_11511::init();
 
 register_activation_hook(__FILE__, array('Parcs_HT_Defaults', 'activate'));
 register_deactivation_hook(__FILE__, static function () {
-    wp_clear_scheduled_hook(Parcs_HT_GBP::CRON);
+    wp_clear_scheduled_hook('parcs_ht_gbp_daily_sync');
     wp_clear_scheduled_hook(Parcs_HT_GBP::QUEUED);
     require_once PARCS_HT_DIR . 'includes/class-parcs-ht-health.php';
     Parcs_HT_Health::deactivate();
