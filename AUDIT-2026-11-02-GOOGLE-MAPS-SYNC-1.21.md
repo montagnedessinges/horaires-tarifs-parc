@@ -13,6 +13,15 @@ Le calendrier de Gestion du parc peut rester la source canonique. Toutefois, Goo
 
 **Recommandation :** commencer par un écran de connexion, de sélection de fiche et de prévisualisation. N’écrire vers Google qu’après validation du diff par l’administrateur. Garder une option d’envoi automatique désactivée par défaut jusqu’à validation du fonctionnement en production.
 
+### Décision fonctionnelle confirmée le 02/11/2026
+
+La prochaine version doit comporter deux outils visibles et distincts :
+
+1. Un bouton **« Connecter Google »** qui lance OAuth, puis permet de sélectionner la fiche Google autorisée. L’écran affiche ensuite le compte et la fiche connectés, avec les actions de déconnexion / reconnexion.
+2. Un **convertisseur calendrier → horaires Google** qui lit le calendrier publié de cette installation, le transforme au format des horaires réguliers et spéciaux Google, et présente le résultat (semaine de base, exceptions datées et diff) avant tout envoi.
+
+La conversion et l’envoi réel doivent rester deux actions distinctes : **« Convertir / prévisualiser »** ne modifie pas la fiche Google ; **« Synchroniser maintenant »** envoie le résultat après confirmation. Une connexion réussie ne déclenche donc pas d’écriture automatique.
+
 ## Éléments vérifiés dans le dépôt
 
 - Le dépôt canonique partagé par les deux parcs est `montagnedessinges/horaires-tarifs-parc`, branche `main`.
@@ -59,10 +68,10 @@ Ces éléments impliquent un vrai flux OAuth avec choix de la fiche autorisée, 
 ## Parcours d’administration proposé
 
 1. **Prérequis** : afficher l’état d’accès Business Profile, le compte Google connecté et les autorisations disponibles. Expliquer qu’une clé API seule ne suffit pas.
-2. **Connexion** : bouton OAuth explicite, scope minimal requis et stockage protégé des jetons de renouvellement ; action de déconnexion et révocation.
-3. **Sélection de la fiche** : l’administrateur choisit la fiche Google associée à ce WordPress. Ne pas l’associer automatiquement uniquement par nom.
-4. **Prévisualisation** : produire le diff à partir du calendrier publié et de `resolve_day()`. Les saisons brouillon, les années non visibles et les données d’un autre site ne sont jamais envoyées.
-5. **Validation / test** : si pris en charge par l’endpoint utilisé, appeler `validateOnly=true` puis présenter les erreurs de Google avant l’envoi réel.
+2. **Connexion** : bouton explicite « Connecter Google » qui lance OAuth avec le scope minimal requis ; stocker les jetons de renouvellement de façon protégée et proposer déconnexion / révocation.
+3. **Sélection de la fiche** : après connexion, l’administrateur choisit la fiche Google associée à ce WordPress. Ne pas l’associer automatiquement uniquement par nom.
+4. **Conversion** : action « Convertir / prévisualiser » qui transforme le calendrier publié en modèle Google, sans écrire sur Google. Le résultat montre la semaine de base, les exceptions datées et le diff.
+5. **Validation / test** : si pris en charge par l’endpoint utilisé, appeler `validateOnly=true` puis présenter les erreurs Google avant l’envoi réel.
 6. **Envoi manuel initial** : bouton distinct « Synchroniser maintenant », confirmation explicite et journal minimal du résultat.
 7. **Automatisation ultérieure** : option distincte, désactivée par défaut, pour lancer la synchronisation après une sauvegarde publiée ; journaliser les changements, éviter les appels identiques et conserver une commande de resynchronisation manuelle.
 8. **Retour de Google** : relire l’état de la fiche après l’envoi et comparer aux horaires prévus.
