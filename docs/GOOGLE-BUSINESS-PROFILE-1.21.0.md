@@ -23,7 +23,7 @@ Cette release est préparée sur une branche de développement. **Aucune connexi
   - écarts sur les 35 prochains jours convertis en horaires exceptionnels (`specialHours`);
   - hors saison ou sans ouverture prévue dans la semaine, statut `CLOSED_TEMPORARILY`;
   - reprise des horaires et du statut `OPEN` à la réouverture, si le calendrier WordPress le prévoit.
-- Synchronisation horaire WP-Cron + événement différé après modification de l'option de calendrier + bouton **Synchroniser maintenant**.
+- Synchronisation **quotidienne** WP-Cron + événement différé après modification du calendrier + bouton **Synchroniser maintenant**. Les plans inchangés sont ignorés. Le module n'est chargé que dans l’administration ou lors d’une tâche cron, jamais sur les requêtes publiques ordinaires.
 - Contrôle après envoi par relecture de l'API et affichage des erreurs / des modifications Google en attente.
 - Les autres champs Google (nom, adresse, téléphone, catégorie, etc.) ne sont jamais modifiés.
 
@@ -44,7 +44,7 @@ Une **simple clé API Google Maps ne suffit pas**. Le projet OAuth peut être so
 - La représentation hebdomadaire Google ne possède pas les périodes de dates de notre calendrier. L'extension calcule des horaires récurrents à court terme et des exceptions futures sur **35 jours**, puis les actualise dans le temps.
 - Les plages horaires chevauchant minuit ou inversées ne sont pas envoyées ; elles produisent une erreur d'administration.
 - Google peut examiner des modifications avant qu'elles soient affichées publiquement. Une réponse HTTP valide **ne garantit pas** la publication immédiate dans Google Maps.
-- WP-Cron peut s'exécuter en retard sur un site peu visité. Configurer une **vraie tâche cron système** sur le serveur pour les bascules saisonnières à heure régulière. L'envoi peut également être retardé par les validations Google.
+- WP-Cron peut s'exécuter en retard sur un site peu visité. Configurer une **vraie tâche cron système** sur le serveur pour les bascules saisonnières à heure régulière. L'envoi quotidien ou déclenché après une modification du calendrier peut être retardé par les validations Google.
 - La bascule saisonnière se fait en fonction de la date locale WordPress, pas d'une heure spécifique de fermeture. Tester ce comportement : pour une dernière journée d'ouverture, l'état `CLOSED_TEMPORARILY` est programmé à partir du **jour suivant**.
 - Cette synchronisation est unidirectionnelle : **WordPress → Google**. Les modifications manuelles dans Google peuvent être remplacées lors de la prochaine synchronisation.
 - Le secret OAuth et le jeton de renouvellement sont enregistrés dans une option WordPress dédiée, non affichée dans le back-office. Protéger la base de données et les sauvegardes ; ne jamais inclure ces identifiants dans un ticket GitHub public. Il faudra auditer les exports/sauvegardes du site avant mise en service.
