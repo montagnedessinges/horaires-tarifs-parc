@@ -1,7 +1,11 @@
-## 1.20.31 — Optimisation mémoire PHP et validation
-- Intègre les optimisations PHP de la PR #123 pour les hébergements disposant de ressources limitées : initialisations administratives conditionnelles et cache de requête des réglages.
-- Corrige la fixture du test de visibilité pour tenir compte de la préparation centralisée de Defaults::all_settings().
-- Conserve les données et le schéma WordPress existants ; ne modifie pas le calendrier ni l'interface publique.
+## 1.21.0 — Synchronisation facultative Google Business Profile (préparation)
+
+- Ajoute un module Google Maps désactivé par défaut dans l’administration du parc.
+- Reprend les données du calendrier déjà existant (périodes, jours fermés, exceptions, saisons) sans les dupliquer.
+- Ajoute l’autorisation OAuth 2.0, la sélection de la fiche du parc, l’envoi des horaires via l’API Business Information et la fermeture saisonnière.
+- Prévoit une vérification nocturne quotidienne décalée par installation, une synchronisation manuelle et des erreurs consultables dans WordPress.
+- N’envoie aucune modification à Google avant connexion, sélection de la fiche et activation explicite.
+- Tests : projection des horaires, ouvertures exceptionnelles et transitions 2026/2027.
 
 ## 1.20.30 — Parcours CSE et groupes clarifié
 

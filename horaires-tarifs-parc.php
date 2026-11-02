@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Gestion du parc
  * Description: Gestion centralisée des horaires, calendriers, tarifs, événements, devis et outils du parc.
- * Version: 1.20.31
+ * Version: 1.21.0
  * Update URI: https://github.com/montagnedessinges/horaires-tarifs-parc
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -12,7 +12,7 @@
 
 if (!defined('ABSPATH')) { exit; }
 
-define('PARCS_HT_VERSION', '1.20.31');
+define('PARCS_HT_VERSION', '1.21.0');
 define('PARCS_HT_FILE', __FILE__);
 define('PARCS_HT_DIR', plugin_dir_path(__FILE__));
 define('PARCS_HT_URL', plugin_dir_url(__FILE__));
@@ -76,7 +76,11 @@ Parcs_HT_Public_Seasons::init();
 Parcs_HT_Stability_11511::init();
 
 register_activation_hook(__FILE__, array('Parcs_HT_Defaults', 'activate'));
-register_deactivation_hook(__FILE__, static function () { require_once PARCS_HT_DIR . 'includes/class-parcs-ht-health.php'; Parcs_HT_Health::deactivate(); });
+register_deactivation_hook(__FILE__, static function () {
+    wp_clear_scheduled_hook('parcs_ht_gbp_daily_sync');
+    require_once PARCS_HT_DIR . 'includes/class-parcs-ht-health.php';
+    Parcs_HT_Health::deactivate();
+});
 
 add_action('updated_option', static function ($option, $old_value, $value) {
     unset($old_value);
@@ -129,6 +133,14 @@ add_action('admin_enqueue_scripts', static function ($hook) {
     $settings = Parcs_HT_Defaults::settings($year);
     wp_add_inline_script('parcs-ht-tariff-seasons-admin', 'window.ParcsHTTariffSeasonAdmin=' . wp_json_encode(array('tariffs'=>(array)($settings['tariffs'] ?? array()))) . ';', 'before');
 }, 90);
+
+add_action('plugins_loaded', static function () {
+    $doing_cron = function_exists('wp_doing_cron') && wp_doing_cron();
+    if (!is_admin() && !$doing_cron) return;
+    require_once PARCS_HT_DIR . 'includes/class-parcs-ht-gbp-plan.php';
+    require_once PARCS_HT_DIR . 'includes/class-parcs-ht-gbp.php';
+    Parcs_HT_GBP::init();
+}, 1);
 
 add_action('plugins_loaded', static function () {
     Parcs_HT_Bootstrap::init();

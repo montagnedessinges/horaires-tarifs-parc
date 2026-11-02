@@ -67,6 +67,7 @@ jobs:
           php tests/group-quote-future-season-runtime.php
           php tests/group-tariff-display-settings-runtime.php
           php tests/schedule-engine.php
+          php tests/gbp-plan-1210-runtime.php
           php tests/schedule-csv-contract.php
           php tests/backup-import-1208-contract.php
           php tests/schedule-weekdays-slot-delays-1208.php
