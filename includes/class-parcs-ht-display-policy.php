@@ -8,7 +8,6 @@ final class Parcs_HT_Display_Policy {
     private static $raw_group = null;
     private static $normalized_main = null;
     private static $filtered_main = null;
-    private static $filtered_date = '';
     private static $forced_group_tariff_year = '';
 
     public static function init() {
@@ -121,7 +120,6 @@ final class Parcs_HT_Display_Policy {
         self::$raw_main = null;
         self::$normalized_main = null;
         self::$filtered_main = null;
-        self::$filtered_date = '';
     }
 
     public static function filter_main_option($value) {
@@ -136,7 +134,6 @@ final class Parcs_HT_Display_Policy {
         $today = self::today($value);
         if (empty($value['seasons']) || !is_array($value['seasons'])) {
             self::$filtered_main = $value;
-            self::$filtered_date = $today;
             return $value;
         }
         foreach ($value['seasons'] as &$season) {
@@ -156,7 +153,6 @@ final class Parcs_HT_Display_Policy {
         }
         unset($season);
         self::$filtered_main = $value;
-        self::$filtered_date = $today;
         return $value;
     }
 
