@@ -696,8 +696,13 @@ final class Parcs_HT_Defaults {
      * full-season merge just to preserve unrelated values.
      */
     public static function raw_settings() {
-        self::maybe_upgrade();
-        $saved = get_option(self::OPTION, array());
+        self::$building_settings = true;
+        try {
+            self::maybe_upgrade();
+            $saved = get_option(self::OPTION, array());
+        } finally {
+            self::$building_settings = false;
+        }
         return is_array($saved) ? $saved : array();
     }
 
@@ -708,8 +713,13 @@ final class Parcs_HT_Defaults {
         $year = preg_match('/^20\d{2}$/', (string) $year) ? (string) $year : '';
         if ($year === '') return array();
 
-        self::maybe_upgrade();
-        $saved = get_option(self::OPTION, array());
+        self::$building_settings = true;
+        try {
+            self::maybe_upgrade();
+            $saved = get_option(self::OPTION, array());
+        } finally {
+            self::$building_settings = false;
+        }
         if (!is_array($saved)) $saved = array();
         $defaults = self::get();
         $keys = array_fill_keys(array_map('strval', (array) $keys), true);
