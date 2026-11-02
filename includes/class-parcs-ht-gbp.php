@@ -286,13 +286,13 @@ final class Parcs_HT_GBP {
 
     public static function manual_sync() {
         self::guard('sync');
-        $result = self::sync(true);
+        $result = self::sync(true, true);
         self::redirect(is_wp_error($result) ? 'error' : 'synced');
     }
 
-    public static function sync($force = false) {
+    public static function sync($force = false, $manual = false) {
         $data = self::option();
-        if (empty($data['enabled']) || empty($data['refresh_token']) || empty($data['location'])) {
+        if ((!$manual && empty($data['enabled'])) || empty($data['refresh_token']) || empty($data['location'])) {
             return new WP_Error('gbp_off','Synchronisation désactivée ou fiche non connectée.');
         }
         if (get_transient('parcs_ht_gbp_busy')) return new WP_Error('gbp_busy','Une synchronisation est déjà en cours.');
@@ -441,7 +441,8 @@ final class Parcs_HT_GBP {
         echo 'Dernier statut demandé : '.esc_html($data['last_mode'] ?? 'Aucun').'.</p>';
         if (!empty($data['last_pending'])) echo '<p>Google indique des modifications en attente d’examen : leur affichage public n’est pas confirmé.</p>';
         if (!empty($data['last_error'])) echo '<div class="notice notice-error"><p>'.esc_html($data['last_error']).'</p></div>';
-        if (!empty($data['enabled']) && $connected && !empty($data['location'])) {
+        if ($connected && !empty($data['location'])) {
+            if (empty($data['enabled'])) echo '<p>Synchronisation automatique désactivée. Le bouton lance un envoi ponctuel pour les tests.</p>';
             self::form_begin('sync');
             submit_button('Synchroniser maintenant','secondary');
             echo '</form>';
