@@ -6,7 +6,6 @@ if (!defined('ABSPATH')) { exit; }
 final class Parcs_HT_Display_Policy {
     private static $raw_main = null;
     private static $raw_group = null;
-    private static $normalized_main = null;
     private static $forced_group_tariff_year = '';
 
     public static function init() {
@@ -16,6 +15,9 @@ final class Parcs_HT_Display_Policy {
         add_filter('pre_update_option_' . Parcs_HT_Defaults::OPTION, array(__CLASS__, 'save_controls'), 97, 3);
         add_action('admin_enqueue_scripts', array(__CLASS__, 'admin_assets'), 98);
         add_action('wp_enqueue_scripts', array(__CLASS__, 'frontend_assets'), 35);
+        add_action('updated_option', array(__CLASS__, 'invalidate_main_cache'), 10, 3);
+        add_action('added_option', array(__CLASS__, 'invalidate_main_cache'), 10, 2);
+        add_action('deleted_option', array(__CLASS__, 'invalidate_main_cache'), 10, 1);
     }
 
     private static function clean_date($value) {
@@ -23,7 +25,7 @@ final class Parcs_HT_Display_Policy {
         return preg_match('/^20\d{2}-\d{2}-\d{2}$/', $value) ? $value : '';
     }
 
-    private static function today($settings) {
+    public static function today($settings) {
         $timezone = is_array($settings) && !empty($settings['timezone']) ? (string)$settings['timezone'] : 'Europe/Paris';
         try { $zone = new DateTimeZone($timezone); } catch (Exception $e) { $zone = new DateTimeZone('Europe/Paris'); }
         return wp_date('Y-m-d', null, $zone);
@@ -101,42 +103,36 @@ final class Parcs_HT_Display_Policy {
         return $tariffs;
     }
 
-    private static function normalize_all_tariffs($value) {
-        if (!is_array($value)) return $value;
-        if (isset($value['tariffs']) && is_array($value['tariffs'])) $value['tariffs'] = self::normalize_tariffs($value['tariffs']);
-        foreach ((array)($value['seasons'] ?? array()) as $year => $season) {
-            if (!is_array($season) || !isset($season['tariffs']) || !is_array($season['tariffs'])) continue;
-            $value['seasons'][$year]['tariffs'] = self::normalize_tariffs($season['tariffs']);
+    public static function apply_season_visibility($season, $today) {
+        if (!is_array($season)) return $season;
+        if (array_key_exists('calendar_visible', $season)) {
+            $season['published'] = (string)$season['calendar_visible'] === '1' ? '1' : '0';
+            $season['public_display_until'] = '';
+            return $season;
         }
-        return $value;
+        if ((string)($season['published'] ?? '0') !== '1') return $season;
+        if ((string)($season['public_force_display'] ?? '0') === '1') {
+            $season['public_display_until'] = '';
+            return $season;
+        }
+        $from = self::clean_date($season['public_display_from'] ?? '');
+        if ($from !== '' && $today < $from) $season['published'] = '0';
+        return $season;
+    }
+
+    public static function invalidate_main_cache($option) {
+        if ($option !== Parcs_HT_Defaults::OPTION) return;
+        self::$raw_main = null;
+        Parcs_HT_Defaults::invalidate_request_cache();
     }
 
     public static function filter_main_option($value) {
         if (!is_array($value)) return $value;
-        if (self::$raw_main !== $value) self::$normalized_main = null;
         self::$raw_main = $value;
-        if (is_admin()) return $value;
-        if (self::$normalized_main === null) self::$normalized_main = self::normalize_all_tariffs($value);
-        $value = self::$normalized_main;
-        if (empty($value['seasons']) || !is_array($value['seasons'])) return $value;
-        $today = self::today($value);
-        foreach ($value['seasons'] as &$season) {
-            if (!is_array($season)) continue;
-            if (array_key_exists('calendar_visible', $season)) {
-                $season['published'] = (string)$season['calendar_visible'] === '1' ? '1' : '0';
-                $season['public_display_until'] = '';
-                continue;
-            }
-            if ((string)($season['published'] ?? '0') !== '1') continue;
-            if ((string)($season['public_force_display'] ?? '0') === '1') {
-                $season['public_display_until'] = '';
-                continue;
-            }
-            $from = self::clean_date($season['public_display_from'] ?? '');
-            if ($from !== '' && $today < $from) $season['published'] = '0';
-        }
-        unset($season);
-        return $value;
+        if (is_admin() || empty($value) || Parcs_HT_Defaults::is_building_settings()) return $value;
+        // Fusion, normalisation des tarifs et règles de visibilité sont préparées
+        // ensemble par Defaults::all_settings(), une seule fois par requête.
+        return Parcs_HT_Defaults::all_settings();
     }
 
     public static function capture_group_option($value) {
