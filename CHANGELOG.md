@@ -1,3 +1,8 @@
+## 1.20.31 — Optimisation mémoire PHP et validation
+- Intègre les optimisations PHP de la PR #123 pour les hébergements disposant de ressources limitées : initialisations administratives conditionnelles et cache de requête des réglages.
+- Corrige la fixture du test de visibilité pour tenir compte de la préparation centralisée de Defaults::all_settings().
+- Conserve les données et le schéma WordPress existants ; ne modifie pas le calendrier ni l'interface publique.
+
 ## 1.20.30 — Parcours CSE et groupes clarifié
 
 - Remplace le texte de comparaison ambigu par trois parcours distincts : particuliers, CSE/amicales et sorties de groupe.
