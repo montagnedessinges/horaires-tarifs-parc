@@ -100,3 +100,17 @@ L’option principale n’est pas autoloadée : l’activation utilise `add_opti
 ## Priorité de livraison
 
 La prochaine évolution à traiter est le chantier performance/mémoire de l’extension, avant la synchronisation Google Maps. L’audit de synchronisation Google Maps reste une étape séparée après stabilisation. Aucun déploiement sur les deux sites n’est inclus dans cette décision.
+
+
+## Comparaison entre les deux parcs — retour utilisateur
+
+L’utilisateur précise que l’extension active fonctionne sur La Montagne des Singes, tandis que le problème concerne La Forêt des Singes. Cette comparaison renforce l’hypothèse d’un problème dépendant de l’installation (hébergement, taille des réglages, thème ou combinaison d’extensions) plutôt que d’une incompatibilité générale de l’extension.
+
+Elle ne confirme pas à elle seule le dépassement mémoire. Pour comparer les deux installations sans exposer de secrets, relever sur chacune :
+- version exacte de l’extension et de PHP / valeur de `memory_limit` ;
+- taille sérialisée de `parcs_ht_settings` et de l’historique de sauvegardes ;
+- action et écran qui échouent à la Forêt ;
+- thème actif et extensions actives autour de l’incident ;
+- pic mémoire et fatal PHP correspondant, s’ils sont disponibles.
+
+La comparaison doit guider la correction commune ; aucun réglage spécifique à la Montagne ne doit être copié vers la Forêt.
