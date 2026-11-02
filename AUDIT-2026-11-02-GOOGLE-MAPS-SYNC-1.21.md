@@ -22,6 +22,13 @@ La prochaine version doit comporter deux outils visibles et distincts :
 
 La conversion et l’envoi réel doivent rester deux actions distinctes : **« Convertir / prévisualiser »** ne modifie pas la fiche Google ; **« Synchroniser maintenant »** envoie le résultat après confirmation. Une connexion réussie ne déclenche donc pas d’écriture automatique.
 
+### Règles métier précisées le 02/11/2026
+
+- Une synchronisation couvre **toute la saison en cours** et toutes les plages d’horaires disponibles dans le calendrier publié, pas seulement les prochains jours.
+- La fermeture de midi ne doit pas devenir une journée fermée : elle est représentée par les deux plages d’ouverture de la journée, avec l’intervalle fermé entre les deux.
+- Toute autre fermeture présente au calendrier doit être transmise à Google Maps, y compris les fermetures exceptionnelles et la fermeture saisonnière du domaine.
+- Les horaires peuvent changer plusieurs fois dans l’année : au moins deux régimes sont prévus à la Montagne des Singes et un nombre potentiellement supérieur à la Forêt des Singes. Le convertisseur doit gérer un nombre variable de périodes et produire les exceptions datées nécessaires pour représenter chacune dans le modèle Google.
+
 ### Emplacement dans l’administration
 
 La synchronisation doit apparaître comme un onglet **« Google Maps »** dans l’écran existant **Gestion du parc → Horaires & calendrier**. Ce placement la rattache au calendrier source et évite de la confondre avec l’écran **IA & Google**, qui gère les données structurées / SEO et ne synchronise pas la fiche Business Profile. Le titre de l’onglet reste court ; son en-tête peut être **« Synchronisation des horaires Google Maps »**.
@@ -86,11 +93,9 @@ Ces éléments impliquent un vrai flux OAuth avec choix de la fiche autorisée, 
 - Le projet Google Cloud de l’entreprise est-il déjà approuvé pour les Business Profile APIs ? Son quota Business Information API est-il supérieur à zéro ?
 - Les deux fiches Google sont-elles administrées depuis le compte Google qui autorisera l’intégration ?
 - Google accepte-t-il, pour les catégories exactes des deux lieux, les horaires et jours spéciaux générés par le calendrier ?
-- Quelle règle d’horizon souhaite-t-on synchroniser : calendrier complet, seule saison publiée actuelle, ou saison actuelle et prochaine ?
-- Pour les variations saisonnières, faut-il définir comme horaires réguliers le régime qui occupe la plus grande partie de la saison, puis publier les autres jours en exceptions ?
 - L’envoi automatique doit-il être proposé dès la première version ou attendre une période d’observation en envoi manuel ?
 
-Le statut d’approbation, les deux comptes/fiches, les catégories, les quotas et le rendu final des fiches **ne peuvent pas être confirmés depuis le seul dépôt**.
+Le statut d’approbation, les deux comptes/fiches, les catégories, les quotas et le rendu final des fiches **ne peuvent pas être confirmés depuis le seul dépôt**. Les règles de saison ci-dessus sont maintenant cadrées ; il reste à vérifier que l’API valide le volume d’exceptions qu’elles nécessitent sur les calendriers réels des deux parcs.
 
 ## Périmètre conseillé pour 1.21.0
 
