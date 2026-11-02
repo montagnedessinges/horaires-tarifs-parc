@@ -733,9 +733,7 @@ final class Parcs_HT_Defaults {
             foreach (array('individual','reduced','groups') as $group) {
                 if (isset($saved_tariffs[$group]) && is_array($saved_tariffs[$group])) $tariffs[$group] = $saved_tariffs[$group];
             }
-            $season_tariffs = isset($saved['seasons'][$year]['tariffs']) && is_array($saved['seasons'][$year]['tariffs'])
-                ? $saved['seasons'][$year]['tariffs'] : null;
-            $out['tariffs'] = is_array($season_tariffs) ? array_replace($tariffs, $season_tariffs) : $tariffs;
+            $out['tariffs'] = $tariffs;
         }
         foreach (array('school_holidays','special_periods','public_holidays','domain_rules','exceptions') as $list) {
             if (!isset($keys[$list])) continue;
