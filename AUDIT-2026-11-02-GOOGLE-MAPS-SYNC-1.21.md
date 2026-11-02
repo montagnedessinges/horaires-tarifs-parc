@@ -73,13 +73,13 @@ Ces éléments impliquent un vrai flux OAuth avec choix de la fiche autorisée, 
 
 1. **Emplacement** : ouvrir l’onglet « Google Maps » dans Gestion du parc → Horaires & calendrier, avec l’en-tête « Synchronisation des horaires Google Maps ».
 2. **Prérequis** : afficher l’état d’accès Business Profile, le compte Google connecté et les autorisations disponibles. Expliquer qu’une clé API seule ne suffit pas.
-2. **Connexion** : bouton explicite « Connecter Google » qui lance OAuth avec le scope minimal requis ; stocker les jetons de renouvellement de façon protégée et proposer déconnexion / révocation.
-3. **Sélection de la fiche** : après connexion, l’administrateur choisit la fiche Google associée à ce WordPress. Ne pas l’associer automatiquement uniquement par nom.
-4. **Conversion** : action « Convertir / prévisualiser » qui transforme le calendrier publié en modèle Google, sans écrire sur Google. Le résultat montre la semaine de base, les exceptions datées et le diff.
-5. **Validation / test** : si pris en charge par l’endpoint utilisé, appeler `validateOnly=true` puis présenter les erreurs Google avant l’envoi réel.
-6. **Envoi manuel initial** : bouton distinct « Synchroniser maintenant », confirmation explicite et journal minimal du résultat.
-7. **Automatisation ultérieure** : option distincte, désactivée par défaut, pour lancer la synchronisation après une sauvegarde publiée ; journaliser les changements, éviter les appels identiques et conserver une commande de resynchronisation manuelle.
-8. **Retour de Google** : relire l’état de la fiche après l’envoi et comparer aux horaires prévus.
+3. **Connexion** : bouton explicite « Connecter Google » qui lance OAuth avec le scope minimal requis ; stocker les jetons de renouvellement de façon protégée et proposer déconnexion / révocation.
+4. **Sélection de la fiche** : après connexion, l’administrateur choisit la fiche Google associée à ce WordPress. Ne pas l’associer automatiquement uniquement par nom.
+5. **Conversion** : action « Convertir / prévisualiser » qui transforme le calendrier publié en modèle Google, sans écrire sur Google. Le résultat montre la semaine de base, les exceptions datées et le diff.
+6. **Validation / test** : si pris en charge par l’endpoint utilisé, appeler `validateOnly=true` puis présenter les erreurs Google avant l’envoi réel.
+7. **Envoi manuel initial** : bouton distinct « Synchroniser maintenant », confirmation explicite et journal minimal du résultat.
+8. **Automatisation ultérieure** : option distincte, désactivée par défaut, pour lancer la synchronisation après une sauvegarde publiée ; journaliser les changements, éviter les appels identiques et conserver une commande de resynchronisation manuelle.
+9. **Retour de Google** : relire l’état de la fiche après l’envoi et comparer aux horaires prévus.
 
 ## Points bloquants à confirmer avant développement
 
