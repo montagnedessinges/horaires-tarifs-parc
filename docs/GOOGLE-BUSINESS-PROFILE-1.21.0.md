@@ -34,6 +34,7 @@ Une **simple clé API Google Maps ne suffit pas**. Le projet OAuth peut être so
 ## Limites et précautions
 
 - Les horaires exceptionnels ne sont pas disponibles pendant un statut Google `CLOSED_TEMPORARILY`. La synchronisation envoie donc seulement le statut hors saison, et les horaires lors de la réouverture.
+- Les exceptions saisies directement sur Google au-delà de la fenêtre de 35 jours sont conservées pour éviter de les effacer ; les exceptions de la fenêtre synchronisée sont remplacées par celles de WordPress.
 - La représentation hebdomadaire Google ne possède pas les périodes de dates de notre calendrier. L'extension calcule des horaires récurrents à court terme et des exceptions futures sur **35 jours**, puis les actualise dans le temps.
 - Les plages horaires chevauchant minuit ou inversées ne sont pas envoyées ; elles produisent une erreur d'administration.
 - Google peut examiner des modifications avant qu'elles soient affichées publiquement. Une réponse HTTP valide **ne garantit pas** la publication immédiate dans Google Maps.
