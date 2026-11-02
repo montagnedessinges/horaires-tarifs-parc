@@ -64,6 +64,7 @@ final class Parcs_HT_GBP {
 
     public static function save() {
         self::guard('save');
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Nonce validé dans guard('save') ; chaque champ est validé séparément ci-dessous.
         $input = isset($_POST['gbp']) && is_array($_POST['gbp']) ? wp_unslash($_POST['gbp']) : array();
         $data = self::option();
         $id = trim(sanitize_text_field((string)($input['client_id'] ?? '')));
@@ -242,6 +243,25 @@ final class Parcs_HT_GBP {
         return new WP_Error('gbp_pagination','La liste des fiches Google est trop longue.');
     }
 
+    /**
+     * Conserver les exceptions Google situées hors de la fenêtre gérée.
+     * Évite de détruire les futures exceptions saisies directement dans Google.
+     */
+    private static function preserve_future_specials($remote, $plan) {
+        $date = (string)$plan['date'];
+        $limit = (new DateTimeImmutable($date, new DateTimeZone('UTC')))
+            ->modify('+'.(int)$plan['horizon_days'].' days')->format('Y-m-d');
+        $kept = array();
+        foreach ((array)($remote['specialHours']['specialHourPeriods'] ?? array()) as $period) {
+            if (!is_array($period)) continue;
+            $part = $period['startDate'] ?? array();
+            if (!is_array($part) || empty($part['year']) || empty($part['month']) || empty($part['day'])) continue;
+            $when = sprintf('%04d-%02d-%02d',(int)$part['year'],(int)$part['month'],(int)$part['day']);
+            if ($when >= $limit) $kept[] = $period;
+        }
+        return array_merge((array)$plan['specialHours']['specialHourPeriods'],$kept);
+    }
+
     private static function record_error($error) {
         $data = self::option();
         $data['last_error'] = is_wp_error($error) ? $error->get_error_message() : (string)$error;
@@ -295,7 +315,10 @@ final class Parcs_HT_GBP {
                     if (is_wp_error($reopen)) { self::record_error($reopen); return $reopen; }
                 }
                 // Envoi limité strictement aux horaires, jamais aux autres champs de la fiche.
-                $body = array('regularHours'=>$plan['regularHours'],'specialHours'=>$plan['specialHours']);
+                $body = array(
+                    'regularHours'=>$plan['regularHours'],
+                    'specialHours'=>array('specialHourPeriods'=>self::preserve_future_specials($remote,$plan)),
+                );
                 $mask = array('updateMask'=>'regularHours,specialHours');
                 $validation = self::api('PATCH', $location, $body, array_merge($mask,array('validateOnly'=>'true')));
                 if (is_wp_error($validation)) { self::record_error($validation); return $validation; }
