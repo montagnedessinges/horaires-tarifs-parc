@@ -98,7 +98,7 @@ Ces éléments impliquent un vrai flux OAuth avec choix de la fiche autorisée, 
 - Les deux fiches Google sont-elles administrées depuis le compte Google qui autorisera l’intégration ?
 - Google accepte-t-il, pour les catégories exactes des deux lieux, les horaires et jours spéciaux générés par le calendrier ?
 
-Le statut d’approbation, les deux comptes/fiches, les catégories, les quotas et le rendu final des fiches **ne peuvent pas être confirmés depuis le seul dépôt**. Les règles de saison ci-dessus sont maintenant cadrées ; il reste à vérifier que l’API valide le volume d’exceptions qu’elles nécessitent sur les calendriers réels des deux parcs.
+Le statut d’approbation, les deux comptes/fiches, les catégories, les quotas et le rendu final des fiches **ne peuvent pas être confirmés depuis le seul dépôt**. Les règles de saison sont cadrées ; il reste à vérifier le volume d’exceptions et la disponibilité d’une exécution planifiée fiable sur l’hébergement des deux sites.
 
 ## Périmètre conseillé pour 1.21.0
 
@@ -109,7 +109,8 @@ Le statut d’approbation, les deux comptes/fiches, les catégories, les quotas 
 - Lecture de la fiche et affichage de ses horaires actuels.
 - Conversion en lecture seule du calendrier publié vers un aperçu des horaires réguliers et des exceptions.
 - Diff et validations avant envoi.
-- Synchronisation manuelle limitée aux horaires, avec rellecture et journal de résultat.
+- Synchronisation manuelle après validation, limitée aux champs d’horaires et accompagnée d’une relecture / d’un journal de résultat.
+- Planification des changements d’état temporaires connus pour la fermeture saisonnière et la réouverture ; aucun polling quotidien, et les fermetures d’urgence restent manuelles sur Google.
 - Tests de contrat pour les semaines types, deux plages quotidiennes, jours fermés, exceptions prioritaires, bornes de saison, saison brouillon et champs hors masque.
 - Protection des actions par capacité WordPress, nonce, validation stricte, échappement des sorties et gestion des erreurs OAuth/API.
 - Vérification séparée sur la configuration de la Montagne des Singes et celle de la Forêt des Singes.
