@@ -137,3 +137,14 @@ Critères de la mise à jour performance :
 - enregistrer une saison sans resérialiser le contenu des autres saisons, après migration réversible ;
 - éviter tout appel HTTP externe dans le rendu public des horaires ;
 - comparer temps et pic mémoire sous la limite réellement disponible sur l’hébergement le plus contraint des deux sites.
+
+
+## Périmètre confirmé — affichage et sauvegarde
+
+L’utilisateur précise que l’optimisation doit couvrir le rendu public autant que l’enregistrement.
+
+**Affichage public :** réduire les lectures, copies, fusions et calculs des saisons qui ne servent pas à la page ; éviter de charger les modules inutilisés ; réutiliser une représentation calculée. Le cache devra être invalidé après une modification et expirer/recalculer aux changements de date nécessaires aux statuts du jour, aux exceptions et aux périodes. Il ne doit pas rendre périmés les horaires ni masquer une fermeture.
+
+**Enregistrement :** le formulaire doit transmettre et traiter seulement la rubrique/saison modifiée, et le stockage doit éviter de réécrire toutes les années. La migration conservera le format historique jusqu’à validation du retour arrière.
+
+Les deux parcours devront être mesurés séparément : pages publiques (avec et sans calendrier) et sauvegarde ciblée en préproduction sur le profil mémoire de l’hébergement le plus contraint.
