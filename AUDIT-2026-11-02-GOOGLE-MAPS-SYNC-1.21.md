@@ -93,7 +93,6 @@ Ces éléments impliquent un vrai flux OAuth avec choix de la fiche autorisée, 
 - Le projet Google Cloud de l’entreprise est-il déjà approuvé pour les Business Profile APIs ? Son quota Business Information API est-il supérieur à zéro ?
 - Les deux fiches Google sont-elles administrées depuis le compte Google qui autorisera l’intégration ?
 - Google accepte-t-il, pour les catégories exactes des deux lieux, les horaires et jours spéciaux générés par le calendrier ?
-- L’envoi automatique doit-il être proposé dès la première version ou attendre une période d’observation en envoi manuel ?
 
 Le statut d’approbation, les deux comptes/fiches, les catégories, les quotas et le rendu final des fiches **ne peuvent pas être confirmés depuis le seul dépôt**. Les règles de saison ci-dessus sont maintenant cadrées ; il reste à vérifier que l’API valide le volume d’exceptions qu’elles nécessitent sur les calendriers réels des deux parcs.
 
