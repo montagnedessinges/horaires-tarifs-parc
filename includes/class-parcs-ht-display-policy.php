@@ -16,6 +16,9 @@ final class Parcs_HT_Display_Policy {
         add_filter('pre_update_option_' . Parcs_HT_Defaults::OPTION, array(__CLASS__, 'save_controls'), 97, 3);
         add_action('admin_enqueue_scripts', array(__CLASS__, 'admin_assets'), 98);
         add_action('wp_enqueue_scripts', array(__CLASS__, 'frontend_assets'), 35);
+        add_action('updated_option', array(__CLASS__, 'invalidate_main_cache'), 10, 3);
+        add_action('added_option', array(__CLASS__, 'invalidate_main_cache'), 10, 2);
+        add_action('deleted_option', array(__CLASS__, 'invalidate_main_cache'), 10, 1);
     }
 
     private static function clean_date($value) {
@@ -111,9 +114,14 @@ final class Parcs_HT_Display_Policy {
         return $value;
     }
 
+    public static function invalidate_main_cache($option) {
+        if ($option !== Parcs_HT_Defaults::OPTION) return;
+        self::$raw_main = null;
+        self::$normalized_main = null;
+    }
+
     public static function filter_main_option($value) {
         if (!is_array($value)) return $value;
-        if (self::$raw_main !== $value) self::$normalized_main = null;
         self::$raw_main = $value;
         if (is_admin()) return $value;
         if (self::$normalized_main === null) self::$normalized_main = self::normalize_all_tariffs($value);
