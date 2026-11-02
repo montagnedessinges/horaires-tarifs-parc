@@ -677,6 +677,74 @@ final class Parcs_HT_Defaults {
         return '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5h16v4a2 2 0 0 0 0 4v3H4v-3a2 2 0 0 0 0-4z"/><path d="M9 9.5h6M9 14.5h4"/></svg>';
     }
 
+    /**
+     * Read the persisted option without building a merged copy of every season.
+     * Targeted admin saves still update the canonical option, but avoid a second
+     * full-season merge just to preserve unrelated values.
+     */
+    public static function raw_settings() {
+        self::maybe_upgrade();
+        $saved = get_option(self::OPTION, array());
+        return is_array($saved) ? $saved : array();
+    }
+
+    /**
+     * Build only the settings needed by one targeted admin workspace.
+     */
+    public static function scoped_settings($year, $keys) {
+        $year = preg_match('/^20\d{2}$/', (string) $year) ? (string) $year : '';
+        if ($year === '') return array();
+
+        self::maybe_upgrade();
+        $saved = get_option(self::OPTION, array());
+        if (!is_array($saved)) $saved = array();
+        $defaults = self::get();
+        $keys = array_fill_keys(array_map('strval', (array) $keys), true);
+        $out = array();
+
+        if (isset($keys['general'])) {
+            $general = isset($saved['general']) && is_array($saved['general']) ? $saved['general'] : array();
+            $season = isset($saved['seasons'][$year]) && is_array($saved['seasons'][$year]) ? $saved['seasons'][$year] : array();
+            $out['general'] = array_merge(
+                array_replace_recursive($defaults['general'], $general),
+                array(
+                    'year' => $year,
+                    'season_start' => isset($season['season_start']) ? $season['season_start'] : '',
+                    'season_end' => isset($season['season_end']) ? $season['season_end'] : '',
+                    'published' => isset($season['published']) ? $season['published'] : '0',
+                )
+            );
+        }
+        if (isset($keys['alerts'])) {
+            $out['alerts'] = isset($saved['alerts']) && is_array($saved['alerts']) ? $saved['alerts'] : array();
+        }
+        if (isset($keys['tariffs'])) {
+            $saved_tariffs = isset($saved['tariffs']) && is_array($saved['tariffs']) ? $saved['tariffs'] : array();
+            $tariffs = array_replace($defaults['tariffs'], $saved_tariffs);
+            foreach (array('notes','payment_methods') as $key) {
+                $tariffs[$key] = array_replace(
+                    $defaults['tariffs'][$key],
+                    isset($saved_tariffs[$key]) && is_array($saved_tariffs[$key]) ? $saved_tariffs[$key] : array()
+                );
+            }
+            if (isset($saved_tariffs['payment_icons']) && is_array($saved_tariffs['payment_icons'])) {
+                $tariffs['payment_icons'] = $saved_tariffs['payment_icons'];
+            }
+            foreach (array('individual','reduced','groups') as $group) {
+                if (isset($saved_tariffs[$group]) && is_array($saved_tariffs[$group])) $tariffs[$group] = $saved_tariffs[$group];
+            }
+            $season_tariffs = isset($saved['seasons'][$year]['tariffs']) && is_array($saved['seasons'][$year]['tariffs'])
+                ? $saved['seasons'][$year]['tariffs'] : null;
+            $out['tariffs'] = is_array($season_tariffs) ? array_replace($tariffs, $season_tariffs) : $tariffs;
+        }
+        foreach (array('school_holidays','special_periods','public_holidays','domain_rules','exceptions') as $list) {
+            if (!isset($keys[$list])) continue;
+            $value = $saved['seasons'][$year][$list] ?? array();
+            $out[$list] = is_array($value) ? $value : array();
+        }
+        return $out;
+    }
+
     public static function all_settings() {
         // Les réglages fusionnés sont immuables pendant une requête front normale.
         // Les mettre en cache ici évite de reconstruire toutes les saisons/tarifs à chaque shortcode ou pop-up.
