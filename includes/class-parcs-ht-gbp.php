@@ -12,6 +12,7 @@ final class Parcs_HT_GBP {
     const OPTION = 'parcs_ht_gbp_connection';
     const CRON = 'parcs_ht_gbp_daily_sync';
     const PAGE = 'parcs-ht-google-maps';
+    const LOCATIONS_CACHE = 'parcs_ht_gbp_locations';
     const API = 'https://mybusinessbusinessinformation.googleapis.com/v1/';
 
     public static function init() {
@@ -77,6 +78,7 @@ final class Parcs_HT_GBP {
             $data['client_id'] = $id;
             unset($data['refresh_token']);
             delete_transient('parcs_ht_gbp_access');
+            delete_transient(self::LOCATIONS_CACHE);
             $data['enabled'] = false;
         }
         $secret = trim((string)($input['client_secret'] ?? ''));
@@ -85,6 +87,7 @@ final class Parcs_HT_GBP {
             $data['client_secret'] = $secret;
             unset($data['refresh_token']);
             delete_transient('parcs_ht_gbp_access');
+            delete_transient(self::LOCATIONS_CACHE);
             $data['enabled'] = false;
         }
         $location = sanitize_text_field((string)($input['location'] ?? ''));
@@ -160,6 +163,7 @@ final class Parcs_HT_GBP {
             self::record_error(new WP_Error('gbp_oauth','Jeton de renouvellement absent. Vérifiez le consentement OAuth.'));
             self::redirect('error');
         }
+        delete_transient(self::LOCATIONS_CACHE);
         $data['refresh_token'] = (string)$tokens['refresh_token'];
         $data['enabled'] = false; // Sélection de la bonne fiche et activation ensuite.
         $data['location'] = '';
@@ -176,6 +180,7 @@ final class Parcs_HT_GBP {
         $data['enabled'] = false;
         self::write($data);
         delete_transient('parcs_ht_gbp_access');
+        delete_transient(self::LOCATIONS_CACHE);
         wp_clear_scheduled_hook(self::CRON);
         self::redirect('disconnected');
     }
@@ -233,6 +238,8 @@ final class Parcs_HT_GBP {
     }
 
     private static function locations() {
+        $cached = get_transient(self::LOCATIONS_CACHE);
+        if (is_array($cached)) return $cached;
         $out = array();
         $page_token = '';
         for ($page=0; $page<10; $page++) {
@@ -244,7 +251,10 @@ final class Parcs_HT_GBP {
                 if (preg_match('~^locations/[0-9]+$~', (string)($item['name'] ?? ''))) $out[] = $item;
             }
             $page_token = (string)($result['nextPageToken'] ?? '');
-            if ($page_token === '') return $out;
+            if ($page_token === '') {
+                set_transient(self::LOCATIONS_CACHE, $out, 6 * HOUR_IN_SECONDS);
+                return $out;
+            }
         }
         return new WP_Error('gbp_pagination','La liste des fiches Google est trop longue.');
     }
