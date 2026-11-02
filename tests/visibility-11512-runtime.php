@@ -17,7 +17,28 @@ function remove_accents($value) { return strtr((string)$value, array('é'=>'e','
 function esc_url_raw($value) { return $value; }
 function esc_attr($value) { return htmlspecialchars((string)$value, ENT_QUOTES); }
 function esc_html($value) { return htmlspecialchars((string)$value, ENT_QUOTES); }
-final class Parcs_HT_Defaults { const OPTION = 'main'; public static function all_settings() { return get_option(self::OPTION); } }
+final class Parcs_HT_Defaults {
+    const OPTION = 'main';
+    public static function is_building_settings() { return false; }
+    // Une fixture de données doit refléter la préparation canonique déplacée
+    // dans Defaults::all_settings() par l'optimisation PHP.
+    public static function all_settings() {
+        $settings = get_option(self::OPTION);
+        if (!is_array($settings) || is_admin()) return $settings;
+        $today = Parcs_HT_Display_Policy::today($settings);
+        if (isset($settings['tariffs']) && is_array($settings['tariffs'])) {
+            $settings['tariffs'] = Parcs_HT_Display_Policy::normalize_tariffs($settings['tariffs']);
+        }
+        foreach ((array)($settings['seasons'] ?? array()) as $year => $season) {
+            if (!is_array($season)) continue;
+            if (isset($season['tariffs']) && is_array($season['tariffs'])) {
+                $season['tariffs'] = Parcs_HT_Display_Policy::normalize_tariffs($season['tariffs']);
+            }
+            $settings['seasons'][$year] = Parcs_HT_Display_Policy::apply_season_visibility($season, $today);
+        }
+        return $settings;
+    }
+}
 $root = getenv('PLUGIN_ROOT') ?: dirname(__DIR__);
 require_once $root . '/includes/class-parcs-ht-display-policy.php';
 require_once $root . '/includes/class-parcs-ht-group-tariff-settings.php';
