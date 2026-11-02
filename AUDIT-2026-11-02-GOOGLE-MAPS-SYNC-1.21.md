@@ -27,7 +27,7 @@ La conversion et l’envoi réel doivent rester deux actions distinctes : **« C
 - L’objectif est de **programmer à l’avance toute la saison en cours**, avec toutes les plages horaires et exceptions déjà connues dans le calendrier publié, pas de vérifier la fiche Google tous les jours.
 - La fermeture de midi ne devient pas une journée fermée : elle est représentée par deux plages d’ouverture le même jour, avec l’intervalle de fermeture entre les deux.
 - Les exceptions datées de courte durée (jusqu’à 6 jours de fermeture consécutifs) sont envoyées comme horaires spéciaux. Une fermeture saisonnière de 7 jours ou plus doit suivre la consigne Google « temporairement fermé » ; elle ne doit pas être encodée comme des centaines de fermetures spéciales quotidiennes.
-- L’API expose le statut courant `openInfo.status` (ouvert / fermé temporairement), sans champ de date d’effet future. Pour programmer la fermeture saisonnière et la réouverture, l’extension devra donc planifier deux actions qui appelleront Google aux dates prévues. Ce sont des événements ponctuels, pas une vérification quotidienne. Les fermetures d’urgence resteront gérées manuellement dans Google Maps et ne feront pas partie d’une synchronisation automatique.
+- L’API expose le statut courant `openInfo.status` (ouvert / fermé temporairement), sans champ de date d’effet future. Une seule validation de la synchronisation annuelle doit envoyer le calendrier et enregistrer en même temps les deux actions futures : fermeture temporaire à la fin de la saison et réouverture à la date prévue. L’administrateur n’a pas à revenir cliquer au moment de ces deux transitions. Si l’une des dates est déjà arrivée au moment de la validation, l’action correspondante doit être exécutée immédiatement au lieu d’être planifiée dans le passé. Ce sont des événements ponctuels, pas une vérification quotidienne. Les fermetures d’urgence resteront gérées manuellement dans Google Maps et ne feront pas partie d’une synchronisation automatique.
 - Les horaires peuvent changer plusieurs fois dans l’année : au moins deux régimes sont prévus à la Montagne des Singes et probablement davantage à la Forêt des Singes. Le convertisseur doit gérer un nombre variable de périodes et produire les exceptions datées nécessaires pour représenter tous les horaires planifiés.
 - Le schéma d’API expose une liste de périodes spéciales et ne donne pas, dans la référence consultée, de maximum global pour le nombre d’entrées ; cela ne prouve pas qu’il n’existe aucune limite opérationnelle. Les périodes spéciales doivent rester non chevauchantes et les fermetures de longue durée doivent utiliser le statut temporaire selon les consignes Google.
 
@@ -88,7 +88,7 @@ Ces éléments impliquent un vrai flux OAuth avec choix de la fiche autorisée, 
 4. **Sélection de la fiche** : après connexion, l’administrateur choisit la fiche Google associée à ce WordPress. Ne pas l’associer automatiquement uniquement par nom.
 5. **Conversion** : action « Convertir / prévisualiser » qui transforme le calendrier publié en modèle Google, sans écrire sur Google. Le résultat montre la semaine de base, les exceptions datées et le diff.
 6. **Validation / test** : si pris en charge par l’endpoint utilisé, appeler `validateOnly=true` puis présenter les erreurs Google avant l’envoi réel.
-7. **Envoi manuel initial** : bouton distinct « Synchroniser maintenant », confirmation explicite et journal minimal du résultat.
+7. **Envoi / programmation annuelle en une validation** : bouton distinct « Synchroniser la saison », confirmation explicite, envoi des horaires connus et programmation simultanée de la fermeture saisonnière et de la réouverture. Une seule validation arme la saison ; les transitions planifiées s’exécutent ensuite sans second clic.
 8. **Tâches planifiées** : programmer uniquement les appels futurs de fermeture saisonnière et de réouverture confirmés dans le calendrier, sans synchronisation quotidienne ni écrasement des fermetures d’urgence saisies directement dans Google Maps. Vérifier si l’hébergement exécute WP-Cron assez régulièrement ; WordPress déclenche les tâches dues lors d’un chargement de page, donc un cron système peut être nécessaire pour un horaire fiable.
 9. **Retour de Google** : relire l’état de la fiche après l’envoi et comparer aux horaires prévus.
 
@@ -109,8 +109,8 @@ Le statut d’approbation, les deux comptes/fiches, les catégories, les quotas 
 - Lecture de la fiche et affichage de ses horaires actuels.
 - Conversion en lecture seule du calendrier publié vers un aperçu des horaires réguliers et des exceptions.
 - Diff et validations avant envoi.
-- Synchronisation manuelle après validation, limitée aux champs d’horaires et accompagnée d’une relecture / d’un journal de résultat.
-- Planification des changements d’état temporaires connus pour la fermeture saisonnière et la réouverture ; aucun polling quotidien, et les fermetures d’urgence restent manuelles sur Google.
+- Une seule synchronisation annuelle manuelle après aperçu et validation, avec envoi du calendrier et enregistrement des changements d’état futurs de fermeture saisonnière et de réouverture.
+- Exécution ponctuelle des transitions programmées sans nouveau clic à leur date ; aucun polling ou appel de vérification quotidien. Les fermetures d’urgence restent manuelles sur Google.
 - Tests de contrat pour les semaines types, deux plages quotidiennes, jours fermés, exceptions prioritaires, bornes de saison, saison brouillon et champs hors masque.
 - Protection des actions par capacité WordPress, nonce, validation stricte, échappement des sorties et gestion des erreurs OAuth/API.
 - Vérification séparée sur la configuration de la Montagne des Singes et celle de la Forêt des Singes.
