@@ -48,9 +48,10 @@ final class Parcs_HT_CSE {
 
     private static function initial($year) {
         return array(
-            'enabled'=>'0', 'show_table'=>'1',
+            'enabled'=>'0', 'show_title'=>'1', 'show_audience'=>'1', 'show_intro'=>'1', 'show_table'=>'1',
+            'show_login_card'=>'1', 'show_signup_card'=>'1', 'show_contact'=>'1',
             'show_login'=>'1', 'show_signup'=>'1', 'show_online'=>'1',
-            'show_pdf'=>'1', 'show_transition'=>'1', 'show_link'=>'0', 'show_kit'=>'1',
+            'show_pdf'=>'1', 'show_transition'=>'1', 'show_link'=>'0', 'show_kit'=>'1', 'show_kit_button'=>'1',
             'page_url'=>array('fr'=>'','en'=>'','de'=>''),
             'login_url'=>array('fr'=>'','en'=>'','de'=>''),
             'signup_url'=>array('fr'=>'','en'=>'','de'=>''),
@@ -62,11 +63,28 @@ final class Parcs_HT_CSE {
             'pdf_label'=>array('fr'=>'','en'=>'','de'=>''),
             'contact_email'=>'',
             'kit_email'=>'',
+            'copy'=>array(
+                'page_title'=>'Tarifs CSE',
+                'audience_title'=>'Espace réservé aux responsables CSE et amicales du personnel.',
+                'audience_text'=>'Les particuliers ne peuvent pas profiter de ces tarifs préférentiels, sauf les porteurs de la carte Cezam, qui doivent acheter leurs billets en caisse au moment de la visite, sur présentation de leur carte Cezam individuelle.',
+                'table_ticket'=>'Billet',
+                'table_cse'=>'Tarif CSE',
+                'table_public'=>'Tarif public',
+                'empty_public_price'=>'—',
+                'login_title'=>'Vous avez déjà un compte CSE ?',
+                'login_text'=>'Connectez-vous sur notre billetterie avec vos identifiants. Si votre statut CSE est activé, les prix des billets passent automatiquement aux tarifs CSE. Sinon, contactez-nous pour vérifier votre activation sans créer un deuxième compte.',
+                'signup_title'=>'Vous n’avez pas encore de compte ?',
+                'signup_text'=>'Vous représentez un CSE ou une amicale du personnel ? Créez un compte sur la billetterie habituelle, puis demandez-nous par e-mail, à l’adresse indiquée ci-dessous, l’activation du statut CSE. Une fois activé, reconnectez-vous pour acheter les billets destinés à vos bénéficiaires.',
+                'contact_label'=>'Activation CSE :',
+                'kit_title'=>'Kit de communication pour les responsables CSE',
+                'year_tabs_label'=>'Année des tarifs CSE',
+                'transition_title'=>'Informations pratiques',
+            ),
             'kit_label'=>array('fr'=>'Demander le kit de communication','en'=>'','de'=>''),
             'kit_intro'=>array('fr'=>'Vous êtes responsable CSE ou partenaire professionnel ? Nous pouvons vous fournir, sur demande, des photos, vidéos, logos et textes officiels pour présenter le parc à vos bénéficiaires.','en'=>'','de'=>''),
             'intro'=>array('fr'=>'','en'=>'','de'=>''),
             'transition'=>array(
-                'fr'=>'La billetterie en ligne est la même pour tous. Après activation du statut CSE, connectez-vous avec votre compte : les prix des billets concernés deviennent les tarifs CSE. Après commande, les billets peuvent être récupérés en PDF ou sous forme de codes pour vos supports de billetterie.',
+                'fr'=>'La billetterie en ligne est la même pour tous. Après activation du statut CSE par nos soins, connectez-vous avec votre compte : les tarifs CSE s’affichent alors pour les billets concernés. Après commande, les billets peuvent être récupérés en PDF ou sous forme de codes pour vos supports de billetterie.',
                 'en'=>'Our digital CSE ticketing is already available. Tickets can be downloaded as ready-to-use PDFs or as codes to add to your own tickets. The PDF order form remains temporarily available to give you time to adapt. Eventually, orders will be online only.',
                 'de'=>'Unser digitales CSE-Ticketsystem ist bereits verfügbar. Tickets können als fertige PDFs oder als Codes für Ihre eigenen Tickets heruntergeladen werden. Das PDF-Bestellformular bleibt für eine Übergangszeit verfügbar. Später erfolgen Bestellungen ausschließlich online.',
             ),
@@ -124,6 +142,8 @@ final class Parcs_HT_CSE {
         $raw = self::all();
         $saved = isset($raw[$year]) && is_array($raw[$year]) ? $raw[$year] : array();
         $settings = array_replace(self::initial($year), $saved);
+        $defaults = self::initial($year);
+        $settings['copy'] = array_replace($defaults['copy'], is_array($saved['copy'] ?? null) ? $saved['copy'] : array());
         // Une seule migration d'affichage : remplacer l'ancien message modèle
         // trompeur. Les messages réellement personnalisés restent intacts.
         $old_transition = 'Notre billetterie CSE dématérialisée est déjà disponible. Après commande, vos billets peuvent être téléchargés en PDF prêts à l’emploi ou sous forme de codes à intégrer à vos propres supports de billetterie. Pour vous laisser le temps de vous adapter, nous maintenons temporairement le bon de commande PDF. À terme, les commandes seront exclusivement en ligne.';
@@ -193,7 +213,7 @@ final class Parcs_HT_CSE {
         $raw = isset($_POST['cse']) && is_array($_POST['cse']) ? wp_unslash($_POST['cse']) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Formulaire protégé par nonce et capacité, chaque champ est ensuite validé et assaini selon son type.
         $old = self::year_settings($year);
         $next = $old;
-        foreach (array('enabled','show_table','show_login','show_signup','show_online','show_pdf','show_transition','show_link','show_kit') as $flag) {
+        foreach (array('enabled','show_title','show_audience','show_intro','show_table','show_login_card','show_signup_card','show_contact','show_login','show_signup','show_online','show_pdf','show_transition','show_link','show_kit','show_kit_button') as $flag) {
             $next[$flag] = isset($raw[$flag]) && (string)$raw[$flag] === '1' ? '1' : '0';
         }
         foreach (array('page_url','login_url','signup_url','online_url','pdf_url') as $key) {
@@ -201,6 +221,17 @@ final class Parcs_HT_CSE {
         }
         foreach (array('login_label','signup_label','online_label','pdf_label','kit_label') as $label_key) {
             $next[$label_key] = self::translations($raw[$label_key] ?? '', false, $old[$label_key] ?? array());
+        }
+        $copy_raw = isset($raw['copy']) && is_array($raw['copy']) ? $raw['copy'] : array();
+        $copy_defaults = self::initial($year)['copy'];
+        $next['copy'] = array();
+        foreach ($copy_defaults as $key=>$default) {
+            $value = array_key_exists($key, $copy_raw) && is_scalar($copy_raw[$key])
+                ? (string)$copy_raw[$key]
+                : (string)($old['copy'][$key] ?? $default);
+            $next['copy'][$key] = in_array($key, array('audience_text','login_text','signup_text'), true)
+                ? sanitize_textarea_field($value)
+                : sanitize_text_field($value);
         }
         $next['contact_email'] = sanitize_email(is_scalar($raw['contact_email'] ?? null) ? (string)$raw['contact_email'] : '');
         $next['kit_email'] = sanitize_email(is_scalar($raw['kit_email'] ?? null) ? (string)$raw['kit_email'] : '');
@@ -263,6 +294,17 @@ final class Parcs_HT_CSE {
         echo '</label></fieldset>';
     }
 
+    private static function page_copy_field($key, $label, $copy, $multiline = false) {
+        $value = (string)($copy[$key] ?? '');
+        echo '<fieldset class="htp-cse-field"><legend><strong>' . esc_html($label) . '</strong></legend><label>';
+        if ($multiline) {
+            echo '<textarea rows="4" name="cse[copy][' . esc_attr($key) . ']">' . esc_textarea($value) . '</textarea>';
+        } else {
+            echo '<input type="text" name="cse[copy][' . esc_attr($key) . ']" value="' . esc_attr($value) . '">';
+        }
+        echo '</label></fieldset>';
+    }
+
     public static function admin_page() {
         if (!current_user_can('manage_options')) return;
         $year = self::chosen_year();
@@ -297,14 +339,21 @@ final class Parcs_HT_CSE {
         echo '<section class="htp-cse-section"><h2>Visibilité — ' . esc_html($year) . '</h2><div class="htp-cse-grid htp-cse-flags">';
         $flags = array(
             'enabled'=>'Publier l’offre CSE pour cette année',
+            'show_title'=>'Afficher le titre de la page CSE',
+            'show_audience'=>'Afficher le bandeau « espace réservé »',
+            'show_intro'=>'Afficher l’introduction',
             'show_table'=>'Afficher le tableau des tarifs',
+            'show_login_card'=>'Afficher l’encadré « compte existant »',
+            'show_signup_card'=>'Afficher l’encadré « pas encore de compte »',
+            'show_contact'=>'Afficher la ligne de contact pour l’activation',
             'show_login'=>'Afficher le bouton de connexion',
             'show_signup'=>'Afficher le bouton de création de compte',
             'show_online'=>'Afficher le bouton billetterie en ligne',
             'show_pdf'=>'Afficher le téléchargement du bon de commande PDF',
-            'show_transition'=>'Afficher le message de transition numérique',
+            'show_transition'=>'Afficher les informations pratiques',
             'show_link'=>'Afficher un lien fixe vers la page CSE sur les tarifs visiteurs français',
-            'show_kit'=>'Afficher la demande de kit de communication (uniquement par e-mail)',
+            'show_kit'=>'Afficher le bloc kit de communication',
+            'show_kit_button'=>'Afficher le bouton de demande de kit',
         );
         foreach ($flags as $flag=>$label) {
             echo '<label><input type="checkbox" name="cse[' . esc_attr($flag) . ']" value="1" ' . checked((string)($settings[$flag] ?? '0'), '1', false) . '> ' . esc_html($label) . '</label>';
@@ -323,6 +372,24 @@ final class Parcs_HT_CSE {
             echo '<td><input type="checkbox" name="cse[rows][' . (int)$index . '][delete]" value="1" aria-label="Supprimer cette ligne"></td></tr>';
         }
         echo '</tbody></table></section>';
+        echo '<section class="htp-cse-section"><h2>Textes affichés sur la page CSE</h2><p>Ces textes sont propres à l’année sélectionnée. Laissez un champ vide pour ne pas afficher son texte.</p>';
+        $copy = (array)($settings['copy'] ?? array());
+        self::page_copy_field('page_title', 'Titre de la page (année ajoutée automatiquement)', $copy);
+        self::page_copy_field('audience_title', 'Titre du bandeau réservé aux responsables CSE', $copy);
+        self::page_copy_field('audience_text', 'Texte complémentaire du bandeau', $copy, true);
+        self::page_copy_field('table_ticket', 'En-tête « Billet »', $copy);
+        self::page_copy_field('table_cse', 'En-tête « Tarif CSE »', $copy);
+        self::page_copy_field('table_public', 'En-tête « Tarif public »', $copy);
+        self::page_copy_field('empty_public_price', 'Texte si le tarif public est vide', $copy);
+        self::page_copy_field('login_title', 'Titre — compte existant', $copy);
+        self::page_copy_field('login_text', 'Texte — compte existant', $copy, true);
+        self::page_copy_field('signup_title', 'Titre — création de compte', $copy);
+        self::page_copy_field('signup_text', 'Texte — création de compte', $copy, true);
+        self::page_copy_field('contact_label', 'Libellé du contact d’activation', $copy);
+        self::page_copy_field('kit_title', 'Titre du bloc kit de communication', $copy);
+        self::page_copy_field('year_tabs_label', 'Libellé accessible des onglets d’année', $copy);
+        self::page_copy_field('transition_title', 'Titre des informations pratiques', $copy);
+        echo '</section>';
         echo '<section class="htp-cse-section"><h2>Parcours de commande et boutons</h2><p>Renseignez les liens et libellés français. Séparez bien connexion, inscription, billetterie et bon de commande.</p>';
         self::field('page_url', 'Adresse de la page CSE (pour le renvoi public)', $settings['page_url']);
         self::field('login_url', 'Connexion au compte CSE', $settings['login_url']);
@@ -394,20 +461,32 @@ final class Parcs_HT_CSE {
 
     private static function render_year($lang, $year) {
         $s = self::year_settings($year);
-        $html = '<section class="parcs-ht-cse__year"><h2>' . esc_html(self::t($lang, 'Tarifs CSE ', 'CSE rates ', 'CSE-Tarife ') . $year) . '</h2>';
-        $html .= '<p class="parcs-ht-cse__audience"><strong>Espace réservé aux responsables CSE et amicales du personnel.</strong> Vous êtes un particulier ? Pour bénéficier de billets CSE, rapprochez-vous du CSE de votre employeur. La création d’un compte individuel ne donne pas accès à ces tarifs.</p>';
+        $copy = (array)($s['copy'] ?? array());
+        $page_title = trim((string)($copy['page_title'] ?? ''));
+        $html = '<section class="parcs-ht-cse__year">';
+        if (($s['show_title'] ?? '1') === '1' && $page_title !== '') {
+            $html .= '<h2>' . esc_html($page_title . ' ' . $year) . '</h2>';
+        }
+        $audience_title = trim((string)($copy['audience_title'] ?? ''));
+        $audience_text = trim((string)($copy['audience_text'] ?? ''));
+        if (($s['show_audience'] ?? '1') === '1' && ($audience_title !== '' || $audience_text !== '')) {
+            $html .= '<p class="parcs-ht-cse__audience">';
+            if ($audience_title !== '') $html .= '<strong>' . esc_html($audience_title) . '</strong>';
+            if ($audience_text !== '') $html .= ($audience_title !== '' ? ' ' : '') . nl2br(esc_html($audience_text));
+            $html .= '</p>';
+        }
         $intro = self::tr($s['intro'], $lang);
-        if ($intro !== '') $html .= '<p>' . nl2br(esc_html($intro)) . '</p>';
+        if (($s['show_intro'] ?? '1') === '1' && $intro !== '') $html .= '<p>' . nl2br(esc_html($intro)) . '</p>';
         $rows = array();
         foreach ((array)($s['rows'] ?? array()) as $row) {
             if (!is_array($row) || (string)($row['enabled'] ?? '0') !== '1' || trim((string)($row['cse_price'] ?? '')) === '') continue;
             $rows[] = $row;
         }
         if ($s['show_table'] === '1' && $rows) {
-            $html .= '<div class="parcs-ht-cse__table-wrap"><table class="parcs-ht-cse__table"><thead><tr><th scope="col">' . esc_html(self::t($lang, 'Billet', 'Ticket', 'Ticket')) . '</th><th scope="col">' . esc_html(self::t($lang, 'Tarif CSE', 'CSE rate', 'CSE-Preis')) . '</th>';
-            $html .= '<th scope="col">Tarif public</th></tr></thead><tbody>';
+            $html .= '<div class="parcs-ht-cse__table-wrap"><table class="parcs-ht-cse__table"><thead><tr><th scope="col">' . esc_html((string)($copy['table_ticket'] ?? '')) . '</th><th scope="col">' . esc_html((string)($copy['table_cse'] ?? '')) . '</th>';
+            $html .= '<th scope="col">' . esc_html((string)($copy['table_public'] ?? '')) . '</th></tr></thead><tbody>';
             foreach ($rows as $row) {
-                $name = self::tr($row['label'] ?? array(), $lang, self::t($lang, 'Billet', 'Ticket', 'Ticket'));
+                $name = self::tr($row['label'] ?? array(), $lang, (string)($copy['table_ticket'] ?? ''));
                 $html .= '<tr><th scope="row">' . esc_html($name) . '</th><td><strong>' . esc_html((string)$row['cse_price']) . '</strong></td>';
                 $public_price = trim((string)($row['public_price'] ?? ''));
                 $public_amount = self::numeric_price($public_price);
@@ -415,7 +494,7 @@ final class Parcs_HT_CSE {
                 // Le tarif public est toujours celui saisi dans le module CSE,
                 // jamais un tarif visiteurs récupéré automatiquement.
                 if ($public_price === '') {
-                    $display_public = '—';
+                    $display_public = esc_html((string)($copy['empty_public_price'] ?? ''));
                 } elseif ($public_amount !== null && $cse_amount !== null && $public_amount > $cse_amount) {
                     $display_public = '<del>' . esc_html($public_price) . '</del>';
                 } else {
@@ -425,19 +504,36 @@ final class Parcs_HT_CSE {
             }
             $html .= '</tbody></table></div>';
         }
-        $html .= '<div class="parcs-ht-cse__paths"><div class="parcs-ht-cse__path"><h3>' . esc_html(self::t($lang, 'Vous avez déjà un compte CSE ?', 'Already have a CSE account?', 'Sie haben bereits ein CSE-Konto?')) . '</h3>';
-        $html .= '<p>' . esc_html(self::t($lang, 'Connectez-vous sur notre billetterie habituelle avec vos identifiants. Si votre statut CSE est activé, les prix des mêmes billets passent automatiquement aux tarifs CSE. Sinon, contactez-nous pour vérifier votre activation sans créer un deuxième compte.', 'Sign in using your usual credentials. If your CSE status is active, you can access your professional rates. Otherwise, contact us to check activation without creating another account.', 'Melden Sie sich mit Ihren Zugangsdaten an. Nach Freischaltung des CSE-Status sehen Sie Ihre CSE-Tarife. Andernfalls kontaktieren Sie uns, statt ein zweites Konto anzulegen.')) . '</p>';
-        if ($s['show_login'] === '1') $html .= self::action_button(self::url($s['login_url'], $lang), self::tr($s['login_label'], $lang, self::t($lang, 'Me connecter', 'Sign in', 'Anmelden')));
-        $html .= '</div><div class="parcs-ht-cse__path"><h3>' . esc_html(self::t($lang, 'Vous n’avez pas encore de compte ?', 'New to CSE ticketing?', 'Noch kein CSE-Konto?')) . '</h3>';
-        $html .= '<p>' . esc_html(self::t($lang, 'Vous représentez un CSE ou une amicale du personnel ? Créez un compte sur la billetterie habituelle, puis demandez-nous par e-mail l’activation du statut CSE. Une fois activé, reconnectez-vous pour acheter les billets destinés à vos bénéficiaires.', 'Create an account on the ticketing website, then email us to request CSE activation. Once activated, sign back in to order.', 'Erstellen Sie ein Konto im Ticketshop und beantragen Sie per E-Mail die CSE-Freischaltung. Melden Sie sich danach an, um zu bestellen.')) . '</p>';
-        if ($s['show_signup'] === '1') $html .= self::action_button(self::url($s['signup_url'], $lang), self::tr($s['signup_label'], $lang, self::t($lang, 'Créer mon compte', 'Create an account', 'Konto erstellen')));
-        $email = sanitize_email((string)$s['contact_email']);
-        if ($email !== '') $html .= '<p class="parcs-ht-cse__contact">' . esc_html(self::t($lang, 'Activation CSE : ', 'CSE activation: ', 'CSE-Freischaltung: ')) . '<a href="mailto:' . esc_attr($email) . '">' . esc_html($email) . '</a></p>';
-        $html .= '</div></div>';
-        $html .= '<div class="parcs-ht-cse__actions">';
-        if ($s['show_online'] === '1') $html .= self::action_button(self::url($s['online_url'], $lang), self::tr($s['online_label'], $lang, self::t($lang, 'Accéder à la billetterie', 'Open ticketing', 'Zum Ticketshop')));
-        if ($s['show_pdf'] === '1') $html .= self::action_button(self::url($s['pdf_url'], $lang), self::tr($s['pdf_label'], $lang, self::t($lang, 'Télécharger le bon de commande PDF', 'Download PDF order form', 'PDF-Bestellformular herunterladen')), true);
-        $html .= '</div>';
+        $has_path_cards = ($s['show_login_card'] ?? '1') === '1' || ($s['show_signup_card'] ?? '1') === '1';
+        if ($has_path_cards) $html .= '<div class="parcs-ht-cse__paths">';
+        if (($s['show_login_card'] ?? '1') === '1') {
+            $login_title = trim((string)($copy['login_title'] ?? ''));
+            $login_text = trim((string)($copy['login_text'] ?? ''));
+            $html .= '<div class="parcs-ht-cse__path">';
+            if ($login_title !== '') $html .= '<h3>' . esc_html($login_title) . '</h3>';
+            if ($login_text !== '') $html .= '<p>' . nl2br(esc_html($login_text)) . '</p>';
+            if ($s['show_login'] === '1') $html .= self::action_button(self::url($s['login_url'], $lang), self::tr($s['login_label'], $lang, self::t($lang, 'Me connecter', 'Sign in', 'Anmelden')));
+            $html .= '</div>';
+        }
+        if (($s['show_signup_card'] ?? '1') === '1') {
+            $signup_title = trim((string)($copy['signup_title'] ?? ''));
+            $signup_text = trim((string)($copy['signup_text'] ?? ''));
+            $html .= '<div class="parcs-ht-cse__path">';
+            if ($signup_title !== '') $html .= '<h3>' . esc_html($signup_title) . '</h3>';
+            if ($signup_text !== '') $html .= '<p>' . nl2br(esc_html($signup_text)) . '</p>';
+            if ($s['show_signup'] === '1') $html .= self::action_button(self::url($s['signup_url'], $lang), self::tr($s['signup_label'], $lang, self::t($lang, 'Créer mon compte', 'Create an account', 'Konto erstellen')));
+            $email = sanitize_email((string)$s['contact_email']);
+            $contact_label = trim((string)($copy['contact_label'] ?? ''));
+            if (($s['show_contact'] ?? '1') === '1' && $email !== '') {
+                $html .= '<p class="parcs-ht-cse__contact">' . ($contact_label !== '' ? esc_html($contact_label) . ' ' : '') . '<a href="mailto:' . esc_attr($email) . '">' . esc_html($email) . '</a></p>';
+            }
+            $html .= '</div>';
+        }
+        if ($has_path_cards) $html .= '</div>';
+        $actions = '';
+        if ($s['show_online'] === '1') $actions .= self::action_button(self::url($s['online_url'], $lang), self::tr($s['online_label'], $lang, self::t($lang, 'Accéder à la billetterie', 'Open ticketing', 'Zum Ticketshop')));
+        if ($s['show_pdf'] === '1') $actions .= self::action_button(self::url($s['pdf_url'], $lang), self::tr($s['pdf_label'], $lang, self::t($lang, 'Télécharger le bon de commande PDF', 'Download PDF order form', 'PDF-Bestellformular herunterladen')), true);
+        if ($actions !== '') $html .= '<div class="parcs-ht-cse__actions">' . $actions . '</div>';
         if ((string)($s['show_kit'] ?? '1') === '1') {
             $kit_email = sanitize_email((string)($s['kit_email'] ?? ''));
             if ($kit_email === '') $kit_email = sanitize_email((string)($s['contact_email'] ?? ''));
@@ -447,14 +543,22 @@ final class Parcs_HT_CSE {
                 $subject = rawurlencode('Demande de kit de communication CSE');
                 $body = rawurlencode("Bonjour,\n\nJe représente un CSE / une amicale du personnel et je souhaite recevoir le kit de communication (photos, vidéos, logos et textes officiels).\n\nNom de la structure :\nNom du contact :\n\nMerci.");
                 $kit_url = 'mailto:' . $kit_email . '?subject=' . $subject . '&body=' . $body;
-                $html .= '<section class="parcs-ht-cse__kit"><h3>Kit de communication pour les responsables CSE</h3>';
-                if ($kit_intro !== '') $html .= '<p>' . esc_html($kit_intro) . '</p>';
-                $html .= self::action_button($kit_url, $kit_label, true) . '</section>';
+                $kit_title = trim((string)($copy['kit_title'] ?? ''));
+                $html .= '<section class="parcs-ht-cse__kit">';
+                if ($kit_title !== '') $html .= '<h3>' . esc_html($kit_title) . '</h3>';
+                if ($kit_intro !== '') $html .= '<p>' . nl2br(esc_html($kit_intro)) . '</p>';
+                if (($s['show_kit_button'] ?? '1') === '1') $html .= self::action_button($kit_url, $kit_label, true);
+                $html .= '</section>';
             }
         }
         if ($s['show_transition'] === '1') {
             $message = self::tr($s['transition'], $lang);
-            if ($message !== '') $html .= '<aside class="parcs-ht-cse__notice"><strong>' . esc_html(self::t($lang, 'Informations pratiques', 'Practical information', 'Praktische Informationen')) . '</strong><p>' . nl2br(esc_html($message)) . '</p></aside>';
+            if ($message !== '') {
+                $transition_title = trim((string)($copy['transition_title'] ?? ''));
+                $html .= '<aside class="parcs-ht-cse__notice">';
+                if ($transition_title !== '') $html .= '<strong>' . esc_html($transition_title) . '</strong>';
+                $html .= '<p>' . nl2br(esc_html($message)) . '</p></aside>';
+            }
         }
         return $html . '</section>';
     }
@@ -470,7 +574,7 @@ final class Parcs_HT_CSE {
         $id = 'parcs-ht-cse-' . self::$instance;
         $html = self::assets() . '<div class="parcs-ht-cse" id="' . esc_attr($id) . '" data-htp-ui-years>';
         if (count($years) > 1) {
-            $html .= '<div class="parcs-ht-tariff-year-tabs-ui" role="tablist" aria-label="' . esc_attr(self::t($lang, 'Année des tarifs CSE', 'CSE rate year', 'CSE-Tarifjahr')) . '">';
+            $html .= '<div class="parcs-ht-tariff-year-tabs-ui" role="tablist" aria-label="' . esc_attr((string)(self::year_settings($selected)['copy']['year_tabs_label'] ?? '')) . '">';
             foreach ($years as $year) $html .= '<button type="button" class="parcs-ht-tariff-year-tab-ui' . ($selected === $year ? ' is-active' : '') . '" role="tab" data-htp-ui-year="' . esc_attr($year) . '" aria-selected="' . ($selected === $year ? 'true' : 'false') . '">' . esc_html($year) . '</button>';
             $html .= '</div>';
         }
