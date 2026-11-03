@@ -77,8 +77,6 @@ final class Parcs_HT_CSE {
                 'signup_text'=>'Vous représentez un CSE ou une amicale du personnel ? Créez un compte sur la billetterie habituelle, puis demandez-nous par e-mail, à l’adresse indiquée ci-dessous, l’activation du statut CSE. Une fois activé, reconnectez-vous pour acheter les billets destinés à vos bénéficiaires.',
                 'contact_label'=>'Activation CSE :',
                 'kit_title'=>'Kit de communication pour les responsables CSE',
-                'kit_email_subject'=>'Demande de kit de communication CSE',
-                'kit_email_body'=>"Bonjour,\n\nJe représente un CSE / une amicale du personnel et je souhaite recevoir le kit de communication (photos, vidéos, logos et textes officiels).\n\nNom de la structure :\nNom du contact :\n\nMerci.",
                 'year_tabs_label'=>'Année des tarifs CSE',
                 'transition_title'=>'Informations pratiques',
             ),
@@ -231,7 +229,7 @@ final class Parcs_HT_CSE {
             $value = array_key_exists($key, $copy_raw) && is_scalar($copy_raw[$key])
                 ? (string)$copy_raw[$key]
                 : (string)($old['copy'][$key] ?? $default);
-            $next['copy'][$key] = in_array($key, array('audience_text','login_text','signup_text','kit_email_body'), true)
+            $next['copy'][$key] = in_array($key, array('audience_text','login_text','signup_text'), true)
                 ? sanitize_textarea_field($value)
                 : sanitize_text_field($value);
         }
@@ -389,8 +387,6 @@ final class Parcs_HT_CSE {
         self::page_copy_field('signup_text', 'Texte — création de compte', $copy, true);
         self::page_copy_field('contact_label', 'Libellé du contact d’activation', $copy);
         self::page_copy_field('kit_title', 'Titre du bloc kit de communication', $copy);
-        self::page_copy_field('kit_email_subject', 'Objet du courriel de demande de kit', $copy);
-        self::page_copy_field('kit_email_body', 'Message prérempli du courriel de demande de kit', $copy, true);
         self::page_copy_field('year_tabs_label', 'Libellé accessible des onglets d’année', $copy);
         self::page_copy_field('transition_title', 'Titre des informations pratiques', $copy);
         echo '</section>';
@@ -544,8 +540,8 @@ final class Parcs_HT_CSE {
             if ($kit_email !== '') {
                 $kit_intro = self::tr($s['kit_intro'] ?? array(), $lang);
                 $kit_label = self::tr($s['kit_label'] ?? array(), $lang, 'Demander le kit de communication');
-                $subject = rawurlencode((string)($copy['kit_email_subject'] ?? ''));
-                $body = rawurlencode((string)($copy['kit_email_body'] ?? ''));
+                $subject = rawurlencode('Demande de kit de communication CSE');
+                $body = rawurlencode("Bonjour,\n\nJe représente un CSE / une amicale du personnel et je souhaite recevoir le kit de communication (photos, vidéos, logos et textes officiels).\n\nNom de la structure :\nNom du contact :\n\nMerci.");
                 $kit_url = 'mailto:' . $kit_email . '?subject=' . $subject . '&body=' . $body;
                 $kit_title = trim((string)($copy['kit_title'] ?? ''));
                 $html .= '<section class="parcs-ht-cse__kit">';
