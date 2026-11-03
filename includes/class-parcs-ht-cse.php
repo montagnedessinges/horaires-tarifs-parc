@@ -375,7 +375,7 @@ final class Parcs_HT_CSE {
         echo '</tbody></table></section>';
         echo '<section class="htp-cse-section"><h2>Textes affichés sur la page CSE</h2><p>Ces textes sont propres à l’année sélectionnée. Laissez un champ vide pour ne pas afficher son texte.</p>';
         $copy = (array)($settings['copy'] ?? array());
-        self::page_copy_field('page_title', 'Titre de la page', $copy);
+        self::page_copy_field('page_title', 'Titre de la page (année ajoutée automatiquement)', $copy);
         self::page_copy_field('audience', 'Texte du bandeau réservé aux responsables CSE', $copy, true);
         self::page_copy_field('table_ticket', 'En-tête « Billet »', $copy);
         self::page_copy_field('table_cse', 'En-tête « Tarif CSE »', $copy);
@@ -471,7 +471,7 @@ final class Parcs_HT_CSE {
         }
         $audience = trim((string)($copy['audience'] ?? ''));
         if (($s['show_audience'] ?? '1') === '1' && $audience !== '') {
-            $html .= '<p class="parcs-ht-cse__audience"><strong>' . esc_html($audience) . '</strong></p>';
+            $html .= '<p class="parcs-ht-cse__audience"><strong>' . nl2br(esc_html($audience)) . '</strong></p>';
         }
         $intro = self::tr($s['intro'], $lang);
         if (($s['show_intro'] ?? '1') === '1' && $intro !== '') $html .= '<p>' . nl2br(esc_html($intro)) . '</p>';
@@ -544,7 +544,7 @@ final class Parcs_HT_CSE {
                 $kit_title = trim((string)($copy['kit_title'] ?? ''));
                 $html .= '<section class="parcs-ht-cse__kit">';
                 if ($kit_title !== '') $html .= '<h3>' . esc_html($kit_title) . '</h3>';
-                if ($kit_intro !== '') $html .= '<p>' . esc_html($kit_intro) . '</p>';
+                if ($kit_intro !== '') $html .= '<p>' . nl2br(esc_html($kit_intro)) . '</p>';
                 if (($s['show_kit_button'] ?? '1') === '1') $html .= self::action_button($kit_url, $kit_label, true);
                 $html .= '</section>';
             }
