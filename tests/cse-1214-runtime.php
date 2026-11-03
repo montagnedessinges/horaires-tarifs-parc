@@ -126,7 +126,7 @@ check_cse(strpos($html, '2027') === false, 'année non publiée exclue');
 check_cse(strpos($html, 'Masqué') === false, 'ligne désactivée absente');
 check_cse(strpos($html, 'https://example.test/login/') !== false && strpos($html, 'https://example.test/signup/') !== false, 'connexion et inscription distinctes');
 check_cse(strpos($html, 'https://example.test/bon-de-commande.pdf') !== false, 'bon de commande indépendant');
-check_cse(strpos($html, 'Espace réservé aux responsables CSE') !== false && strpos($html, 'Vous êtes un particulier') !== false, 'page CSE précise les deux publics');
+check_cse(strpos($html, 'Espace réservé aux responsables CSE') !== false && strpos($html, 'Vous êtes un particulier') === false, 'page CSE réservée aux responsables sans message particuliers');
 check_cse(strpos($html, 'mêmes billets passent automatiquement aux tarifs CSE') !== false, 'parcours PrestaShop expliqué sans fausse billetterie séparée');
 check_cse(strpos($html, 'mailto:kit@example.test?subject=') !== false, 'kit de communication uniquement sur demande par e-mail');
 check_cse(strpos($html, 'drive.google.com') === false, 'pas de dossier Drive interne exposé au public');
