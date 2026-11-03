@@ -84,7 +84,7 @@ final class Parcs_HT_CSE {
             'kit_intro'=>array('fr'=>'Vous êtes responsable CSE ou partenaire professionnel ? Nous pouvons vous fournir, sur demande, des photos, vidéos, logos et textes officiels pour présenter le parc à vos bénéficiaires.','en'=>'','de'=>''),
             'intro'=>array('fr'=>'','en'=>'','de'=>''),
             'transition'=>array(
-                'fr'=>'La billetterie en ligne est la même pour tous. Après activation du statut CSE par nos soins, connectez-vous avec votre compte : les prix des billets concernés s’affichent aux tarifs CSE. Après commande, les billets peuvent être récupérés en PDF ou sous forme de codes pour vos supports de billetterie.',
+                'fr'=>'La billetterie en ligne est la même pour tous. Après activation du statut CSE par nos soins, connectez-vous avec votre compte : les tarifs CSE s’affichent alors pour les billets concernés. Après commande, les billets peuvent être récupérés en PDF ou sous forme de codes pour vos supports de billetterie.',
                 'en'=>'Our digital CSE ticketing is already available. Tickets can be downloaded as ready-to-use PDFs or as codes to add to your own tickets. The PDF order form remains temporarily available to give you time to adapt. Eventually, orders will be online only.',
                 'de'=>'Unser digitales CSE-Ticketsystem ist bereits verfügbar. Tickets können als fertige PDFs oder als Codes für Ihre eigenen Tickets heruntergeladen werden. Das PDF-Bestellformular bleibt für eine Übergangszeit verfügbar. Später erfolgen Bestellungen ausschließlich online.',
             ),
