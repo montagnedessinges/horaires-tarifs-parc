@@ -65,7 +65,8 @@ final class Parcs_HT_CSE {
             'kit_email'=>'',
             'copy'=>array(
                 'page_title'=>'Tarifs CSE',
-                'audience'=>'Espace réservé aux responsables CSE et amicales du personnel. Les particuliers ne peuvent pas profiter de ces tarifs préférentiels, sauf les porteurs de la carte Cezam, qui doivent acheter leurs billets en caisse au moment de la visite, sur présentation de leur carte Cezam individuelle.',
+                'audience_title'=>'Espace réservé aux responsables CSE et amicales du personnel.',
+                'audience_text'=>'Les particuliers ne peuvent pas profiter de ces tarifs préférentiels, sauf les porteurs de la carte Cezam, qui doivent acheter leurs billets en caisse au moment de la visite, sur présentation de leur carte Cezam individuelle.',
                 'table_ticket'=>'Billet',
                 'table_cse'=>'Tarif CSE',
                 'table_public'=>'Tarif public',
@@ -230,7 +231,7 @@ final class Parcs_HT_CSE {
             $value = array_key_exists($key, $copy_raw) && is_scalar($copy_raw[$key])
                 ? (string)$copy_raw[$key]
                 : (string)($old['copy'][$key] ?? $default);
-            $next['copy'][$key] = in_array($key, array('audience','login_text','signup_text','kit_email_body'), true)
+            $next['copy'][$key] = in_array($key, array('audience_text','login_text','signup_text','kit_email_body'), true)
                 ? sanitize_textarea_field($value)
                 : sanitize_text_field($value);
         }
@@ -376,7 +377,8 @@ final class Parcs_HT_CSE {
         echo '<section class="htp-cse-section"><h2>Textes affichés sur la page CSE</h2><p>Ces textes sont propres à l’année sélectionnée. Laissez un champ vide pour ne pas afficher son texte.</p>';
         $copy = (array)($settings['copy'] ?? array());
         self::page_copy_field('page_title', 'Titre de la page (année ajoutée automatiquement)', $copy);
-        self::page_copy_field('audience', 'Texte du bandeau réservé aux responsables CSE', $copy, true);
+        self::page_copy_field('audience_title', 'Titre du bandeau réservé aux responsables CSE', $copy);
+        self::page_copy_field('audience_text', 'Texte complémentaire du bandeau', $copy, true);
         self::page_copy_field('table_ticket', 'En-tête « Billet »', $copy);
         self::page_copy_field('table_cse', 'En-tête « Tarif CSE »', $copy);
         self::page_copy_field('table_public', 'En-tête « Tarif public »', $copy);
@@ -469,9 +471,13 @@ final class Parcs_HT_CSE {
         if (($s['show_title'] ?? '1') === '1' && $page_title !== '') {
             $html .= '<h2>' . esc_html($page_title . ' ' . $year) . '</h2>';
         }
-        $audience = trim((string)($copy['audience'] ?? ''));
-        if (($s['show_audience'] ?? '1') === '1' && $audience !== '') {
-            $html .= '<p class="parcs-ht-cse__audience"><strong>' . nl2br(esc_html($audience)) . '</strong></p>';
+        $audience_title = trim((string)($copy['audience_title'] ?? ''));
+        $audience_text = trim((string)($copy['audience_text'] ?? ''));
+        if (($s['show_audience'] ?? '1') === '1' && ($audience_title !== '' || $audience_text !== '')) {
+            $html .= '<p class="parcs-ht-cse__audience">';
+            if ($audience_title !== '') $html .= '<strong>' . esc_html($audience_title) . '</strong>';
+            if ($audience_text !== '') $html .= ($audience_title !== '' ? ' ' : '') . nl2br(esc_html($audience_text));
+            $html .= '</p>';
         }
         $intro = self::tr($s['intro'], $lang);
         if (($s['show_intro'] ?? '1') === '1' && $intro !== '') $html .= '<p>' . nl2br(esc_html($intro)) . '</p>';
