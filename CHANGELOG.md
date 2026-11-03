@@ -1,3 +1,10 @@
+## 1.21.1 — Textes de la page CSE modifiables et masquables
+
+- Rend modifiables les textes visibles de la page CSE : titre, bandeau réservé, en-têtes du tableau, titres et descriptions des encadrés, libellé du contact, titres du kit et des informations pratiques, ainsi que le texte prérempli de la demande de kit.
+- Ajoute des contrôles de visibilité pour le titre, le bandeau, l’introduction, chaque encadré, le contact, le kit et son bouton, et les informations pratiques. Le tableau et les boutons conservent leurs réglages de visibilité.
+- Retire du bandeau de la page CSE la phrase destinée aux particuliers ; le bandeau indique désormais uniquement que l’espace est réservé aux responsables CSE et amicales du personnel.
+- Les textes CSE restent réglés séparément pour chaque année et chaque installation WordPress. Les nouveaux champs reprennent les formulations actuelles par défaut ; aucun changement de données CSE ni des textes de l’onglet de renvoi « Horaires et tarifs ».
+
 ## 1.21.0 — Synchronisation facultative Google Business Profile (préparation)
 
 - Ajoute un module Google Maps désactivé par défaut dans l’administration du parc.
