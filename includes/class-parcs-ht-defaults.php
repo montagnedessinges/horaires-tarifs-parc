@@ -1016,7 +1016,7 @@ final class Parcs_HT_Defaults {
                 'groups_school_resources_title' => array(
                     'fr'=>'Vous préparez une sortie scolaire ou périscolaire ?',
                     'en'=>'Are you planning a school or extracurricular visit?',
-                    'de'=>'Planen Sie einen Schul- oder Ausflug?',
+                    'de'=>'Planen Sie einen schulischen oder außerschulischen Ausflug?',
                 ),
                 'groups_school_resources_text' => array(
                     'fr'=>'Retrouvez les dossiers pédagogiques par cycle, les activités et les informations pratiques pour préparer votre visite.',
