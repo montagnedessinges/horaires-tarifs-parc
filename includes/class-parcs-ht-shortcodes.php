@@ -267,10 +267,22 @@ final class Parcs_HT_Shortcodes {
                         $groups_booking_note = Parcs_HT_Schedule::translation(isset($settings['general']['groups_booking_note']) ? $settings['general']['groups_booking_note'] : array(), $language);
                         $groups_closed_note = Parcs_HT_Schedule::translation(isset($settings['general']['groups_closed_note']) ? $settings['general']['groups_closed_note'] : array(), $language);
                         $groups_button_label = Parcs_HT_Schedule::translation(isset($settings['general']['groups_button_label']) ? $settings['general']['groups_button_label'] : array(), $language);
+                        $groups_school_resources_enabled = isset($settings['general']['groups_school_resources_enabled']) ? (string)$settings['general']['groups_school_resources_enabled'] : '0';
+                        $groups_school_resources_title = Parcs_HT_Schedule::translation(isset($settings['general']['groups_school_resources_title']) ? $settings['general']['groups_school_resources_title'] : array(), $language);
+                        $groups_school_resources_text = Parcs_HT_Schedule::translation(isset($settings['general']['groups_school_resources_text']) ? $settings['general']['groups_school_resources_text'] : array(), $language);
+                        $groups_school_resources_button_label = Parcs_HT_Schedule::translation(isset($settings['general']['groups_school_resources_button_label']) ? $settings['general']['groups_school_resources_button_label'] : array(), $language);
+                        $groups_school_resources_url = isset($settings['general']['groups_school_resources_url'][$language]) ? $settings['general']['groups_school_resources_url'][$language] : '';
                         if ($groups_booking_note) : ?><p class="parcs-ht-groups-booking-note"><?php echo nl2br(esc_html($groups_booking_note)); ?></p><?php endif;
                         if ($groups_closed_note) : ?><p class="parcs-ht-groups-closed-note" data-htp-groups-closed-note hidden><?php echo nl2br(esc_html($groups_closed_note)); ?><?php if ($groups_email) : ?> <a href="mailto:<?php echo esc_attr($groups_email); ?>"><?php echo esc_html($groups_email); ?></a><?php endif; ?></p><?php endif;
                         if ($groups_url) : ?>
                         <div class="parcs-ht-panel-actions"><a class="parcs-ht-button" href="<?php echo esc_url($groups_url); ?>"><?php echo esc_html($groups_button_label ?: $d['quote']); ?></a></div>
+                    <?php endif;
+                        if ($groups_school_resources_enabled === '1' && $groups_school_resources_url && $groups_school_resources_title && $groups_school_resources_button_label) : ?>
+                        <aside class="parcs-ht-groups-resource">
+                            <h4><?php echo esc_html($groups_school_resources_title); ?></h4>
+                            <?php if ($groups_school_resources_text) : ?><p><?php echo nl2br(esc_html($groups_school_resources_text)); ?></p><?php endif; ?>
+                            <a class="parcs-ht-button is-secondary" href="<?php echo esc_url($groups_school_resources_url); ?>"><?php echo esc_html($groups_school_resources_button_label); ?></a>
+                        </aside>
                     <?php endif; endif; ?>
                 </div>
             <?php $first = false; endforeach; ?>
