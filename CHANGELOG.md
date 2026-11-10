@@ -1,3 +1,9 @@
+## 1.21.3 — Rétablissement des exports publics (base 1.21.1)
+
+- Rétablit sur les pages publiques le téléchargement du planning ainsi que l’impression et le téléchargement PDF des tarifs.
+- Retire de l’aperçu d’administration les liens d’export ajoutés en 1.21.2.
+- Rétablit le comportement des exports de la version 1.21.1 ; le numéro 1.21.3 permet à WordPress de proposer le retour depuis 1.21.2.
+
 ## 1.21.2 — Téléchargements et impressions réservés au back-office
 
 - Retire des pages publiques le lien de téléchargement du planning ainsi que les actions d’impression et de téléchargement PDF des tarifs.
