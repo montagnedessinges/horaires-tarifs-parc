@@ -1,3 +1,8 @@
+## 1.21.4 — Secours et diagnostic du shortcode public
+
+- Protège l’affichage des shortcodes de l’extension contre les erreurs PHP non interceptées afin qu’une erreur d’affichage ne fasse plus tomber toute la page.
+- Affiche un message temporaire dans la langue du shortcode et conserve pendant 48 heures le type, le message, le fichier et la ligne de l’erreur dans une notification réservée aux administrateurs WordPress.
+
 ## 1.21.3 — Rétablissement des exports publics (base 1.21.1)
 
 - Rétablit sur les pages publiques le téléchargement du planning ainsi que l’impression et le téléchargement PDF des tarifs.
