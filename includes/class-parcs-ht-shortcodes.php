@@ -9,6 +9,7 @@ final class Parcs_HT_Shortcodes {
 
     public static function init() {
         add_action('wp_enqueue_scripts', array(__CLASS__, 'maybe_enqueue_assets'), 20);
+        add_action('admin_notices', array(__CLASS__, 'shortcode_runtime_error_notice'));
         add_action('admin_post_parcs_ht_tariffs_print', array(__CLASS__, 'tariffs_print_endpoint'));
         add_action('admin_post_nopriv_parcs_ht_tariffs_print', array(__CLASS__, 'tariffs_print_endpoint'));
         add_action('admin_post_parcs_ht_tariffs_pdf', array(__CLASS__, 'tariffs_pdf_endpoint'));
@@ -42,11 +43,54 @@ final class Parcs_HT_Shortcodes {
     }
 
     private static function register($tag, $module, $language = '') {
-        add_shortcode($tag, static function ($atts = array(), $content = null, $shortcode_tag = '') use ($module, $language) {
-            $atts = is_array($atts) ? $atts : array();
-            $lang = $language ?: Parcs_HT_Schedule::language();
-            return Parcs_HT_Shortcodes::render($module, $lang, $atts);
+        add_shortcode($tag, static function ($atts = array(), $content = null, $shortcode_tag = '') use ($tag, $module, $language) {
+            try {
+                $atts = is_array($atts) ? $atts : array();
+                $lang = $language ?: Parcs_HT_Schedule::language();
+                return Parcs_HT_Shortcodes::render($module, $lang, $atts);
+            } catch (Throwable $error) {
+                Parcs_HT_Shortcodes::record_shortcode_runtime_error($tag, $module, $language, $error);
+                return Parcs_HT_Shortcodes::shortcode_fallback($language);
+            }
         });
+    }
+
+    private static function record_shortcode_runtime_error($tag, $module, $language, $error) {
+        $details = array(
+            'tag' => sanitize_key($tag),
+            'module' => sanitize_key($module),
+            'language' => in_array($language, array('fr', 'en', 'de'), true) ? $language : 'fr',
+            'type' => sanitize_text_field(get_class($error)),
+            'message' => sanitize_text_field($error->getMessage()),
+            'file' => sanitize_text_field(basename($error->getFile())),
+            'line' => (int)$error->getLine(),
+            'time' => current_time('mysql'),
+        );
+        set_transient('parcs_ht_shortcode_runtime_error', $details, 2 * DAY_IN_SECONDS);
+    }
+
+    private static function shortcode_fallback($language) {
+        $language = in_array($language, array('fr', 'en', 'de'), true) ? $language : 'fr';
+        $messages = array(
+            'fr' => 'Les horaires et tarifs sont momentanément indisponibles.',
+            'en' => 'Opening hours and prices are temporarily unavailable.',
+            'de' => 'Öffnungszeiten und Eintrittspreise sind vorübergehend nicht verfügbar.',
+        );
+        return '<div class="parcs-ht-shortcode-error" role="status">' . esc_html($messages[$language]) . '</div>';
+    }
+
+    public static function shortcode_runtime_error_notice() {
+        if (!current_user_can('manage_options')) return;
+        $details = get_transient('parcs_ht_shortcode_runtime_error');
+        if (!is_array($details)) return;
+        $tag = isset($details['tag']) ? $details['tag'] : 'shortcode inconnu';
+        $type = isset($details['type']) ? $details['type'] : 'Erreur PHP';
+        $message = isset($details['message']) ? $details['message'] : '';
+        $file = isset($details['file']) ? $details['file'] : '';
+        $line = isset($details['line']) ? (int)$details['line'] : 0;
+        $time = isset($details['time']) ? $details['time'] : '';
+        echo '<div class="notice notice-error"><p><strong>Gestion du parc :</strong> une erreur s’est produite dans le shortcode <code>[' . esc_html($tag) . ']</code>. La page publique a affiché un message de secours.</p>';
+        echo '<p><strong>Détail :</strong> ' . esc_html($type . ': ' . $message) . ' — <code>' . esc_html($file) . ':' . esc_html((string)$line) . '</code> <small>' . esc_html($time) . '</small></p></div>';
     }
 
     public static function maybe_enqueue_assets() {
