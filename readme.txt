@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.21.4
+Stable tag: 1.21.5
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes, FAQ et outils du parc.
 
@@ -23,10 +23,8 @@ Une sauvegarde du site et de la base de données reste recommandée avant toute 
 
 == Changelog ==
 
-= 1.21.2 =
-* Removes schedule download and tariff print/PDF controls from public pages.
-* Adds season-specific planning PDF, tariff print and tariff PDF actions to the administrator preview screen.
-* Restricts schedule and tariff exports to administrators with a valid nonce.
+= 1.21.5 =
+* Restores the complete source behavior of 1.21.1 as a higher-numbered rollback release so WordPress can offer the stable version after 1.21.4.
 
 
 = 1.20.30 =
