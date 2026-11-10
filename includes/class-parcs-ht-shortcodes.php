@@ -891,6 +891,7 @@ final class Parcs_HT_Shortcodes {
     }
 
     private static function admin_export_year() {
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Each admin-only export endpoint validates its nonce before resolving this read-only year parameter.
         $year = isset($_GET['htp_year']) ? sanitize_text_field(wp_unslash($_GET['htp_year'])) : '';
         if (!preg_match('/^20\\d{2}$/', $year)) return '';
         $all = Parcs_HT_Defaults::all_settings();
