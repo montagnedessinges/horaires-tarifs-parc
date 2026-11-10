@@ -146,7 +146,7 @@ final class Parcs_HT_Admin {
                 <?php self::alerts_section($settings); ?>
                 <?php self::tariffs_section($settings); ?>
                 <?php self::quote_section($settings); ?>
-                <?php self::preview_section($audit, $active_year); ?>
+                <?php self::preview_section($audit); ?>
                 <?php self::updates_section($settings); ?>
                 <?php self::shortcodes_section(); ?>
 
@@ -619,16 +619,6 @@ final class Parcs_HT_Admin {
                 <?php self::translated_textarea('settings[general][groups_closed_note]', $g['groups_closed_note'] ?? array('fr'=>'','en'=>'','de'=>''), 'Message supplémentaire lorsque le parc est fermé'); ?>
             </div>
 
-            <h3>Ressources scolaires et périscolaires</h3>
-            <p>Affichez dans l’onglet Groupes un encart vers la page de préparation scolaire et ses dossiers pédagogiques. Le texte et le lien peuvent être gérés séparément pour chaque langue.</p>
-            <div class="htp-grid htp-grid-2">
-                <label class="htp-field"><span>Affichage</span><span><?php self::checkbox('settings[general][groups_school_resources_enabled]', $g['groups_school_resources_enabled'] ?? '0', 'Afficher l’encart ressources pédagogiques dans l’onglet Groupes'); ?></span></label>
-                <?php self::translated_input('settings[general][groups_school_resources_title]', $g['groups_school_resources_title'] ?? array('fr'=>'','en'=>'','de'=>''), 'Titre de l’encart'); ?>
-                <?php self::translated_textarea('settings[general][groups_school_resources_text]', $g['groups_school_resources_text'] ?? array('fr'=>'','en'=>'','de'=>''), 'Texte de présentation'); ?>
-                <?php self::translated_input('settings[general][groups_school_resources_button_label]', $g['groups_school_resources_button_label'] ?? array('fr'=>'','en'=>'','de'=>''), 'Texte du bouton'); ?>
-                <?php self::translated_input('settings[general][groups_school_resources_url]', $g['groups_school_resources_url'] ?? array('fr'=>'','en'=>'','de'=>''), 'Lien de la page scolaire', 'url'); ?>
-            </div>
-
             <details class="htp-advanced">
                 <summary>Apparence des tarifs</summary>
                 <div class="htp-advanced-content">
@@ -1081,14 +1071,10 @@ final class Parcs_HT_Admin {
         <?php
     }
 
-    private static function preview_section($audit, $year = '') {
+    private static function preview_section($audit) {
         $summary = is_array($audit['summary'] ?? null) ? $audit['summary'] : array();
         $audit_problems = array_merge((array)($audit['errors'] ?? array()), (array)($audit['warnings'] ?? array()));
         $revisions = class_exists('Parcs_HT_Health') ? Parcs_HT_Health::revisions() : array();
-        $export_args = array('lang'=>'fr', 'htp_year'=>(string)$year);
-        $schedule_export_url = wp_nonce_url(add_query_arg(array_merge($export_args, array('action'=>'parcs_ht_schedule_pdf')), admin_url('admin-post.php')), 'parcs_ht_private_export');
-        $tariff_print_url = wp_nonce_url(add_query_arg(array_merge($export_args, array('action'=>'parcs_ht_tariffs_print', 'auto'=>'1')), admin_url('admin-post.php')), 'parcs_ht_private_export');
-        $tariff_pdf_url = wp_nonce_url(add_query_arg(array_merge($export_args, array('action'=>'parcs_ht_tariffs_pdf')), admin_url('admin-post.php')), 'parcs_ht_private_export');
         ?>
         <section id="htp-preview" class="htp-card">
             <h2>Diagnostic annuel et aperçu</h2>
@@ -1100,13 +1086,6 @@ final class Parcs_HT_Admin {
                     (int)($summary['exceptional_hours'] ?? 0), (int)($summary['exceptional_closures'] ?? 0), (int)($summary['domain_limited'] ?? 0)
                 )); ?></p>
                 <?php if ($audit_problems) : ?><ul><?php foreach (array_slice($audit_problems, 0, 30) as $problem) : ?><li><?php echo esc_html($problem); ?></li><?php endforeach; ?></ul><?php endif; ?>
-            </div>
-            <h3>Téléchargements et impressions internes</h3>
-            <p>Ces documents sont disponibles uniquement depuis le back-office. Ils utilisent la saison <?php echo esc_html((string)$year); ?> sélectionnée.</p>
-            <div class="htp-preview-controls">
-                <a class="button button-secondary" href="<?php echo esc_url($schedule_export_url); ?>">Télécharger le planning PDF</a>
-                <a class="button button-secondary" href="<?php echo esc_url($tariff_print_url); ?>">Imprimer les tarifs</a>
-                <a class="button button-secondary" href="<?php echo esc_url($tariff_pdf_url); ?>">Télécharger les tarifs PDF</a>
             </div>
             <p>Enregistrez d’abord les modifications, puis choisissez une date pour vérifier la priorité des horaires, fermetures et règles du domaine.</p>
             <div class="htp-preview-controls"><label class="htp-field"><span>Date à tester</span><input type="date" data-htp-preview-date></label><button type="button" class="button button-secondary" data-htp-preview-button>Afficher le résultat</button></div>
@@ -1427,11 +1406,6 @@ final class Parcs_HT_Admin {
             'groups_closed_note' => self::sanitize_translations(isset($g['groups_closed_note']) ? $g['groups_closed_note'] : array(), true),
             'groups_booking_note' => self::sanitize_translations(isset($g['groups_booking_note']) ? $g['groups_booking_note'] : array(), true),
             'groups_button_label' => self::sanitize_translations(isset($g['groups_button_label']) ? $g['groups_button_label'] : array()),
-            'groups_school_resources_enabled' => array_key_exists('groups_school_resources_enabled', $g) ? self::bool($g, 'groups_school_resources_enabled') : '0',
-            'groups_school_resources_title' => self::sanitize_translations(isset($g['groups_school_resources_title']) ? $g['groups_school_resources_title'] : array()),
-            'groups_school_resources_text' => self::sanitize_translations(isset($g['groups_school_resources_text']) ? $g['groups_school_resources_text'] : array(), true),
-            'groups_school_resources_button_label' => self::sanitize_translations(isset($g['groups_school_resources_button_label']) ? $g['groups_school_resources_button_label'] : array()),
-            'groups_school_resources_url' => self::sanitize_url_translations(isset($g['groups_school_resources_url']) ? $g['groups_school_resources_url'] : array()),
             'health_notifications_enabled' => array_key_exists('health_notifications_enabled', $g) ? self::bool($g, 'health_notifications_enabled') : '1',
             'health_notification_email' => isset($g['health_notification_email']) ? sanitize_email($g['health_notification_email']) : '',
             'delete_data_on_uninstall' => array_key_exists('delete_data_on_uninstall', $g) ? self::bool($g, 'delete_data_on_uninstall') : '0',
