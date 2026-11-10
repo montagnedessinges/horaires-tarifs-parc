@@ -10,11 +10,8 @@ final class Parcs_HT_Shortcodes {
     public static function init() {
         add_action('wp_enqueue_scripts', array(__CLASS__, 'maybe_enqueue_assets'), 20);
         add_action('admin_post_parcs_ht_tariffs_print', array(__CLASS__, 'tariffs_print_endpoint'));
-        add_action('admin_post_nopriv_parcs_ht_tariffs_print', array(__CLASS__, 'tariffs_print_endpoint'));
         add_action('admin_post_parcs_ht_tariffs_pdf', array(__CLASS__, 'tariffs_pdf_endpoint'));
-        add_action('admin_post_nopriv_parcs_ht_tariffs_pdf', array(__CLASS__, 'tariffs_pdf_endpoint'));
         add_action('admin_post_parcs_ht_schedule_pdf', array(__CLASS__, 'schedule_pdf_endpoint'));
-        add_action('admin_post_nopriv_parcs_ht_schedule_pdf', array(__CLASS__, 'schedule_pdf_endpoint'));
 
         self::register('parc_horaires_tarifs', 'page');
         self::register('parc_horaires_aujourdhui', 'today');
@@ -146,7 +143,6 @@ final class Parcs_HT_Shortcodes {
             '<div class="parcs-ht-month-summary" data-htp-month-summary></div>' .
             '<div class="parcs-ht-calendar-grid" data-htp-calendar-grid></div>' .
             '<div class="parcs-ht-legend"><span><i class="parcs-ht-symbol is-hours">!</i><span data-htp-legend-hours></span></span><span><i class="parcs-ht-symbol is-closed">×</i><span data-htp-legend-closed></span></span><span data-htp-event-legend-wrap hidden><i class="parcs-ht-event-legend" aria-hidden="true">★</i><span data-htp-legend-event></span></span><span class="parcs-ht-period-legends" data-htp-period-legends></span></div>' .
-            self::schedule_export_button($language) .
             '</section>';
     }
 
@@ -289,7 +285,6 @@ final class Parcs_HT_Shortcodes {
             <div class="parcs-ht-actions">
                 <?php $tickets_url = isset($settings['general']['tickets_url'][$language]) ? $settings['general']['tickets_url'][$language] : ''; if ($tickets_url) : ?><a class="parcs-ht-button is-primary" href="<?php echo esc_url($tickets_url); ?>"><?php echo esc_html($d['tickets']); ?></a><?php endif; ?>
             </div>
-            <?php echo wp_kses_post(self::tariff_export_actions($tariffs, $language, $settings['general']['year'] ?? '')); ?>
         </section>
         <?php
         return ob_get_clean();
@@ -449,58 +444,10 @@ final class Parcs_HT_Shortcodes {
         return $accordion ? '<div class="parcs-ht-quote-accordions">'.implode('', $items).'</div>' : '<div class="parcs-ht-quote-info-grid">'.implode('', $items).'</div>';
     }
 
-    private static function tariff_export_actions($tariffs, $language, $year = '') {
-        $print = isset($tariffs['print']) && is_array($tariffs['print']) ? $tariffs['print'] : array();
-        if ((string)($print['pdf_enabled'] ?? '1') !== '1') return '';
-
-        $pdf_url = add_query_arg(
-            array(
-                'action'   => 'parcs_ht_tariffs_pdf',
-                'htp_year' => $year,
-                'lang'     => $language,
-                'rev'      => max(1, (int)get_option('parcs_ht_export_revision', 1)),
-            ),
-            admin_url('admin-post.php')
-        );
-
-        $labels = array(
-            'fr' => 'Télécharger les tarifs en PDF',
-            'en' => 'Download prices as PDF',
-            'de' => 'Preise als PDF herunterladen',
-        );
-        $label = $labels[$language] ?? $labels['fr'];
-
-        return '<div class="parcs-ht-tariff-export-actions">' .
-            '<a class="parcs-ht-tariff-export-button is-pdf" href="' . esc_url($pdf_url) . '">' .
-            '<span class="parcs-ht-pdf-mark" aria-hidden="true">PDF</span>' .
-            '<span>' . esc_html($label) . '</span>' .
-            '</a></div>';
-    }
-
-
-    private static function schedule_export_button($language) {
-        $labels = array(
-            'fr' => 'Télécharger le planning des horaires',
-            'en' => 'Download opening-hours schedule',
-            'de' => 'Öffnungszeitenplan herunterladen',
-        );
-        $url = add_query_arg(
-            array(
-                'action' => 'parcs_ht_schedule_pdf',
-                'lang' => $language,
-                'rev' => max(1, (int)get_option('parcs_ht_export_revision', 1)),
-            ),
-            admin_url('admin-post.php')
-        );
-        return '<div class="parcs-ht-schedule-export"><a class="parcs-ht-schedule-export-button" href="' .
-            esc_url($url) . '"><span class="parcs-ht-pdf-mark" aria-hidden="true">PDF</span>' .
-            esc_html($labels[$language] ?? $labels['fr']) . '</a></div>';
-    }
-
     public static function schedule_pdf_endpoint() {
-        self::validate_public_export_request();
+        self::validate_admin_export_request();
         $language = self::export_language();
-        $settings = Parcs_HT_Defaults::settings();
+        $settings = Parcs_HT_Defaults::settings(self::admin_export_year());
         $ctx = self::schedule_export_context($settings, $language);
         $slug = sanitize_title($ctx['park'] ?: 'parc');
         $year = $ctx['year'] !== '' ? '-' . $ctx['year'] : '';
@@ -510,9 +457,10 @@ final class Parcs_HT_Shortcodes {
     }
 
     private static function schedule_export_context($settings, $language) {
-        unset($settings);
         $all = Parcs_HT_Defaults::all_settings();
-        $year = Parcs_HT_Defaults::select_season_year($all);
+        $requested_year = (string)($settings['general']['year'] ?? '');
+        $year = $requested_year !== '' && isset($all['seasons'][$requested_year])
+            ? $requested_year : Parcs_HT_Defaults::select_season_year($all);
         $season = ($year !== '' && isset($all['seasons'][$year]) && is_array($all['seasons'][$year]))
             ? $all['seasons'][$year] : array();
 
@@ -797,15 +745,15 @@ final class Parcs_HT_Shortcodes {
     }
 
     public static function tariffs_print_endpoint() {
-        self::validate_tariff_export_request();
+        self::validate_admin_export_request();
         $language = self::export_language();
-        $settings = Parcs_HT_Defaults::settings();
+        $settings = Parcs_HT_Defaults::settings(self::admin_export_year());
         $ctx = self::tariff_export_context($settings, $language);
         nocache_headers();
         header('Content-Type: text/html; charset=' . get_bloginfo('charset'));
         echo '<!doctype html><html lang="'.esc_attr($language).'"><head><meta charset="'.esc_attr(get_bloginfo('charset')).'"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'.esc_html($ctx['title']).'</title>';
         echo '<style>@page{size:A4;margin:14mm}*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#202724;margin:0;font-size:12px}.head{border-bottom:2px solid #1f6554;padding-bottom:10px;margin-bottom:16px}.park{font-size:13px;margin:0 0 4px}.title{font-size:26px;line-height:1.1;margin:0}.meta{color:#65706b;margin-top:6px}.group{margin:18px 0;page-break-inside:avoid}.group h2{font-size:17px;margin:0 0 8px;color:#1f6554}.table{width:100%;border-collapse:collapse}.table th,.table td{border-bottom:1px solid #d7ddda;padding:8px 6px;text-align:left;vertical-align:top}.table th{font-size:10px;text-transform:uppercase;color:#5c6661}.price{text-align:right!important;white-space:nowrap;font-weight:700}.old{text-decoration:line-through;font-weight:400;color:#777;margin-right:5px}.sub{display:block;font-size:10px;color:#666;margin-top:2px}.badge{display:inline-block;font-size:9px;border:1px solid #d4ad2f;border-radius:10px;padding:1px 5px;margin-left:5px}.note{font-size:10px;line-height:1.45}.footer{border-top:1px solid #d7ddda;margin-top:20px;padding-top:10px;color:#666;font-size:9px}.actions{display:flex;gap:8px;margin:0 0 16px}.actions button,.actions a{border:0;border-radius:5px;padding:9px 13px;background:#1f6554;color:#fff;text-decoration:none;cursor:pointer}@media print{.actions{display:none}.group{break-inside:avoid}}@media(max-width:600px){body{font-size:11px}.title{font-size:21px}.table th,.table td{padding:6px 4px}}</style></head><body>';
-        $pdf_url = add_query_arg(array('action'=>'parcs_ht_tariffs_pdf','lang'=>$language,'rev'=>max(1, (int)get_option('parcs_ht_export_revision', 1))), admin_url('admin-post.php'));
+        $pdf_url = wp_nonce_url(add_query_arg(array('action'=>'parcs_ht_tariffs_pdf','lang'=>$language,'htp_year'=>$ctx['year'],'rev'=>max(1, (int)get_option('parcs_ht_export_revision', 1))), admin_url('admin-post.php')), 'parcs_ht_private_export');
         $print_label = $language==='de'?'Drucken':($language==='en'?'Print':'Imprimer');
         $pdf_label = $language==='de'?'PDF herunterladen':($language==='en'?'Download PDF':'Télécharger PDF');
         echo '<div class="actions"><button type="button" onclick="window.print()">'.esc_html($print_label).'</button>';
@@ -818,9 +766,9 @@ final class Parcs_HT_Shortcodes {
     }
 
     public static function tariffs_pdf_endpoint() {
-        self::validate_tariff_export_request();
+        self::validate_admin_export_request();
         $language = self::export_language();
-        $settings = Parcs_HT_Defaults::settings();
+        $settings = Parcs_HT_Defaults::settings(self::admin_export_year());
         $ctx = self::tariff_export_context($settings, $language);
         $orientation = (string)($ctx['print']['orientation'] ?? 'portrait');
         $slug = sanitize_title($ctx['park'] ?: 'tarifs');
@@ -935,23 +883,18 @@ final class Parcs_HT_Shortcodes {
         exit;
     }
 
-    private static function validate_tariff_export_request() {
-        self::validate_public_export_request();
+    private static function validate_admin_export_request() {
+        if (!current_user_can('manage_options')) {
+            wp_die('Accès réservé à l’équipe du parc.', '', array('response'=>403));
+        }
+        check_admin_referer('parcs_ht_private_export');
     }
 
-    private static function validate_public_export_request() {
-        if (is_user_logged_in() && current_user_can('manage_options')) return;
-        $address = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : 'unknown';
-        $bucket = (string)floor(time() / MINUTE_IN_SECONDS);
-        $key = 'parcs_ht_export_rate_'.substr(hash_hmac('sha256', $address.'|'.$bucket, wp_salt('nonce')), 0, 32);
-        $count = (int)get_transient($key);
-        if ($count >= 30) {
-            status_header(429);
-            header('Retry-After: 60');
-            wp_die('Trop de téléchargements. Merci de réessayer dans une minute.', '', array('response'=>429));
-        }
-        set_transient($key, $count + 1, 2 * MINUTE_IN_SECONDS);
-        header('X-Robots-Tag: noindex, nofollow', true);
+    private static function admin_export_year() {
+        $year = isset($_GET['htp_year']) ? sanitize_text_field(wp_unslash($_GET['htp_year'])) : '';
+        if (!preg_match('/^20\\d{2}$/', $year)) return '';
+        $all = Parcs_HT_Defaults::all_settings();
+        return isset($all['seasons'][$year]) ? $year : '';
     }
 
     private static function export_language() {
