@@ -1012,27 +1012,6 @@ final class Parcs_HT_Defaults {
                 'groups_closed_note' => array('fr'=>'Même lorsque le parc est fermé au public, une demande de groupe peut être envoyée par e-mail.','en'=>'Even when the park is closed to the public, group visit requests can still be sent by email.','de'=>'Auch wenn der Park für die Öffentlichkeit geschlossen ist, können Gruppenanfragen weiterhin per E-Mail gesendet werden.'),
                 'groups_booking_note' => array('fr'=>$is_mds?'Réservation obligatoire pour bénéficier des tarifs groupes. Commencez par effectuer une demande de devis en ligne. Une fois le devis reçu, renvoyez-le avec la mention « Bon pour accord » pour confirmer votre réservation.':($is_fds?'Réservation recommandée pour les groupes, mais non obligatoire. Pour préparer votre venue, vous pouvez contacter directement l’équipe du parc.':''),'en'=>$is_fds?'Group reservations are recommended but not compulsory. You can contact the park team directly to prepare your visit.':'','de'=>''),
                 'groups_button_label' => array('fr'=>$is_mds?'Faire une demande de devis':($is_fds?'Contacter le parc':''),'en'=>$is_fds?'Contact the park':'','de'=>''),
-                'groups_school_resources_enabled' => $is_mds ? '1' : '0',
-                'groups_school_resources_title' => array(
-                    'fr'=>'Vous préparez une sortie scolaire ou périscolaire ?',
-                    'en'=>'Are you planning a school or extracurricular visit?',
-                    'de'=>'Planen Sie einen schulischen oder außerschulischen Ausflug?',
-                ),
-                'groups_school_resources_text' => array(
-                    'fr'=>'Retrouvez les dossiers pédagogiques par cycle, les activités et les informations pratiques pour préparer votre visite.',
-                    'en'=>'Find educational resources by school cycle, activities and practical information to prepare your visit.',
-                    'de'=>'Hier finden Sie pädagogische Materialien, Aktivitäten und praktische Informationen zur Vorbereitung Ihres Besuchs.',
-                ),
-                'groups_school_resources_button_label' => array(
-                    'fr'=>'Préparer ma sortie scolaire',
-                    'en'=>'Prepare my school visit',
-                    'de'=>'Schulbesuch vorbereiten',
-                ),
-                'groups_school_resources_url' => array(
-                    'fr'=>$is_mds?'https://www.montagnedessinges.com/groupes-et-cse/groupes-scolaires-et-periscolaires/':'',
-                    'en'=>'',
-                    'de'=>'',
-                ),
                 'health_notifications_enabled'=>'1',
                 'health_notification_email'=>'',
                 'delete_data_on_uninstall'=>'0',

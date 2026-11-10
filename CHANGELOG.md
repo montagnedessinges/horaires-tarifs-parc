@@ -1,3 +1,8 @@
+## 1.21.5 — Retour à la base stable 1.21.1
+
+- Restaure le code source de la version 1.21.1, dernière version antérieure aux changements récents.
+- La version 1.21.5 permet à WordPress de proposer ce retour arrière après les versions 1.21.2 à 1.21.4.
+
 ## 1.21.4 — Secours et diagnostic du shortcode public
 
 - Protège l’affichage des shortcodes de l’extension contre les erreurs PHP non interceptées afin qu’une erreur d’affichage ne fasse plus tomber toute la page.
