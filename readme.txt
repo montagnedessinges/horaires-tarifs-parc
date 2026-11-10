@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.21.1
+Stable tag: 1.21.2
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes, FAQ et outils du parc.
 
@@ -22,6 +22,12 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.21.2 =
+* Removes schedule download and tariff print/PDF controls from public pages.
+* Adds season-specific planning PDF, tariff print and tariff PDF actions to the administrator preview screen.
+* Restricts schedule and tariff exports to administrators with a valid nonce.
+
 
 = 1.20.30 =
 * Replaces the CSE referral copy with three clear routes: private visitors, CSE representatives and group outings.
