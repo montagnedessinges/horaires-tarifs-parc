@@ -1,3 +1,9 @@
+## 1.21.2 — Téléchargements et impressions réservés au back-office
+
+- Retire des pages publiques le lien de téléchargement du planning ainsi que les actions d’impression et de téléchargement PDF des tarifs.
+- Ajoute dans l’aperçu de l’administration les exports PDF du planning et des tarifs, ainsi que l’impression des tarifs pour la saison sélectionnée.
+- Réserve les points d’accès d’export aux administrateurs et protège les liens avec un nonce.
+
 ## 1.21.1 — Textes de la page CSE modifiables et masquables
 
 - Rend modifiables les textes visibles de la page CSE : titre, bandeau réservé, en-têtes du tableau, titres et descriptions des encadrés, libellé du contact, titres du kit et des informations pratiques.
