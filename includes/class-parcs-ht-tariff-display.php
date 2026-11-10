@@ -275,7 +275,6 @@ final class Parcs_HT_Tariff_Display {
         if ($tickets_url !== '') {
             $html .= '<div class="parcs-ht-tariff-ui__actions"><a class="parcs-ht-tariff-ui__button is-primary" href="' . esc_url($tickets_url) . '">' . esc_html($d['tickets'] ?? self::t($language, 'Acheter vos billets', 'Buy tickets', 'Tickets kaufen')) . '</a></div>';
         }
-        $html .= self::export_actions($tariffs, $language, $year);
         return $html . '</section>';
     }
 
@@ -528,20 +527,6 @@ final class Parcs_HT_Tariff_Display {
             case 'card': return '<svg ' . $common . '><rect x="2.5" y="4.8" width="19" height="14.4" rx="2.4"/><path d="M2.5 9.1h19"/><rect x="6" y="13" width="4.6" height="2.4" rx=".5" fill="currentColor" stroke="none"/></svg>';
             default: return '<svg ' . $common . '><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>';
         }
-    }
-
-    private static function export_actions($tariffs, $language, $year) {
-        $print = isset($tariffs['print']) && is_array($tariffs['print']) ? $tariffs['print'] : array();
-        if (isset($print['enabled']) && (string)$print['enabled'] !== '1') return '';
-        $params = array('lang'=>$language); if ($year !== '') $params['year'] = $year;
-        $html = '<div class="parcs-ht-tariff-ui__export">';
-        $print_url = add_query_arg(array_merge(array('action'=>'parcs_ht_tariffs_print'), $params), admin_url('admin-post.php'));
-        $html .= '<a href="' . esc_url($print_url) . '">' . esc_html(self::t($language, 'Imprimer les tarifs', 'Print rates', 'Tarife drucken')) . '</a>';
-        if (!isset($print['pdf_enabled']) || (string)$print['pdf_enabled'] === '1') {
-            $pdf_url = add_query_arg(array_merge(array('action'=>'parcs_ht_tariffs_pdf'), $params), admin_url('admin-post.php'));
-            $html .= '<a href="' . esc_url($pdf_url) . '">' . esc_html(self::t($language, 'Télécharger en PDF', 'Download PDF', 'PDF herunterladen')) . '</a>';
-        }
-        return $html . '</div>';
     }
 
     public static function render_group($language, $atts = array(), $forced_year = '') {
