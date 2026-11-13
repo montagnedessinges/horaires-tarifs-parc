@@ -105,6 +105,14 @@ final class Parcs_HT_Display_Policy {
 
     public static function apply_season_visibility($season, $today) {
         if (!is_array($season)) return $season;
+        if (class_exists('Parcs_HT_Public_Visibility')) {
+            // Use the same automatic/manual rule as the administration before
+            // Defaults caches this projection. Do not reload options here.
+            $season['published'] = Parcs_HT_Public_Visibility::module_visible_for_season(
+                $season, 'calendar_visible', (string)($season['published'] ?? '0') === '1', $today
+            ) ? '1' : '0';
+            return $season;
+        }
         if (array_key_exists('calendar_visible', $season)) {
             $season['published'] = (string)$season['calendar_visible'] === '1' ? '1' : '0';
             $season['public_display_until'] = '';

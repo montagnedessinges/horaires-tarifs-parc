@@ -80,7 +80,8 @@ final class Parcs_HT_Public_Visibility {
         return 'manual';
     }
 
-    private static function module_visible_for_season($season, $flag, $fallback, $today = '') {
+    /** Pure season projection: also used while Defaults is building its request cache. */
+    public static function module_visible_for_season($season, $flag, $fallback, $today = '') {
         $state = self::scheduled_state_for_season($season, $today);
         if ($state === 'off') return false;
         if ($state === 'on') return true;
