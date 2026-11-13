@@ -22,4 +22,4 @@ Le test est exécuté dans la CI PHP 7.4, 8.1, 8.2 et 8.3, ainsi que sur les sou
 
 ## Livraison
 
-PR de préparation, sans fusion ni release. Le numéro reste 1.21.5 pour cette revue ; une nouvelle version sera nécessaire avant distribution. Après validation, vérifier sur une copie de la Forêt que le calendrier, ses détails et le PDF ne proposent que 2027, puis vérifier la Montagne et les pages groupes. Cette préparation ne modifie aucun site en production.
+Version de distribution : 1.21.6. La publication sur main est autorisée par l’utilisateur ; la release est produite par le workflow après validation. Après validation, vérifier sur une copie de la Forêt que le calendrier, ses détails et le PDF ne proposent que 2027, puis vérifier la Montagne et les pages groupes. Cette préparation ne modifie aucun site en production.
