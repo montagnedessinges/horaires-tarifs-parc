@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.21.5
+Stable tag: 1.21.6
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes, FAQ et outils du parc.
 
@@ -22,6 +22,9 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.21.6 =
+* Le calendrier public respecte les dates automatiques de publication et de retrait des saisons, avec la même règle que l’administration.
 
 = 1.21.5 =
 * Restores the complete source behavior of 1.21.1 as a higher-numbered rollback release so WordPress can offer the stable version after 1.21.4.

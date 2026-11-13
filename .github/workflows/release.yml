@@ -62,6 +62,7 @@ jobs:
           php tests/tariff-info-callouts-1196-contract.php
           php tests/admin-year-context-1177-runtime.php
           php tests/admin-quotes-1177-contract.php
+          php tests/calendar-year-rollover-runtime.php
           php tests/visibility-11512-runtime.php
           php tests/stability-11511-contract.php
           php tests/group-quote-future-season-runtime.php
@@ -135,6 +136,7 @@ jobs:
           PLUGIN_ROOT=/tmp/htp-production-test php tests/admin-quotes-1177-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/quote-closed-dates-runtime.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/quote-closed-dates-admin-save-runtime.php
+          PLUGIN_ROOT=/tmp/htp-production-test php tests/calendar-year-rollover-runtime.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/public-data-regressions.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/updater-metadata-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/schedule-csv-contract.php

@@ -1,3 +1,9 @@
+## 1.21.6 — Bascule automatique du calendrier public
+
+- Corrige la projection du calendrier qui pouvait remplacer la visibilité automatique par un ancien interrupteur manuel et conserver la saison précédente.
+- Réutilise la règle centrale de publication, conserve les dates de retrait et ne modifie aucune donnée enregistrée.
+- Ajoute 69 cas de régression pour les deux parcs, les dates limites, le cache de requête et les données publiques, testés sur PHP 7.4, 8.1, 8.2 et 8.3 et sur le paquet de production.
+
 ## 1.21.5 — Retour à la base stable 1.21.1
 
 - Restaure le code source de la version 1.21.1, dernière version antérieure aux changements récents.
