@@ -136,6 +136,7 @@ jobs:
           PLUGIN_ROOT=/tmp/htp-production-test php tests/admin-quotes-1177-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/quote-closed-dates-runtime.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/quote-closed-dates-admin-save-runtime.php
+          PLUGIN_ROOT=/tmp/htp-production-test php tests/calendar-year-rollover-runtime.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/public-data-regressions.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/updater-metadata-contract.php
           PLUGIN_ROOT=/tmp/htp-production-test php tests/schedule-csv-contract.php
