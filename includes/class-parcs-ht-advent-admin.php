@@ -829,8 +829,8 @@ final class Parcs_HT_Advent_Admin {
         $candidate = $report['candidate'];
         if (!is_array($candidate) || (string)$candidate['campagne_id'] !== $campaign_id || (string)$candidate['parc_code'] !== Parcs_HT_Advent::installation_park_code()) wp_die('Campagne importée invalide.');
         $store = Parcs_HT_Advent::store();
-        $backup_key = 'parcs_ht_advent_backup_' . $campaign_id . '_' . gmdate('Ymd_His');
-        add_option($backup_key, $store, '', false);
+        $backup_key = 'parcs_ht_advent_backup_' . $campaign_id . '_' . gmdate('Ymd_His') . '_' . sanitize_key(wp_generate_password(6, false, false));
+        if (!add_option($backup_key, $store, '', false)) wp_die('Impossible de créer la sauvegarde avant import.');
         $store['campaigns'][$campaign_id] = $candidate;
         Parcs_HT_Advent::save_store($store);
         delete_transient($key);
