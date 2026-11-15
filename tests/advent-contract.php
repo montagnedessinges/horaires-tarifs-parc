@@ -132,6 +132,15 @@ advent_check(strpos($admin, 'Analyser sans écrire') !== false && strpos($admin,
 advent_check(strpos($admin, "'schema_version'") !== false && strpos($admin, "'parc_code'") !== false && strpos($admin, "'campagne_id'") !== false, 'import validates schema, park and campaign identifiers');
 advent_check(strpos($admin, '!empty($before[\'visuel_url\'])') !== false && strpos($admin, '!empty($before[\'logo_url\'])') !== false, 'smart reimport preserves manually assigned media when incoming media is empty');
 advent_check(strpos($admin, 'count($seen) !== 24') !== false, 'smart import enforces exactly 24 daily entries');
+advent_check(strpos($admin, "if ($kind === 'CAMPAGNE')") !== false, 'CSV campaign fields are isolated to campaign rows');
+advent_check(strpos($admin, "if ($kind === 'PARTENAIRE')") !== false, 'CSV partner fields are isolated to partner rows');
+advent_check(strpos($admin, "if ($kind === 'CONTENU')") !== false, 'CSV content fields are isolated to content rows');
+advent_check(strpos($admin, "unset($payload['logo_url'],$payload['logo_source'])") !== false, 'CSV import never overwrites manually assigned partner logos');
+advent_check(strpos($admin, "unset($payload['visuel_url'],$payload['visuel_source'],$payload['statut'])") !== false, 'CSV import never overwrites manual visuals or publishes a day');
+advent_check(strpos($admin, "unset($payload['statut_resultat'])") !== false, 'CSV import never publishes a result');
+advent_check(strpos($admin, "public static function export_csv()") !== false && strpos($admin, "check_admin_referer('parcs_ht_advent_export_csv')") !== false, 'CSV full export requires a dedicated nonce');
+advent_check(strpos($admin, "microcopy_") !== false, 'CSV import/export includes FR/EN/DE customizable labels');
+advent_check(strpos($admin, "add_option($backup_key") !== false, 'CSV applies changes only after creating a recovery snapshot');
 advent_check(strpos($admin, 'Publier le résultat') !== false && strpos($admin, 'Enregistrer sans publier') !== false, 'result publication is an explicit separate admin action');
 advent_check(strpos($admin, 'Aperçu Facebook') !== false && strpos($admin, 'Aperçu Instagram') !== false && strpos($admin, 'Copier le texte') !== false, 'admin provides generated social previews with copy actions');
 advent_check(strpos($uninstall, "'parcs_ht_advent'") !== false && strpos($uninstall, "'parcs_ht_advent_appearance'") !== false, 'Advent data and appearance follow the plugin uninstall data-deletion preference');
