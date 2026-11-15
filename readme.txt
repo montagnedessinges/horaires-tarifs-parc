@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.21.6
+Stable tag: 1.21.7
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes, FAQ et outils du parc.
 
@@ -22,6 +22,12 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.21.7 =
+* Calendrier de l’Avent : export complet de la campagne actuelle (partenaires, contenus, résultats, textes, traductions et libellés).
+* Réimport CSV sécurisé par type de ligne : la fiche partenaire ne modifie plus les liens Facebook du parc ; une journée ne crée plus une fiche partenaire fictive.
+* Analyse préalable détaillée et détection des doublons de noms de partenaires ; sauvegarde avant import.
+* Les médias choisis dans WordPress et les statuts de publication sont conservés : leur gestion reste manuelle.
 
 = 1.21.6 =
 * Le calendrier public respecte les dates automatiques de publication et de retrait des saisons, avec la même règle que l’administration.
