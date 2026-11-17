@@ -1,3 +1,10 @@
+## 1.21.8 — Retrait ciblé des boutons publics d’export
+
+- Retire uniquement les commandes publiques planning PDF, impression et PDF des tarifs.
+- Conserve les méthodes appelées par les renderers partagés, les générateurs et les endpoints : les anciennes URL restent utilisables par décision utilisateur (#134).
+- Aucun changement CSS/JS, calendrier, grilles, données ou ajout back-office.
+- Ajoute une régression sur les appels par réflexion et une comparaison du HTML complet dans WordPress avec la base 1.21.7, hors commandes retirées.
+
 ## 1.21.6 — Bascule automatique du calendrier public
 
 - Corrige la projection du calendrier qui pouvait remplacer la visibilité automatique par un ancien interrupteur manuel et conserver la saison précédente.
