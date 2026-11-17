@@ -53,3 +53,26 @@ jobs:
             echo "Phase: $phase"
             HTP_CASE="$phase" php -d memory_limit=256M wp-cli.phar eval-file tests/scoped-save-wp.php --path=/tmp/htp-wp --context=admin
           done
+
+      - name: Compare complete public rendering against 1.21.7
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin 3c51cce23b2865aeae593160d571cf6739b2a7a5
+          mkdir -p /tmp/htp-export-baseline /tmp/htp-export-candidate
+          git archive 3c51cce23b2865aeae593160d571cf6739b2a7a5 | tar -x -C /tmp/htp-export-baseline
+          cp horaires-tarifs-parc.php uninstall.php readme.txt /tmp/htp-export-candidate/
+          cp -R includes assets /tmp/htp-export-candidate/
+          php tools/prepare-production.php /tmp/htp-export-candidate
+          # Styles and scripts must be byte-for-byte identical before packaging.
+          diff -qr /tmp/htp-export-baseline/assets assets
+          plugin_dir=/tmp/htp-wp/wp-content/plugins/horaires-tarifs-parc
+          for scenario in mds fds groups-only; do
+            HTP_EXPORT_PHASE=seed HTP_EXPORT_SCENARIO="$scenario" php wp-cli.phar eval-file tests/public-export-wordpress.php --path=/tmp/htp-wp
+            cp /tmp/htp-export-baseline/horaires-tarifs-parc.php "$plugin_dir/"
+            cp -R /tmp/htp-export-baseline/includes "$plugin_dir/"
+            HTP_EXPORT_PHASE=baseline HTP_EXPORT_SCENARIO="$scenario" php wp-cli.phar eval-file tests/public-export-wordpress.php --path=/tmp/htp-wp
+            cp /tmp/htp-export-candidate/horaires-tarifs-parc.php "$plugin_dir/"
+            cp -R /tmp/htp-export-candidate/includes "$plugin_dir/"
+            HTP_EXPORT_PHASE=candidate HTP_EXPORT_SCENARIO="$scenario" php wp-cli.phar eval-file tests/public-export-wordpress.php --path=/tmp/htp-wp
+          done

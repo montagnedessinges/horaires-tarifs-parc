@@ -531,17 +531,9 @@ final class Parcs_HT_Tariff_Display {
     }
 
     private static function export_actions($tariffs, $language, $year) {
-        $print = isset($tariffs['print']) && is_array($tariffs['print']) ? $tariffs['print'] : array();
-        if (isset($print['enabled']) && (string)$print['enabled'] !== '1') return '';
-        $params = array('lang'=>$language); if ($year !== '') $params['year'] = $year;
-        $html = '<div class="parcs-ht-tariff-ui__export">';
-        $print_url = add_query_arg(array_merge(array('action'=>'parcs_ht_tariffs_print'), $params), admin_url('admin-post.php'));
-        $html .= '<a href="' . esc_url($print_url) . '">' . esc_html(self::t($language, 'Imprimer les tarifs', 'Print rates', 'Tarife drucken')) . '</a>';
-        if (!isset($print['pdf_enabled']) || (string)$print['pdf_enabled'] === '1') {
-            $pdf_url = add_query_arg(array_merge(array('action'=>'parcs_ht_tariffs_pdf'), $params), admin_url('admin-post.php'));
-            $html .= '<a href="' . esc_url($pdf_url) . '">' . esc_html(self::t($language, 'Télécharger en PDF', 'Download PDF', 'PDF herunterladen')) . '</a>';
-        }
-        return $html . '</div>';
+        // Keep this callable: shared tariff renderers invoke export helpers via reflection.
+        // Only public controls are removed; PDF/print endpoints remain available (issue #134).
+        return '';
     }
 
     public static function render_group($language, $atts = array(), $forced_year = '') {

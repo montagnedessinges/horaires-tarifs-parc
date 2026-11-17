@@ -438,51 +438,16 @@ final class Parcs_HT_Shortcodes {
     }
 
     private static function tariff_export_actions($tariffs, $language, $year = '') {
-        $print = isset($tariffs['print']) && is_array($tariffs['print']) ? $tariffs['print'] : array();
-        if ((string)($print['pdf_enabled'] ?? '1') !== '1') return '';
-
-        $pdf_url = add_query_arg(
-            array(
-                'action'   => 'parcs_ht_tariffs_pdf',
-                'htp_year' => $year,
-                'lang'     => $language,
-                'rev'      => max(1, (int)get_option('parcs_ht_export_revision', 1)),
-            ),
-            admin_url('admin-post.php')
-        );
-
-        $labels = array(
-            'fr' => 'Télécharger les tarifs en PDF',
-            'en' => 'Download prices as PDF',
-            'de' => 'Preise als PDF herunterladen',
-        );
-        $label = $labels[$language] ?? $labels['fr'];
-
-        return '<div class="parcs-ht-tariff-export-actions">' .
-            '<a class="parcs-ht-tariff-export-button is-pdf" href="' . esc_url($pdf_url) . '">' .
-            '<span class="parcs-ht-pdf-mark" aria-hidden="true">PDF</span>' .
-            '<span>' . esc_html($label) . '</span>' .
-            '</a></div>';
+        // Keep this callable: shared tariff renderers invoke export helpers via reflection.
+        // Only public controls are removed; PDF/print endpoints remain available (issue #134).
+        return '';
     }
 
 
     private static function schedule_export_button($language) {
-        $labels = array(
-            'fr' => 'Télécharger le planning des horaires',
-            'en' => 'Download opening-hours schedule',
-            'de' => 'Öffnungszeitenplan herunterladen',
-        );
-        $url = add_query_arg(
-            array(
-                'action' => 'parcs_ht_schedule_pdf',
-                'lang' => $language,
-                'rev' => max(1, (int)get_option('parcs_ht_export_revision', 1)),
-            ),
-            admin_url('admin-post.php')
-        );
-        return '<div class="parcs-ht-schedule-export"><a class="parcs-ht-schedule-export-button" href="' .
-            esc_url($url) . '"><span class="parcs-ht-pdf-mark" aria-hidden="true">PDF</span>' .
-            esc_html($labels[$language] ?? $labels['fr']) . '</a></div>';
+        // Keep this callable: shared tariff renderers invoke export helpers via reflection.
+        // Only public controls are removed; PDF/print endpoints remain available (issue #134).
+        return '';
     }
 
     public static function schedule_pdf_endpoint() {
