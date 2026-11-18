@@ -22,9 +22,9 @@ if (!defined('ABSPATH')) {
     function current_user_can($cap) { return false; }
     function wp_timezone_string() { return 'Europe/Paris'; }
 }
-require_once dirname(__DIR__) . '/includes/class-parcs-ht-advent.php';
-require_once dirname(__DIR__) . '/includes/class-parcs-ht-advent-admin.php';
-require_once dirname(__DIR__) . '/includes/class-parcs-ht-advent-ux.php';
+if (!class_exists('Parcs_HT_Advent')) require_once dirname(__DIR__) . '/includes/class-parcs-ht-advent.php';
+if (!class_exists('Parcs_HT_Advent_Admin')) require_once dirname(__DIR__) . '/includes/class-parcs-ht-advent-admin.php';
+if (!class_exists('Parcs_HT_Advent_UX')) require_once dirname(__DIR__) . '/includes/class-parcs-ht-advent-ux.php';
 function ai_check($condition, $message) { if (!$condition) throw new RuntimeException($message); }
 function ai_call($method, ...$args) {
     $m = new ReflectionMethod('Parcs_HT_Advent_Admin', $method);
