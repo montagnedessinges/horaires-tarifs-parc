@@ -2,7 +2,7 @@
 Contributors: equipe-parcs
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.21.8
+Stable tag: 1.21.9
 
 Gestion centralisée et multilingue des horaires, calendriers, tarifs, événements, devis groupes, FAQ et outils du parc.
 
@@ -22,6 +22,12 @@ Téléversez le ZIP depuis Extensions > Ajouter une extension > Téléverser une
 Une sauvegarde du site et de la base de données reste recommandée avant toute mise à jour.
 
 == Changelog ==
+
+= 1.21.9 =
+* Calendrier de l’Avent : descriptions, hashtags et comptes partenaires intégrés aux publications sociales ; logos et liens affichés sur les journées.
+* Réimports CSV schéma 3 (150 colonnes) : champs absents/vides préservés, effacement explicite de textes avec [VIDER], option de remplacement des URL médias non vides, diff avant/après et relecture après sauvegarde.
+* Aucun statut de publication modifié par import. Sauvegarde préalable et contrôle parc/campagne conservés.
+* IMPORTANT : après installation, valider manuellement les règlements existants dans Campagne. Les textes non validés sont masqués, même dans une campagne active ; toute modification du règlement exige une nouvelle validation.
 
 = 1.21.8 =
 * Retire uniquement les boutons publics de téléchargement du planning et d’impression/PDF des tarifs.
