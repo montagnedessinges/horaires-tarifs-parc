@@ -363,3 +363,48 @@ Aucune campagne MDS ne doit apparaître sur FDS, et inversement.
 - `Comment participer ?` ouvre une explication courte dans le bloc ;
 - bouton vers le règlement complet via URL configurable ;
 - finale : mot validé côté serveur avant rendu du shortcode de formulaire.
+
+## Contrat effectif après correction des réimports (novembre 2026)
+
+Cette section prévaut sur le cadrage historique ci-dessus. Schéma **3**, **150 colonnes** dans le modèle/export courant, CSV UTF-8 (BOM accepté), séparateur `;`. Les noms de colonnes, pas leur position, pilotent l’import. Un sous-ensemble de colonnes connues est accepté ; `schema_version`, `parc_code` et `campagne_id` doivent être renseignés sur chaque ligne. Les colonnes inconnues/dupliquées, lignes de largeur incorrecte et identifiants d’entités répétés sont refusés. Les guillemets CSV protègent les points-virgules et retours à la ligne ; utiliser un export CSV, pas une concaténation manuelle.
+
+### Écarts constatés dans la version 1.21.8
+
+- `description_fr` était déjà persisté. Le générateur social ignorait cette description, `intro_partenaire_fr`, les liens/comptes et les hashtags partenaires. Le calendrier donnait déjà priorité à `intro_partenaire_fr`, pouvant masquer une description partenaire réimportée.
+- Les médias étaient systématiquement ignorés malgré leur présence dans le schéma/export. Les statuts étaient ignorés volontairement et le restent.
+- Les cellules vides conservaient les champs ordinaires, mais une traduction vide pouvait écraser le texte existant. Ce comportement est désormais cohérent.
+- Sauvegarde complète avant import, analyse préalable, contrôle des 24 jours et empreinte anti-écrasement concurrent existaient déjà. Ils sont conservés ; le diff montre désormais les valeurs avant/après et une relecture contrôle l’écriture.
+- Aucun statut propre au règlement n’empêchait la diffusion d’un brouillon dans une campagne active. Une validation manuelle liée au contenu exact couvre maintenant règlement complet, rappel quotidien, URL du règlement et leurs traductions.
+
+### Réimport et effacement explicite
+
+Une colonne absente ou une cellule vide conserve la valeur existante. Une valeur non vide remplace uniquement le champ fourni. Le marqueur exact `[VIDER]` efface exclusivement : `description_fr`, `hashtags`, `instagram_handle`, `instagram_url_override`, `facebook_slug`, `facebook_url_override`, `site_url`, `intro_partenaire_fr`, `intro_question_fr`, `texte_post_override_fr`, `reglement_complet_fr`, `reglement_quotidien_fr`, `page_reglement_url`, `hashtags_defaut`, `texte` (traduction). Tout autre effacement est refusé. Une traduction vide retombe sur le français lorsque le réglage de repli le prévoit.
+
+Pour réutiliser la présentation courte du partenaire sur une journée ayant un texte spécifique, mettre `[VIDER]` dans `intro_partenaire_fr` de cette journée. Ce choix s’applique au calendrier et au générateur social. Les textes `texte_post_override_fr` gardent leur priorité éditoriale ; les hashtags partenaires et campagne sont ajoutés en fin de publication. Aucun compte n’est déduit du nom d’un partenaire : compte absent = nom conservé sans arobase inventée. Les URL sociales explicites priment sur les handles/slugs. Sur Instagram, un handle sans URL prioritaire donne `@handle` ; Facebook utilise l’URL de page (aucune garantie de mention native lors du collage).
+
+### Médias et statuts
+
+Par défaut, aucune URL média importée ne remplace la médiathèque. Cocher **Autoriser les URL médias non vides** avant l’analyse autorise explicitement les URL HTTP(S) de `logo_url`, `visuel_url`, `teasing_site_visuel_url` et `grand_jeu_pictogramme_url`. Les champs source associés deviennent `url`. Les URL sont référencées, pas téléchargées dans la médiathèque. Une cellule vide conserve le média, même avec cette option ; `[VIDER]` y est interdit. Pour retirer un média, passer par l’éditeur WordPress. Les seuls champs `*_source` n’effectuent aucune suppression.
+
+`statut_campagne`, `statut`, `statut_resultat` sont toujours ignorés avec avertissement. L’import ne publie ni campagne, ni journée, ni résultat et ne change pas leurs statuts existants. Une nouvelle entrée conserve son état initial brouillon.
+
+### Règlement : migration et validation
+
+**Après installation de cette correction, les règlements existants nécessitent une validation manuelle**, même si la campagne est active. Dans Campagne, relire les textes et traductions puis choisir **Valider et autoriser la publication des textes enregistrés** et enregistrer. La validation n’est pas importable et n’ajoute aucune colonne au CSV. « Conserver » garde l’empreinte existante ; « Retirer » la révoque. Toute modification des champs couverts, par CSV ou dans l’éditeur, rend l’empreinte inapplicable jusqu’à une nouvelle validation. Un réimport identique ne la modifie pas. L’état de publication de la campagne reste inchangé.
+
+Sans validation applicable, le shortcode règlement, son lien dans le calendrier et le rappel quotidien du générateur social sont masqués. Cette protection couvre ces champs structurés ; elle ne peut pas détecter un règlement copié dans un texte libre de publication, une page WordPress indépendante ou un PDF externe.
+
+### Contexte FDS / MDS et contrôle sur site
+
+Les deux Sheets de référence ont été rouverts le 18 novembre 2026 (lecture seule). L’onglet FDS **Campagne – plugin** confirme `campagne_id=2026`, `parc_code=fds`. L’exemple `fds_avent_2026` de l’ancien onglet référentiel n’est pas l’identifiant de cette campagne WordPress. Pour MDS, conserver l’identifiant réellement exporté et `parc_code=mds`. Aucun identifiant social des Sheets n’est codé en dur dans l’extension.
+
+1. Installer la future release d’abord sur une copie de test ; exporter la campagne et conserver une sauvegarde de base complète.
+2. Sélectionner la campagne voulue, importer le CSV et **Analyser sans écrire**. Vérifier parc, campagne, textes avant/après, avertissements et absence de modifications de statuts. Les sauvegardes d’import sont conservées dans les options WordPress `parcs_ht_advent_backup_<campagne>_*` ; ce sont des instantanés complets du stockage Avent, à restaurer uniquement après revue administrative (pas de bouton de restauration ajouté).
+3. Appliquer une présentation courte et un hashtag modifiés ; rouvrir le partenaire et les aperçus Facebook/Instagram. Tester aussi un partenaire sans compte confirmé.
+4. Vérifier une journée ouverte : description de repli ou introduction spécifique, logo, site et réseaux. Tester le retour au texte partenaire avec `[VIDER]`.
+5. Réimporter à l’identique : aucune modification. Réimporter des cellules vides : conservation. Tester le remplacement média avec et sans option, puis l’interdiction d’effacement média.
+6. Vérifier les campagnes 2026 et 2027, les deux parcs sur leurs installations, et le refus d’un import destiné à l’autre parc/campagne.
+7. Dans une campagne active, importer un règlement provisoire : aucun rendu règlement ni rappel social. Valider manuellement, vérifier le rendu, puis modifier le texte ou sa traduction : validation de nouveau requise.
+8. Modifier la campagne après analyse : l’application du rapport périmé doit être refusée. Purger le cache du site après installation/import pour vérifier le rendu frais.
+
+Tests : `php tests/advent-import-runtime.php` (fonctions réelles, interfaces WordPress simulées en local), `wp eval-file tests/advent-import-runtime.php` et `wp eval-file tests/advent-import-wp.php` sur installation jetable uniquement (ces tests écrivent des données fictives). La CI teste PHP 7.4/8.1/8.2/8.3 et l’application réelle dans WordPress. Ces corrections sont livrées dans la version 1.21.9. La publication GitHub ne signifie pas que les sites WordPress ont été mis à jour ; installer la version puis effectuer la recette ci-dessus.

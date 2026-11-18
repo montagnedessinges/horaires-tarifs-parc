@@ -135,8 +135,8 @@ advent_check(strpos($admin, 'count($seen) !== 24') !== false, 'smart import enfo
 advent_check(strpos($admin, 'if ($kind === \'CAMPAGNE\')') !== false, 'CSV campaign fields are isolated to campaign rows');
 advent_check(strpos($admin, 'if ($kind === \'PARTENAIRE\')') !== false, 'CSV partner fields are isolated to partner rows');
 advent_check(strpos($admin, 'if ($kind === \'CONTENU\')') !== false, 'CSV content fields are isolated to content rows');
-advent_check(strpos($admin, 'unset($payload[\'logo_url\'],$payload[\'logo_source\'])') !== false, 'CSV import never overwrites manually assigned partner logos');
-advent_check(strpos($admin, 'unset($payload[\'visuel_url\'],$payload[\'visuel_source\'],$payload[\'statut\'])') !== false, 'CSV import never overwrites manual visuals or publishes a day');
+advent_check(strpos($admin, "self::import_media_values(\$payload, \$row, 'logo_url'") !== false, 'CSV media replacement uses an explicit option');
+advent_check(strpos($admin, 'unset($payload[\'statut\'])') !== false, 'CSV import never overwrites manual visuals or publishes a day');
 advent_check(strpos($admin, 'unset($payload[\'statut_resultat\'])') !== false, 'CSV import never publishes a result');
 advent_check(strpos($admin, "public static function export_csv()") !== false && strpos($admin, "check_admin_referer('parcs_ht_advent_export_csv')") !== false, 'CSV full export requires a dedicated nonce');
 advent_check(strpos($admin, "microcopy_") !== false, 'CSV import/export includes FR/EN/DE customizable labels');

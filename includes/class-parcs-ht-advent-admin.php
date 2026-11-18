@@ -234,6 +234,9 @@ final class Parcs_HT_Advent_Admin {
             <?php self::input('campaign[libelle_comment_participer_fr]', $campaign['libelle_comment_participer_fr'], 'Libellé « Comment participer ? »'); ?>
             <?php self::textarea('campaign[texte_comment_participer_fr]', $campaign['texte_comment_participer_fr'], 'Explication courte'); ?>
             <?php self::input('campaign[libelle_reglement_complet_fr]', $campaign['libelle_reglement_complet_fr'], 'Libellé règlement complet'); ?>
+            <p><strong>Règlement : <?php echo Parcs_HT_Advent::rules_approved($campaign) ? 'validé pour publication' : 'provisoire / validation requise'; ?></strong></p>
+            <?php self::select('rules_action', 'keep', 'Validation du règlement', array('keep'=>'Conserver la validation existante (si textes inchangés)','approve'=>'Valider et autoriser la publication des textes enregistrés','revoke'=>'Retirer la validation')); ?>
+            <p>La validation couvre le règlement complet, le rappel quotidien, le lien et leurs traductions. Toute modification exige une nouvelle validation. Les anciens règlements nécessitent une première validation manuelle.</p>
             <?php self::textarea('campaign[reglement_complet_fr]', $campaign['reglement_complet_fr'], 'Règlement complet', 12); ?>
             <?php self::textarea('campaign[texte_tirage_non_effectue_fr]', $campaign['texte_tirage_non_effectue_fr'], 'Texte si tirage non publié'); ?>
             <?php self::textarea('campaign[reglement_quotidien_fr]', $campaign['reglement_quotidien_fr'], 'Rappel participation quotidien'); ?>
@@ -421,12 +424,12 @@ final class Parcs_HT_Advent_Admin {
         <section class="htp-advent-card"><h2>Import / export — complet et sécurisé</h2><p>Les partenaires, les 24 journées, les textes, le règlement, les traductions et les libellés sont importables. Les médias déjà choisis dans WordPress sont conservés. L’analyse n’écrit rien : vérifiez le détail avant validation.</p>
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="htp-advent-inline-form"><input type="hidden" name="action" value="parcs_ht_advent_export_csv"><input type="hidden" name="campaign_id" value="<?php echo esc_attr($campaign['campagne_id']); ?>"><?php wp_nonce_field('parcs_ht_advent_export_csv'); ?><button class="button" type="submit">Télécharger l’export complet (sauvegarde CSV)</button></form>
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="htp-advent-inline-form"><input type="hidden" name="action" value="parcs_ht_advent_csv_template"><input type="hidden" name="campaign_id" value="<?php echo esc_attr($campaign['campagne_id']); ?>"><?php wp_nonce_field('parcs_ht_advent_csv_template'); ?><button class="button" type="submit">Télécharger le modèle CSV</button></form>
-            <form method="post" enctype="multipart/form-data" action="<?php echo esc_url(admin_url('admin-post.php')); ?>"><input type="hidden" name="action" value="parcs_ht_advent_import_csv"><input type="hidden" name="campaign_id" value="<?php echo esc_attr($campaign['campagne_id']); ?>"><?php wp_nonce_field('parcs_ht_advent_import_csv'); ?><p><input type="file" name="advent_csv" accept=".csv,text/csv" required> <button class="button button-primary" type="submit">Analyser sans écrire</button></p></form>
-            <details><summary>Format attendu / aide IA</summary><p>Le fichier doit utiliser <code>schema_version = 3</code>, le <code>parc_code</code> de cette installation et le même <code>campagne_id</code>. Les identifiants stables pilotent les mises à jour. Les valeurs des colonnes médias ne sont jamais importées : choisissez logos et visuels dans WordPress. Le statut de publication se règle manuellement.</p><textarea readonly rows="5">Crée un CSV UTF-8 séparé par des points-virgules conforme au référentiel Calendrier de l’Avent schema_version 3. Utilise exactement les colonnes du modèle officiel et conserve les identifiants stables campagne_id, partenaire_id, contenu_id et resultat_id.</textarea></details>
+            <form method="post" enctype="multipart/form-data" action="<?php echo esc_url(admin_url('admin-post.php')); ?>"><input type="hidden" name="action" value="parcs_ht_advent_import_csv"><input type="hidden" name="campaign_id" value="<?php echo esc_attr($campaign['campagne_id']); ?>"><?php wp_nonce_field('parcs_ht_advent_import_csv'); ?><p><input type="file" name="advent_csv" accept=".csv,text/csv" required> <label><input type="checkbox" name="import_media" value="1"> Autoriser les URL médias non vides (remplacement explicite)</label> <button class="button button-primary" type="submit">Analyser sans écrire</button></p></form>
+            <details><summary>Format attendu / aide IA</summary><p>Le fichier doit utiliser <code>schema_version = 3</code>, le <code>parc_code</code> de cette installation et le même <code>campagne_id</code>. Les identifiants stables pilotent les mises à jour. Cellule vide ou colonne absente : conserver. [VIDER] : vider uniquement un texte ou lien autorisé. Les médias sont conservés sauf option explicite d’import des URL non vides ; aucune suppression de média par CSV. Le statut de publication se règle manuellement.</p><textarea readonly rows="5">Crée un CSV UTF-8 séparé par des points-virgules conforme au référentiel Calendrier de l’Avent schema_version 3. Utilise exactement les colonnes du modèle officiel et conserve les identifiants stables campagne_id, partenaire_id, contenu_id et resultat_id.</textarea></details>
         <?php if (is_array($report)) : $counts = $report['counts']; ?>
             <div class="htp-advent-import-report"><h3>Aperçu avant validation</h3><p><strong><?php echo esc_html((string)$counts['create']); ?></strong> créations · <strong><?php echo esc_html((string)$counts['modify']); ?></strong> modifications · <strong><?php echo esc_html((string)$counts['same']); ?></strong> inchangés</p>
                 <?php if ($report['warnings']) : ?><h4>Avertissements</h4><ul><?php foreach ($report['warnings'] as $message) echo '<li>' . esc_html($message) . '</li>'; ?></ul><?php endif; ?>
-                <?php if (!empty($report['diff'])) : ?><h4>Détail des changements</h4><table class="widefat striped"><thead><tr><th>Élément</th><th>Identifiant</th><th>Action</th><th>Champs modifiés</th></tr></thead><tbody><?php foreach (array_slice($report['diff'], 0, 100) as $item) : ?><tr><td><?php echo esc_html($item['type']); ?></td><td><code><?php echo esc_html($item['id']); ?></code></td><td><?php echo esc_html($item['action']); ?></td><td><?php echo esc_html(implode(', ', $item['fields'])); ?></td></tr><?php endforeach; ?></tbody></table><?php endif; ?>
+                <?php if (!empty($report['diff'])) : ?><h4>Détail des changements</h4><table class="widefat striped"><thead><tr><th>Élément</th><th>Identifiant</th><th>Action</th><th>Champs modifiés</th></tr></thead><tbody><?php foreach (array_slice($report['diff'], 0, 100) as $item) : ?><tr><td><?php echo esc_html($item['type']); ?></td><td><code><?php echo esc_html($item['id']); ?></code></td><td><?php echo esc_html($item['action']); ?></td><td><?php echo esc_html(implode(', ', $item['fields'])); ?><details><summary>Avant / après</summary><pre><?php echo esc_html(wp_json_encode(array('avant'=>$item['before'],'après'=>$item['after']), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)); ?></pre></details></td></tr><?php endforeach; ?></tbody></table><?php endif; ?>
                 <?php if ($report['errors']) : ?><h4>Erreurs</h4><ul><?php foreach ($report['errors'] as $message) echo '<li>' . esc_html($message) . '</li>'; ?></ul><?php else : ?>
                     <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>"><input type="hidden" name="action" value="parcs_ht_advent_apply_import"><input type="hidden" name="campaign_id" value="<?php echo esc_attr($campaign['campagne_id']); ?>"><input type="hidden" name="import_token" value="<?php echo esc_attr($token); ?>"><?php wp_nonce_field('parcs_ht_advent_apply_import'); ?><button class="button button-primary" type="submit">Appliquer la mise à jour intelligente</button></form>
                 <?php endif; ?>
@@ -460,7 +463,11 @@ final class Parcs_HT_Advent_Admin {
         $raw = isset($_POST['campaign']) && is_array($_POST['campaign']) ? wp_unslash($_POST['campaign']) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Tableau imbriqué nettoyé par sanitize_campaign().
         $raw['campagne_id'] = $campaign_id;
         $raw['parc_code'] = Parcs_HT_Advent::installation_park_code();
+        unset($raw['rules_approved_hash']);
         $clean = Parcs_HT_Advent::sanitize_campaign($raw, $current);
+        $rules_action = isset($_POST['rules_action']) ? sanitize_key(wp_unslash($_POST['rules_action'])) : 'keep';
+        if ($rules_action === 'approve') $clean['rules_approved_hash'] = Parcs_HT_Advent::rules_hash($clean);
+        elseif ($rules_action === 'revoke') $clean['rules_approved_hash'] = '';
         $store = Parcs_HT_Advent::store();
         $store['campaigns'][$campaign_id] = $clean;
         Parcs_HT_Advent::save_store($store);
@@ -557,11 +564,11 @@ final class Parcs_HT_Advent_Admin {
         if ($output === false) wp_die('Impossible de générer le fichier CSV.');
         fwrite($output, "\xEF\xBB\xBF");
         $headers = self::csv_headers();
-        fputcsv($output, $headers, ';');
+        fputcsv($output, $headers, ';', '"', '');
         foreach ($rows as $row) {
             $values = array();
             foreach ($headers as $field) $values[] = isset($row[$field]) && is_scalar($row[$field]) ? (string)$row[$field] : '';
-            fputcsv($output, $values, ';');
+            fputcsv($output, $values, ';', '"', '');
         }
         fclose($output);
         exit;
@@ -607,7 +614,7 @@ final class Parcs_HT_Advent_Admin {
         $output = fopen('php://output', 'w');
         if ($output === false) wp_die('Impossible de générer le modèle.');
         fwrite($output, "\xEF\xBB\xBF");
-        fputcsv($output, self::csv_headers(), ';');
+        fputcsv($output, self::csv_headers(), ';', '"', '');
         fclose($output);
         exit;
     }
@@ -633,7 +640,7 @@ final class Parcs_HT_Advent_Admin {
         if ($tmp === '' || !is_uploaded_file($tmp)) self::redirect($campaign_id, 'import', array('advent_error'=>'Fichier temporaire invalide.'));
         $rows = self::read_csv($tmp);
         if (is_wp_error($rows)) self::redirect($campaign_id, 'import', array('advent_error'=>$rows->get_error_message()));
-        $report = self::analyze_import($rows, $current);
+        $report = self::analyze_import($rows, $current, isset($_POST['import_media']) && sanitize_text_field(wp_unslash($_POST['import_media'])) === '1');
         $token = sanitize_key(wp_generate_password(16, false, false));
         set_transient(self::import_transient_key($token), $report, 30 * MINUTE_IN_SECONDS);
         self::redirect($campaign_id, 'import', array('import_token'=>$token));
@@ -642,14 +649,21 @@ final class Parcs_HT_Advent_Admin {
     private static function read_csv($path) {
         $handle = fopen($path, 'r');
         if ($handle === false) return new WP_Error('advent_csv_open','Impossible de lire le CSV.');
-        $header = fgetcsv($handle, 0, ';');
+        $header = fgetcsv($handle, 0, ';', '"', '');
         if (!is_array($header) || !$header) { fclose($handle); return new WP_Error('advent_csv_header','En-tête CSV introuvable.'); }
         if (isset($header[0])) $header[0] = preg_replace('/^\xEF\xBB\xBF/', '', (string)$header[0]);
-        $header = array_map('sanitize_key', $header);
+        $header = array_map('trim', $header);
+        if (count($header) !== count(array_unique($header)) || array_diff($header, self::csv_headers()) || array_diff(array('schema_version','campagne_id','parc_code'), $header)) {
+            fclose($handle);
+            return new WP_Error('advent_csv_header', 'Colonnes inconnues, dupliquées ou identifiants obligatoires absents. Utilisez le modèle CSV ; UTF-8.');
+        }
         $rows = array();
-        while (($line = fgetcsv($handle, 0, ';')) !== false) {
+        while (($line = fgetcsv($handle, 0, ';', '"', '')) !== false) {
             if (!array_filter($line, 'strlen')) continue;
-            $line = array_pad($line, count($header), '');
+            if (count($line) !== count($header) || preg_match('//u', implode('', $line)) !== 1) {
+                fclose($handle);
+                return new WP_Error('advent_csv_row', 'Ligne CSV mal formée ou encodage différent de UTF-8.');
+            }
             $row = array();
             foreach ($header as $index=>$key) if ($key !== '') $row[$key] = isset($line[$index]) ? (string)$line[$index] : '';
             $rows[] = $row;
@@ -660,8 +674,28 @@ final class Parcs_HT_Advent_Admin {
 
     private static function nonempty_subset($row, $fields) {
         $out = array();
-        foreach ($fields as $field) if (array_key_exists($field, $row) && $row[$field] !== '') $out[$field] = $row[$field];
+        foreach ($fields as $field) {
+            if (!array_key_exists($field, $row) || $row[$field] === '') continue;
+            $out[$field] = $row[$field] === '[VIDER]' && self::clearable_field($field) ? '' : $row[$field];
+        }
         return $out;
+    }
+
+    private static function clearable_field($field) {
+        return in_array($field, array('description_fr','hashtags','instagram_handle','instagram_url_override','facebook_slug','facebook_url_override','site_url','intro_partenaire_fr','intro_question_fr','texte_post_override_fr','reglement_complet_fr','reglement_quotidien_fr','page_reglement_url','hashtags_defaut','texte'), true);
+    }
+
+    private static function import_media_values(&$payload, $row, $url_field, $source_field, $allowed, &$errors) {
+        unset($payload[$url_field]);
+        if ($source_field !== '') unset($payload[$source_field]);
+        if (!$allowed || empty($row[$url_field])) return;
+        $url = esc_url_raw($row[$url_field], array('http','https'));
+        if ($url === '' || !preg_match('~^https?://~i', $url)) {
+            $errors[] = 'URL média invalide : ' . $url_field;
+            return;
+        }
+        $payload[$url_field] = $url;
+        if ($source_field !== '') $payload[$source_field] = 'url';
     }
 
     private static function count_change(&$counts, $before, $after, $exists) {
@@ -670,12 +704,13 @@ final class Parcs_HT_Advent_Admin {
         else $counts['modify']++;
     }
 
-    private static function analyze_import($rows, $current) {
+    private static function analyze_import($rows, $current, $import_media = false) {
         $candidate = $current;
         $counts = array('create'=>0,'modify'=>0,'same'=>0);
         $warnings = array();
         $errors = array();
         $diff = array();
+        $identities = array();
         $park = Parcs_HT_Advent::installation_park_code();
         $changes = static function ($type, $id, $before, $after, $exists) use (&$counts, &$diff) {
             $fields = array();
@@ -685,15 +720,22 @@ final class Parcs_HT_Advent_Admin {
             if (!$exists) $counts['create']++;
             elseif (!$fields) $counts['same']++;
             else $counts['modify']++;
-            if ($fields) $diff[] = array('type'=>$type,'id'=>$id,'action'=>$exists ? 'Modifier' : 'Créer','fields'=>$fields);
+            if ($fields) $diff[] = array('type'=>$type,'id'=>$id,'action'=>$exists ? 'Modifier' : 'Créer','fields'=>$fields,'before'=>array_intersect_key((array)$before,array_flip($fields)),'after'=>array_intersect_key((array)$after,array_flip($fields)));
         };
+        if ($park === '' || (string)$current['parc_code'] !== $park) $errors[] = 'Parc de la campagne incompatible avec cette installation.';
+        if (!$rows) $errors[] = 'Le fichier ne contient aucune donnée.';
         if (count($rows) > 2000) $errors[] = 'Le fichier dépasse 2 000 lignes.';
         foreach ((array)$rows as $index=>$row) {
             $line_no = $index + 2;
             if (!is_array($row)) continue;
-            if (isset($row['schema_version']) && $row['schema_version'] !== '' && (int)$row['schema_version'] !== Parcs_HT_Advent::SCHEMA_VERSION) $errors[] = 'Ligne ' . $line_no . ' : schema_version incompatible.';
-            if (isset($row['parc_code']) && $row['parc_code'] !== '' && sanitize_key($row['parc_code']) !== $park) $errors[] = 'Ligne ' . $line_no . ' : parc_code différent de cette installation.';
-            if (isset($row['campagne_id']) && $row['campagne_id'] !== '' && sanitize_key($row['campagne_id']) !== $current['campagne_id']) $errors[] = 'Ligne ' . $line_no . ' : campagne_id différent de la campagne sélectionnée.';
+            if ((string)($row['schema_version'] ?? '') !== '3') $errors[] = 'Ligne ' . $line_no . ' : schema_version doit valoir 3.';
+            if ((string)($row['parc_code'] ?? '') !== $park) $errors[] = 'Ligne ' . $line_no . ' : parc_code absent ou différent.';
+            if ((string)($row['campagne_id'] ?? '') !== (string)$current['campagne_id']) $errors[] = 'Ligne ' . $line_no . ' : campagne_id absent ou différent.';
+            foreach ($row as $field=>$value) {
+                if ($value === '[VIDER]' && !self::clearable_field($field)) $errors[] = 'Ligne ' . $line_no . ' : effacement interdit pour ' . $field;
+                if ($value !== '' && in_array($field, array('statut','statut_campagne','statut_resultat'), true)) $warnings[] = 'Statuts CSV ignorés : publication exclusivement manuelle.';
+                if (!$import_media && $value !== '' && in_array($field, array('logo_url','visuel_url','teasing_site_visuel_url','grand_jeu_pictogramme_url'), true)) $warnings[] = 'URL médias ignorées : option médias non cochée.';
+            }
 
             $kind = strtoupper(sanitize_text_field((string)($row['type_ligne'] ?? '')));
             if ($kind === '') {
@@ -709,10 +751,15 @@ final class Parcs_HT_Advent_Admin {
                 $errors[] = 'Ligne ' . $line_no . ' : type_ligne inconnu.';
                 continue;
             }
+            $identity = $kind . '|' . ($kind === 'PARTENAIRE' ? ($row['partenaire_id'] ?? '') : ($kind === 'CONTENU' ? ($row['contenu_id'] ?? '') : ($kind === 'RESULTAT' ? ($row['resultat_id'] ?? '') : ($kind === 'TRADUCTION' ? ($row['reference_id'] ?? '') . '|' . ($row['champ'] ?? '') . '|' . ($row['langue'] ?? '') : 'campaign'))));
+            if (isset($identities[$identity])) $errors[] = 'Ligne ' . $line_no . ' : identifiant dupliqué dans le CSV.';
+            $identities[$identity] = true;
             if ($kind === 'CAMPAGNE') {
                 $values = self::nonempty_subset($row, Parcs_HT_Advent::campaign_field_names());
                 // La publication et tous les médias restent sous contrôle manuel.
                 unset($values['schema_version'],$values['campagne_id'],$values['parc_code'],$values['statut_campagne'],$values['teasing_site_visuel_source'],$values['teasing_site_visuel_url'],$values['grand_jeu_pictogramme_url']);
+                self::import_media_values($values, $row, 'teasing_site_visuel_url', 'teasing_site_visuel_source', $import_media, $errors);
+                self::import_media_values($values, $row, 'grand_jeu_pictogramme_url', '', $import_media, $errors);
                 $microcopy = array();
                 foreach (Parcs_HT_Advent::default_microcopies() as $key=>$defaults) {
                     foreach (array('fr','en','de') as $language) {
@@ -740,10 +787,10 @@ final class Parcs_HT_Advent_Admin {
                 $exists = isset($candidate['partners'][$id]);
                 $before = $exists ? $candidate['partners'][$id] : Parcs_HT_Advent::default_partner();
                 $payload = self::nonempty_subset($row,Parcs_HT_Advent::partner_field_names());
-                unset($payload['logo_url'],$payload['logo_source']);
+                self::import_media_values($payload, $row, 'logo_url', 'logo_source', $import_media, $errors);
                 $payload['partenaire_id']=$id;
                 $after = Parcs_HT_Advent::sanitize_partner($payload,$before);
-                if (!empty($before['logo_url'])) { $after['logo_url']=$before['logo_url'];$after['logo_source']=$before['logo_source']; }
+                if (!isset($payload['logo_url']) && !empty($before['logo_url'])) { $after['logo_url']=$before['logo_url'];$after['logo_source']=$before['logo_source']; }
                 if (!$exists && $after['nom'] === '') { $errors[]='Ligne ' . $line_no . ' : nom du nouveau partenaire absent.';continue; }
                 foreach ((array)$candidate['partners'] as $other_id=>$partner) {
                     if ($other_id === $id || !is_array($partner) || empty($partner['nom'])) continue;
@@ -762,10 +809,11 @@ final class Parcs_HT_Advent_Admin {
                 $exists=isset($candidate['contents'][$id]);
                 $before=$exists ? $candidate['contents'][$id] : Parcs_HT_Advent::default_content();
                 $payload=self::nonempty_subset($row,Parcs_HT_Advent::content_field_names());
-                unset($payload['visuel_url'],$payload['visuel_source'],$payload['statut']);
+                unset($payload['statut']);
+                self::import_media_values($payload, $row, 'visuel_url', 'visuel_source', $import_media, $errors);
                 $payload['contenu_id']=$id;
                 $after=Parcs_HT_Advent::sanitize_content($payload,$before);
-                if (!empty($before['visuel_url'])) { $after['visuel_url']=$before['visuel_url'];$after['visuel_source']=$before['visuel_source']; }
+                if (!isset($payload['visuel_url']) && !empty($before['visuel_url'])) { $after['visuel_url']=$before['visuel_url'];$after['visuel_source']=$before['visuel_source']; }
                 $candidate['contents'][$id]=$after;
                 $changes('Contenu',$id,$before,$after,$exists);
                 continue;
@@ -785,7 +833,7 @@ final class Parcs_HT_Advent_Admin {
             }
             if ($kind === 'TRADUCTION') {
                 if (empty($row['reference_id']) || empty($row['champ']) || empty($row['langue'])) { $errors[]='Ligne ' . $line_no . ' : traduction incomplète.';continue; }
-                $translation=Parcs_HT_Advent::sanitize_translation($row);
+                $translation=Parcs_HT_Advent::sanitize_translation(array_merge($row, self::nonempty_subset($row, array('texte'))));
                 if ($translation['langue'] === '') { $errors[]='Ligne ' . $line_no . ' : langue de traduction invalide.';continue; }
                 $key=$translation['reference_id'].'|'.$translation['champ'].'|'.$translation['langue'];
                 $oldIndex=null;
@@ -794,6 +842,7 @@ final class Parcs_HT_Advent_Admin {
                 }
                 $exists=$oldIndex!==null;
                 $before=$exists ? $candidate['translations'][$oldIndex] : array();
+                if ($exists && (!isset($row['texte']) || $row['texte'] === '')) $translation['texte'] = $before['texte'];
                 if ($exists) $candidate['translations'][$oldIndex]=$translation;
                 else $candidate['translations'][]=$translation;
                 $changes('Traduction',$key,$before,$translation,$exists);
@@ -812,6 +861,10 @@ final class Parcs_HT_Advent_Admin {
         if (count($seen) !== 24) $errors[]='La campagne doit contenir exactement les jours 1 à 24.';
         foreach ((array)$candidate['results'] as $result) {
             if (is_array($result) && !empty($result['contenu_id']) && !isset($candidate['contents'][$result['contenu_id']])) $errors[]='Un résultat référence un contenu inexistant.';
+        }
+        if (!Parcs_HT_Advent::rules_approved($candidate)) $warnings[] = 'Règlement provisoire : valider manuellement les textes dans Campagne avant affichage public ou utilisation du rappel social.';
+        foreach ($candidate['contents'] as $content) {
+            if (!empty($content['intro_partenaire_fr'])) $warnings[] = 'La présentation propre à une journée remplace la description du partenaire. Utilisez [VIDER] dans intro_partenaire_fr pour retrouver la description partenaire.';
         }
         return array('candidate'=>$candidate,'counts'=>$counts,'warnings'=>array_values(array_unique($warnings)),'errors'=>array_values(array_unique($errors)),'diff'=>$diff,'original_hash'=>hash('sha256',wp_json_encode($current)));
     }
@@ -833,6 +886,8 @@ final class Parcs_HT_Advent_Admin {
         if (!add_option($backup_key, $store, '', false)) wp_die('Impossible de créer la sauvegarde avant import.');
         $store['campaigns'][$campaign_id] = $candidate;
         Parcs_HT_Advent::save_store($store);
+        $saved = Parcs_HT_Advent::campaign($campaign_id, true);
+        if (wp_json_encode($saved) !== wp_json_encode($candidate)) wp_die('La relecture après import diffère du résultat attendu. Sauvegarde conservée : ' . esc_html($backup_key));
         delete_transient($key);
         self::redirect($campaign_id,'import',array('advent_notice'=>'imported'));
     }

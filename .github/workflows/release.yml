@@ -97,6 +97,7 @@ jobs:
           php tests/pedagogical-guides-contract.php
           php tests/pedagogical-guide-stats-contract.php
           php tests/guides-library-1194-contract.php
+          php tests/advent-import-runtime.php
           php tests/advent-contract.php
           php tests/advent-ux-contract.php
           php tests/faq-1190-contract.php

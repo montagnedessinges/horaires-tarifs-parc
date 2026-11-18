@@ -1,3 +1,13 @@
+## 1.21.9 — Réimports Avent, partenaires sociaux et validation du règlement
+
+- Utilise les descriptions, hashtags et comptes/liens partenaires pour les publications Facebook/Instagram et affiche logos et liens dans le calendrier, sans inventer de compte social.
+- Conserve le schéma 3 et ses 150 colonnes UTF-8 séparées par `;`. Préserve les champs absents/vides, y compris les traductions ; autorise `[VIDER]` uniquement sur une liste de textes et liens.
+- Remplace les URL médias non vides uniquement sur option explicite ; aucun effacement média ni modification des statuts de publication par CSV.
+- Complète l’analyse par un diff avant/après et une relecture après écriture, avec sauvegarde préalable et refus des rapports périmés.
+- **À faire après installation : valider manuellement les règlements existants dans Campagne.** Le règlement complet, son lien et son rappel quotidien restent masqués sans validation applicable, même pour une campagne active. Une modification des textes ou traductions exige une nouvelle validation. Les textes copiés dans des pages indépendantes restent à contrôler séparément.
+- Tests MDS/FDS : réimports successifs, isolation 2026/2027, descriptions et hashtags sociaux, médias, statuts, rendu public et absence de brouillons dans le JavaScript ; tests du véritable handler et des sauvegardes sur WordPress.
+- Installation via le ZIP `horaires-tarifs-parc.zip`, puis purge du cache et recette décrite dans `docs/calendrier-avent/REFERENTIEL-IMPORT.md`.
+
 ## 1.21.8 — Retrait ciblé des boutons publics d’export
 
 - Retire uniquement les commandes publiques planning PDF, impression et PDF des tarifs.
