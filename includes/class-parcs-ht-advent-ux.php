@@ -248,9 +248,9 @@ final class Parcs_HT_Advent_UX {
             if (!$can_preview && (string)($campaign['statut_campagne'] ?? '') !== 'active') continue;
             $row = array(
                 'participateText' => (string)($campaign['texte_comment_participer_fr'] ?? ''),
-                'dailyText' => (string)($campaign['reglement_quotidien_fr'] ?? ''),
+                'dailyText' => Parcs_HT_Advent::rules_approved($campaign) ? (string)($campaign['reglement_quotidien_fr'] ?? '') : '',
                 'mysteryText' => (string)($campaign['texte_rappel_grand_jeu_fr'] ?? ''),
-                'rulesUrl' => esc_url_raw((string)($campaign['page_reglement_url'] ?? '')),
+                'rulesUrl' => Parcs_HT_Advent::rules_approved($campaign) ? esc_url_raw((string)($campaign['page_reglement_url'] ?? '')) : '',
                 'rulesLabel' => (string)($campaign['libelle_reglement_complet_fr'] ?? ''),
                 'calendarUrl' => esc_url_raw((string)($campaign['page_calendrier_url'] ?? '')),
                 'facebookUrl' => self::account_url($campaign['facebook_url_override'] ?? '', $campaign['facebook_slug'] ?? '', 'facebook'),

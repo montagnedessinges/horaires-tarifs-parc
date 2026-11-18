@@ -76,3 +76,8 @@ jobs:
             cp -R /tmp/htp-export-candidate/includes "$plugin_dir/"
             HTP_EXPORT_PHASE=candidate HTP_EXPORT_SCENARIO="$scenario" php wp-cli.phar eval-file tests/public-export-wordpress.php --path=/tmp/htp-wp
           done
+
+      - name: Advent CSV import and public rendering on WordPress
+        run: |
+          php wp-cli.phar eval-file tests/advent-import-runtime.php --path=/tmp/htp-wp --context=admin
+          php wp-cli.phar eval-file tests/advent-import-wp.php --path=/tmp/htp-wp --context=admin

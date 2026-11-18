@@ -104,3 +104,7 @@ Le chat de développement doit relire ce dossier **avant toute modification du c
 Les anciennes idées remplacées — notamment plusieurs teasings publics et ouverture automatique du jour courant — ne doivent pas être réintroduites.
 
 Le développement peut maintenant commencer sur cette base. Le premier prototype sera ensuite testé avec une campagne/CSV fictif afin d’ajuster le rendu avec l’utilisateur avant d’intégrer les données définitives 2026.
+
+### Réimports CSV et règlements
+
+Voir la section **Contrat effectif après correction des réimports (novembre 2026)** du [référentiel d’import](REFERENTIEL-IMPORT.md) pour les 150 colonnes, `[VIDER]`, l’option médias, la priorité des présentations et la validation manuelle des règlements existants après mise à jour.

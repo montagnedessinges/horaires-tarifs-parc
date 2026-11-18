@@ -337,6 +337,7 @@ final class Parcs_HT_Advent {
         $existing = is_array($existing) ? $existing : array();
         $out = array();
         $out['schema_version'] = self::SCHEMA_VERSION;
+        $out['rules_approved_hash'] = sanitize_text_field((string)($raw['rules_approved_hash'] ?? ($existing['rules_approved_hash'] ?? '')));
         $out['campagne_id'] = sanitize_key((string)($raw['campagne_id'] ?? ($existing['campagne_id'] ?? '')));
         $park = sanitize_key((string)($raw['parc_code'] ?? ($existing['parc_code'] ?? '')));
         $out['parc_code'] = in_array($park, array('mds','fds'), true) ? $park : '';
@@ -612,7 +613,38 @@ final class Parcs_HT_Advent {
         return (string)($campaign['fallback_traduction'] ?? 'fr') === 'fr' ? (string)$fallback : '';
     }
 
+    /** Approval is tied to exact rules and their translations, never to campaign activation. */
+    public static function rules_hash($campaign) {
+        $values = array();
+        foreach (array('reglement_complet_fr','reglement_quotidien_fr','page_reglement_url') as $field) $values[$field] = (string)($campaign[$field] ?? '');
+        foreach ((array)($campaign['translations'] ?? array()) as $row) {
+            if (($row['reference_id'] ?? '') === (string)$campaign['campagne_id'] && in_array($row['champ'] ?? '', array('reglement_complet_fr','reglement_quotidien_fr','page_reglement_url'), true)) {
+                $values[$row['champ'] . '|' . $row['langue']] = $row['texte'];
+            }
+        }
+        ksort($values);
+        return hash('sha256', wp_json_encode($values));
+    }
+
+    public static function rules_approved($campaign) {
+        return !empty($campaign['rules_approved_hash']) && hash_equals((string)$campaign['rules_approved_hash'], self::rules_hash($campaign));
+    }
+
+    public static function partner_social_url($partner, $network) {
+        $network = $network === 'instagram' ? 'instagram' : 'facebook';
+        if (!empty($partner[$network . '_url_override'])) return (string)$partner[$network . '_url_override'];
+        $handle = ltrim(trim((string)($partner[$network === 'instagram' ? 'instagram_handle' : 'facebook_slug'] ?? '')), '@');
+        if ($handle === '' || !preg_match('/^[a-zA-Z0-9._]+$/', $handle)) return '';
+        return 'https://www.' . $network . '.com/' . rawurlencode($handle) . '/';
+    }
+
+    private static function partner_intro($campaign, $content, $partner, $language) {
+        $intro = self::content_text($campaign, $content, 'intro_partenaire_fr', $language);
+        return $intro !== '' ? $intro : self::partner_text($campaign, $partner, 'description_fr', $language);
+    }
+
     private static function campaign_text($campaign, $field, $language) {
+        if (in_array($field, array('reglement_complet_fr','reglement_quotidien_fr','page_reglement_url'), true) && !self::rules_approved($campaign)) return '';
         $fallback = (string)($campaign[$field] ?? '');
         return self::translation($campaign, (string)$campaign['campagne_id'], $field, $language, $fallback);
     }
@@ -665,7 +697,7 @@ final class Parcs_HT_Advent {
         $participate_label = self::campaign_text($campaign, 'libelle_comment_participer_fr', $language);
         $participate_text = self::campaign_text($campaign, 'texte_comment_participer_fr', $language);
         $rules_label = self::campaign_text($campaign, 'libelle_reglement_complet_fr', $language);
-        $rules_url = (string)($campaign['page_reglement_url'] ?? '');
+        $rules_url = self::campaign_text($campaign, 'page_reglement_url', $language);
         $instance = 'parcs-ht-advent-' . wp_rand(1000, 999999);
 
         ob_start();
@@ -759,7 +791,9 @@ final class Parcs_HT_Advent {
                     <div class="parcs-ht-advent-partner">
                         <strong><?php echo esc_html(self::microcopy($campaign, 'partner_label', $language)); ?> :</strong>
                         <?php echo esc_html((string)$partner['nom']); ?>
-                        <?php $partner_intro = self::content_text($campaign, $content, 'intro_partenaire_fr', $language); if ($partner_intro === '') $partner_intro = self::partner_text($campaign, $partner, 'description_fr', $language); if ($partner_intro !== '') : ?><div><?php echo wp_kses_post(wpautop($partner_intro)); ?></div><?php endif; ?>
+                        <?php if (!empty($partner['logo_url'])) : ?><img src="<?php echo esc_url($partner['logo_url']); ?>" alt="<?php echo esc_attr($partner['nom']); ?>" loading="lazy" width="120"><?php endif; ?>
+                        <?php foreach (array('facebook'=>'Facebook','instagram'=>'Instagram','site'=>'Site web') as $network=>$label) : $partner_url = $network === 'site' ? (string)($partner['site_url'] ?? '') : self::partner_social_url($partner, $network); if ($partner_url !== '') : ?><a href="<?php echo esc_url($partner_url); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html($label); ?></a><?php endif; endforeach; ?>
+                        <?php $partner_intro = self::partner_intro($campaign, $content, $partner, $language); if ($partner_intro !== '') : ?><div><?php echo wp_kses_post(wpautop($partner_intro)); ?></div><?php endif; ?>
                     </div>
                 <?php endif; ?>
 
@@ -966,6 +1000,7 @@ final class Parcs_HT_Advent {
     public static function social_post($campaign, $content, $network = 'facebook', $language = 'fr') {
         if (!is_array($campaign) || !is_array($content)) return '';
         $network = $network === 'instagram' ? 'instagram' : 'facebook';
+        $partner = self::partner($campaign, (string)($content['partenaire_id'] ?? ''));
         $override = self::content_text($campaign, $content, 'texte_post_override_fr', $language);
         $lines = array();
         if ($override !== '') {
@@ -973,8 +1008,16 @@ final class Parcs_HT_Advent {
         } else {
             $title = self::content_text($campaign, $content, 'titre_fr', $language);
             if ($title !== '') $lines[] = $title;
-            $partner = self::partner($campaign, (string)($content['partenaire_id'] ?? ''));
-            if ($partner && !empty($partner['nom'])) $lines[] = 'Partenaire : ' . $partner['nom'];
+            if ($partner && !empty($partner['nom'])) {
+                $lines[] = 'Partenaire : ' . $partner['nom'];
+                $partner_intro = self::partner_intro($campaign, $content, $partner, $language);
+                if ($partner_intro !== '') $lines[] = $partner_intro;
+                $social_url = self::partner_social_url($partner, $network);
+                $handle = ltrim(trim((string)($partner['instagram_handle'] ?? '')), '@');
+                if ($network === 'instagram' && empty($partner['instagram_url_override']) && $social_url !== '') $lines[] = '@' . $handle;
+                elseif ($social_url !== '') $lines[] = $social_url;
+                if (!empty($partner['site_url'])) $lines[] = $partner['site_url'];
+            }
             $lot = self::content_text($campaign, $content, 'lot_fr', $language);
             if ($lot !== '') $lines[] = 'À gagner : ' . $lot;
             $intro = self::content_text($campaign, $content, 'intro_question_fr', $language);
@@ -997,6 +1040,7 @@ final class Parcs_HT_Advent {
             $link_text = self::campaign_text($campaign, 'texte_lien_calendrier_social_fr', $language);
             $lines[] = trim($link_text . ' ' . $campaign['page_calendrier_url']);
         }
+        if ($partner && !empty($partner['hashtags'])) $lines[] = trim((string)$partner['hashtags']);
         if (!empty($campaign['hashtags_defaut'])) $lines[] = trim((string)$campaign['hashtags_defaut']);
         return trim(implode("\n\n", array_values(array_filter($lines, 'strlen'))));
     }
